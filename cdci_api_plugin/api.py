@@ -60,7 +60,7 @@ class DispatcherAPI(object):
         a = ast.literal_eval(str(_js).replace('null', 'None'))
 
 
-            
+
         self.dig_list(a)
 
 

@@ -28,7 +28,17 @@ class PolarDispatcher(DispatcherAPI):
                      T2_iso='2016-12-18T08:34:01.000',
                      E1_keV=10.,
                      E2_keV=100.):
+        """
 
+        :param src_name: name of the source
+        :param time_bin: delta t
+        :param time_bin_format: t units for time_bin (seconds default)
+        :param T1_iso: T start in isot
+        :param T2_iso: T stop in isot
+        :param E1_keV: E min in keV
+        :param E2_keV: E max in keV
+        :return:
+        """
         parameters_dic = dict(E1_keV=E1_keV, E2_keV=E2_keV, T1=T1_iso, T2=T2_iso,
                               query_type='Real', product_type='polar_lc',
                               src_name=src_name, time_bin=time_bin,
