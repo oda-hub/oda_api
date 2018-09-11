@@ -10,6 +10,8 @@ __author__ = "Andrea Tramacere"
 import requests
 import ast
 import json
+import  random
+import string
 
 class Request(object):
     def __init__(self,):
@@ -29,6 +31,10 @@ class DispatcherAPI(object):
         self.url= "http://%s:%d"%(host,port)
 
 
+    def generate_session_id(self,size=16):
+        chars = string.ascii_uppercase + string.digits
+        return ''.join(random.choice(chars) for _ in range(size))
+
     def set_instr(self,instrument):
         self.instrument=instrument
 
@@ -36,27 +42,30 @@ class DispatcherAPI(object):
         pass
 
 
-    def get_description(self):
-        res=requests.get("%s:/api/meta-data"%self.url,params=dict(instrument=self.instrument))
-        _js = json.loads(res.content)
-        a = ast.literal_eval(str(_js).replace('null', 'None'))
-
-        def dig_list(b):
+    def dig_list(self,b):
             if isinstance(b, (set, tuple, list)):
                 for c in b:
-                    dig_list(c)
+                    self.dig_list(c)
             else:
                 # print type(b)
                 c = ast.literal_eval(str(b))
                 if isinstance(c, (set, tuple, list)):
-                    dig_list(c)
+                    self.dig_list(c)
                 else:
-                    print
-                    type(c), c
+                    print(type(c), c)
 
-        dig_list(a)
+    def get_description(self):
+        res=requests.get("%s/api/meta-data"%self.url,params=dict(instrument=self.instrument))
+        _js = json.loads(res.content)
+        a = ast.literal_eval(str(_js).replace('null', 'None'))
+
+
+            
+        self.dig_list(a)
 
 
 
     def get_prod_descriton(self):
         pass
+
+

@@ -17,7 +17,7 @@ from .api import DispatcherAPI
 class PolarDispatcher(DispatcherAPI):
 
     def __init__(self):
-        super(PolarDispatcher).__init__()
+        super(PolarDispatcher,self).__init__(instrument='polar')
 
 
 
@@ -32,12 +32,13 @@ class PolarDispatcher(DispatcherAPI):
         parameters_dic = dict(E1_keV=E1_keV, E2_keV=E2_keV, T1=T1_iso, T2=T2_iso,
                               query_type='Real', product_type='polar_lc',
                               src_name=src_name, time_bin=time_bin,
-                              time_bin_format=time_bin_format, instrument='polar', query_status='new',
+                              time_bin_format=time_bin_format, instrument=self.instrument, query_status='new',
                               off_line=False,
-                              run_asynch=True)
+                              run_asynch=False,
+                              session_id=self.generate_session_id())
 
 
-        res = requests.get("%s:/api" % self.url, params=dict(instrument=self.instrument))
+        res = requests.get("%s/run_analysis" % self.url, params=parameters_dic)
 
         lc_data = res.json()['products']['data']
 
