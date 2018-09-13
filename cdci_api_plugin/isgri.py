@@ -18,6 +18,7 @@ class IsgriDispatcher(DispatcherAPI):
         super(IsgriDispatcher,self).__init__(instrument='polar')
 
 
+    
     def get_lc(self,
                      src_name='4U 1700-377',
                      time_bin=500,
