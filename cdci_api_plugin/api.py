@@ -42,6 +42,16 @@ class DispatcherAPI(object):
         pass
 
 
+    def get_lc(self):
+        raise RuntimeError('method to implement in the derived ')
+
+    def request(self,parameters_dict,handle='run_analysis',url=None):
+        if url is None:
+            url=self.url
+
+
+        return requests.get("%s/run_analysis" %(handle, url), params=parameters_dict)
+
     def dig_list(self,b):
             if isinstance(b, (set, tuple, list)):
                 for c in b:

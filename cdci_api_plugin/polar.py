@@ -8,7 +8,6 @@ from builtins import (bytes, str, open, super, range,
 
 __author__ = "Andrea Tramacere"
 
-import requests
 
 
 from .api import DispatcherAPI
@@ -39,7 +38,7 @@ class PolarDispatcher(DispatcherAPI):
         :param E2_keV: E max in keV
         :return:
         """
-        parameters_dic = dict(E1_keV=E1_keV, E2_keV=E2_keV, T1=T1_iso, T2=T2_iso,
+        parameters_dict = dict(E1_keV=E1_keV, E2_keV=E2_keV, T1=T1_iso, T2=T2_iso,
                               query_type='Real', product_type='polar_lc',
                               src_name=src_name, time_bin=time_bin,
                               time_bin_format=time_bin_format, instrument=self.instrument, query_status='new',
@@ -48,7 +47,8 @@ class PolarDispatcher(DispatcherAPI):
                               session_id=self.generate_session_id())
 
 
-        res = requests.get("%s/run_analysis" % self.url, params=parameters_dic)
+        res =self.request(parameters_dict)
+
 
         lc_data = res.json()['products']['data']
 
