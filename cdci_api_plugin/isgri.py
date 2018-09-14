@@ -14,8 +14,9 @@ from .api import DispatcherAPI
 
 class IsgriDispatcher(DispatcherAPI):
 
-    def __init__(self):
-        super(IsgriDispatcher,self).__init__(instrument='polar')
+    def __init__(self, host=None, port=None):
+
+        super(IsgriDispatcher, self).__init__(instrument='isgri', host=host, port=port)
 
 
     
@@ -28,12 +29,13 @@ class IsgriDispatcher(DispatcherAPI):
                      upload_data=None,
                      T1_iso='2003-03-15T23:27:40.0',
                      T2_iso='2003-03-16T00:03:15.0',
-                     RA_user_cat=[205.09872436523438],
-                     Dec_user_cat=[83.6317138671875],
+                     RA_user_cat=[255.986542],
+                     Dec_user_cat=[-37.844167],
                      detection_threshold=5.0,
-                     radius=25,
+                     radius=15,
                      E1_keV=20.,
-                     E2_keV=40.):
+                     E2_keV=40.,
+                     osa_version='OSA10.2'):
 
         """
 
@@ -63,26 +65,40 @@ class IsgriDispatcher(DispatcherAPI):
                             T2=T2_iso,
                             RA=RA_user_cat[0],
                             DEC=Dec_user_cat[0],
-                            radius=radius,scw_list=scw_list,
+                            radius=radius,
+                            scw_list=scw_list,
                             image_scale_min=1,
                             session_id=self.generate_session_id(),
                             query_type=query_type,
+                            query_status='new',
                             product_type='isgri_lc',
                             detection_threshold=detection_threshold,
                             src_name=src_name,
                             time_bin=time_bin,
                             time_bin_format=time_bin_format,
                             run_asynch=True,
-                            user_catalog_dictionary=None)
+                            instrument=self.instrument,
+                            off_line=False,
+                            user_catalog_dictionary=None,
+                            osa_version=osa_version)
 
         res = self.request(parameters_dict)
 
-        lc_data = res.json()['products']['data']
+        _lcs_data = res.json()['products']['data']
+        _out=[]
 
-        rate = lc_data['rate']
-        time = lc_data['time']
-        rate_err = lc_data['rate_err']
+        if type(_lcs_data)==list:
+            for _lc_data in _lcs_data:
+                _data_dict={}
+                _data_dict['name'] = _lc_data['name']
+                _data_dict['mjdref'] = _lc_data['mjdref']
+                _data_dict['rate'] = _lc_data['rate']
+                _data_dict['time'] = _lc_data['time']
+                _data_dict['time_del'] = _lc_data['time_del']
+                _data_dict['rate_err'] = _lc_data['rate_err']
+
+                _out.append(_data_dict)
 
 
-        return rate,time,rate_err
+        return _out
 

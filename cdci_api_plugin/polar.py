@@ -15,8 +15,10 @@ from .api import DispatcherAPI
 
 class PolarDispatcher(DispatcherAPI):
 
-    def __init__(self):
-        super(PolarDispatcher,self).__init__(instrument='polar')
+    def __init__(self,host=None,port=None):
+
+
+        super(PolarDispatcher,self).__init__(instrument='polar',host=host,port=port)
 
 
 
@@ -38,13 +40,19 @@ class PolarDispatcher(DispatcherAPI):
         :param E2_keV: E max in keV
         :return:
         """
-        parameters_dict = dict(E1_keV=E1_keV, E2_keV=E2_keV, T1=T1_iso, T2=T2_iso,
-                              query_type='Real', product_type='polar_lc',
-                              src_name=src_name, time_bin=time_bin,
-                              time_bin_format=time_bin_format, instrument=self.instrument, query_status='new',
-                              off_line=False,
-                              run_asynch=False,
-                              session_id=self.generate_session_id())
+        parameters_dict = dict(E1_keV=E1_keV,
+                               E2_keV=E2_keV,
+                               T1=T1_iso,
+                               T2=T2_iso,
+                               query_type='Real',
+                               product_type='polar_lc',
+                               src_name=src_name, time_bin=time_bin,
+                               time_bin_format=time_bin_format,
+                               instrument=self.instrument,
+                               query_status='new',
+                               off_line=False,
+                               run_asynch=False,
+                               session_id=self.generate_session_id())
 
 
         res =self.request(parameters_dict)
@@ -57,5 +65,5 @@ class PolarDispatcher(DispatcherAPI):
         rate_err = lc_data['rate_err']
 
 
-        return rate,time,rate_err
+        return rate,time,rate_err,res
 
