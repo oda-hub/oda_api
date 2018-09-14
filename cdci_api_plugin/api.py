@@ -58,15 +58,15 @@ class DispatcherAPI(object):
         res= requests.get("%s/%s" %(url, handle), params=parameters_dict)
         query_status = res.json()['query_status']
         job_id = res.json()['job_monitor']['job_id']
-
+        print ('working remotely, please wait')
         while query_status != 'done' and query_status != 'failed':
             parameters_dict['query_status']=query_status
             parameters_dict['job_id'] = job_id
             res = requests.get("%s/%s" % (url,handle), params=parameters_dict)
             query_status =res.json()['query_status']
             job_id = res.json()['job_monitor']['job_id']
-            print ('query status',query_status)
-            print ('job_id', job_id)
+            #print ('query status',query_status)
+            #print ('job_id', job_id)
 
             time.sleep(5)
 
