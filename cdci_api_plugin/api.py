@@ -165,7 +165,7 @@ class DispatcherAPI(object):
         self.dig_list(a)
 
     def get_instruments_list(self):
-        print ('instr',self.instrument)
+        #print ('instr',self.instrument)
         res = requests.get("%s/api/instr-list" % self.url,params=dict(instrument=self.instrument))
         _js = json.loads(res.content)
         a = ast.literal_eval(str(_js).replace('null', 'None'))
