@@ -22,7 +22,7 @@ class Request(object):
 
 class DispatcherAPI(object):
 
-    def __init__(self,instrument,host='10.194.169.161',port=32784):
+    def __init__(self,instrument='mock',host='10.194.169.161',port=32784):
 
         self.host=host
         self.port=port
@@ -36,6 +36,9 @@ class DispatcherAPI(object):
             self.url += ":%d" % (port)
 
 
+
+
+
     def generate_session_id(self,size=16):
         chars = string.ascii_uppercase + string.digits
         return ''.join(random.choice(chars) for _ in range(size))
@@ -43,12 +46,9 @@ class DispatcherAPI(object):
     def set_instr(self,instrument):
         self.instrument=instrument
 
-    def set_prod(self):
-        pass
 
 
-    def get_lc(self):
-        raise RuntimeError('method to implement in the derived ')
+
 
     def request(self,parameters_dict,handle='run_analysis',url=None):
         if url is None:
@@ -93,30 +93,91 @@ class DispatcherAPI(object):
         print('exit_status, error_message', res.json()['exit_status']['error_message'])
         print('exit_status, debug_message', res.json()['exit_status']['debug_message'])
 
-    def dig_list(self,b):
-            if isinstance(b, (set, tuple, list)):
-                for c in b:
-                    self.dig_list(c)
-            else:
-                # print type(b)
-                c = ast.literal_eval(str(b))
-                if isinstance(c, (set, tuple, list)):
-                    self.dig_list(c)
-                else:
-                    print(type(c), c)
+    def dig_list(self,b,only_prod=False):
+        from astropy.table import Table
+        if isinstance(b, (set, tuple, list)):
+            for c in b:
+                self.dig_list(c)
+        else:
+            #print('not list',type(b))
+            try:
+                b = ast.literal_eval(str(b))
+                #print(type(b))
+            except:
+                #print ('except')
+                return str(b)
+            if isinstance(b, dict):
+                #print('dict')
+                _s = ''
+                for k, v in b.items():
 
-    def get_description(self):
-        res=requests.get("%s/api/meta-data"%self.url,params=dict(instrument=self.instrument))
+                    if 'query_name' == k or 'instrumet' == k and only_prod==False:
+                        print('')
+                        print('--------------')
+                        _s += '%s' % k + ': ' + v
+                    if 'product_name' == k :
+                        _s += ' %s' % k + ': ' + v
+
+                for k in ['name', 'value', 'units']:
+                    if k in b.keys():
+                        _s += ' %s' % k + ': '
+                        if b[k] is not None:
+                            _s += '%s,' % str(b[k])
+                        else:
+                            _s += 'None,'
+                        _s += ' '
+                #if 'prod_dict' in b.keys():
+                #    print ('product dict',b)
+
+                if _s != '':
+                    print(_s)
+            else:
+                self.dig_list(b)
+
+
+
+
+
+
+
+    def get_instrument_description(self,instrument=None):
+        if instrument is None:
+            instrument=self.instrument
+
+        res=requests.get("%s/api/meta-data"%self.url,params=dict(instrument=instrument))
         _js = json.loads(res.content)
         a = ast.literal_eval(str(_js).replace('null', 'None'))
+        self.dig_list(a)
+        #for _d in a[0]:
+        #    if isinstance(_d,list):
+         #       for _d1 in _d:
+          #          print('a',_d1)
+          #  else:
+          #      print ('b',_d,type(_d))
 
 
-
+    def get_product_description(self,instrument,product_name):
+        res = requests.get("%s/api/meta-data" % self.url, params=dict(instrument=instrument,product_type=product_name))
+        _js = json.loads(res.content)
+        a = ast.literal_eval(str(_js).replace('null', 'None'))
+        print('--------------')
+        print ('parameters for  product',product_name,'and instrument',instrument)
         self.dig_list(a)
 
+    def get_instruments_list(self):
+        print ('instr',self.instrument)
+        res = requests.get("%s/api/instr-list" % self.url,params=dict(instrument=self.instrument))
+        _js = json.loads(res.content)
+        a = ast.literal_eval(str(_js).replace('null', 'None'))
+        self.dig_list(a)
+        return a
 
 
-    def get_prod_descriton(self):
-        pass
+    def get_product(self,product,instrument, **kwargs):
+        kwargs['instrument'] = instrument
+        kwargs['product'] = product
 
+        res = self.request(kwargs)
+
+        return res.json()['products']['data']
 
