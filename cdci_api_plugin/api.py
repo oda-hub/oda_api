@@ -173,10 +173,14 @@ class DispatcherAPI(object):
         return a
 
 
-    def get_product(self,product,instrument, **kwargs):
+    def get_product(self,product,instrument ,asynch=True, **kwargs):
         kwargs['instrument'] = instrument
-        kwargs['product'] = product
-
+        kwargs['product_type'] = product
+        kwargs['query_type'] = 'Real'
+        kwargs['off_line'] = False,
+        kwargs['run_asynch'] = asynch,
+        kwargs['query_status'] = 'new',
+        kwargs['session_id'] = self.generate_session_id()
         res = self.request(kwargs)
 
         return res.json()['products']['data']
