@@ -9,7 +9,7 @@ __author__ = "Andrea Tramacere"
 
 
 
-from .api import DispatcherAPI
+from cdci_api_plugin.api import DispatcherAPI
 
 
 class IsgriDispatcher(DispatcherAPI):
