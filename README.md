@@ -1,11 +1,11 @@
-cdci_api_plugin
+oda_api
 ==========================================
 *API for cdci_data_analysis*
 
 What's the license?
 -------------------
 
-cdci_api_plugin is distributed under the terms of The MIT License.
+oda_api is distributed under the terms of The MIT License.
 
 Who's responsible?
 -------------------
