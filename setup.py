@@ -31,14 +31,14 @@ print ('packs',packs)
 include_package_data=True
 
 scripts_list=glob.glob('./bin/*')
-setup(name='cdci_api_plugin',
+setup(name='oda_api',
       version=1.0,
-      description='A API plugin  for CDCI online data analysis',
+      description='API plugin  for CDCI online data analysis',
       author='Andrea Tramacere',
       author_email='andrea.tramacere@unige.ch',
       scripts=scripts_list,
       packages=packs,
-      package_data={'cdci_api_plugin':['config_dir/*']},
+      package_data={'oda_api':['config_dir/*']},
       include_package_data=True,
       install_requires=install_req,
 )
