@@ -13,6 +13,7 @@ import json
 import  random
 import string
 import time
+from .data_products import NumpyDataProduct
 
 class Request(object):
     def __init__(self,):
@@ -188,10 +189,10 @@ class DispatcherAPI(object):
 
 
 
-    def get_product(self,product,instrument ,verbose=False,dry_run=False, **kwargs):
+    def get_product(self,product,instrument ,verbose=False,dry_run=False,product_type='Real', **kwargs):
         kwargs['instrument'] = instrument
         kwargs['product_type'] = product
-        kwargs['query_type'] = 'Real'
+        kwargs['query_type'] = product_type
         kwargs['off_line'] = False,
         kwargs['query_status'] = 'new',
         kwargs['verbose'] = verbose,
@@ -201,7 +202,15 @@ class DispatcherAPI(object):
         res = self.request(kwargs)
 
         if dry_run  ==False:
-            return res.json()['products']['data']
+            #print ('-->npd', 'numpy_data_product' in res.json()['products'].keys())
+            #print ('-->ndpl',    'numpy_data_product_list'  in res.json()['products'].keys())
+            data=None
+            if  'numpy_data_product'  in res.json()['products'].keys():
+                data= NumpyDataProduct.from_json(res.json()['products']['numpy_data_product'])
+            elif  'numpy_data_product_list'  in res.json()['products'].keys():
+
+                data= [NumpyDataProduct.from_json(d) for d in res.json()['products']['numpy_data_product_list']]
         else:
             self._decode_res_json(res.json()['products']['instrumet_parameters'])
 
+        return data
