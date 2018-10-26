@@ -20,8 +20,7 @@ from json_tricks import numpy_encode,dumps,loads,numeric_types_hook,hashodict,js
 from astropy.io import fits as pf
 import json
 from astropy.utils.misc import JsonCustomEncoder
-#import jsonpickle
-# must
+
 import  numpy
 import  base64
 import  pickle
@@ -170,7 +169,7 @@ class NumpyDataUnit(object):
         return dt
 
 
-    def encode(self,use_pickle=False,use_gzip=False):
+    def encode(self,use_pickle=False,use_gzip=False,to_json=False):
 
         _data = []
         _meata_d=[]
@@ -199,21 +198,33 @@ class NumpyDataUnit(object):
             else:
                 _d= json.dumps(self.data, cls=JsonCustomEncoder)
 
-            #print('enc ->', type(_binarys))
 
+        _o_dict = {'data': _d,
+                   'dt': _dt,
+                   'name': self.name,
+                   'header': self.header,
+                   'binarys': _binarys,
+                   'meta_data': self.meta_data,
+                   'hdu_type': self.hdu_type}
 
-        return dumps({'data': _d,
-                      'dt':_dt,
-                      'name': self.name,
-                      'header': self.header,
-                      'binarys':_binarys,
-                      'meta_data': self.meta_data,
-                      'hdu_type': self.hdu_type})
+        if to_json == True:
+            _o_dict=json.dump(_o_dict)
+
+        return   _o_dict
 
 
     @classmethod
-    def from_json(cls,encoded_obj,use_gzip=False):
-        encoded_obj=eval(encoded_obj)
+    def decode(cls,encoded_obj,use_gzip=False,from_json=False):
+        #encoded_obj=eval(encoded_obj)
+        #encoded_obj=json.loads(encoded_obj)
+        #print('-->encoded_obj',type(encoded_obj))
+
+        if from_json == False:
+            try:
+                encoded_obj = json.loads(encoded_obj)
+            except:
+                pass
+
         encoded_data = encoded_obj['data']
         encoded_dt=encoded_obj['dt']
         encoded_header = encoded_obj['header']
@@ -334,14 +345,17 @@ class NumpyDataProduct(object):
 
 
 
-    def encode(self,use_pickle=True,use_gzip=False):
+    def encode(self,use_pickle=True,use_gzip=False,to_json=False):
         _enc=[]
         #print('use_gzip',use_gzip)
         for ID, ed in enumerate(self.data_uint):
             #print('data_uint',ID)
             _enc.append(self.data_uint[ID].encode(use_pickle=use_pickle,use_gzip=use_gzip))
-        #print ('enc done')
-        return dumps({'data_unit_list':_enc,'name':self.name,'meta_data':dumps(self.meta_data)})
+        _o_dict={'data_unit_list':_enc,'name':self.name,'meta_data':dumps(self.meta_data)}
+        if to_json==True:
+            return json.dumps(_o_dict)
+
+        return _o_dict
 
 
 
@@ -375,9 +389,13 @@ class NumpyDataProduct(object):
         return cls(data_uint=[NumpyDataUnit.from_fits_hdu(h) for h in  hdul],meta_data=meta_data,name=name)
 
     @classmethod
-    def from_json(cls,encoded_obj):
+    def decode(cls,encoded_obj,from_json=False):
         if encoded_obj is not None:
-            encoded_obj = eval(sanitize_encoded(encoded_obj))
+            if from_json==False:
+                try:
+                    encoded_obj = json.loads(sanitize_encoded(encoded_obj))
+                except:
+                    pass
 
             encoded_data_unit_list = encoded_obj['data_unit_list']
             encoded_name = encoded_obj['name']
@@ -386,7 +404,7 @@ class NumpyDataProduct(object):
             _data_unit_list=[]
             #print('encoded_data_unit_list',encoded_data_unit_list)
             for enc_data_unit in encoded_data_unit_list:
-                _data_unit_list.append(NumpyDataUnit.from_json(enc_data_unit))
+                _data_unit_list.append(NumpyDataUnit.decode(enc_data_unit,from_json=False))
         else:
             _data_unit_list=[]
             encoded_name=None

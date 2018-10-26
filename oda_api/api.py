@@ -202,15 +202,20 @@ class DispatcherAPI(object):
 
         res = self.request(kwargs)
         data = None
+
+        js=json.loads(res.content)
+        #print('js-->',type(js))
         if dry_run  ==False:
             #print ('-->npd', 'numpy_data_product' in res.json()['products'].keys())
             #print ('-->ndpl',    'numpy_data_product_list'  in res.json()['products'].keys())
 
             if  'numpy_data_product'  in res.json()['products'].keys():
-                data= NumpyDataProduct.from_json(res.json()['products']['numpy_data_product'])
+                #data= NumpyDataProduct.from_json(res.json()['products']['numpy_data_product'])
+                data = NumpyDataProduct.decode(js['products']['numpy_data_product'])
             elif  'numpy_data_product_list'  in res.json()['products'].keys():
 
-                data= [NumpyDataProduct.from_json(d) for d in res.json()['products']['numpy_data_product_list']]
+                #data= [NumpyDataProduct.from_json(d) for d in res.json()['products']['numpy_data_product_list']]
+                data = [NumpyDataProduct.decode(d) for d in js['products']['numpy_data_product_list']]
         else:
             self._decode_res_json(res.json()['products']['instrumet_parameters'])
 
