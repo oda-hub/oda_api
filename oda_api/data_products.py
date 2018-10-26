@@ -23,16 +23,22 @@ from astropy.utils.misc import JsonCustomEncoder
 #import jsonpickle
 # must
 import  numpy
-
-
-
-
-
+import  base64
+import  pickle
+import gzip
+from numpy import nan,inf
+from sys import version_info
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 def sanitize_encoded(d):
     d = d.replace('null', 'None')
     d = d.replace('true', 'True')
     d = d.replace('false', 'False')
+    d = d.replace('NaN', 'nan')
+    d = d.replace('Infinity', 'inf')
     return d
 
 
@@ -57,7 +63,7 @@ def _chekc_enc_data(data):
 
 class NumpyDataUnit(object):
 
-    def __init__(self,data,data_header={},meta_data={},hdu_type='',name=''):
+    def __init__(self,data,data_header={},meta_data={},hdu_type=None,name=''):
         self._hdu_type_list_ = ['primary', 'image', 'table', 'bintable']
 
         self.name=name
@@ -164,63 +170,91 @@ class NumpyDataUnit(object):
         return dt
 
 
-    def encode(self):
+    def encode(self,use_pickle=False,use_gzip=False):
 
         _data = []
         _meata_d=[]
         _kw_d = []
+        _d = None
+        _dt = None
+        _binarys = None
         if self.data is not None:
-            print(self.data[0])
-            _dt= numpy_encode(numpy.array(self.data)  )['dtype']
-            _d= json.dumps(self.data, cls=JsonCustomEncoder)
-            #print(_d)
-            print('enc dtype', _dt)
-            #_d = numpy_encode(self.data)
-            #print('encoded', _d['__ndarray__'])
-            #print('encoded', dumps(_d['__ndarray__']))
-        else:
+            _dt= numpy_encode(numpy.array(self.data))['dtype']
 
-          _d = None
-          _dt=None
+            if use_pickle is True:
+
+                if use_gzip==True:
+                    print ('gizziping')
+                    out_file = StringIO()
+                    gzip_file = gzip.GzipFile(fileobj=out_file, mode='wb')
+
+
+                    gzip_file.write(pickle.dumps(numpy.array(self.data)))
+                    _binarys = base64.b64encode(out_file.getvalue())
+                    gzip_file.close()
+                else:
+                    _binarys= base64.b64encode(pickle.dumps(numpy.array(self.data),2))
+
+
+            else:
+                _d= json.dumps(self.data, cls=JsonCustomEncoder)
+
+            #print('enc ->', type(_binarys))
+
+
         return dumps({'data': _d,
                       'dt':_dt,
                       'name': self.name,
                       'header': self.header,
+                      'binarys':_binarys,
                       'meta_data': self.meta_data,
                       'hdu_type': self.hdu_type})
 
 
     @classmethod
-    def from_json(cls,encoded_obj):
-        print ('--- decoding')
+    def from_json(cls,encoded_obj,use_gzip=False):
         encoded_obj=eval(encoded_obj)
-        #print(type(encoded_obj),encoded_obj.keys())
         encoded_data = encoded_obj['data']
         encoded_dt=encoded_obj['dt']
         encoded_header = encoded_obj['header']
         encoded_meta_data=encoded_obj['meta_data']
         _name=encoded_obj['name']
         _hdu_type=encoded_obj['hdu_type']
+        _binarys=encoded_obj['binarys']
 
+        if _binarys is not None:
+            #print('dec ->', type(_binarys))
+            in_file = StringIO()
+            if version_info[0] > 2:
+                _binarys=base64.b64decode(_binarys)
 
-        if encoded_data is not None:
-            #print('_name', encoded_data['dtype'])
-            #_#data=pickle.loads(encoded_data)
-            #print('encoded_data',type(encoded_data),c encoded_data['dtype'#)
-            #encoded_data=eval(encoded_data)
-            #print (type(encoded_data['__ndarray__']))
+            else:
+                _binarys = base64.decodestring(_binarys)
+
+            if use_gzip ==True:
+                in_file.write(_binarys)
+                in_file.seek(0)
+
+                gzip_file = gzip.GzipFile(fileobj=in_file, mode='rb')
+                _data = gzip_file.read()
+                _data = _data.decode('utf-8')
+                _data = pickle.loads(_data)
+                gzip_file.close()
+            else:
+                if version_info[0] > 2:
+                    _data=pickle.loads(_binarys,encoding='bytes')
+                else:
+                    _data = pickle.loads(_binarys)
+
+        elif encoded_data is not None:
+            #print('using JsonCustomEncoder')
             encoded_data=eval(encoded_data)
-            print('dec dtype', cls._eval_dt(encoded_dt))
+
             for ID,c in enumerate(encoded_data):
                 encoded_data[ID]=tuple(c)
-            ##print(encoded_dt)
-            #print(encoded_data['__ndarray__'])
-            _data=numpy.asanyarray(encoded_data,dtype=cls._eval_dt(encoded_dt))
-            #_data=loads(encoded_data)
 
-            #print('_data shape',encoded_data['__ndarray__'],cls._eval_dt(encoded_data['dtype']))
-            #d1=json_numpy_obj_hook(encoded_data)
-            #print(_data[0])
+            _data=numpy.asanyarray(encoded_data,dtype=cls._eval_dt(encoded_dt))
+
         else:
             _data=None
 
@@ -261,11 +295,16 @@ class NumpyDataProduct(object):
         return self.data_uint[ID]
 
     def get_data_unit_by_name(self,name):
+        _du=None
         for du in self.data_uint:
             if du.name == name:
-               return (du)
 
-        return None
+                _du=du
+            print('--> NAME',du.name)
+
+        #TODO raise RuntimeError if _du is None
+
+        return _du
 
     def _seta_data(self,data):
         if type(data) == list:
@@ -295,13 +334,13 @@ class NumpyDataProduct(object):
 
 
 
-    def encode(self):
+    def encode(self,use_pickle=True,use_gzip=False):
         _enc=[]
-        print('enc start')
+        #print('use_gzip',use_gzip)
         for ID, ed in enumerate(self.data_uint):
-            print('data_uint',ID)
-            _enc.append(self.data_uint[ID].encode())
-        print ('enc done')
+            #print('data_uint',ID)
+            _enc.append(self.data_uint[ID].encode(use_pickle=use_pickle,use_gzip=use_gzip))
+        #print ('enc done')
         return dumps({'data_unit_list':_enc,'name':self.name,'meta_data':dumps(self.meta_data)})
 
 
@@ -337,17 +376,21 @@ class NumpyDataProduct(object):
 
     @classmethod
     def from_json(cls,encoded_obj):
-        encoded_obj = eval(sanitize_encoded(encoded_obj))
+        if encoded_obj is not None:
+            encoded_obj = eval(sanitize_encoded(encoded_obj))
 
-        encoded_data_unit_list = encoded_obj['data_unit_list']
-        encoded_name = encoded_obj['name']
-        encoded_meta_data = encoded_obj['meta_data']
+            encoded_data_unit_list = encoded_obj['data_unit_list']
+            encoded_name = encoded_obj['name']
+            encoded_meta_data = encoded_obj['meta_data']
 
-        _data_unit_list=[]
-        #print('encoded_data_unit_list',encoded_data_unit_list)
-        for enc_data_unit in encoded_data_unit_list:
-            _data_unit_list.append(NumpyDataUnit.from_json(enc_data_unit))
-
+            _data_unit_list=[]
+            #print('encoded_data_unit_list',encoded_data_unit_list)
+            for enc_data_unit in encoded_data_unit_list:
+                _data_unit_list.append(NumpyDataUnit.from_json(enc_data_unit))
+        else:
+            _data_unit_list=[]
+            encoded_name=None
+            encoded_meta_data={}
 
 
 

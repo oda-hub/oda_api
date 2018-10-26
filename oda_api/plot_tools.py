@@ -26,11 +26,17 @@ from matplotlib.widgets import Slider, Button, RadioButtons
 
 class OdaImage(object):
 
-    def __init__(self):
-        pass
+    def __init__(self,data):
+        self.data = data
 
+        self.meta = data
 
-    def show(self,data):
+    def show(self,data=None,meta=None,unit_ID=0):
+        if data is None:
+            data=self.data.data_uint[unit_ID].data
+        if meta is None:
+            self.meta=self.data.meta_data
+
         fig = plt.figure(figsize=(8 ,6))
         ax = fig.subplots(1,1)
         self.line =ax.imshow(data ,interpolation='nearest')
@@ -46,19 +52,27 @@ class OdaImage(object):
 
     def update(self,x):
         #print('x',x)
-        self.line.set_clim(self.smin.val,self.smax.val)
+        if self.smin.val<self.smax.val:
+            self.line.set_clim(self.smin.val,self.smax.val)
 
 
 
 
 class OdaLightCurve(object):
 
-    def __init__(self):
-        pass
+    def __init__(self,data):
+        self.data =data
 
 
-    def show(self,data,meta):
-        print(data,meta['time'],data[meta['time']])
+
+    def show(self,data=None,meta=None,unit_ID=0):
+
+        if data is None:
+            data=self.data.data_uint[unit_ID].data
+        if meta is None:
+            meta = self.data.meta_data
+
+        #print(data,meta['time'],data[meta['time']])
         fig = plt.figure(figsize=(8 ,6))
         ax = fig.subplots(1,1)
         x = data[meta['time']]

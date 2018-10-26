@@ -62,8 +62,8 @@ class DispatcherAPI(object):
     def request(self,parameters_dict,handle='run_analysis',url=None):
         if url is None:
             url=self.url
-
-        print('waiting for remote response, please wait')
+        parameters_dict['api']='True'
+        print('waiting for remote response, please wait',handle,url)
         res= requests.get("%s/%s" %(url, handle), params=parameters_dict)
         query_status = res.json()['query_status']
         job_id = res.json()['job_monitor']['job_id']
@@ -72,6 +72,7 @@ class DispatcherAPI(object):
         while query_status != 'done' and query_status != 'failed':
             parameters_dict['query_status']=query_status
             parameters_dict['job_id'] = job_id
+            print('waiting for remote response, please wait', handle, url)
             res = requests.get("%s/%s" % (url,handle), params=parameters_dict)
             query_status =res.json()['query_status']
             job_id = res.json()['job_monitor']['job_id']
@@ -200,11 +201,11 @@ class DispatcherAPI(object):
         kwargs['dry_run'] = dry_run,
 
         res = self.request(kwargs)
-
+        data = None
         if dry_run  ==False:
             #print ('-->npd', 'numpy_data_product' in res.json()['products'].keys())
             #print ('-->ndpl',    'numpy_data_product_list'  in res.json()['products'].keys())
-            data=None
+
             if  'numpy_data_product'  in res.json()['products'].keys():
                 data= NumpyDataProduct.from_json(res.json()['products']['numpy_data_product'])
             elif  'numpy_data_product_list'  in res.json()['products'].keys():
@@ -212,5 +213,7 @@ class DispatcherAPI(object):
                 data= [NumpyDataProduct.from_json(d) for d in res.json()['products']['numpy_data_product_list']]
         else:
             self._decode_res_json(res.json()['products']['instrumet_parameters'])
+
+        del(res)
 
         return data
