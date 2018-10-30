@@ -13,6 +13,8 @@ import json
 import  random
 import string
 import time
+from itertools import cycle
+
 from .data_products import NumpyDataProduct
 
 class Request(object):
@@ -44,6 +46,7 @@ class DispatcherAPI(object):
         if port is not None:
             self.url += ":%d" % (port)
 
+        self._progress_iter = cycle(['|', '/', '-', '\\'])
 
 
 
@@ -57,6 +60,8 @@ class DispatcherAPI(object):
 
 
 
+    def _progess_bar(self):
+        print("\r %s the job is working remotely, please wait "%(next(self._progress_iter)),end='')
 
 
     def request(self,parameters_dict,handle='run_analysis',url=None):
@@ -67,19 +72,23 @@ class DispatcherAPI(object):
         res= requests.get("%s/%s" %(url, handle), params=parameters_dict)
         query_status = res.json()['query_status']
         job_id = res.json()['job_monitor']['job_id']
+
         if query_status != 'done' and query_status != 'failed':
-            print ('the job is working remotely, please wait')
+            print ('the has been submitted on the remote server')
+
         while query_status != 'done' and query_status != 'failed':
             parameters_dict['query_status']=query_status
             parameters_dict['job_id'] = job_id
-            print('waiting for remote response, please wait', handle, url)
             res = requests.get("%s/%s" % (url,handle), params=parameters_dict)
             query_status =res.json()['query_status']
             job_id = res.json()['job_monitor']['job_id']
-            #print ('query status',query_status)
-            #print ('job_id', job_id)
 
-            time.sleep(5)
+            self._progess_bar()
+
+
+            time.sleep(2)
+
+        print("\r", end="")
 
         if  res.json()['exit_status']['status']!=0:
             self.failure_report(res)

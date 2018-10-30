@@ -33,7 +33,7 @@ class OdaImage(object):
 
     def show(self,data=None,meta=None,unit_ID=0):
         if data is None:
-            data=self.data.data_uint[unit_ID].data
+            data=self.data.data_unit[unit_ID].data
         if meta is None:
             self.meta=self.data.meta_data
 
@@ -68,7 +68,7 @@ class OdaLightCurve(object):
     def show(self,data=None,meta=None,unit_ID=0):
 
         if data is None:
-            data=self.data.data_uint[unit_ID].data
+            data=self.data.data_unit[unit_ID].data
         if meta is None:
             meta = self.data.meta_data
 

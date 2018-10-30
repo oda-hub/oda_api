@@ -62,7 +62,7 @@ def _chekc_enc_data(data):
 
 class NumpyDataUnit(object):
 
-    def __init__(self,data,data_header={},meta_data={},hdu_type=None,name=''):
+    def __init__(self,data,data_header={},meta_data={},hdu_type=None,name='table'):
         self._hdu_type_list_ = ['primary', 'image', 'table', 'bintable']
 
         self.name=name
@@ -277,11 +277,11 @@ class NumpyDataUnit(object):
 
 class NumpyDataProduct(object):
 
-    def __init__(self,data_uint,name='',meta_data={}):
+    def __init__(self, data_unit, name='', meta_data={}):
 
         self.name=name
 
-        self.data_uint=self._seta_data(data_uint)
+        self.data_unit=self._seta_data(data_unit)
         self._chekc_dict(meta_data)
         self.meta_data=meta_data
 
@@ -290,9 +290,9 @@ class NumpyDataProduct(object):
         print('------------------------------')
         print('name:',self.name)
         print('meta_data',self.meta_data.keys())
-        print ('number of data units',len(self.data_uint))
+        print ('number of data units',len(self.data_unit))
         print ('------------------------------')
-        for ID,du in enumerate(self.data_uint):
+        for ID,du in enumerate(self.data_unit):
             print('data uniti',ID,',name:',du.name)
 
     def show_meta(self):
@@ -303,11 +303,11 @@ class NumpyDataProduct(object):
 
 
     def get_data_unit(self,ID   ):
-        return self.data_uint[ID]
+        return self.data_unit[ID]
 
     def get_data_unit_by_name(self,name):
         _du=None
-        for du in self.data_uint:
+        for du in self.data_unit:
             if du.name == name:
 
                 _du=du
@@ -348,9 +348,9 @@ class NumpyDataProduct(object):
     def encode(self,use_pickle=True,use_gzip=False,to_json=False):
         _enc=[]
         #print('use_gzip',use_gzip)
-        for ID, ed in enumerate(self.data_uint):
-            #print('data_uint',ID)
-            _enc.append(self.data_uint[ID].encode(use_pickle=use_pickle,use_gzip=use_gzip))
+        for ID, ed in enumerate(self.data_unit):
+            #print('data_unit',ID)
+            _enc.append(self.data_unit[ID].encode(use_pickle=use_pickle,use_gzip=use_gzip))
         _o_dict={'data_unit_list':_enc,'name':self.name,'meta_data':dumps(self.meta_data)}
         if to_json==True:
             return json.dumps(_o_dict)
@@ -362,7 +362,7 @@ class NumpyDataProduct(object):
 
     def to_fits_hdu_list(self):
         _hdul=pf.HDUList()
-        for ID,_d in enumerate(self.data_uint):
+        for ID,_d in enumerate(self.data_unit):
             _hdul.append(_d.to_fits_hdu())
         return _hdul
 
@@ -386,7 +386,7 @@ class NumpyDataProduct(object):
                     _hdul.append(hdu)
             hdul=_hdul
 
-        return cls(data_uint=[NumpyDataUnit.from_fits_hdu(h) for h in  hdul],meta_data=meta_data,name=name)
+        return cls(data_unit=[NumpyDataUnit.from_fits_hdu(h) for h in  hdul],meta_data=meta_data,name=name)
 
     @classmethod
     def decode(cls,encoded_obj,from_json=False):
@@ -412,6 +412,6 @@ class NumpyDataProduct(object):
 
 
 
-        return cls(data_uint=_data_unit_list,name=encoded_name,meta_data=eval(encoded_meta_data))
+        return cls(data_unit=_data_unit_list,name=encoded_name,meta_data=eval(encoded_meta_data))
 
 
