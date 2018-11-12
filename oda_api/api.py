@@ -33,7 +33,7 @@ class RemoteException(Exception):
 
 class DispatcherAPI(object):
 
-    def __init__(self,instrument='mock',host='10.194.169.161',port=32784):
+    def __init__(self,instrument='mock',host='10.194.169.161',port=None):
 
         self.host=host
         self.port=port
