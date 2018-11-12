@@ -61,7 +61,7 @@ class DispatcherAPI(object):
 
 
     def _progess_bar(self,info=''):
-        print("\r %s the job is working remotely, please wait %s"%(next(self._progress_iter,info)),end='')
+        print("\r %s the job is working remotely, please wait %s"%(next(self._progress_iter),info),end='')
 
 
     def request(self,parameters_dict,handle='run_analysis',url=None):
