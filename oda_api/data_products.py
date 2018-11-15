@@ -57,7 +57,7 @@ def _chekc_enc_data(data):
 
 
 
-class BinaryData(object,file_path=None):
+class BinaryData(object):
 
     def __init__(self,file_path=None):
         self.file_path=file_path
