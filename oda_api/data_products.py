@@ -25,6 +25,7 @@ import  numpy
 import  base64
 import  pickle
 import gzip
+import  hashlib
 from numpy import nan,inf
 from sys import version_info
 try:
@@ -56,8 +57,22 @@ def _chekc_enc_data(data):
 
 
 
+class BinaryData(object,file_path=None):
 
+    def __init__(self,file_path=None):
+        self.file_path=file_path
 
+    def encode(self,file_path=None):
+        if file_path==None:
+            file_path=self.file_path
+        _file_binary = open(file_path, 'rb').read()
+        _file_b64 = base64.urlsafe_b64encode(_file_binary)
+        _file_b64_md5 = hashlib.md5(_file_binary).hexdigest()
+
+        return _file_b64,_file_b64_md5
+
+    def decode(self,encoded_obj):
+        return base64.urlsafe_b64decode(encoded_obj.encode('ascii', 'ignore'))
 
 
 class NumpyDataUnit(object):

@@ -82,14 +82,15 @@ class DispatcherAPI(object):
             res = requests.get("%s/%s" % (url,handle), params=parameters_dict)
             query_status =res.json()['query_status']
             job_id = res.json()['job_monitor']['job_id']
-            info='status%s - job_id%s'%(query_status,job_id)
+            info='status=%s - job_id=%s '%(query_status,job_id)
             self._progess_bar(info=info)
 
 
             time.sleep(2)
 
         print("\r", end="")
-
+        print('')
+        print('')
         if  res.json()['exit_status']['status']!=0:
             self.failure_report(res)
 
@@ -99,6 +100,7 @@ class DispatcherAPI(object):
         #print('products', res.json()['products'].keys())
 
         if query_status != 'failed':
+
             print('query done succesfully!')
         else:
 

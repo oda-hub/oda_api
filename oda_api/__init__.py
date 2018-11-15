@@ -26,9 +26,9 @@ for importer, modname, ispkg in pkgutil.walk_packages(path=[pkg_dir],
 
 conf_dir=os.path.dirname(__file__)+'/config_dir'
 
-evn_phat=os.environ.get('CDCI_API_PLUGIN_CONF_FILE')
+env_phat=os.environ.get('CDCI_API_PLUGIN_CONF_FILE')
 
-if conf_dir is not None:
-    conf_dir=conf_dir
+if env_phat is not None:
+    conf_dir=env_phat
 
 conf_file=os.path.join(conf_dir,'data_server_conf.yml')
