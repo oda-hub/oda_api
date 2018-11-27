@@ -15,7 +15,7 @@ import string
 import time
 from itertools import cycle
 
-from .data_products import NumpyDataProduct
+from .data_products import NumpyDataProduct,BinaryData
 
 class Request(object):
     def __init__(self,):
@@ -33,15 +33,19 @@ class RemoteException(Exception):
 
 class DispatcherAPI(object):
 
-    def __init__(self,instrument='mock',host='10.194.169.161',port=None):
+    def __init__(self,instrument='mock',host='10.194.169.161',port=None,cookies=None,protocol='http'):
 
         self.host=host
         self.port=port
-
+        self.cookies=cookies
         self.set_instr(instrument)
 
-
-        self.url= "http://%s"%(host)
+        if protocol=='http':
+            self.url= "http://%s"%(host)
+        elif protocol=='https':
+            self.url = "https://%s" % (host)
+        else:
+            raise  RuntimeError('protocol must be either http or https')
 
         if port is not None:
             self.url += ":%d" % (port)
@@ -65,11 +69,12 @@ class DispatcherAPI(object):
 
 
     def request(self,parameters_dict,handle='run_analysis',url=None):
+
         if url is None:
             url=self.url
         parameters_dict['api']='True'
         print('waiting for remote response, please wait',handle,url)
-        res= requests.get("%s/%s" %(url, handle), params=parameters_dict)
+        res= requests.get("%s/%s" %(url, handle), params=parameters_dict,cookies=self.cookies)
         query_status = res.json()['query_status']
         job_id = res.json()['job_monitor']['job_id']
 
@@ -79,7 +84,7 @@ class DispatcherAPI(object):
         while query_status != 'done' and query_status != 'failed':
             parameters_dict['query_status']=query_status
             parameters_dict['job_id'] = job_id
-            res = requests.get("%s/%s" % (url,handle), params=parameters_dict)
+            res = requests.get("%s/%s" % (url,handle), params=parameters_dict,cookies=self.cookies)
             query_status =res.json()['query_status']
             job_id = res.json()['job_monitor']['job_id']
             info='status=%s - job_id=%s '%(query_status,job_id)
@@ -179,14 +184,14 @@ class DispatcherAPI(object):
         if instrument is None:
             instrument=self.instrument
 
-        res=requests.get("%s/api/meta-data"%self.url,params=dict(instrument=instrument))
+        res=requests.get("%s/api/meta-data"%self.url,params=dict(instrument=instrument),cookies=self.cookies)
         self._decode_res_json(res)
 
 
 
 
     def get_product_description(self,instrument,product_name):
-        res = requests.get("%s/api/meta-data" % self.url, params=dict(instrument=instrument,product_type=product_name))
+        res = requests.get("%s/api/meta-data" % self.url, params=dict(instrument=instrument,product_type=product_name),cookies=self.cookies)
 
         print('--------------')
         print ('parameters for  product',product_name,'and instrument',instrument)
@@ -196,7 +201,7 @@ class DispatcherAPI(object):
 
     def get_instruments_list(self):
         #print ('instr',self.instrument)
-        res = requests.get("%s/api/instr-list" % self.url,params=dict(instrument=self.instrument))
+        res = requests.get("%s/api/instr-list" % self.url,params=dict(instrument=self.instrument),cookies=self.cookies)
         return self._decode_res_json(res)
 
 
@@ -227,6 +232,9 @@ class DispatcherAPI(object):
 
                 #data= [NumpyDataProduct.from_json(d) for d in res.json()['products']['numpy_data_product_list']]
                 data = [NumpyDataProduct.decode(d) for d in js['products']['numpy_data_product_list']]
+
+            if 'binary_data_product_list' in res.json()['products'].keys():
+                data.extend([BinaryData().decode(d) for d in js['products']['binary_data_product_list']])
         else:
             self._decode_res_json(res.json()['products']['instrumet_parameters'])
 
