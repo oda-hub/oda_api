@@ -13,6 +13,8 @@ import json
 import  random
 import string
 import time
+import os
+
 from itertools import cycle
 
 from .data_products import NumpyDataProduct,BinaryData
@@ -40,20 +42,26 @@ class DispatcherAPI(object):
         self.cookies=cookies
         self.set_instr(instrument)
 
-        if protocol=='http':
-            self.url= "http://%s"%(host)
-        elif protocol=='https':
-            self.url = "https://%s" % (host)
+        if self.host.startswith('htt'):
+            self.url=host
         else:
-            raise  RuntimeError('protocol must be either http or https')
+            if protocol=='http':
+                self.url= "http://%s"%(host)
+            elif protocol=='https':
+                self.url = "https://%s" % (host)
+            else:
+                raise  RuntimeError('protocol must be either http or https')
 
         if port is not None:
             self.url += ":%d" % (port)
 
         self._progress_iter = cycle(['|', '/', '-', '\\'])
 
-
-
+    @classmethod
+    def build_from_envs(cls):
+        cookies = dict(_oauth2_proxy=open(os.environ.get('HOME') + '/.oda-api-token').read().strip())
+        host_url = os.environ.get('DISP_URL')
+        return cls(host=host_url, instrument='mock', cookies=cookies, protocol='http')
 
     def generate_session_id(self,size=16):
         chars = string.ascii_uppercase + string.digits
@@ -225,16 +233,20 @@ class DispatcherAPI(object):
             #print ('-->npd', 'numpy_data_product' in res.json()['products'].keys())
             #print ('-->ndpl',    'numpy_data_product_list'  in res.json()['products'].keys())
 
+            data=[]
             if  'numpy_data_product'  in res.json()['products'].keys():
                 #data= NumpyDataProduct.from_json(res.json()['products']['numpy_data_product'])
-                data = NumpyDataProduct.decode(js['products']['numpy_data_product'])
+                data.append(NumpyDataProduct.decode(js['products']['numpy_data_product']))
             elif  'numpy_data_product_list'  in res.json()['products'].keys():
 
                 #data= [NumpyDataProduct.from_json(d) for d in res.json()['products']['numpy_data_product_list']]
-                data = [NumpyDataProduct.decode(d) for d in js['products']['numpy_data_product_list']]
+                data.extend([NumpyDataProduct.decode(d) for d in js['products']['numpy_data_product_list']])
 
             if 'binary_data_product_list' in res.json()['products'].keys():
                 data.extend([BinaryData().decode(d) for d in js['products']['binary_data_product_list']])
+
+            if 'catalog' in  res.json()['products'].keys():
+                data.append(js['products']['catalog'])
         else:
             self._decode_res_json(res.json()['products']['instrumet_parameters'])
 
