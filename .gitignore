@@ -20,4 +20,3 @@ lib64
 /.idea
 /run_tests
 /diagrams
-*.ipynb_checkpoints
