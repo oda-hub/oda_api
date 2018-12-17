@@ -59,8 +59,10 @@ class DispatcherAPI(object):
 
     @classmethod
     def build_from_envs(cls):
-        cookies = dict(_oauth2_proxy=open(os.environ.get('HOME') + '/.oda-api-token').read().strip())
+        cookies_path = os.environ.get('ODA_API_TOKEN')
+        cookies = dict(_oauth2_proxy=open(cookies_path).read().strip())
         host_url = os.environ.get('DISP_URL')
+
         return cls(host=host_url, instrument='mock', cookies=cookies, protocol='http')
 
     def generate_session_id(self,size=16):
