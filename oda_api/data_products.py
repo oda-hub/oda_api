@@ -77,7 +77,7 @@ class BinaryData(object):
 
 class NumpyDataUnit(object):
 
-    def __init__(self,data,data_header={},meta_data={},hdu_type=None,name='table'):
+    def __init__(self,data,data_header={},meta_data={},hdu_type=None,name='table',units_dict=None):
         self._hdu_type_list_ = ['primary', 'image', 'table', 'bintable']
 
         self.name=name
@@ -90,7 +90,7 @@ class NumpyDataUnit(object):
         self.header=data_header
         self.meta_data=meta_data
         self.hdu_type=hdu_type
-
+        self.units_dict=units_dict
 
     def _chekc_data(self,data):
 
@@ -134,7 +134,7 @@ class NumpyDataUnit(object):
 
          return  self.new_hdu_from_data(self.data,
                                 header=pf.header.Header(self.header),
-                                hdu_type=self.hdu_type)
+                                hdu_type=self.hdu_type,units_dict=self.units_dict)
 
 
 
@@ -154,7 +154,7 @@ class NumpyDataUnit(object):
         #print('_t',_t)
         return _t
 
-    def new_hdu_from_data(self,data,hdu_type, header=None):
+    def new_hdu_from_data(self,data,hdu_type, header=None,units_dict=None):
 
         self._chekc_hdu_type(hdu_type)
 
@@ -169,7 +169,13 @@ class NumpyDataUnit(object):
         else:
             raise RuntimeError('hdu type ', hdu_type, 'not in allowed', self._hdu_type_list_)
 
-        return h(data=data, header=header)
+
+        _h=h(data=data, header=header)
+        if units_dict is not None:
+
+            for k in units_dict.keys():
+                _h.columns.change_unit(k,units_dict[k])
+        return _h
 
     @staticmethod
     def _eval_dt(dt):
