@@ -175,6 +175,7 @@ class NumpyDataUnit(object):
 
             for k in units_dict.keys():
                 _h.columns.change_unit(k,units_dict[k])
+            self.header=_h.header
         return _h
 
     @staticmethod
