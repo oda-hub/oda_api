@@ -14,8 +14,8 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../'))
-import oda_api
+sys.path.insert(0, os.path.abspath('../../'))
+#import oda_api
 
 
 # -- Project information -----------------------------------------------------
