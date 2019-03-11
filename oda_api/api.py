@@ -22,6 +22,8 @@ from itertools import cycle
 
 from .data_products import NumpyDataProduct,BinaryData
 
+__all__=['Request','NoTraceBackWithLineNumber','NoTraceBackWithLineNumber','RemoteException','DispatcherAPI']
+
 class Request(object):
     def __init__(self,):
         pass
@@ -36,7 +38,7 @@ class NoTraceBackWithLineNumber(Exception):
         self.args = "{0.__name__} (line {1}): {2}".format(type(self), ln, msg),
         sys.exit(self)
 
-class RequestError(NoTraceBackWithLineNumber):
+class NoTraceBackWithLineNumber(NoTraceBackWithLineNumber):
     pass
 
 class RemoteException(NoTraceBackWithLineNumber ):
@@ -207,7 +209,7 @@ class DispatcherAPI(object):
             return res
         except Exception as e:
             print('response not valid', res)
-            raise RequestError('error ')
+            raise RemoteException(message='remote/connection error')
 
 
 
