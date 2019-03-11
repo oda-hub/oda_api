@@ -1,4 +1,8 @@
 
+
+Quick Start
+===========
+
 .. code:: ipython3
 
     from oda_api.api import DispatcherAPI
@@ -8,13 +12,14 @@
     %matplotlib notebook
 
 
-### build the dispatcher object
+build the dispatcher object
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: ipython3
 
     #external axcess
     #cookies=dict(_oauth2_proxy=open(os.environ.get('HOME')+'/.oda-api-token').read().strip())
-    #disp=DispatcherAPI(host='analyse-staging-1.2.reproducible.online/dispatch-data',instrument='mock',cookies=cookies,protocol='https')
+    disp=DispatcherAPI(host='analyse-staging-1.2.reproducible.online/dispatch-data',instrument='mock',cookies=cookies,protocol='https')
     
     #internal
     #disp=DispatcherAPI(host='cdcicn01.isdc.unige.ch:32003/dispatch-data',instrument='mock')
