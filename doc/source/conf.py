@@ -90,8 +90,8 @@ pygments_style = None
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-theme = 'bootstrap'
-html_theme = 'bootstrap'
+#theme = 'bootstrap'
+theme='sphinx_rtd_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -114,7 +114,26 @@ html_static_path = ['_static']
 #
 # html_sidebars = {}
 
-if html_theme=='bootstrap':
+
+if theme=='sphinx_rtd_theme':
+    html_theme_options = {
+        #'canonical_url': '',
+        #'analytics_id': 'UA-XXXXXXX-1',  # Provided by Google in your dashboard
+        'logo_only': False,
+        'display_version': True,
+        'prev_next_buttons_location': 'bottom',
+        #'style_external_links': False,
+        #'vcs_pageview_mode': '',
+        # Toc options
+        'collapse_navigation': True,
+        'sticky_navigation': True,
+        'navigation_depth': 4,
+        #'includehidden': True,
+        #'titles_only': False
+    }
+
+if theme=='bootstrap':
+    html_theme = 'bootstrap'
 
     #html_sidebars = {'**': ['localtoc.html', 'sourcelink.html', 'searchbox.html']}
 
