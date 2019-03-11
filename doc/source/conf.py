@@ -41,7 +41,6 @@ release = '1.0.0'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [ 'sphinx.ext.autodoc'
-               'sphinx.ext.doctest',
                'sphinx.ext.intersphinx',
                'sphinx.ext.todo',
                'sphinx.ext.coverage',
@@ -50,11 +49,6 @@ extensions = [ 'sphinx.ext.autodoc'
                'sphinx.ext.autosummary',
                'sphinx.ext.graphviz',
                'sphinx_automodapi.automodapi',
-               'sphinx_automodapi.smart_resolver',
-               # 'sphinxcontrib.plantuml',
-               # 'sphinxcontrib.bibtex',
-               'sphinx.ext.napoleon',
-               # 'matplotlib.sphinxext.plot_directive',
                'sphinx.ext.inheritance_diagram',
                'sphinx.ext.autosummary',
                'nbsphinx',
@@ -62,6 +56,7 @@ extensions = [ 'sphinx.ext.autodoc'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
+
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
@@ -82,7 +77,8 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = []
+
+exclude_patterns = ['_build', '**.ipynb_checkpoints']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None
