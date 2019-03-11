@@ -2,3 +2,4 @@ sphinx-bootstrap-theme
 sphinx-automodapi
 nbsphinx
 numpydoc
+matplotlib
