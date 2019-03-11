@@ -8,7 +8,7 @@ The complete user guide will be available during spring 2019
 .. toctree::
    :maxdepth: 1
 
-   quick start:  <TestAPI.rst>
+   quick start  <TestAPI.rst>
 
 
 
