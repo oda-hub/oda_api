@@ -1,7 +1,13 @@
-oda_api
-=======
 
+
+Modules
+=============
+
+In the following the package modules are listed.
+ 
 .. toctree::
-   :maxdepth: 4
-
-   oda_api
+   :maxdepth: 2
+    
+   api    <api.rst>
+   data_products    <data_products.rst>
+   plot_tools    <plot_tools.rst>

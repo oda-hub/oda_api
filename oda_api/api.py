@@ -14,6 +14,9 @@ import  random
 import string
 import time
 import os
+import inspect
+import sys
+
 
 from itertools import cycle
 
@@ -24,7 +27,19 @@ class Request(object):
         pass
 
 
-class RemoteException(Exception):
+class NoTraceBackWithLineNumber(Exception):
+    def __init__(self, msg):
+        try:
+            ln = sys.exc_info()[-1].tb_lineno
+        except AttributeError:
+            ln = inspect.currentframe().f_back.f_lineno
+        self.args = "{0.__name__} (line {1}): {2}".format(type(self), ln, msg),
+        sys.exit(self)
+
+class RequestError(NoTraceBackWithLineNumber):
+    pass
+
+class RemoteException(NoTraceBackWithLineNumber ):
 
     def __init__(self, message='Remote analysis exception', debug_message=''):
         super(RemoteException, self).__init__(message)
@@ -181,14 +196,21 @@ class DispatcherAPI(object):
 
 
     def _decode_res_json(self,res):
-        if hasattr(res,'content'):
-            _js = json.loads(res.content)
-            res = ast.literal_eval(str(_js).replace('null', 'None'))
-        else:
-            res = ast.literal_eval(str(res).replace('null', 'None'))
+        try:
+            if hasattr(res,'content'):
+                _js = json.loads(res.content)
+                res = ast.literal_eval(str(_js).replace('null', 'None'))
+            else:
+                res = ast.literal_eval(str(res).replace('null', 'None'))
 
-        self.dig_list(res)
-        return res
+            self.dig_list(res)
+            return res
+        except Exception as e:
+            print('response not valid', res)
+            raise RequestError('error ')
+
+
+
 
     def get_instrument_description(self,instrument=None):
         if instrument is None:
@@ -211,8 +233,10 @@ class DispatcherAPI(object):
 
     def get_instruments_list(self):
         #print ('instr',self.instrument)
+
         res = requests.get("%s/api/instr-list" % self.url,params=dict(instrument=self.instrument),cookies=self.cookies)
         return self._decode_res_json(res)
+
 
 
 

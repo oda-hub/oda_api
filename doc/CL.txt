@@ -1,2 +1,2 @@
-sphinx-apidoc -o source/api ../oda_api
+python make_apidoc_and_uml_graphs.py
 make html
