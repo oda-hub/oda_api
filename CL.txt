@@ -1,6 +1,5 @@
  git add .
  git commit -m'inproving doc and api errors'
- git push origin master
  git push origin master && git push origin-github master
  git tag  -d stable
  git add .
@@ -8,3 +7,4 @@
  git push --delete origin-github stable
  git tag -a stable  -m stable
  git push origin master && git push origin-github master
+ git push origin-github stable
