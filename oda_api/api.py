@@ -313,7 +313,7 @@ class DispatcherAPI(object):
         _cmd_ ='%s\n'%_header
         _cmd_ +='par_dict='
         _cmd_ += '%s'%_api_dict
-        _cmd_ = '%s\n'
+        _cmd_ += '%s\n'
         _cmd_ +='%s'%_cmd_prod_
 
 
