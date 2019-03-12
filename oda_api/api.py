@@ -287,7 +287,7 @@ class DispatcherAPI(object):
     @staticmethod
     def set_api_code(query_dict):
 
-        _skip_list_ = ['job_id', 'query_status', 'session_id', 'use_resolver', 'use_scws']
+        _skip_list_ = ['job_id', 'query_status', 'session_id', 'use_resolver[local]', 'use_scws']
 
         _alias_dict = {}
         _alias_dict['product_type'] = 'product'
@@ -311,7 +311,7 @@ class DispatcherAPI(object):
 
 
         _cmd_ ='%s\n'%_header
-        _cmd_ +='par_dict=%s' %str(query_dict)
+        _cmd_ +='par_dict=%s' %str(_api_dict)
         _cmd_ +='%s'%_cmd_prod_
 
 
