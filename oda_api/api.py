@@ -281,3 +281,35 @@ class DispatcherAPI(object):
         del(res)
 
         return data
+
+
+
+    @staticmethod
+    def set_api_code(query_dict):
+
+        _skip_list_ = ['job_id', 'query_status', 'session_id', 'use_resolver', 'use_scws']
+
+        _alias_dict = {}
+        _alias_dict['product_type'] = 'product'
+        _alias_dict['query_type'] = 'product_type'
+
+        _header = '''disp=DispatcherAPI(host='analyse-staging-1.2.reproducible.online/dispatch-data',instrument='mock',cookies=cookies,protocol='https')'''
+
+        _cmd_prod_ = 'disp.get_product(**par_dict)'
+
+        _api_dict = {}
+        for k in query_dict.keys():
+            if k not in _skip_list_:
+
+                if k in _alias_dict.keys():
+                    n = _alias_dict[k]
+
+                else:
+                    n = k
+
+                _api_dict[n] = query_dict[k]
+
+
+        _cmd_ ='%s\n'%_header
+        _cmd_ +='par_dict=%s' %str(query_dict)
+        _cmd_ +='%s'%_cmd_prod_
