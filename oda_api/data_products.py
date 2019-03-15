@@ -21,6 +21,9 @@ from astropy.io import fits as pf
 import json
 from astropy.utils.misc import JsonCustomEncoder
 
+from astropy.table import Table
+from astropy.coordinates import Angle
+
 import  numpy
 import  base64
 import  pickle
@@ -34,7 +37,7 @@ except ImportError:
     from io import StringIO
 
 
-__all__=['sanitize_encoded','_chekc_enc_data','BinaryData','NumpyDataUnit','NumpyDataProduct']
+__all__=['sanitize_encoded','_chekc_enc_data','BinaryData','NumpyDataUnit','NumpyDataProduct','ApiCatalog']
 
 
 def sanitize_encoded(d):
@@ -440,4 +443,57 @@ class NumpyDataProduct(object):
 
         return cls(data_unit=_data_unit_list,name=encoded_name,meta_data=eval(encoded_meta_data))
 
+
+
+class ApiCatalog(object):
+
+
+    def __init__(self,cat_dict,name='catalog'):
+        self.name=name
+        _skip_list=['meta_ID']
+
+        lon_name = None
+        if 'cat_lon_name' in cat_dict.keys():
+            lon_name =  cat_dict['cat_lon_name']
+
+            lat_name = None
+        if 'cat_lat_name' in cat_dict.keys():
+            lat_name = cat_dict['cat_lat_name']
+
+        frame = None
+        if 'cat_frame' in cat_dict.keys():
+            frame = cat_dict['cat_frame']
+
+        coord_units = None
+        if 'cat_coord_units' in cat_dict.keys():
+            coord_units = cat_dict['cat_coord_units']
+
+        meta = {'FRAME': frame}
+        meta['COORD_UNIT'] = coord_units
+        meta['LON_NAME'] = lon_name
+        meta['LAT_NAME'] = lat_name
+
+        self.table =Table(cat_dict['cat_column_list'], names=cat_dict['cat_column_names'],meta=meta)
+
+        if coord_units is not None:
+            self.table[lon_name]=Angle(self.table[lon_name],unit=coord_units)
+            self.table[lat_name]=Angle(self.table[lat_name],unit=coord_units)
+
+        self.lat_name=lat_name
+        self.lon_name=lon_name
+
+    def get_dictionary(self ):
+
+
+        column_lists=[self.table[name].tolist() for name in self.table.colnames]
+        for ID,_col in enumerate(column_lists):
+            column_lists[ID] = [x if str(x)!='nan' else None for x in _col]
+
+        return dict(cat_frame=self.table.meta['FRAME'],
+                    cat_coord_units=self.table.meta['COORD_UNIT'],
+                    cat_column_list=column_lists,
+                    cat_column_names=self.table.colnames,
+                    cat_column_descr=self.table.dtype.descr,
+                    cat_lat_name=self.lat_name,
+                    cat_lon_name=self.lon_name)
 

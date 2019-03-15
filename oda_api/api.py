@@ -20,7 +20,7 @@ import sys
 
 from itertools import cycle
 
-from .data_products import NumpyDataProduct,BinaryData
+from .data_products import NumpyDataProduct,BinaryData,ApiCatalog
 
 __all__=['Request','NoTraceBackWithLineNumber','NoTraceBackWithLineNumber','RemoteException','DispatcherAPI']
 
@@ -274,13 +274,13 @@ class DispatcherAPI(object):
                 data.extend([BinaryData().decode(d) for d in js['products']['binary_data_product_list']])
 
             if 'catalog' in  res.json()['products'].keys():
-                data.append(js['products']['catalog'])
+                data.append(ApiCatalog(js['products']['catalog'],name='dispatcher_catalog'))
         else:
             self._decode_res_json(res.json()['products']['instrumet_parameters'])
 
         del(res)
 
-        return data
+        return DataCollection(data)
 
 
 
@@ -318,3 +318,26 @@ class DispatcherAPI(object):
 
 
         return _cmd_
+
+
+
+class DataCollection(object):
+
+
+    def __init__(self,data_list):
+        self._p_list = []
+        for ID,data in enumerate(data_list):
+
+            if hasattr(data,'name'):
+                n=data.name+'_%d'% ID
+            else:
+                n='pord_%d' % ID
+
+            setattr(self, n, data)
+
+            self._p_list.append(data)
+
+
+    def show(self):
+        for ID,p in enumerate(self._p_list):
+            print(p.name,ID)
