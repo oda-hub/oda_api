@@ -482,18 +482,18 @@ class ApiCatalog(object):
         self.lat_name=lat_name
         self.lon_name=lon_name
 
-    def get_dictionary(self ):
+    def get_api_dictionary(self ):
 
 
         column_lists=[self.table[name].tolist() for name in self.table.colnames]
         for ID,_col in enumerate(column_lists):
             column_lists[ID] = [x if str(x)!='nan' else None for x in _col]
 
-        return dict(cat_frame=self.table.meta['FRAME'],
+        return json.dumps(dict(cat_frame=self.table.meta['FRAME'],
                     cat_coord_units=self.table.meta['COORD_UNIT'],
                     cat_column_list=column_lists,
                     cat_column_names=self.table.colnames,
                     cat_column_descr=self.table.dtype.descr,
                     cat_lat_name=self.lat_name,
-                    cat_lon_name=self.lon_name)
+                    cat_lon_name=self.lon_name))
 

@@ -326,18 +326,19 @@ class DataCollection(object):
 
     def __init__(self,data_list):
         self._p_list = []
+        self._n_list = []
         for ID,data in enumerate(data_list):
 
             if hasattr(data,'name'):
-                n=data.name+'_%d'% ID
+                n=data.name+'_%d'%ID
             else:
                 n='pord_%d' % ID
 
             setattr(self, n, data)
 
             self._p_list.append(data)
-
+            self._n_list.append(n)
 
     def show(self):
         for ID,p in enumerate(self._p_list):
-            print(p.name,ID)
+            print(self._n_list[ID],ID)
