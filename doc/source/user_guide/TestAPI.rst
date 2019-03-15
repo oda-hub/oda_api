@@ -235,26 +235,38 @@ the ODA data structure
 
 .. parsed-literal::
 
-    mosaic_image
-    dispatcher_catalog
+    mosaic_image_0 0
+    dispatcher_catalog_1 1
 
 
 you can acess memeber by name:
 
 .. code:: ipython3
 
-    data.mosaic_image
+    data.mosaic_image_0
 
 
 
 
 .. parsed-literal::
 
-    <oda_api.data_products.NumpyDataProduct at 0x12440d438>
+    <oda_api.data_products.NumpyDataProduct at 0x117c8f828>
 
 
 
 or by position in the data list
+
+.. code:: ipython3
+
+    data._p_list[0]
+
+
+
+
+.. parsed-literal::
+
+    <oda_api.data_products.NumpyDataProduct at 0x117c8f828>
+
 
 
 the ODA catalog
@@ -262,7 +274,7 @@ the ODA catalog
 
 .. code:: ipython3
 
-    data.dispatcher_catalog.table
+    data.dispatcher_catalog_1.table
 
 
 
@@ -270,7 +282,7 @@ the ODA catalog
 .. raw:: html
 
     <i>Table length=4</i>
-    <table id="table4903195648" class="table-striped table-bordered table-condensed">
+    <table id="table4694015728" class="table-striped table-bordered table-condensed">
     <thead><tr><th>meta_ID</th><th>src_names</th><th>significance</th><th>ra</th><th>dec</th><th>NEW_SOURCE</th><th>ISGRI_FLAG</th><th>FLAG</th><th>ERR_RAD</th></tr></thead>
     <thead><tr><th></th><th></th><th></th><th>deg</th><th>deg</th><th></th><th></th><th></th><th></th></tr></thead>
     <thead><tr><th>int64</th><th>str12</th><th>float64</th><th>float64</th><th>float64</th><th>int64</th><th>int64</th><th>int64</th><th>float64</th></tr></thead>
@@ -285,69 +297,55 @@ the ODA catalog
 you can use astropy.table commands to modify the table of the catatlog
 http://docs.astropy.org/en/stable/table/modify\_table.html
 
-to generate a catalog to pass to the dispatcher
+to generate a catalog to pass to the dispatcher api
 
 .. code:: ipython3
 
-    cat_dict=data.dispatcher_catalog.get_dictionary()
+    api_cat=data.dispatcher_catalog_1.get_api_dictionary()
 
 .. code:: ipython3
 
-    cat_dict
+    api_cat
 
 
 
 
 .. parsed-literal::
 
-    {'cat_frame': 'fk5',
-     'cat_coord_units': 'deg',
-     'cat_column_list': [[67, 73, 76, 128],
-      ['OAO 1657-415', '4U 1700-377', 'GX 349+2', 'GX 354-0'],
-      [18.9650936126709, 22.8853702545166, 14.08207893371582, 9.371565818786621],
-      [255.1972198486328,
-       255.97720336914062,
-       256.4292297363281,
-       262.9886169433594],
-      [-41.653160095214844,
-       -37.83725357055664,
-       -36.415679931640625,
-       -33.828392028808594],
-      [-32768, -32768, -32768, -32768],
-      [2, 2, 2, 2],
-      [0, 0, 0, 0],
-      [0.00014000000373926014,
-       0.0002800000074785203,
-       0.0002800000074785203,
-       0.0002800000074785203]],
-     'cat_column_names': ['meta_ID',
-      'src_names',
-      'significance',
-      'ra',
-      'dec',
-      'NEW_SOURCE',
-      'ISGRI_FLAG',
-      'FLAG',
-      'ERR_RAD'],
-     'cat_column_descr': [('meta_ID', '<i8'),
-      ('src_names', '<U12'),
-      ('significance', '<f8'),
-      ('ra', '<f8'),
-      ('dec', '<f8'),
-      ('NEW_SOURCE', '<i8'),
-      ('ISGRI_FLAG', '<i8'),
-      ('FLAG', '<i8'),
-      ('ERR_RAD', '<f8')],
-     'cat_lat_name': 'dec',
-     'cat_lon_name': 'ra'}
+    '{"cat_frame": "fk5", "cat_coord_units": "deg", "cat_column_list": [[67, 73, 76, 128], ["OAO 1657-415", "4U 1700-377", "GX 349+2", "GX 354-0"], [18.9650936126709, 22.8853702545166, 14.08207893371582, 9.371565818786621], [255.1972198486328, 255.97720336914062, 256.4292297363281, 262.9886169433594], [-41.653160095214844, -37.83725357055664, -36.415679931640625, -33.828392028808594], [-32768, -32768, -32768, -32768], [2, 2, 2, 2], [0, 0, 0, 0], [0.00014000000373926014, 0.0002800000074785203, 0.0002800000074785203, 0.0002800000074785203]], "cat_column_names": ["meta_ID", "src_names", "significance", "ra", "dec", "NEW_SOURCE", "ISGRI_FLAG", "FLAG", "ERR_RAD"], "cat_column_descr": [["meta_ID", "<i8"], ["src_names", "<U12"], ["significance", "<f8"], ["ra", "<f8"], ["dec", "<f8"], ["NEW_SOURCE", "<i8"], ["ISGRI_FLAG", "<i8"], ["FLAG", "<i8"], ["ERR_RAD", "<f8"]], "cat_lat_name": "dec", "cat_lon_name": "ra"}'
 
+
+
+.. code:: ipython3
+
+    data=disp.get_product(instrument='isgri',
+                          product='isgri_image',
+                          T1='2003-03-15T23:27:40.0',
+                          T2='2003-03-16T00:03:15.0',
+                          E1_keV=20.0,
+                          E2_keV=40.0,
+                          osa_version='OSA10.2',
+                          RA=255.986542,
+                          DEC=-37.844167,
+                          detection_threshold=5.0,
+                          radius=15.,
+                          product_type='Rela',
+                          selected_catalog=api_cat)
+
+
+.. parsed-literal::
+
+    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
+    
+    
+    query done succesfully!
 
 
 you can explore the image with the following command
 
 .. code:: ipython3
 
-    data.mosaic_image.show()
+    data.mosaic_image_0.show()
 
 
 .. parsed-literal::
@@ -362,7 +360,7 @@ you can explore the image with the following command
 
 .. code:: ipython3
 
-    data.mosaic_image.show_meta()
+    data.mosaic_image_0.show_meta()
 
 
 .. parsed-literal::
@@ -377,7 +375,7 @@ you can explore the image with the following command
 
 .. code:: ipython3
 
-    data.mosaic_image.data_unit[0].data
+    data.mosaic_image_0.data_unit[0].data
 
 
 
@@ -396,11 +394,11 @@ you can explore the image with the following command
 
 .. code:: ipython3
 
-    hdu=data.mosaic_image.to_fits_hdu_list()
+    hdu=data.mosaic_image_0.to_fits_hdu_list()
 
 .. code:: ipython3
 
-    data.mosaic_image.data_unit[0].data.shape
+    data.mosaic_image_0.data_unit[0].data.shape
 
 
 
@@ -413,7 +411,7 @@ you can explore the image with the following command
 
 .. code:: ipython3
 
-    data.mosaic_image.write_fits_file('test.fits',overwrite=True)
+    data.mosaic_image_0.write_fits_file('test.fits',overwrite=True)
 
 the ODA Image plotting tool
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -424,7 +422,7 @@ the ODA Image plotting tool
     #%matplotlib notebook
     
     %matplotlib inline
-    im=OdaImage(data.mosaic_image)
+    im=OdaImage(data.mosaic_image_0)
 
 .. code:: ipython3
 
@@ -432,12 +430,12 @@ the ODA Image plotting tool
 
 
 
-.. image:: TestAPI_files/TestAPI_36_0.png
+.. image:: TestAPI_files/TestAPI_37_0.png
 
 
 .. code:: ipython3
 
-    data.mosaic_image.data_unit[0].header
+    data.mosaic_image_0.data_unit[0].header
 
 
 
@@ -536,7 +534,7 @@ the ODA LC plotting tool
 
 .. parsed-literal::
 
-    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
+    waiting for remote response, please wait run_analysis http://10.194.169.161:32784
     
     
     query done succesfully!
@@ -552,47 +550,47 @@ explore LC
 
 .. parsed-literal::
 
-    isgri_lc 0
-    isgri_lc 1
-    isgri_lc 2
-    isgri_lc 3
-    isgri_lc 4
-    isgri_lc 5
-    isgri_lc 6
-    isgri_lc 7
-    isgri_lc 8
-    isgri_lc 9
-    isgri_lc 10
-    isgri_lc 11
-    isgri_lc 12
-    isgri_lc 13
-    isgri_lc 14
-    isgri_lc 15
-    isgri_lc 16
-    isgri_lc 17
-    isgri_lc 18
-    isgri_lc 19
-    isgri_lc 20
-    isgri_lc 21
-    isgri_lc 22
-    isgri_lc 23
-    isgri_lc 24
-    isgri_lc 25
-    isgri_lc 26
-    isgri_lc 27
-    isgri_lc 28
-    isgri_lc 29
+    isgri_lc_0 0
+    isgri_lc_1 1
+    isgri_lc_2 2
+    isgri_lc_3 3
+    isgri_lc_4 4
+    isgri_lc_5 5
+    isgri_lc_6 6
+    isgri_lc_7 7
+    isgri_lc_8 8
+    isgri_lc_9 9
+    isgri_lc_10 10
+    isgri_lc_11 11
+    isgri_lc_12 12
+    isgri_lc_13 13
+    isgri_lc_14 14
+    isgri_lc_15 15
+    isgri_lc_16 16
+    isgri_lc_17 17
+    isgri_lc_18 18
+    isgri_lc_19 19
+    isgri_lc_20 20
+    isgri_lc_21 21
+    isgri_lc_22 22
+    isgri_lc_23 23
+    isgri_lc_24 24
+    isgri_lc_25 25
+    isgri_lc_26 26
+    isgri_lc_27 27
+    isgri_lc_28 28
+    isgri_lc_29 29
 
 
 .. code:: ipython3
 
-    data.isgri_lc_5.show_meta()
+    data.isgri_lc_0.show_meta()
 
 
 .. parsed-literal::
 
     ------------------------------
-    src_name : IGR J17586-2129
+    src_name : GX 349+2
     rate : RATE
     time_bin : 0.000810143479094966
     rate_err : ERROR
@@ -602,42 +600,42 @@ explore LC
 
 .. code:: ipython3
 
-    for s in data._p_list:
-        print (s.meta_data)
+    for ID,s in enumerate(data._p_list):
+        print (ID,s.meta_data['src_name'])
 
 
 .. parsed-literal::
 
-    {'src_name': 'GX 349+2', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
-    {'src_name': 'IGR J17285-2922', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
-    {'src_name': 'AX J1700.2-4220', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
-    {'src_name': 'IGR J17507-2856', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
-    {'src_name': 'IGR J17508-3219', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
-    {'src_name': 'IGR J17586-2129', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
-    {'src_name': 'OAO 1657-415', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
-    {'src_name': 'GRO J1719-24', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
-    {'src_name': '4U 1735-444', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
-    {'src_name': 'IGR J17326-3445', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
-    {'src_name': '4U 1722-30', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
-    {'src_name': 'IGR J17099-2418', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
-    {'src_name': 'NEW_6', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
-    {'src_name': 'NEW_4', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
-    {'src_name': 'NEW_5', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
-    {'src_name': 'NEW_2', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
-    {'src_name': 'NEW_3', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
-    {'src_name': 'NEW_1', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
-    {'src_name': 'IGR J16248-4603', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
-    {'src_name': 'IGR J17091-3624', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
-    {'src_name': 'IGR J17191-2821', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
-    {'src_name': 'IGR J17103-3341', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
-    {'src_name': 'GRS 1747-312', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
-    {'src_name': 'GX 354-0', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
-    {'src_name': 'IGR J17314-2854', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
-    {'src_name': 'GX 1+4', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
-    {'src_name': 'H 1705-440', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
-    {'src_name': '1RXS J174607.8-21333', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
-    {'src_name': '4U 1700-377', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
-    {'src_name': '1E 1740.7-2942', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
+    0 GX 349+2
+    1 IGR J17285-2922
+    2 AX J1700.2-4220
+    3 IGR J17507-2856
+    4 IGR J17508-3219
+    5 IGR J17586-2129
+    6 OAO 1657-415
+    7 GRO J1719-24
+    8 4U 1735-444
+    9 IGR J17326-3445
+    10 4U 1722-30
+    11 IGR J17099-2418
+    12 NEW_6
+    13 NEW_4
+    14 NEW_5
+    15 NEW_2
+    16 NEW_3
+    17 NEW_1
+    18 IGR J16248-4603
+    19 IGR J17091-3624
+    20 IGR J17191-2821
+    21 IGR J17103-3341
+    22 GRS 1747-312
+    23 GX 354-0
+    24 IGR J17314-2854
+    25 GX 1+4
+    26 H 1705-440
+    27 1RXS J174607.8-21333
+    28 4U 1700-377
+    29 1E 1740.7-2942
 
 
 .. code:: ipython3
@@ -717,7 +715,7 @@ explore LC
 
 
 
-.. image:: TestAPI_files/TestAPI_47_0.png
+.. image:: TestAPI_files/TestAPI_48_0.png
 
 
 .. code:: ipython3
@@ -729,7 +727,7 @@ explore LC
 
 .. parsed-literal::
 
-    {u'BITPIX': 8, u'EXTEND': True, u'NAXIS': 0, u'SIMPLE': True}
+    {'BITPIX': 8, 'EXTEND': True, 'NAXIS': 0, 'SIMPLE': True}
 
 
 
@@ -751,10 +749,21 @@ Polar LC
 
 .. parsed-literal::
 
-    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
+    waiting for remote response, please wait run_analysis http://10.194.169.161:32784
     
     
     query done succesfully!
+
+
+.. code:: ipython3
+
+    data.show()
+
+
+.. parsed-literal::
+
+    _0 0
+    pord_1 1
 
 
 .. code:: ipython3
@@ -766,7 +775,7 @@ Polar LC
 
 .. parsed-literal::
 
-    <oda_api.data_products.NumpyDataProduct at 0x120497da0>
+    <oda_api.data_products.NumpyDataProduct at 0x119fbf2b0>
 
 
 
@@ -805,7 +814,7 @@ Polar LC
 
 
 
-.. image:: TestAPI_files/TestAPI_54_0.png
+.. image:: TestAPI_files/TestAPI_56_0.png
 
 
 SPIACS LC
@@ -866,7 +875,17 @@ SPIACS LC
 
 .. code:: ipython3
 
-    lc=data[0]
+    data.show()
+
+
+.. parsed-literal::
+
+    _0 0
+
+
+.. code:: ipython3
+
+    lc=data._p_list[0]
 
 
 .. code:: ipython3
@@ -946,7 +965,12 @@ SPIACS LC
 
 .. code:: ipython3
 
-    #OdaLightCurve(lc).show(unit_ID=0)
+    OdaLightCurve(lc).show(unit_ID=0)
+
+
+
+.. image:: TestAPI_files/TestAPI_65_0.png
+
 
 the ODA and spectra
 ~~~~~~~~~~~~~~~~~~~
@@ -963,14 +987,13 @@ the ODA and spectra
                           DEC=-37.844167,
                           detection_threshold=5.0,
                           radius=15.,
-                          product_type='Real' )
+                          product_type='Real')
 
 
 .. parsed-literal::
 
-    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
-    the job has been submitted on the remote server
-     / the job is working remotely, please wait status=done - job_id=4121793180152260278  78  
+    waiting for remote response, please wait run_analysis http://10.194.169.161:32784
+    
     
     query done succesfully!
 
@@ -1128,14 +1151,14 @@ explore spectra
      'BITPIX': 8,
      'BKGPARAM': 'rebinned_back_spe.fits',
      'CHANTYPE': 'PI',
-     'CHECKSUM': 'nOZIpNZFnNZFnNZF',
+     'CHECKSUM': 'oKaFoJWEoJaEoJUE',
      'COMMENT': '  on the next keyword which has the name CONTINUE.',
      'CONFIGUR': 'latest_osa_sw_2015-11-10T03:50:02',
      'CORRFILE': 'NONE',
      'CORRSCAL': 0,
      'CREATOR': 'ISGRISpectraSum.v5.4.2.extractall',
      'DATASUM': '3507849637',
-     'DATE': '2019-03-15T12:34:40.337020',
+     'DATE': '2018-12-14T13:50:24.083597',
      'DEADC': 0.775885283090927,
      'DEC_OBJ': -29.3624725341797,
      'DETCHANS': 62,
@@ -1410,7 +1433,7 @@ spectral fitting with threeML
 
 
 
-.. image:: TestAPI_files/TestAPI_82_2.png
+.. image:: TestAPI_files/TestAPI_85_2.png
 
 
 .. code:: ipython3
@@ -1605,7 +1628,7 @@ spectral fitting with threeML
 
 
 
-.. image:: TestAPI_files/TestAPI_84_0.png
+.. image:: TestAPI_files/TestAPI_87_0.png
 
 
 .. code:: ipython3
@@ -1622,12 +1645,12 @@ spectral fitting with threeML
 
 
 
-.. image:: TestAPI_files/TestAPI_85_1.png
+.. image:: TestAPI_files/TestAPI_88_1.png
 
 
 
 
-.. image:: TestAPI_files/TestAPI_85_2.png
+.. image:: TestAPI_files/TestAPI_88_2.png
 
 
 .. code:: ipython3
@@ -2086,12 +2109,12 @@ spectral fitting with threeML
 
 
 
-.. image:: TestAPI_files/TestAPI_90_0.png
+.. image:: TestAPI_files/TestAPI_93_0.png
 
 
 
 
-.. image:: TestAPI_files/TestAPI_90_1.png
+.. image:: TestAPI_files/TestAPI_93_1.png
 
 
 .. code:: ipython3
@@ -2108,12 +2131,12 @@ spectral fitting with threeML
 
 
 
-.. image:: TestAPI_files/TestAPI_91_1.png
+.. image:: TestAPI_files/TestAPI_94_1.png
 
 
 
 
-.. image:: TestAPI_files/TestAPI_91_2.png
+.. image:: TestAPI_files/TestAPI_94_2.png
 
 
 .. code:: ipython3
