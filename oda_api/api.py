@@ -10,21 +10,38 @@ __author__ = "Andrea Tramacere"
 import requests
 import ast
 import json
-import  random
+import random
 import string
 import time
 import os
+import inspect
+import sys
+
 
 from itertools import cycle
 
-from .data_products import NumpyDataProduct,BinaryData
+from .data_products import NumpyDataProduct,BinaryData,ApiCatalog
+
+__all__=['Request','NoTraceBackWithLineNumber','NoTraceBackWithLineNumber','RemoteException','DispatcherAPI']
 
 class Request(object):
     def __init__(self,):
         pass
 
 
-class RemoteException(Exception):
+class NoTraceBackWithLineNumber(Exception):
+    def __init__(self, msg):
+        try:
+            ln = sys.exc_info()[-1].tb_lineno
+        except AttributeError:
+            ln = inspect.currentframe().f_back.f_lineno
+        self.args = "{0.__name__} (line {1}): {2}".format(type(self), ln, msg),
+        sys.exit(self)
+
+class NoTraceBackWithLineNumber(NoTraceBackWithLineNumber):
+    pass
+
+class RemoteException(NoTraceBackWithLineNumber ):
 
     def __init__(self, message='Remote analysis exception', debug_message=''):
         super(RemoteException, self).__init__(message)
@@ -78,7 +95,10 @@ class DispatcherAPI(object):
         print("\r %s the job is working remotely, please wait %s"%(next(self._progress_iter),info),end='')
 
 
+
     def request(self,parameters_dict,handle='run_analysis',url=None):
+        if 'scw_list' in parameters_dict.keys():
+            print (parameters_dict['scw_list'])
 
         if url is None:
             url=self.url
@@ -181,14 +201,21 @@ class DispatcherAPI(object):
 
 
     def _decode_res_json(self,res):
-        if hasattr(res,'content'):
-            _js = json.loads(res.content)
-            res = ast.literal_eval(str(_js).replace('null', 'None'))
-        else:
-            res = ast.literal_eval(str(res).replace('null', 'None'))
+        try:
+            if hasattr(res,'content'):
+                _js = json.loads(res.content)
+                res = ast.literal_eval(str(_js).replace('null', 'None'))
+            else:
+                res = ast.literal_eval(str(res).replace('null', 'None'))
 
-        self.dig_list(res)
-        return res
+            self.dig_list(res)
+            return res
+        except Exception as e:
+            print('response not valid', res)
+            raise RemoteException(message='remote/connection error')
+
+
+
 
     def get_instrument_description(self,instrument=None):
         if instrument is None:
@@ -211,8 +238,10 @@ class DispatcherAPI(object):
 
     def get_instruments_list(self):
         #print ('instr',self.instrument)
+
         res = requests.get("%s/api/instr-list" % self.url,params=dict(instrument=self.instrument),cookies=self.cookies)
         return self._decode_res_json(res)
+
 
 
 
@@ -247,11 +276,74 @@ class DispatcherAPI(object):
             if 'binary_data_product_list' in res.json()['products'].keys():
                 data.extend([BinaryData().decode(d) for d in js['products']['binary_data_product_list']])
 
-            if 'catalog' in  res.json()['products'].keys():
-                data.append(js['products']['catalog'])
+            if 'catalog' in res.json()['products'].keys():
+                data.append(ApiCatalog(js['products']['catalog'],name='dispatcher_catalog'))
         else:
             self._decode_res_json(res.json()['products']['instrumet_parameters'])
 
         del(res)
 
-        return data
+        return DataCollection(data)
+
+
+
+    @staticmethod
+    def set_api_code(query_dict):
+
+        _skip_list_ = ['job_id', 'query_status', 'session_id', 'use_resolver[local]', 'use_scws']
+
+        _alias_dict = {}
+        _alias_dict['product_type'] = 'product'
+        _alias_dict['query_type'] = 'product_type'
+
+        _header = '''
+        from oda_api.api import DispatcherAPI\n
+        disp=DispatcherAPI(host='analyse-staging-1.2.reproducible.online/dispatch-data',instrument='mock',cookies=cookies,protocol='https')'''
+
+        _cmd_prod_ = 'disp.get_product(**par_dict)'
+
+        _api_dict = {}
+        for k in query_dict.keys():
+            if k not in _skip_list_:
+
+                if k in _alias_dict.keys():
+                    n = _alias_dict[k]
+
+                else:
+                    n = k
+
+                _api_dict[n] = query_dict[k]
+
+
+        _cmd_ ='%s\n'%_header
+        _cmd_ +='par_dict='
+        _cmd_ += '%s'%_api_dict
+        _cmd_ += '\n'
+        _cmd_ +='%s'%_cmd_prod_
+
+
+        return _cmd_
+
+
+
+class DataCollection(object):
+
+
+    def __init__(self,data_list):
+        self._p_list = []
+        self._n_list = []
+        for ID,data in enumerate(data_list):
+
+            if hasattr(data,'name'):
+                n=data.name+'_%d'%ID
+            else:
+                n='pord_%d' % ID
+
+            setattr(self, n, data)
+
+            self._p_list.append(data)
+            self._n_list.append(n)
+
+    def show(self):
+        for ID,p in enumerate(self._p_list):
+            print(self._n_list[ID],ID)

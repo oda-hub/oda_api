@@ -24,6 +24,9 @@ from matplotlib import  pylab as plt
 #from ipywidgets import *
 from matplotlib.widgets import Slider, Button, RadioButtons
 
+
+__all__=['OdaImage','OdaLightCurve']
+
 class OdaImage(object):
 
     def __init__(self,data):

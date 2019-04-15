@@ -26,4 +26,4 @@ Installation
 
 Documentation
 -------------------
-see the TestDispatcher.ipynb jupyther notebook
+https://oda-api.readthedocs.io/en/latest/

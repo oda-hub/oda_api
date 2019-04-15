@@ -10,6 +10,8 @@
 /.DS_Store
 *.egg-info
 *.egg
+*.root
+*.fits
 /build
 develop-eggs
 /dist
@@ -20,4 +22,4 @@ lib64
 /.idea
 /run_tests
 /diagrams
-*.ipynb_checkpoints
+/doc/build
