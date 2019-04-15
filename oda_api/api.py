@@ -10,7 +10,7 @@ __author__ = "Andrea Tramacere"
 import requests
 import ast
 import json
-import  random
+import random
 import string
 import time
 import os
@@ -95,7 +95,10 @@ class DispatcherAPI(object):
         print("\r %s the job is working remotely, please wait %s"%(next(self._progress_iter),info),end='')
 
 
+
     def request(self,parameters_dict,handle='run_analysis',url=None):
+        if 'scw_list' in parameters_dict.keys():
+            print (parameters_dict['scw_list'])
 
         if url is None:
             url=self.url
@@ -273,7 +276,7 @@ class DispatcherAPI(object):
             if 'binary_data_product_list' in res.json()['products'].keys():
                 data.extend([BinaryData().decode(d) for d in js['products']['binary_data_product_list']])
 
-            if 'catalog' in  res.json()['products'].keys():
+            if 'catalog' in res.json()['products'].keys():
                 data.append(ApiCatalog(js['products']['catalog'],name='dispatcher_catalog'))
         else:
             self._decode_res_json(res.json()['products']['instrumet_parameters'])
@@ -293,7 +296,9 @@ class DispatcherAPI(object):
         _alias_dict['product_type'] = 'product'
         _alias_dict['query_type'] = 'product_type'
 
-        _header = '''disp=DispatcherAPI(host='analyse-staging-1.2.reproducible.online/dispatch-data',instrument='mock',cookies=cookies,protocol='https')'''
+        _header = '''
+        from oda_api.api import DispatcherAPI\n
+        disp=DispatcherAPI(host='analyse-staging-1.2.reproducible.online/dispatch-data',instrument='mock',cookies=cookies,protocol='https')'''
 
         _cmd_prod_ = 'disp.get_product(**par_dict)'
 
