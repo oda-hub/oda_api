@@ -178,6 +178,7 @@ class NumpyDataUnit(object):
 
 
         _h=h(data=data, header=header)
+        _h.name=self.name
         if units_dict is not None:
 
             for k in units_dict.keys():
