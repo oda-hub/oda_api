@@ -330,7 +330,7 @@ to generate a catalog to pass to the dispatcher api
                           DEC=-37.844167,
                           detection_threshold=5.0,
                           radius=15.,
-                          product_type='Rela',
+                          product_type='Real',
                           selected_catalog=api_cat)
 
 
