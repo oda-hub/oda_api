@@ -171,7 +171,7 @@ submitting it
 
 .. parsed-literal::
 
-    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
+    waiting for remote response, please wait run_analysis http://10.194.169.161:32784
     
     
     query failed!
@@ -219,8 +219,9 @@ now we skip the dry\_run to actually get the products
 
 .. parsed-literal::
 
-    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
-    
+    waiting for remote response, please wait run_analysis http://10.194.169.161:32784
+    the job has been submitted on the remote server
+     | the job is working remotely, please wait status=done - job_id=-6235342954244489107 
     
     query done succesfully!
 
@@ -250,7 +251,7 @@ you can acess memeber by name:
 
 .. parsed-literal::
 
-    <oda_api.data_products.NumpyDataProduct at 0x117c8f828>
+    <oda_api.data_products.NumpyDataProduct at 0x1160e7f60>
 
 
 
@@ -265,7 +266,7 @@ or by position in the data list
 
 .. parsed-literal::
 
-    <oda_api.data_products.NumpyDataProduct at 0x117c8f828>
+    <oda_api.data_products.NumpyDataProduct at 0x1160e7f60>
 
 
 
@@ -282,7 +283,7 @@ the ODA catalog
 .. raw:: html
 
     <i>Table length=4</i>
-    <table id="table4694015728" class="table-striped table-bordered table-condensed">
+    <table id="table4665015936" class="table-striped table-bordered table-condensed">
     <thead><tr><th>meta_ID</th><th>src_names</th><th>significance</th><th>ra</th><th>dec</th><th>NEW_SOURCE</th><th>ISGRI_FLAG</th><th>FLAG</th><th>ERR_RAD</th></tr></thead>
     <thead><tr><th></th><th></th><th></th><th>deg</th><th>deg</th><th></th><th></th><th></th><th></th></tr></thead>
     <thead><tr><th>int64</th><th>str12</th><th>float64</th><th>float64</th><th>float64</th><th>int64</th><th>int64</th><th>int64</th><th>float64</th></tr></thead>
@@ -335,8 +336,9 @@ to generate a catalog to pass to the dispatcher api
 
 .. parsed-literal::
 
-    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
-    
+    waiting for remote response, please wait run_analysis http://10.194.169.161:32784
+    the job has been submitted on the remote server
+     / the job is working remotely, please wait status=done - job_id=-101925144157579535  35  
     
     query done succesfully!
 
@@ -353,9 +355,10 @@ you can explore the image with the following command
     ------------------------------
     name: mosaic_image
     meta_data dict_keys(['src_name', 'instrument', 'product', 'query_parameters'])
-    number of data units 1
+    number of data units 2
     ------------------------------
-    data uniti 0 ,name: ISGR-MOSA-IMA
+    data uniti 0 ,name: Primary
+    data uniti 1 ,name: ISGR-MOSA-IMA
 
 
 .. code:: ipython3
@@ -375,7 +378,7 @@ you can explore the image with the following command
 
 .. code:: ipython3
 
-    data.mosaic_image_0.data_unit[0].data
+    data.mosaic_image_0.data_unit[1].data
 
 
 
@@ -398,7 +401,7 @@ you can explore the image with the following command
 
 .. code:: ipython3
 
-    data.mosaic_image_0.data_unit[0].data.shape
+    data.mosaic_image_0.data_unit[1].data.shape
 
 
 
@@ -426,7 +429,7 @@ the ODA Image plotting tool
 
 .. code:: ipython3
 
-    im.show()
+    im.show(unit_ID=1)
 
 
 
@@ -435,7 +438,7 @@ the ODA Image plotting tool
 
 .. code:: ipython3
 
-    data.mosaic_image_0.data_unit[0].header
+    data.mosaic_image_0.data_unit[1].header
 
 
 
@@ -454,7 +457,7 @@ the ODA Image plotting tool
      'CHANMAX': 40,
      'CHANMIN': 20,
      'CHANTYPE': 'PI',
-     'CHECKSUM': 'dCOEfBN9dBNEdBN9',
+     'CHECKSUM': 'nRMqnQLnnQLnnQLn',
      'COMMENT': 'STAMP :',
      'CONFIGUR': 'latest_osa_sw_2015-11-10T03:50:02',
      'CREATOR': 'ii_skyimage 5.4.4',
@@ -466,8 +469,8 @@ the ODA Image plotting tool
      'CTYPE2': 'DEC--TAN',
      'CUNIT1': 'deg',
      'CUNIT2': 'deg',
-     'DATASUM': '3562348081',
-     'DATE': '2019-03-15T12:08:54',
+     'DATASUM': '2370916866',
+     'DATE': '2019-05-27T06:46:26',
      'DATE-END': '2003-03-15T23:57:39',
      'DATE-OBS': '2003-03-15T23:27:53',
      'DEADC': 0.775885283090927,
@@ -500,7 +503,7 @@ the ODA Image plotting tool
      'ORIGIN': 'ISDC',
      'PCOUNT': 0,
      'RADECSYS': 'FK5',
-     'STAMP': '2019-03-15T12:08:54 ii_skyimage 5.4.4',
+     'STAMP': '2019-05-27T06:46:26 ii_skyimage 5.4.4',
      'TELAPSE': 1589.0,
      'TELESCOP': 'INTEGRAL',
      'TFIRST': 1169.97884473118,
@@ -535,7 +538,8 @@ the ODA LC plotting tool
 .. parsed-literal::
 
     waiting for remote response, please wait run_analysis http://10.194.169.161:32784
-    
+    the job has been submitted on the remote server
+     / the job is working remotely, please wait status=done - job_id=815032431550934891  91  
     
     query done succesfully!
 
@@ -727,7 +731,29 @@ explore LC
 
 .. parsed-literal::
 
-    {'BITPIX': 8, 'EXTEND': True, 'NAXIS': 0, 'SIMPLE': True}
+    {'BITPIX': 8,
+     'DEC': '-37.844167',
+     'EXTEND': True,
+     'NAXIS': 0,
+     'RA': '255.986542',
+     'SIMPLE': True,
+     'T1': '2003-03-15T23:27:40.0',
+     'T2': '2003-03-16T00:03:12.0',
+     'api': 'True',
+     'detection_threshold': '5.0',
+     'dry_run': 'False',
+     'instrument': 'isgri',
+     'job_id': '815032431550934891',
+     'off_line': 'False',
+     'osa_version': 'OSA10.2',
+     'product_type': 'isgri_lc',
+     'query_status': 'ready',
+     'query_type': 'Real',
+     'radius': '15.0',
+     'session_id': '7627NJ7QGDZ6OT52',
+     'time_bin': '70',
+     'url': 'None/product_type=isgri_lc&verbose=False&dry_run=False&osa_version=OSA10.2&RA=255.986542&T2=2003-03-16T00%3A03%3A12.0&time_bin=70&session_id=7627NJ7QGDZ6OT52&T1=2003-03-15T23%3A27%3A40.0&instrument=isgri&api=True&radius=15.0&detection_threshold=5.0&query_type=Real&off_line=False&DEC=-37.844167&query_status=ready&job_id=815032431550934891',
+     'verbose': 'False'}
 
 
 
@@ -775,7 +801,7 @@ Polar LC
 
 .. parsed-literal::
 
-    <oda_api.data_products.NumpyDataProduct at 0x119fbf2b0>
+    <oda_api.data_products.NumpyDataProduct at 0x1178e1fd0>
 
 
 
@@ -810,7 +836,7 @@ Polar LC
 .. code:: ipython3
 
     %matplotlib inline
-    OdaLightCurve(lc).show(unit_ID=0)
+    OdaLightCurve(lc).show(unit_ID=1)
 
 
 
@@ -898,14 +924,15 @@ SPIACS LC
     ------------------------------
     name: 
     meta_data dict_keys(['src_name', 'rate', 'time_bin', 'rate_err', 'time'])
-    number of data units 1
+    number of data units 2
     ------------------------------
-    data uniti 0 ,name: RATE
+    data uniti 0 ,name: Primary
+    data uniti 1 ,name: RATE
 
 
 .. code:: ipython3
 
-    lc.data_unit[0].header
+    lc.data_unit[1].header
 
 
 
@@ -913,6 +940,8 @@ SPIACS LC
 .. parsed-literal::
 
     {'BITPIX': 8,
+     'DATE-END': '2003-03-15T23:27:40.007',
+     'DATE-OBS': '2003-03-15T23:27:40.007',
      'EXTNAME': 'RATE',
      'GCOUNT': 1,
      'INSTRUME': 'SPIACS',
@@ -922,15 +951,17 @@ SPIACS LC
      'NAXIS2': 886,
      'ONTIME': 1772.0,
      'PCOUNT': 0,
+     'TASSIGN': 'SATELLITE',
      'TELESCOP': 'INTEGRAL',
      'TFIELDS': 3,
      'TFORM1': 'D',
      'TFORM2': 'D',
      'TFORM3': 'D',
+     'TIMEDEL': 2.0,
      'TIMEREF': 'LOCAL',
      'TIMESYS': 'TT',
      'TIMEUNIT': 's',
-     'TIMEZERO': -885.993,
+     'TIMEZERO': 101086946.00000004,
      'TSTART': 101086060.00700004,
      'TSTOP': 101087832.00700004,
      'TTYPE1': 'TIME',
@@ -942,7 +973,7 @@ SPIACS LC
 
 .. code:: ipython3
 
-    lc.data_unit[0].data[0:10]
+    lc.data_unit[1].data[0:10]
 
 
 
@@ -965,7 +996,7 @@ SPIACS LC
 
 .. code:: ipython3
 
-    OdaLightCurve(lc).show(unit_ID=0)
+    OdaLightCurve(lc).show(unit_ID=1)
 
 
 
@@ -993,7 +1024,8 @@ the ODA and spectra
 .. parsed-literal::
 
     waiting for remote response, please wait run_analysis http://10.194.169.161:32784
-    
+    the job has been submitted on the remote server
+     / the job is working remotely, please wait status=done - job_id=-1255063856769622835  35  
     
     query done succesfully!
 
@@ -1151,14 +1183,14 @@ explore spectra
      'BITPIX': 8,
      'BKGPARAM': 'rebinned_back_spe.fits',
      'CHANTYPE': 'PI',
-     'CHECKSUM': 'oKaFoJWEoJaEoJUE',
+     'CHECKSUM': 'lKaDnHXDlHaDlHUD',
      'COMMENT': '  on the next keyword which has the name CONTINUE.',
      'CONFIGUR': 'latest_osa_sw_2015-11-10T03:50:02',
      'CORRFILE': 'NONE',
      'CORRSCAL': 0,
      'CREATOR': 'ISGRISpectraSum.v5.4.2.extractall',
      'DATASUM': '3507849637',
-     'DATE': '2018-12-14T13:50:24.083597',
+     'DATE': '2019-05-28T09:10:50.691804',
      'DEADC': 0.775885283090927,
      'DEC_OBJ': -29.3624725341797,
      'DETCHANS': 62,
@@ -1298,9 +1330,10 @@ JEM-X test
 
 .. parsed-literal::
 
-    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
+    ['010200230010.001']
+    waiting for remote response, please wait run_analysis http://10.194.169.161:32784
     the job has been submitted on the remote server
-     - the job is working remotely, please wait status=done - job_id=-7499550732554273084 
+     - the job is working remotely, please wait status=done - job_id=734507049305780161  61  
     
     query done succesfully!
 
@@ -1319,9 +1352,10 @@ JEM-X test
 
 .. parsed-literal::
 
-    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
+    ['010200230010.001']
+    waiting for remote response, please wait run_analysis http://10.194.169.161:32784
     the job has been submitted on the remote server
-     \ the job is working remotely, please wait status=done - job_id=-73930099223456509 
+     - the job is working remotely, please wait status=done - job_id=-73930099223456509  09  
     
     query done succesfully!
 
@@ -1340,8 +1374,10 @@ JEM-X test
 
 .. parsed-literal::
 
-    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
-    
+    ['010200230010.001']
+    waiting for remote response, please wait run_analysis http://10.194.169.161:32784
+    the job has been submitted on the remote server
+     / the job is working remotely, please wait status=done - job_id=-8193837570595478341  41  
     
     query done succesfully!
 
