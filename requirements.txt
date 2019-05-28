@@ -2,3 +2,4 @@ future
 astropy
 json_tricks
 matplotlib
+numpy
