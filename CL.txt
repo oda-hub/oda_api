@@ -1,5 +1,5 @@
  git add .
- git commit -m'inproving doc and api errors'
+ git commit -m'improving error communication'
  git push origin master && git push origin-github master
  git tag  -d stable
  git add .

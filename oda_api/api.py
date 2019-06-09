@@ -38,10 +38,12 @@ class NoTraceBackWithLineNumber(Exception):
         self.args = "{0.__name__} (line {1}): {2}".format(type(self), ln, msg),
         sys.exit(self)
 
+
 class NoTraceBackWithLineNumber(NoTraceBackWithLineNumber):
     pass
 
-class RemoteException(NoTraceBackWithLineNumber ):
+
+class RemoteException(NoTraceBackWithLineNumber):
 
     def __init__(self, message='Remote analysis exception', debug_message=''):
         super(RemoteException, self).__init__(message)
@@ -49,6 +51,18 @@ class RemoteException(NoTraceBackWithLineNumber ):
         self.debug_message=debug_message
 
 
+def safe_run(func):
+
+    def func_wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            message =  'remote/connection error, server response is not valid, check your credentials and connection status'
+            message += '\n exception message: '
+            message += '%s'%e
+            raise RemoteException(message=message)
+
+    return func_wrapper
 
 class DispatcherAPI(object):
 
@@ -94,8 +108,7 @@ class DispatcherAPI(object):
     def _progess_bar(self,info=''):
         print("\r %s the job is working remotely, please wait %s"%(next(self._progress_iter),info),end='')
 
-
-
+    @safe_run
     def request(self,parameters_dict,handle='run_analysis',url=None):
         if 'scw_list' in parameters_dict.keys():
             print (parameters_dict['scw_list'])
@@ -196,10 +209,7 @@ class DispatcherAPI(object):
                 #print('no dict', type(b))
                 self.dig_list(b)
 
-
-
-
-
+    @safe_run
     def _decode_res_json(self,res):
         try:
             if hasattr(res,'content'):
@@ -211,12 +221,9 @@ class DispatcherAPI(object):
             self.dig_list(res)
             return res
         except Exception as e:
-            print('response not valid', res)
-            raise RemoteException(message='remote/connection error')
+            raise RemoteException(message='remote/connection error, server response is not valid, check your credentials and connection status')
 
-
-
-
+    @safe_run
     def get_instrument_description(self,instrument=None):
         if instrument is None:
             instrument=self.instrument
@@ -224,9 +231,7 @@ class DispatcherAPI(object):
         res=requests.get("%s/api/meta-data"%self.url,params=dict(instrument=instrument),cookies=self.cookies)
         self._decode_res_json(res)
 
-
-
-
+    @safe_run
     def get_product_description(self,instrument,product_name):
         res = requests.get("%s/api/meta-data" % self.url, params=dict(instrument=instrument,product_type=product_name),cookies=self.cookies)
 
@@ -234,11 +239,9 @@ class DispatcherAPI(object):
         print ('parameters for  product',product_name,'and instrument',instrument)
         self._decode_res_json(res)
 
-
-
+    @safe_run
     def get_instruments_list(self):
         #print ('instr',self.instrument)
-
         res = requests.get("%s/api/instr-list" % self.url,params=dict(instrument=self.instrument),cookies=self.cookies)
         return self._decode_res_json(res)
 
