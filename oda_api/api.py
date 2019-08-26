@@ -117,6 +117,9 @@ class DispatcherAPI(object):
             url=self.url
         parameters_dict['api']='True'
         print('waiting for remote response, please wait',handle,url)
+        for k in parameters_dict.keys():
+            print(k,parameters_dict[k])
+
         res= requests.get("%s/%s" %(url, handle), params=parameters_dict,cookies=self.cookies)
         query_status = res.json()['query_status']
         job_id = res.json()['job_monitor']['job_id']
@@ -213,7 +216,9 @@ class DispatcherAPI(object):
     def _decode_res_json(self,res):
         try:
             if hasattr(res,'content'):
-                _js = json.loads(res.content)
+                #_js = json.loads(res.content)
+                #fixed issue with python 3.5
+                _js = res.json()
                 res = ast.literal_eval(str(_js).replace('null', 'None'))
             else:
                 res = ast.literal_eval(str(res).replace('null', 'None'))
