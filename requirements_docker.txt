@@ -1,0 +1,7 @@
+future
+astropy
+json_tricks
+matplotlib
+numpy
+scipy
+ipython
