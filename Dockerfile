@@ -67,10 +67,10 @@ ADD doc/source/user_guide/ $HOME/user_guide
 
 USER root
 #RUN ln -s /opt/heasoft/x86_64-unknown-linux-gnu-libc2.17 /opt/heasoft/x86_64-pc-linux-gnu-libc2.17
-RUN pip install numpy scipy ipython
-RUN pip install -r /requirements.txt
-RUN python setup.py install
+RUN pip install  scipy ipython
 RUN pip install git+https://github.com/giacomov/3ML.git
 RUN pip install git+https://github.com/giacomov/astromodels.git --upgrade
+RUN pip install -r /requirements.txt
+RUN python setup.py install
 USER ${NB_USER}
 WORKDIR /home/jovyan/user_guide
