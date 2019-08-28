@@ -1,6 +1,6 @@
  git add .
  git commit -m'improving error communication'
- git push origin master && git push origin-github master
+ git push origin master && git push origin-github master && git push  origin-cdcihub
  git tag  -d stable
  git add .
  git commit -m'tag stable'
