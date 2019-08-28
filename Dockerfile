@@ -61,6 +61,9 @@ ENV XANBIN "/opt/heasoft/x86_64-pc-linux-gnu-libc2.17"
 ENV XRDEFAULTS "/opt/heasoft/x86_64-pc-linux-gnu-libc2.17/xrdefaults"
 
 ADD requirements.txt /requirements.txt
+ADD setup.py /setup.py
+ADD oda_api /oda_api
+ADD doc/source/user_guide/ $HOME/user_guide
 
 USER root
 #RUN ln -s /opt/heasoft/x86_64-unknown-linux-gnu-libc2.17 /opt/heasoft/x86_64-pc-linux-gnu-libc2.17
@@ -69,5 +72,4 @@ RUN pip install numpy scipy ipython
 RUN pip install git+https://github.com/giacomov/3ML.git
 RUN pip install git+https://github.com/giacomov/astromodels.git --upgrade
 USER ${NB_USER}
-ADD doc/source/user_guide/ $HOME/user_guide
 WORKDIR /home/jovyan/user_guide
