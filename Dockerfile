@@ -61,6 +61,7 @@ ENV XANBIN "/opt/heasoft/x86_64-pc-linux-gnu-libc2.17"
 ENV XRDEFAULTS "/opt/heasoft/x86_64-pc-linux-gnu-libc2.17/xrdefaults"
 
 ADD requirements.txt /requirements.txt
+ADD requirements_docker.txt /requirements_docker.txt
 ADD setup.py /setup.py
 ADD oda_api /oda_api
 ADD doc/source/user_guide/ $HOME/user_guide
