@@ -70,9 +70,9 @@ USER root
 RUN ln -s /opt/heasoft/x86_64-unknown-linux-gnu-libc2.17 /opt/heasoft/x86_64-pc-linux-gnu-libc2.17
 #RUN pip install  future
 RUN pip install -r /requirements.txt
-RUN pip install git+https://github.com/giacomov/3ML.git
-RUN pip install git+https://github.com/giacomov/astromodels.git
+#RUN pip install git+https://github.com/giacomov/3ML.git
+#RUN pip install git+https://github.com/giacomov/astromodels.git
 #RUN pip install -r /requirements.txt
 RUN python setup.py install
 USER ${NB_USER}
-WORKDIR /home/jovyan
+WORKDIR /home/jovyan/user_guide
