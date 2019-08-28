@@ -9,6 +9,7 @@ The complete user guide will be available during spring 2019
    :maxdepth: 1
 
    quick start  <TestAPI.rst>
+   examples <https://github.com/cdcihub/oda_api_benchmark>
 
 
 
