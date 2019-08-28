@@ -5,6 +5,8 @@
  git add .
  git commit -m'tag stable'
  git push --delete origin-github stable
+ git push --delete origin-cdcihub stable
  git tag -a stable  -m stable
- git push origin master && git push origin-github master
+ git push origin master && git push origin-github master && git push  origin-cdcihub master
  git push origin-github stable
+ git push origin-cdcihub stable
