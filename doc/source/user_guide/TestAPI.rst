@@ -19,19 +19,26 @@ build the dispatcher object
 
 .. code:: ipython3
 
-    #external axcess
-    cookies=dict(_oauth2_proxy=open(os.environ.get('HOME')+'/.oda-api-token').read().strip())
-    disp=DispatcherAPI(host='analyse-staging-1.2.reproducible.online/dispatch-data',instrument='mock',cookies=cookies,protocol='https')
+    #read token from cookies of the following host
+    host='analyse-staging-1.2.reproducible.online'
     
-    #internal
-    #disp=DispatcherAPI(host='cdcicn01.isdc.unige.ch:32003/dispatch-data',instrument='mock')
+    if host=='analyse-staging-1.2.reproducible.online':
+        try:
+            token=raw_input() # token for restricted access server
+        except:
+            token=input() # token for restricted access server
+    else:
+        token=''
     
-    #cdicweb01
-    #disp=DispatcherAPI(host='10.194.169.161',port=32784,instrument='mock')
+    cookies=dict(_oauth2_proxy=token)
     
-    #local
-    #disp=DispatcherAPI(host='0.0.0.0',port=5000,instrument='mock')
-     
+    disp=DispatcherAPI(host=host+'/dispatch-data',instrument='mock',cookies=cookies,protocol='https')
+
+
+.. parsed-literal::
+
+    YW5kcmVhLnRyYW1hY2VyZUBnbWFpbC5jb20=|1566574892|YLhJVPnnLgcArZNn9903NmD12KQ=
+
 
 .. code:: ipython3
 
