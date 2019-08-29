@@ -19,7 +19,7 @@ COPY . ${HOME}
 
 ADD requirements_docker.txt /requirements_docker.txt
 ADD doc/source/user_guide/ $HOME/user_guide
-RUN chown -R ${NB_UID} ${HOME}
+#RUN chown -R ${NB_UID} ${HOME}
 RUN pip install  future
 RUN pip install -r /requirements_docker.txt
 USER ${NB_USER}
