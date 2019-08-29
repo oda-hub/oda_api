@@ -2,12 +2,12 @@
 ODA API Tutorial
 ==================
 
-The following tutorial covers a large fraction of the code features
+The following tutorial covers a large fraction of the code features. The examples notebooks reproduce the analysis published in ...
 
 .. toctree::
    :maxdepth: 1
 
-   quick start  <TestAPI.rst>
+   full tutorial  <TestAPI.rst>
    examples <https://github.com/cdcihub/oda_api_benchmark>
 
 
