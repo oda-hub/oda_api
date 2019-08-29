@@ -12,7 +12,9 @@ USER root
 ADD requirements_docker.txt /requirements_docker.txt
 RUN pip install  future
 RUN pip install -r /requirements_docker.txt
+ADD doc/source/user_guide/ $HOME/user_guide
+
+RUN chown -R ${NB_UID} ${HOME}
 
 USER ${NB_USER}
-ADD doc/source/user_guide/ $HOME/user_guide
 WORKDIR /home/jovyan/user_guide
