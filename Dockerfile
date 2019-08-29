@@ -1,4 +1,4 @@
-FROM alpine:3.7
+FROM python:3.7-alpine
 
 pip install --no-cache-dir notebook==5.*
 ARG NB_USER=jovyan
