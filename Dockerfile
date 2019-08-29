@@ -1,4 +1,4 @@
-FROM integralsw/osa-python:11.0-3-g78d73880-20190124-105932-refcat-42.0-heasoft-6.26.1-python-3.6.9 1 GB
+FROM integralsw/osa-python:11.0-3-g78d73880-20190124-105932-refcat-42.0-heasoft-6.26.1-python-3.6.9
 
 
 RUN source /init.sh; pip install --no-cache-dir notebook==5.*
