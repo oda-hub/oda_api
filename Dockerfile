@@ -27,45 +27,13 @@ RUN ln -s /opt/heasoft/x86_64-unknown-linux-gnu-libc2.17 /opt/heasoft/x86_64-pc-
 USER ${NB_USER}
 
 
-ENV FTOOLS "/opt/heasoft/x86_64-pc-linux-gnu-libc2.17"
-ENV FTOOLSINPUT "stdin"
-ENV FTOOLSOUTPUT "stdout"
-ENV HEADAS "/opt/heasoft/x86_64-pc-linux-gnu-libc2.17"
-ENV HOME "/home/jovyan"
-ENV HOME_OVERRRIDE "/home/jovyan"
-ENV HOSTNAME "5a2a5cfe79e7"
-ENV LD_LIBRARY_PATH "/opt/heasoft/x86_64-pc-linux-gnu-libc2.17/lib"
-ENV LHEAPERL "/usr/bin/perl"
-ENV LHEASOFT "/opt/heasoft/x86_64-pc-linux-gnu-libc2.17"
-ENV LHEA_DATA "/opt/heasoft/x86_64-pc-linux-gnu-libc2.17/refdata"
-ENV LHEA_HELP "/opt/heasoft/x86_64-pc-linux-gnu-libc2.17/help"
-ENV LYNX_CFG "/opt/heasoft/x86_64-pc-linux-gnu-libc2.17/lib"
-ENV NB_UID "1000"
-ENV PATH "/pyenv/shims:/pyenv/bin:/opt/heasoft/x86_64-pc-linux-gnu-libc2.17/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-ENV PERL5LIB "/opt/heasoft/x86_64-pc-linux-gnu-libc2.17/lib/perl"
-ENV PERLLIB "/opt/heasoft/x86_64-pc-linux-gnu-libc2.17/lib/perl"
-ENV PFCLOBBER "1"
-ENV PFILES "/home/jovyan/pfiles;/opt/heasoft/x86_64-pc-linux-gnu-libc2.17/syspfiles"
-ENV PGPLOT_DIR "/opt/heasoft/x86_64-pc-linux-gnu-libc2.17/lib"
-ENV PGPLOT_FONT "/opt/heasoft/x86_64-pc-linux-gnu-libc2.17/lib/grfont.dat"
-ENV PGPLOT_RGB "/opt/heasoft/x86_64-pc-linux-gnu-libc2.17/lib/rgb.txt"
-ENV POW_LIBRARY "/opt/heasoft/x86_64-pc-linux-gnu-libc2.17/lib/pow"
-ENV PYENV_ROOT "/pyenv"
-ENV PYENV_SHELL "bash"
-ENV PYTHONPATH "/opt/heasoft/x86_64-pc-linux-gnu-libc2.17/lib/python:/opt/heasoft/x86_64-pc-linux-gnu-libc2.17/lib"
-ENV SHLVL "1"
-ENV TCLRL_LIBDIR "/opt/heasoft/x86_64-pc-linux-gnu-libc2.17/lib"
-ENV TERM "xterm"
-ENV USER "jovyan"
-ENV XANADU "/opt/heasoft"
-ENV XANBIN "/opt/heasoft/x86_64-pc-linux-gnu-libc2.17"
-ENV XRDEFAULTS "/opt/heasoft/x86_64-pc-linux-gnu-libc2.17/xrdefaults"
+
 
 ADD requirements_docker.txt /requirements_docker.txt
 ADD doc/source/user_guide/ $HOME/user_guide
 
 USER root
-RUN ln -s /opt/heasoft/x86_64-unknown-linux-gnu-libc2.17 /opt/heasoft/x86_64-pc-linux-gnu-libc2.17
+#RUN ln -s /opt/heasoft/x86_64-unknown-linux-gnu-libc2.17 /opt/heasoft/x86_64-pc-linux-gnu-libc2.17
 RUN pip install  future
 RUN pip install -r /requirements_docker.txt
 RUN pip install git+https://github.com/giacomov/3ML.git
