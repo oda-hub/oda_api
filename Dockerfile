@@ -6,7 +6,7 @@ ENV USER ${NB_USER}
 ENV NB_UID ${NB_UID}
 ENV HOME /home/${NB_USER}
 
-RUN mkdir -pv $HOME; chown -R ${NB_UID}:${NB_UID} ${HOME}
+#RUN mkdir -pv $HOME; chown -R ${NB_UID}:${NB_UID} ${HOME}
 
 RUN adduser  \
     --uid ${NB_UID} \
