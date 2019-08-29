@@ -15,7 +15,16 @@ RUN adduser  \
 COPY . ${HOME}
 USER root
 RUN chown -R ${NB_UID} ${HOME}
+USER ${NB_USER}
+
+RUN echo 'source /init.sh' >> $HOME/.bashrc
+#ADD init.sh /init.sh
+
 
 USER ${NB_USER}
+
 ADD doc/source/user_guide/ $HOME/user_guide
+RUN chown -R ${NB_UID} ${HOME}
+
+USER ${NB_USER}
 WORKDIR /home/jovyan/user_guide
