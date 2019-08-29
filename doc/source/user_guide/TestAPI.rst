@@ -22,17 +22,17 @@ build the dispatcher object
     host='analyse-staging-1.2.reproducible.online'
     
     #locally stored token
-    cookies=dict(_oauth2_proxy=open(os.environ.get('HOME')+'/.oda-api-token').read().strip())
+    #cookies=dict(_oauth2_proxy=open(os.environ.get('HOME')+'/.oda-api-token').read().strip())
     
     #interactive usage 
-    #if host=='analyse-staging-1.2.reproducible.online':
-    #    try:
-    #        token=raw_input() # token for restricted access server
-    #    except:
-    #        token=input() # token for restricted access server
-    #else:
-    #    token=''
-    #cookies=dict(_oauth2_proxy=token)
+    if host=='analyse-staging-1.2.reproducible.online':
+        try:
+            token=raw_input() # token for restricted access server
+        except:
+            token=input() # token for restricted access server
+    else:
+        token=''
+    cookies=dict(_oauth2_proxy=token)
     
     disp=DispatcherAPI(host='analyse-staging-1.2.reproducible.online/dispatch-data',instrument='mock',cookies=cookies,protocol='https')
 
