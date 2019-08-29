@@ -10,7 +10,7 @@ Installation
 1) Anaconda
      .. code-block:: bash
 
-        - while read requirement; do conda install --yes $requirement; done < requirements.txt
+        - conda  install --file requirements.txt
         - python setup.py install
 
 2) PIP

@@ -57,10 +57,14 @@ def safe_run(func):
         try:
             return func(*args, **kwargs)
         except Exception as e:
-            message =  'remote/connection error, server response is not valid, check your credentials and connection status'
-            message += '\n exception message: '
-            message += '%s'%e
-            raise RemoteException(message=message)
+           message =  'the remote server response is not valid\n'
+           message += 'possible causes: \n'
+           message += '- connection error\n'
+           message += '- wrong credentials\n'
+           message += '- error on the remote server\n'
+           message += '\n exception message: '
+           message += '%s'%e
+           raise RemoteException(message=message)
 
     return func_wrapper
 
@@ -116,7 +120,7 @@ class DispatcherAPI(object):
         if url is None:
             url=self.url
         parameters_dict['api']='True'
-        print('waiting for remote response, please wait',handle,url)
+        print('- waiting for remote response, please wait',handle,url)
         for k in parameters_dict.keys():
             print(k,parameters_dict[k])
 
