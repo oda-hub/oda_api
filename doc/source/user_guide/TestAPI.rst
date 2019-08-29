@@ -19,25 +19,22 @@ build the dispatcher object
 
 .. code:: ipython3
 
-    #read token from cookies of the following host
     host='analyse-staging-1.2.reproducible.online'
     
-    if host=='analyse-staging-1.2.reproducible.online':
-        try:
-            token=raw_input() # token for restricted access server
-        except:
-            token=input() # token for restricted access server
-    else:
-        token=''
+    #locally stored token
+    cookies=dict(_oauth2_proxy=open(os.environ.get('HOME')+'/.oda-api-token').read().strip())
     
-    cookies=dict(_oauth2_proxy=token)
+    #interactive usage 
+    #if host=='analyse-staging-1.2.reproducible.online':
+    #    try:
+    #        token=raw_input() # token for restricted access server
+    #    except:
+    #        token=input() # token for restricted access server
+    #else:
+    #    token=''
+    #cookies=dict(_oauth2_proxy=token)
     
-    disp=DispatcherAPI(host=host+'/dispatch-data',instrument='mock',cookies=cookies,protocol='https')
-
-
-.. parsed-literal::
-
-    YW5kcmVhLnRyYW1hY2VyZUBnbWFpbC5jb20=|1566574892|YLhJVPnnLgcArZNn9903NmD12KQ=
+    disp=DispatcherAPI(host='analyse-staging-1.2.reproducible.online/dispatch-data',instrument='mock',cookies=cookies,protocol='https')
 
 
 .. code:: ipython3
@@ -178,7 +175,23 @@ submitting it
 
 .. parsed-literal::
 
-    waiting for remote response, please wait run_analysis http://10.194.169.161:32784
+    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
+    T1 2003-03-15T23:27:40.0
+    T2 2003-03-16T00:03:12.0
+    osa_version OSA10.2
+    RA a
+    DEC -37.844167
+    detection_threshold 5.0
+    radius 15.0
+    instrument isgri
+    product_type isgri_image
+    query_type Real
+    off_line (False,)
+    query_status ('new',)
+    verbose (False,)
+    session_id 5CDBXZO4CDYVFNL2
+    dry_run (True,)
+    api True
     
     
     query failed!
@@ -193,13 +206,13 @@ submitting it
     An exception has occurred, use %tb to see the full traceback.
 
 
-    SystemExit: RemoteException (line 47): Remote analysis exception
+    SystemExit: RemoteException (line 49): Remote analysis exception
 
 
 
 .. parsed-literal::
 
-    /Users/orion/anaconda3/lib/python3.7/site-packages/IPython/core/interactiveshell.py:3275: UserWarning: To exit: use 'exit', 'quit', or Ctrl-D.
+    /Users/orion/anaconda3/lib/python3.7/site-packages/IPython/core/interactiveshell.py:3334: UserWarning: To exit: use 'exit', 'quit', or Ctrl-D.
       warn("To exit: use 'exit', 'quit', or Ctrl-D.", stacklevel=1)
 
 
@@ -226,9 +239,27 @@ now we skip the dry\_run to actually get the products
 
 .. parsed-literal::
 
-    waiting for remote response, please wait run_analysis http://10.194.169.161:32784
+    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
+    T1 2003-03-15T23:27:40.0
+    T2 2003-03-16T00:03:15.0
+    E1_keV 20.0
+    E2_keV 40.0
+    osa_version OSA10.2
+    RA 255.986542
+    DEC -37.844167
+    detection_threshold 5.0
+    radius 15.0
+    instrument isgri
+    product_type isgri_image
+    query_type Real
+    off_line (False,)
+    query_status ('new',)
+    verbose (False,)
+    session_id 5SGAP41P0WIE9833
+    dry_run (False,)
+    api True
     the job has been submitted on the remote server
-     | the job is working remotely, please wait status=done - job_id=-6235342954244489107 
+     - the job is working remotely, please wait status=done - job_id=-6235342954244489107 9107 
     
     query done succesfully!
 
@@ -258,7 +289,7 @@ you can acess memeber by name:
 
 .. parsed-literal::
 
-    <oda_api.data_products.NumpyDataProduct at 0x1160e7f60>
+    <oda_api.data_products.NumpyDataProduct at 0x1189f9860>
 
 
 
@@ -273,7 +304,7 @@ or by position in the data list
 
 .. parsed-literal::
 
-    <oda_api.data_products.NumpyDataProduct at 0x1160e7f60>
+    <oda_api.data_products.NumpyDataProduct at 0x1189f9860>
 
 
 
@@ -290,7 +321,7 @@ the ODA catalog
 .. raw:: html
 
     <i>Table length=4</i>
-    <table id="table4665015936" class="table-striped table-bordered table-condensed">
+    <table id="table4708081056" class="table-striped table-bordered table-condensed">
     <thead><tr><th>meta_ID</th><th>src_names</th><th>significance</th><th>ra</th><th>dec</th><th>NEW_SOURCE</th><th>ISGRI_FLAG</th><th>FLAG</th><th>ERR_RAD</th></tr></thead>
     <thead><tr><th></th><th></th><th></th><th>deg</th><th>deg</th><th></th><th></th><th></th><th></th></tr></thead>
     <thead><tr><th>int64</th><th>str12</th><th>float64</th><th>float64</th><th>float64</th><th>int64</th><th>int64</th><th>int64</th><th>float64</th></tr></thead>
@@ -343,9 +374,28 @@ to generate a catalog to pass to the dispatcher api
 
 .. parsed-literal::
 
-    waiting for remote response, please wait run_analysis http://10.194.169.161:32784
+    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
+    T1 2003-03-15T23:27:40.0
+    T2 2003-03-16T00:03:15.0
+    E1_keV 20.0
+    E2_keV 40.0
+    osa_version OSA10.2
+    RA 255.986542
+    DEC -37.844167
+    detection_threshold 5.0
+    radius 15.0
+    selected_catalog {"cat_frame": "fk5", "cat_coord_units": "deg", "cat_column_list": [[67, 73, 76, 128], ["OAO 1657-415", "4U 1700-377", "GX 349+2", "GX 354-0"], [18.9650936126709, 22.8853702545166, 14.08207893371582, 9.371565818786621], [255.1972198486328, 255.97720336914062, 256.4292297363281, 262.9886169433594], [-41.653160095214844, -37.83725357055664, -36.415679931640625, -33.828392028808594], [-32768, -32768, -32768, -32768], [2, 2, 2, 2], [0, 0, 0, 0], [0.00014000000373926014, 0.0002800000074785203, 0.0002800000074785203, 0.0002800000074785203]], "cat_column_names": ["meta_ID", "src_names", "significance", "ra", "dec", "NEW_SOURCE", "ISGRI_FLAG", "FLAG", "ERR_RAD"], "cat_column_descr": [["meta_ID", "<i8"], ["src_names", "<U12"], ["significance", "<f8"], ["ra", "<f8"], ["dec", "<f8"], ["NEW_SOURCE", "<i8"], ["ISGRI_FLAG", "<i8"], ["FLAG", "<i8"], ["ERR_RAD", "<f8"]], "cat_lat_name": "dec", "cat_lon_name": "ra"}
+    instrument isgri
+    product_type isgri_image
+    query_type Real
+    off_line (False,)
+    query_status ('new',)
+    verbose (False,)
+    session_id CESVQ4RQCY9ED73M
+    dry_run (False,)
+    api True
     the job has been submitted on the remote server
-     / the job is working remotely, please wait status=done - job_id=-101925144157579535  35  
+     | the job is working remotely, please wait status=done - job_id=176021827695642761 2761 
     
     query done succesfully!
 
@@ -405,6 +455,18 @@ you can explore the image with the following command
 .. code:: ipython3
 
     hdu=data.mosaic_image_0.to_fits_hdu_list()
+
+
+.. parsed-literal::
+
+    WARNING: VerifyWarning: Keyword name 'detection_threshold' is greater than 8 characters or contains characters not allowed by the FITS standard; a HIERARCH card will be created. [astropy.io.fits.card]
+    WARNING: VerifyWarning: Keyword name 'instrument' is greater than 8 characters or contains characters not allowed by the FITS standard; a HIERARCH card will be created. [astropy.io.fits.card]
+    WARNING: VerifyWarning: Keyword name 'osa_version' is greater than 8 characters or contains characters not allowed by the FITS standard; a HIERARCH card will be created. [astropy.io.fits.card]
+    WARNING: VerifyWarning: Keyword name 'product_type' is greater than 8 characters or contains characters not allowed by the FITS standard; a HIERARCH card will be created. [astropy.io.fits.card]
+    WARNING: VerifyWarning: Keyword name 'query_status' is greater than 8 characters or contains characters not allowed by the FITS standard; a HIERARCH card will be created. [astropy.io.fits.card]
+    WARNING: VerifyWarning: Keyword name 'query_type' is greater than 8 characters or contains characters not allowed by the FITS standard; a HIERARCH card will be created. [astropy.io.fits.card]
+    WARNING: VerifyWarning: Keyword name 'session_id' is greater than 8 characters or contains characters not allowed by the FITS standard; a HIERARCH card will be created. [astropy.io.fits.card]
+
 
 .. code:: ipython3
 
@@ -544,9 +606,26 @@ the ODA LC plotting tool
 
 .. parsed-literal::
 
-    waiting for remote response, please wait run_analysis http://10.194.169.161:32784
+    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
+    T1 2003-03-15T23:27:40.0
+    T2 2003-03-16T00:03:12.0
+    time_bin 70
+    osa_version OSA10.2
+    RA 255.986542
+    DEC -37.844167
+    detection_threshold 5.0
+    radius 15.0
+    instrument isgri
+    product_type isgri_lc
+    query_type Real
+    off_line (False,)
+    query_status ('new',)
+    verbose (False,)
+    session_id SE2BL9IRAZWSKI4W
+    dry_run (False,)
+    api True
     the job has been submitted on the remote server
-     / the job is working remotely, please wait status=done - job_id=815032431550934891  91  
+     / the job is working remotely, please wait status=done - job_id=815032431550934891 
     
     query done succesfully!
 
@@ -754,12 +833,12 @@ explore LC
      'off_line': 'False',
      'osa_version': 'OSA10.2',
      'product_type': 'isgri_lc',
-     'query_status': 'ready',
+     'query_status': 'submitted',
      'query_type': 'Real',
      'radius': '15.0',
-     'session_id': '7627NJ7QGDZ6OT52',
+     'session_id': 'SE2BL9IRAZWSKI4W',
      'time_bin': '70',
-     'url': 'None/product_type=isgri_lc&verbose=False&dry_run=False&osa_version=OSA10.2&RA=255.986542&T2=2003-03-16T00%3A03%3A12.0&time_bin=70&session_id=7627NJ7QGDZ6OT52&T1=2003-03-15T23%3A27%3A40.0&instrument=isgri&api=True&radius=15.0&detection_threshold=5.0&query_type=Real&off_line=False&DEC=-37.844167&query_status=ready&job_id=815032431550934891',
+     'url': 'http://www.astro.unige.ch/cdci/astrooda_?product_type=isgri_lc&verbose=False&dry_run=False&osa_version=OSA10.2&RA=255.986542&T2=2003-03-16T00%3A03%3A12.0&time_bin=70&session_id=SE2BL9IRAZWSKI4W&T1=2003-03-15T23%3A27%3A40.0&instrument=isgri&api=True&radius=15.0&detection_threshold=5.0&query_type=Real&off_line=False&DEC=-37.844167&query_status=submitted&job_id=815032431550934891',
      'verbose': 'False'}
 
 
@@ -782,7 +861,19 @@ Polar LC
 
 .. parsed-literal::
 
-    waiting for remote response, please wait run_analysis http://10.194.169.161:32784
+    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
+    T1 2016-12-18T08:32:21.000
+    T2 2016-12-18T08:34:01.000
+    time_bin 0.5
+    instrument polar
+    product_type polar_lc
+    query_type Real
+    off_line (False,)
+    query_status ('new',)
+    verbose (True,)
+    session_id 7EVG3VSE63NRDMLT
+    dry_run (False,)
+    api True
     
     
     query done succesfully!
@@ -808,7 +899,7 @@ Polar LC
 
 .. parsed-literal::
 
-    <oda_api.data_products.NumpyDataProduct at 0x1178e1fd0>
+    <oda_api.data_products.NumpyDataProduct at 0x11a06db38>
 
 
 
@@ -900,7 +991,24 @@ SPIACS LC
 
 .. parsed-literal::
 
-    waiting for remote response, please wait run_analysis http://10.194.169.161:32784
+    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
+    T1 2003-03-15T23:27:40.0
+    T2 2003-03-15T23:57:12.0
+    time_bin 2
+    osa_version OSA10.2
+    RA 255.986542
+    DEC -37.844167
+    detection_threshold 5.0
+    radius 15.0
+    instrument spi_acs
+    product_type spi_acs_lc
+    query_type Real
+    off_line (False,)
+    query_status ('new',)
+    verbose (False,)
+    session_id CCPC5ORX9N2J45JV
+    dry_run (False,)
+    api True
     
     
     query done succesfully!
@@ -1030,9 +1138,26 @@ the ODA and spectra
 
 .. parsed-literal::
 
-    waiting for remote response, please wait run_analysis http://10.194.169.161:32784
+    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
+    T1 2003-03-15T23:27:40.0
+    T2 2003-03-16T00:03:12.0
+    time_bin 50
+    osa_version OSA10.2
+    RA 255.986542
+    DEC -37.844167
+    detection_threshold 5.0
+    radius 15.0
+    instrument isgri
+    product_type isgri_spectrum
+    query_type Real
+    off_line (False,)
+    query_status ('new',)
+    verbose (False,)
+    session_id UYMNSS2QGHQ5D38F
+    dry_run (False,)
+    api True
     the job has been submitted on the remote server
-     / the job is working remotely, please wait status=done - job_id=-1255063856769622835  35  
+     \ the job is working remotely, please wait status=done - job_id=-1255063856769622835 2835 
     
     query done succesfully!
 
@@ -1338,9 +1463,23 @@ JEM-X test
 .. parsed-literal::
 
     ['010200230010.001']
-    waiting for remote response, please wait run_analysis http://10.194.169.161:32784
+    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
+    jemx_num 2
+    scw_list ['010200230010.001']
+    osa_version OSA10.2
+    detection_threshold 5.0
+    radius 15.0
+    instrument jemx
+    product_type jemx_image
+    query_type dummy
+    off_line (False,)
+    query_status ('new',)
+    verbose (False,)
+    session_id E2KZC9XLM7312UJX
+    dry_run (False,)
+    api True
     the job has been submitted on the remote server
-     - the job is working remotely, please wait status=done - job_id=734507049305780161  61  
+     / the job is working remotely, please wait status=done - job_id=734507049305780161 0161 
     
     query done succesfully!
 
@@ -1360,9 +1499,23 @@ JEM-X test
 .. parsed-literal::
 
     ['010200230010.001']
-    waiting for remote response, please wait run_analysis http://10.194.169.161:32784
+    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
+    jemx_nume 2
+    scw_list ['010200230010.001']
+    osa_version OSA10.2
+    detection_threshold 5.0
+    radius 15.0
+    instrument jemx
+    product_type jemx_lc
+    query_type Real
+    off_line (False,)
+    query_status ('new',)
+    verbose (False,)
+    session_id A0H5NQLRWCZIR09P
+    dry_run (False,)
+    api True
     the job has been submitted on the remote server
-     - the job is working remotely, please wait status=done - job_id=-73930099223456509  09  
+     \ the job is working remotely, please wait status=done - job_id=-73930099223456509 6509 
     
     query done succesfully!
 
@@ -1382,852 +1535,25 @@ JEM-X test
 .. parsed-literal::
 
     ['010200230010.001']
-    waiting for remote response, please wait run_analysis http://10.194.169.161:32784
+    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
+    jemx_num 2
+    scw_list ['010200230010.001']
+    osa_version OSA10.2
+    detection_threshold 5.0
+    radius 15.0
+    instrument jemx
+    product_type jemx_spectrum
+    query_type Real
+    off_line (False,)
+    query_status ('new',)
+    verbose (False,)
+    session_id UDG7NSP6SP1UXBWE
+    dry_run (False,)
+    api True
     the job has been submitted on the remote server
-     / the job is working remotely, please wait status=done - job_id=-8193837570595478341  41  
+     / the job is working remotely, please wait status=done - job_id=-8193837570595478341 8341 
     
     query done succesfully!
-
-
-spectral fitting with threeML
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code:: ipython3
-
-    from threeML.plugins.OGIPLike import  OGIPLike
-    from threeML.io.package_data import get_path_of_data_file
-    from threeML import *
-    warnings.filterwarnings('ignore')
-
-
-
-.. parsed-literal::
-
-    
-    WARNING UserWarning: Using default configuration from /Users/orion/anaconda3/envs/threeML/lib/python2.7/site-packages/threeML/data/threeML_config.yml. You might want to copy it to /Users/orion/.threeML/threeML_config.yml to customize it and avoid this warning.
-    
-    INFO:keyring.backend:Loading KWallet
-    INFO:keyring.backend:Loading SecretService
-    INFO:keyring.backend:Loading Windows
-    INFO:keyring.backend:Loading chainer
-    INFO:keyring.backend:Loading macOS
-    
-    WARNING RuntimeWarning: Env. variable OMP_NUM_THREADS is not set. Please set it to 1 for optimal performances in 3ML
-    
-    
-    WARNING RuntimeWarning: Env. variable MKL_NUM_THREADS is not set. Please set it to 1 for optimal performances in 3ML
-    
-    
-    WARNING RuntimeWarning: Env. variable NUMEXPR_NUM_THREADS is not set. Please set it to 1 for optimal performances in 3ML
-    
-
-
-.. code:: ipython3
-
-    
-    ogip_data = OGIPLike('ogip',
-                         observation='spec.fits',
-                         arf_file= 'arf.fits' ,
-                         response= 'rmf.fits')
-
-
-.. parsed-literal::
-
-    Auto-probed noise models:
-    - observation: gaussian
-    - background: None
-
-
-.. code:: ipython3
-
-    ogip_data.set_active_measurements('20-60')
-
-
-
-.. parsed-literal::
-
-    Range 20-60 translates to channels 7-24
-    Now using 18 channels out of 62
-
-
-.. code:: ipython3
-
-    import matplotlib.pyplot as plt
-
-.. code:: ipython3
-
-    ogip_data.view_count_spectrum()
-    plt.ylim(1E-5,10)
-
-
-
-.. parsed-literal::
-
-    bad channels shown in red hatching
-    
-
-
-
-
-.. parsed-literal::
-
-    (1e-05, 10)
-
-
-
-
-.. image:: TestAPI_files/TestAPI_85_2.png
-
-
-.. code:: ipython3
-
-    
-    fit_function = Cutoff_powerlaw()
-    
-    # define the point source
-    point_source = PointSource('ps', 0, 0, spectral_shape=fit_function)
-    
-    #define the model
-    model = Model(point_source)
-    
-    # create a data list
-    datalist = DataList(ogip_data)
-    
-    # make the joint likelihood
-    jl = JointLikelihood(model, datalist)
-    
-    #fit
-    jl.fit();
-
-
-.. parsed-literal::
-
-    Best fit values:
-    
-
-
-
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-    
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-    
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>result</th>
-          <th>unit</th>
-        </tr>
-        <tr>
-          <th>parameter</th>
-          <th></th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>ps.spectrum.main.Cutoff_powerlaw.K</th>
-          <td>(2.3 -1.1 +2.0) x 10^-3</td>
-          <td>1 / (cm2 keV s)</td>
-        </tr>
-        <tr>
-          <th>ps.spectrum.main.Cutoff_powerlaw.index</th>
-          <td>(5.3 +/- 2.5) x 10^-1</td>
-          <td></td>
-        </tr>
-        <tr>
-          <th>ps.spectrum.main.Cutoff_powerlaw.xc</th>
-          <td>9.8 -1.0 +1.1</td>
-          <td>keV</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-
-
-.. parsed-literal::
-
-    
-    Correlation matrix:
-    
-
-
-
-.. raw:: html
-
-    <table id="table4882631696">
-    <tr><td>1.00</td><td>-0.93</td><td>0.49</td></tr>
-    <tr><td>-0.93</td><td>1.00</td><td>-0.76</td></tr>
-    <tr><td>0.49</td><td>-0.76</td><td>1.00</td></tr>
-    </table>
-
-
-.. parsed-literal::
-
-    
-    Values of -log(likelihood) at the minimum:
-    
-
-
-
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-    
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-    
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>-log(likelihood)</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>ogip</th>
-          <td>5.24134</td>
-        </tr>
-        <tr>
-          <th>total</th>
-          <td>5.24134</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-
-
-.. parsed-literal::
-
-    
-    Values of statistical measures:
-    
-
-
-
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-    
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-    
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>statistical measures</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>AIC</th>
-          <td>18.196966</td>
-        </tr>
-        <tr>
-          <th>BIC</th>
-          <td>19.153796</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-
-
-.. code:: ipython3
-
-    display_spectrum_model_counts(jl, step=True);
-
-
-
-
-.. image:: TestAPI_files/TestAPI_87_0.png
-
-
-.. code:: ipython3
-
-    plot_point_source_spectra(jl.results, ene_min=20, ene_max=60, num_ene=100,
-                              flux_unit='erg / (cm2 s)')
-
-
-
-.. parsed-literal::
-
-    VBox(children=(HTML(value=u'Propagating errors : '), HTML(value=u''), FloatProgress(value=0.0)))
-
-
-
-
-.. image:: TestAPI_files/TestAPI_88_1.png
-
-
-
-
-.. image:: TestAPI_files/TestAPI_88_2.png
-
-
-.. code:: ipython3
-
-    
-    # A uniform prior can be defined directly, like:
-    model.ps.spectrum.main.Cutoff_powerlaw.index.prior = Uniform_prior(lower_bound=-2.,
-                                                                         upper_bound=2.)
-    
-    # or it can be set using the currently defined boundaries
-    model.ps.spectrum.main.Cutoff_powerlaw.xc.prior=  Uniform_prior(lower_bound=0,
-                                                                         upper_bound=100)
-    
-    
-    # The same for the Log_uniform prior
-    model.ps.spectrum.main.Cutoff_powerlaw.K.prior = Log_uniform_prior(lower_bound=1e-3,
-                                                                         upper_bound=100)
-    
-    
-    model.display()
-
-
-
-.. raw:: html
-
-    Model summary:<br><br><div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-    
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-    
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>N</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>Point sources</th>
-          <td>1</td>
-        </tr>
-        <tr>
-          <th>Extended sources</th>
-          <td>0</td>
-        </tr>
-        <tr>
-          <th>Particle sources</th>
-          <td>0</td>
-        </tr>
-      </tbody>
-    </table>
-    </div><br><br>Free parameters (3):<br><br><div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-    
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-    
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>value</th>
-          <th>min_value</th>
-          <th>max_value</th>
-          <th>unit</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>ps.spectrum.main.Cutoff_powerlaw.K</th>
-          <td>0.00230365</td>
-          <td>1e-30</td>
-          <td>1000</td>
-          <td>keV-1 s-1 cm-2</td>
-        </tr>
-        <tr>
-          <th>ps.spectrum.main.Cutoff_powerlaw.index</th>
-          <td>0.531183</td>
-          <td>-10</td>
-          <td>10</td>
-          <td></td>
-        </tr>
-        <tr>
-          <th>ps.spectrum.main.Cutoff_powerlaw.xc</th>
-          <td>9.7834</td>
-          <td>None</td>
-          <td>None</td>
-          <td>keV</td>
-        </tr>
-      </tbody>
-    </table>
-    </div><br><br>Fixed parameters (4):<br>(abridged. Use complete=True to see all fixed parameters)<br><br><br>Linked parameters (0):<br><br>(none)<br><br>Independent variables:<br><br>(none)<br>
-
-
-
-.. code:: ipython3
-
-    bs = BayesianAnalysis(model, datalist)
-    
-    # This uses the emcee sampler
-    samples = bs.sample(n_walkers=30, burn_in=100, n_samples=1000)
-
-
-
-.. parsed-literal::
-
-    VBox(children=(HTML(value=u'Burn-in : '), HTML(value=u''), FloatProgress(value=0.0)))
-
-
-
-.. parsed-literal::
-
-    VBox(children=(HTML(value=u'Sampling : '), HTML(value=u''), FloatProgress(value=0.0)))
-
-
-.. parsed-literal::
-
-    
-    Mean acceptance fraction: 0.3102
-    
-    Maximum a posteriori probability (MAP) point:
-    
-
-
-
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-    
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-    
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>result</th>
-          <th>unit</th>
-        </tr>
-        <tr>
-          <th>parameter</th>
-          <th></th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>ps.spectrum.main.Cutoff_powerlaw.K</th>
-          <td>(1.1 -0.9 +1.0) x 10^-2</td>
-          <td>1 / (cm2 keV s)</td>
-        </tr>
-        <tr>
-          <th>ps.spectrum.main.Cutoff_powerlaw.index</th>
-          <td>(1 +/- 5) x 10^-1</td>
-          <td></td>
-        </tr>
-        <tr>
-          <th>ps.spectrum.main.Cutoff_powerlaw.xc</th>
-          <td>(1.19 +/- 0.24) x 10</td>
-          <td>keV</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-
-
-.. parsed-literal::
-
-    
-    Values of -log(posterior) at the minimum:
-    
-
-
-
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-    
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-    
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>-log(posterior)</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>ogip</th>
-          <td>-2.289032</td>
-        </tr>
-        <tr>
-          <th>total</th>
-          <td>-2.289032</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-
-
-.. parsed-literal::
-
-    
-    Values of statistical measures:
-    
-
-
-
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-    
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-    
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>statistical measures</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>AIC</th>
-          <td>12.292351</td>
-        </tr>
-        <tr>
-          <th>BIC</th>
-          <td>13.249180</td>
-        </tr>
-        <tr>
-          <th>DIC</th>
-          <td>-262.085434</td>
-        </tr>
-        <tr>
-          <th>PDIC</th>
-          <td>-270.310299</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-
-
-.. code:: ipython3
-
-    bs.results.display()
-
-
-.. parsed-literal::
-
-    Maximum a posteriori probability (MAP) point:
-    
-
-
-
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-    
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-    
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>result</th>
-          <th>unit</th>
-        </tr>
-        <tr>
-          <th>parameter</th>
-          <th></th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>ps.spectrum.main.Cutoff_powerlaw.K</th>
-          <td>(1.1 -0.9 +1.0) x 10^-2</td>
-          <td>1 / (cm2 keV s)</td>
-        </tr>
-        <tr>
-          <th>ps.spectrum.main.Cutoff_powerlaw.index</th>
-          <td>(1 +/- 5) x 10^-1</td>
-          <td></td>
-        </tr>
-        <tr>
-          <th>ps.spectrum.main.Cutoff_powerlaw.xc</th>
-          <td>(1.19 +/- 0.24) x 10</td>
-          <td>keV</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-
-
-.. parsed-literal::
-
-    
-    Values of -log(posterior) at the minimum:
-    
-
-
-
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-    
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-    
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>-log(posterior)</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>ogip</th>
-          <td>-2.289032</td>
-        </tr>
-        <tr>
-          <th>total</th>
-          <td>-2.289032</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-
-
-.. parsed-literal::
-
-    
-    Values of statistical measures:
-    
-
-
-
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-    
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-    
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>statistical measures</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>AIC</th>
-          <td>12.292351</td>
-        </tr>
-        <tr>
-          <th>BIC</th>
-          <td>13.249180</td>
-        </tr>
-        <tr>
-          <th>DIC</th>
-          <td>-262.085434</td>
-        </tr>
-        <tr>
-          <th>PDIC</th>
-          <td>-270.310299</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-
-
-.. code:: ipython3
-
-    bs.results.corner_plot()
-
-
-
-
-.. image:: TestAPI_files/TestAPI_93_0.png
-
-
-
-
-.. image:: TestAPI_files/TestAPI_93_1.png
-
-
-.. code:: ipython3
-
-    plot_point_source_spectra(bs.results, ene_min=20, ene_max=60, num_ene=100,
-                              flux_unit='erg / (cm2 s)')
-
-
-
-.. parsed-literal::
-
-    VBox(children=(HTML(value=u'Propagating errors : '), HTML(value=u''), FloatProgress(value=0.0)))
-
-
-
-
-.. image:: TestAPI_files/TestAPI_94_1.png
-
-
-
-
-.. image:: TestAPI_files/TestAPI_94_2.png
-
-
-.. code:: ipython3
-
-    
-    fluxes_bs = bs.results.get_point_source_flux(100 * u.keV, 1 * u.MeV)
-
-
-
-.. parsed-literal::
-
-    VBox(children=(HTML(value=u'Propagating errors : '), HTML(value=u''), FloatProgress(value=0.0)))
-
-
-
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-    
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-    
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>flux</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>ps: total</th>
-          <td>(0.33 -0.32 +9) x 10^-11 erg / (cm2 s)</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-
-
 
 
 
