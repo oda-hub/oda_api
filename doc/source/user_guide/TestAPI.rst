@@ -19,23 +19,7 @@ build the dispatcher object
 
 .. code:: ipython2
 
-    host='analyse-staging-1.2.reproducible.online'
-    
-    #locally stored token
-    #cookies=dict(_oauth2_proxy=open(os.environ.get('HOME')+'/.oda-api-token').read().strip())
-    
-    #interactive usage 
-    if host=='analyse-staging-1.2.reproducible.online':
-        try:
-            token=raw_input() # token for restricted access server
-        except:
-            token=input() # token for restricted access server
-    else:
-        token=''
-    cookies=dict(_oauth2_proxy=token)
-    
-    disp=DispatcherAPI(host='analyse-staging-1.2.reproducible.online/dispatch-data',instrument='mock',cookies=cookies,protocol='https')
-
+    disp=DispatcherAPI(host='www.astro.unige.ch/cdci/astrooda/dispatch-data',instrument='mock',protocol='https')
 
 .. code:: ipython2
 
@@ -50,7 +34,6 @@ build the dispatcher object
     jemx
     polar
     spi_acs
-
 
 
 get the description of the instrument
@@ -155,7 +138,7 @@ get the description of the product
 check query before submission
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-we pass ‘dry_run’ to check if the request is correct without actually
+we pass 'dry\_run' to check if the request is correct without actually
 submitting it
 
 .. code:: ipython2
@@ -219,7 +202,7 @@ submitting it
 Get ODA products
 ----------------
 
-now we skip the dry_run to actually get the products
+now we skip the dry\_run to actually get the products
 
 .. code:: ipython2
 
@@ -334,7 +317,7 @@ the ODA catalog
 
 
 you can use astropy.table commands to modify the table of the catatlog
-http://docs.astropy.org/en/stable/table/modify_table.html
+http://docs.astropy.org/en/stable/table/modify\_table.html
 
 to generate a catalog to pass to the dispatcher api
 
@@ -502,7 +485,7 @@ the ODA Image plotting tool
 
 
 
-.. image:: TestAPI_files/TestAPI_37_0.png
+.. image:: TestAPI_files/TestAPI_36_0.png
 
 
 .. code:: ipython2
@@ -805,7 +788,7 @@ explore LC
 
 
 
-.. image:: TestAPI_files/TestAPI_48_0.png
+.. image:: TestAPI_files/TestAPI_47_0.png
 
 
 .. code:: ipython2
@@ -938,7 +921,7 @@ Polar LC
 
 
 
-.. image:: TestAPI_files/TestAPI_56_0.png
+.. image:: TestAPI_files/TestAPI_55_0.png
 
 
 SPIACS LC
@@ -1115,7 +1098,7 @@ SPIACS LC
 
 
 
-.. image:: TestAPI_files/TestAPI_65_0.png
+.. image:: TestAPI_files/TestAPI_64_0.png
 
 
 the ODA and spectra
@@ -1564,6 +1547,23 @@ JEM-X test
     warnings.filterwarnings('ignore')
     %matplotlib inline
 
+
+.. parsed-literal::
+
+    
+    WARNING UserWarning: Using default configuration from /Users/orion/anaconda3/envs/threeML/lib/python2.7/site-packages/threeML-0.4.1199-py2.7.egg/threeML/data/threeML_config.yml. You might want to copy it to /Users/orion/.threeML/threeML_config.yml to customize it and avoid this warning.
+    
+    
+    WARNING RuntimeWarning: Env. variable OMP_NUM_THREADS is not set. Please set it to 1 for optimal performances in 3ML
+    
+    
+    WARNING RuntimeWarning: Env. variable MKL_NUM_THREADS is not set. Please set it to 1 for optimal performances in 3ML
+    
+    
+    WARNING RuntimeWarning: Env. variable NUMEXPR_NUM_THREADS is not set. Please set it to 1 for optimal performances in 3ML
+    
+
+
 .. code:: ipython2
 
     ogip_data = OGIPLike('ogip',
@@ -1613,7 +1613,7 @@ JEM-X test
 
 
 
-.. image:: TestAPI_files/TestAPI_83_2.png
+.. image:: TestAPI_files/TestAPI_82_2.png
 
 
 .. code:: ipython2
@@ -1703,7 +1703,7 @@ JEM-X test
 
 .. raw:: html
 
-    <table id="table9329587792">
+    <table id="table4595738640">
     <tr><td>1.00</td><td>-0.93</td><td>0.49</td></tr>
     <tr><td>-0.93</td><td>1.00</td><td>-0.76</td></tr>
     <tr><td>0.49</td><td>-0.76</td><td>1.00</td></tr>
@@ -1807,7 +1807,7 @@ JEM-X test
 
 
 
-.. image:: TestAPI_files/TestAPI_85_0.png
+.. image:: TestAPI_files/TestAPI_84_0.png
 
 
 .. code:: ipython2
@@ -1824,12 +1824,12 @@ JEM-X test
 
 
 
-.. image:: TestAPI_files/TestAPI_86_1.png
+.. image:: TestAPI_files/TestAPI_85_1.png
 
 
 
 
-.. image:: TestAPI_files/TestAPI_86_2.png
+.. image:: TestAPI_files/TestAPI_85_2.png
 
 
 .. code:: ipython2
@@ -1965,7 +1965,7 @@ JEM-X test
 .. parsed-literal::
 
     
-    Mean acceptance fraction: 0.3236333333333333
+    Mean acceptance fraction: 0.3325333333333333
     
     Maximum a posteriori probability (MAP) point:
     
@@ -2004,17 +2004,17 @@ JEM-X test
       <tbody>
         <tr>
           <th>ps.spectrum.main.Cutoff_powerlaw.K</th>
-          <td>(1.3 +/- 1.2) x 10^-2</td>
+          <td>(1.3 -1.1 +1.2) x 10^-2</td>
           <td>1 / (cm2 keV s)</td>
         </tr>
         <tr>
           <th>ps.spectrum.main.Cutoff_powerlaw.index</th>
-          <td>(0 -5 +6) x 10^-1</td>
+          <td>(1 -6 +5) x 10^-1</td>
           <td></td>
         </tr>
         <tr>
           <th>ps.spectrum.main.Cutoff_powerlaw.xc</th>
-          <td>(1.22 +/- 0.27) x 10</td>
+          <td>(1.19 +/- 0.25) x 10</td>
           <td>keV</td>
         </tr>
       </tbody>
@@ -2056,11 +2056,11 @@ JEM-X test
       <tbody>
         <tr>
           <th>ogip</th>
-          <td>-2.306522</td>
+          <td>-2.31802</td>
         </tr>
         <tr>
           <th>total</th>
-          <td>-2.306522</td>
+          <td>-2.31802</td>
         </tr>
       </tbody>
     </table>
@@ -2101,19 +2101,19 @@ JEM-X test
       <tbody>
         <tr>
           <th>AIC</th>
-          <td>12.327331</td>
+          <td>12.350326</td>
         </tr>
         <tr>
           <th>BIC</th>
-          <td>13.284160</td>
+          <td>13.307156</td>
         </tr>
         <tr>
           <th>DIC</th>
-          <td>-317.198864</td>
+          <td>-368.722190</td>
         </tr>
         <tr>
           <th>PDIC</th>
-          <td>-325.758057</td>
+          <td>-377.146266</td>
         </tr>
       </tbody>
     </table>
@@ -2164,17 +2164,17 @@ JEM-X test
       <tbody>
         <tr>
           <th>ps.spectrum.main.Cutoff_powerlaw.K</th>
-          <td>(1.3 +/- 1.2) x 10^-2</td>
+          <td>(1.3 -1.1 +1.2) x 10^-2</td>
           <td>1 / (cm2 keV s)</td>
         </tr>
         <tr>
           <th>ps.spectrum.main.Cutoff_powerlaw.index</th>
-          <td>(0 -5 +6) x 10^-1</td>
+          <td>(1 -6 +5) x 10^-1</td>
           <td></td>
         </tr>
         <tr>
           <th>ps.spectrum.main.Cutoff_powerlaw.xc</th>
-          <td>(1.22 +/- 0.27) x 10</td>
+          <td>(1.19 +/- 0.25) x 10</td>
           <td>keV</td>
         </tr>
       </tbody>
@@ -2216,11 +2216,11 @@ JEM-X test
       <tbody>
         <tr>
           <th>ogip</th>
-          <td>-2.306522</td>
+          <td>-2.31802</td>
         </tr>
         <tr>
           <th>total</th>
-          <td>-2.306522</td>
+          <td>-2.31802</td>
         </tr>
       </tbody>
     </table>
@@ -2261,19 +2261,19 @@ JEM-X test
       <tbody>
         <tr>
           <th>AIC</th>
-          <td>12.327331</td>
+          <td>12.350326</td>
         </tr>
         <tr>
           <th>BIC</th>
-          <td>13.284160</td>
+          <td>13.307156</td>
         </tr>
         <tr>
           <th>DIC</th>
-          <td>-317.198864</td>
+          <td>-368.722190</td>
         </tr>
         <tr>
           <th>PDIC</th>
-          <td>-325.758057</td>
+          <td>-377.146266</td>
         </tr>
       </tbody>
     </table>
@@ -2287,12 +2287,12 @@ JEM-X test
 
 
 
-.. image:: TestAPI_files/TestAPI_90_0.png
+.. image:: TestAPI_files/TestAPI_89_0.png
 
 
 
 
-.. image:: TestAPI_files/TestAPI_90_1.png
+.. image:: TestAPI_files/TestAPI_89_1.png
 
 
 .. code:: ipython2
@@ -2309,57 +2309,12 @@ JEM-X test
 
 
 
-.. image:: TestAPI_files/TestAPI_91_1.png
+.. image:: TestAPI_files/TestAPI_90_1.png
 
-
-
-
-.. image:: TestAPI_files/TestAPI_91_2.png
 
 
 .. code:: ipython2
 
     
     fluxes_bs = bs.results.get_point_source_flux(100 * u.keV, 1 * u.MeV)
-
-
-
-.. parsed-literal::
-
-    A Jupyter Widget
-
-
-
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-    
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-    
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>flux</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>ps: total</th>
-          <td>(0.26 -0.25 +7) x 10^-11 erg / (cm2 s)</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-
 
