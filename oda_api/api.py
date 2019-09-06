@@ -69,8 +69,7 @@ def safe_run(func):
     return func_wrapper
 
 class DispatcherAPI(object):
-
-    def __init__(self,instrument='mock',host='10.194.169.161',port=None,cookies=None,protocol='http'):
+    def __init__(self,instrument='mock',host='www.astro.unige.ch/cdci/astrooda/dispatch-data',port=None,cookies=None,protocol='https'):
 
         self.host=host
         self.port=port
@@ -310,7 +309,7 @@ class DispatcherAPI(object):
 
         _header = '''
         from oda_api.api import DispatcherAPI\n
-        disp=DispatcherAPI(host='analyse-staging-1.2.reproducible.online/dispatch-data',instrument='mock',cookies=cookies,protocol='https')'''
+        disp=DispatcherAPI(host='www.astro.unige.ch/cdci/astrooda/dispatch-data',instrument='mock',cookies=cookies,protocol='https')'''
 
         _cmd_prod_ = 'disp.get_product(**par_dict)'
 
