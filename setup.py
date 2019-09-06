@@ -41,7 +41,8 @@ setup(name='oda_api',
       package_data={'oda_api':['config_dir/*']},
       include_package_data=True,
       install_requires=install_req,
-)
+      python_requires='>=2.7',
+      )
 
 
 

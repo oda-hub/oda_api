@@ -10,8 +10,6 @@
 /.DS_Store
 *.egg-info
 *.egg
-*.root
-*.fits
 /build
 develop-eggs
 /dist

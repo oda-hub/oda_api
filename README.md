@@ -27,3 +27,5 @@ Installation
 Documentation
 -------------------
 https://oda-api.readthedocs.io/en/latest/
+
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/cdcihub/oda_api/master)

@@ -2,7 +2,7 @@
 Quick Start
 ===========
 
-.. code:: ipython3
+.. code:: ipython2
 
     from oda_api.api import DispatcherAPI
     from oda_api.plot_tools import OdaImage,OdaLightCurve
@@ -17,23 +17,27 @@ Connection to the dispatcher
 build the dispatcher object
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code:: ipython3
+.. code:: ipython2
 
-    #external axcess
-    cookies=dict(_oauth2_proxy=open(os.environ.get('HOME')+'/.oda-api-token').read().strip())
+    host='analyse-staging-1.2.reproducible.online'
+    
+    #locally stored token
+    #cookies=dict(_oauth2_proxy=open(os.environ.get('HOME')+'/.oda-api-token').read().strip())
+    
+    #interactive usage 
+    if host=='analyse-staging-1.2.reproducible.online':
+        try:
+            token=raw_input() # token for restricted access server
+        except:
+            token=input() # token for restricted access server
+    else:
+        token=''
+    cookies=dict(_oauth2_proxy=token)
+    
     disp=DispatcherAPI(host='analyse-staging-1.2.reproducible.online/dispatch-data',instrument='mock',cookies=cookies,protocol='https')
-    
-    #internal
-    #disp=DispatcherAPI(host='cdcicn01.isdc.unige.ch:32003/dispatch-data',instrument='mock')
-    
-    #cdicweb01
-    #disp=DispatcherAPI(host='10.194.169.161',port=32784,instrument='mock')
-    
-    #local
-    #disp=DispatcherAPI(host='0.0.0.0',port=5000,instrument='mock')
-     
 
-.. code:: ipython3
+
+.. code:: ipython2
 
     instr_list=disp.get_instruments_list()
     for i in instr_list:
@@ -52,7 +56,7 @@ build the dispatcher object
 get the description of the instrument
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code:: ipython3
+.. code:: ipython2
 
     disp.get_instrument_description('isgri')
 
@@ -109,7 +113,7 @@ get the description of the instrument
 get the description of the product
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code:: ipython3
+.. code:: ipython2
 
     disp.get_product_description(instrument='isgri',product_name='isgri_image')
 
@@ -151,10 +155,10 @@ get the description of the product
 check query before submission
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-we pass 'dry\_run' to check if the request is correct without actually
+we pass ‘dry_run’ to check if the request is correct without actually
 submitting it
 
-.. code:: ipython3
+.. code:: ipython2
 
     data=disp.get_product(instrument='isgri',
                           product='isgri_image',
@@ -171,7 +175,23 @@ submitting it
 
 .. parsed-literal::
 
-    waiting for remote response, please wait run_analysis http://10.194.169.161:32784
+    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
+    T1 2003-03-15T23:27:40.0
+    T2 2003-03-16T00:03:12.0
+    osa_version OSA10.2
+    RA a
+    DEC -37.844167
+    detection_threshold 5.0
+    radius 15.0
+    instrument isgri
+    product_type isgri_image
+    query_type Real
+    off_line (False,)
+    query_status ('new',)
+    verbose (False,)
+    session_id 5CDBXZO4CDYVFNL2
+    dry_run (True,)
+    api True
     
     
     query failed!
@@ -186,22 +206,22 @@ submitting it
     An exception has occurred, use %tb to see the full traceback.
 
 
-    SystemExit: RemoteException (line 47): Remote analysis exception
+    SystemExit: RemoteException (line 49): Remote analysis exception
 
 
 
 .. parsed-literal::
 
-    /Users/orion/anaconda3/lib/python3.7/site-packages/IPython/core/interactiveshell.py:3275: UserWarning: To exit: use 'exit', 'quit', or Ctrl-D.
+    /Users/orion/anaconda3/lib/python3.7/site-packages/IPython/core/interactiveshell.py:3334: UserWarning: To exit: use 'exit', 'quit', or Ctrl-D.
       warn("To exit: use 'exit', 'quit', or Ctrl-D.", stacklevel=1)
 
 
 Get ODA products
 ----------------
 
-now we skip the dry\_run to actually get the products
+now we skip the dry_run to actually get the products
 
-.. code:: ipython3
+.. code:: ipython2
 
     data=disp.get_product(instrument='isgri',
                           product='isgri_image',
@@ -219,9 +239,27 @@ now we skip the dry\_run to actually get the products
 
 .. parsed-literal::
 
-    waiting for remote response, please wait run_analysis http://10.194.169.161:32784
+    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
+    T1 2003-03-15T23:27:40.0
+    T2 2003-03-16T00:03:15.0
+    E1_keV 20.0
+    E2_keV 40.0
+    osa_version OSA10.2
+    RA 255.986542
+    DEC -37.844167
+    detection_threshold 5.0
+    radius 15.0
+    instrument isgri
+    product_type isgri_image
+    query_type Real
+    off_line (False,)
+    query_status ('new',)
+    verbose (False,)
+    session_id 5SGAP41P0WIE9833
+    dry_run (False,)
+    api True
     the job has been submitted on the remote server
-     | the job is working remotely, please wait status=done - job_id=-6235342954244489107 
+     - the job is working remotely, please wait status=done - job_id=-6235342954244489107 9107 
     
     query done succesfully!
 
@@ -229,7 +267,7 @@ now we skip the dry\_run to actually get the products
 the ODA data structure
 ~~~~~~~~~~~~~~~~~~~~~~
 
-.. code:: ipython3
+.. code:: ipython2
 
     data.show()
 
@@ -242,7 +280,7 @@ the ODA data structure
 
 you can acess memeber by name:
 
-.. code:: ipython3
+.. code:: ipython2
 
     data.mosaic_image_0
 
@@ -251,13 +289,13 @@ you can acess memeber by name:
 
 .. parsed-literal::
 
-    <oda_api.data_products.NumpyDataProduct at 0x1160e7f60>
+    <oda_api.data_products.NumpyDataProduct at 0x1189f9860>
 
 
 
 or by position in the data list
 
-.. code:: ipython3
+.. code:: ipython2
 
     data._p_list[0]
 
@@ -266,14 +304,14 @@ or by position in the data list
 
 .. parsed-literal::
 
-    <oda_api.data_products.NumpyDataProduct at 0x1160e7f60>
+    <oda_api.data_products.NumpyDataProduct at 0x1189f9860>
 
 
 
 the ODA catalog
 ~~~~~~~~~~~~~~~
 
-.. code:: ipython3
+.. code:: ipython2
 
     data.dispatcher_catalog_1.table
 
@@ -283,7 +321,7 @@ the ODA catalog
 .. raw:: html
 
     <i>Table length=4</i>
-    <table id="table4665015936" class="table-striped table-bordered table-condensed">
+    <table id="table4708081056" class="table-striped table-bordered table-condensed">
     <thead><tr><th>meta_ID</th><th>src_names</th><th>significance</th><th>ra</th><th>dec</th><th>NEW_SOURCE</th><th>ISGRI_FLAG</th><th>FLAG</th><th>ERR_RAD</th></tr></thead>
     <thead><tr><th></th><th></th><th></th><th>deg</th><th>deg</th><th></th><th></th><th></th><th></th></tr></thead>
     <thead><tr><th>int64</th><th>str12</th><th>float64</th><th>float64</th><th>float64</th><th>int64</th><th>int64</th><th>int64</th><th>float64</th></tr></thead>
@@ -296,15 +334,15 @@ the ODA catalog
 
 
 you can use astropy.table commands to modify the table of the catatlog
-http://docs.astropy.org/en/stable/table/modify\_table.html
+http://docs.astropy.org/en/stable/table/modify_table.html
 
 to generate a catalog to pass to the dispatcher api
 
-.. code:: ipython3
+.. code:: ipython2
 
     api_cat=data.dispatcher_catalog_1.get_api_dictionary()
 
-.. code:: ipython3
+.. code:: ipython2
 
     api_cat
 
@@ -317,7 +355,7 @@ to generate a catalog to pass to the dispatcher api
 
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     data=disp.get_product(instrument='isgri',
                           product='isgri_image',
@@ -336,16 +374,35 @@ to generate a catalog to pass to the dispatcher api
 
 .. parsed-literal::
 
-    waiting for remote response, please wait run_analysis http://10.194.169.161:32784
+    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
+    T1 2003-03-15T23:27:40.0
+    T2 2003-03-16T00:03:15.0
+    E1_keV 20.0
+    E2_keV 40.0
+    osa_version OSA10.2
+    RA 255.986542
+    DEC -37.844167
+    detection_threshold 5.0
+    radius 15.0
+    selected_catalog {"cat_frame": "fk5", "cat_coord_units": "deg", "cat_column_list": [[67, 73, 76, 128], ["OAO 1657-415", "4U 1700-377", "GX 349+2", "GX 354-0"], [18.9650936126709, 22.8853702545166, 14.08207893371582, 9.371565818786621], [255.1972198486328, 255.97720336914062, 256.4292297363281, 262.9886169433594], [-41.653160095214844, -37.83725357055664, -36.415679931640625, -33.828392028808594], [-32768, -32768, -32768, -32768], [2, 2, 2, 2], [0, 0, 0, 0], [0.00014000000373926014, 0.0002800000074785203, 0.0002800000074785203, 0.0002800000074785203]], "cat_column_names": ["meta_ID", "src_names", "significance", "ra", "dec", "NEW_SOURCE", "ISGRI_FLAG", "FLAG", "ERR_RAD"], "cat_column_descr": [["meta_ID", "<i8"], ["src_names", "<U12"], ["significance", "<f8"], ["ra", "<f8"], ["dec", "<f8"], ["NEW_SOURCE", "<i8"], ["ISGRI_FLAG", "<i8"], ["FLAG", "<i8"], ["ERR_RAD", "<f8"]], "cat_lat_name": "dec", "cat_lon_name": "ra"}
+    instrument isgri
+    product_type isgri_image
+    query_type Real
+    off_line (False,)
+    query_status ('new',)
+    verbose (False,)
+    session_id CESVQ4RQCY9ED73M
+    dry_run (False,)
+    api True
     the job has been submitted on the remote server
-     / the job is working remotely, please wait status=done - job_id=-101925144157579535  35  
+     | the job is working remotely, please wait status=done - job_id=176021827695642761 2761 
     
     query done succesfully!
 
 
 you can explore the image with the following command
 
-.. code:: ipython3
+.. code:: ipython2
 
     data.mosaic_image_0.show()
 
@@ -361,7 +418,7 @@ you can explore the image with the following command
     data uniti 1 ,name: ISGR-MOSA-IMA
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     data.mosaic_image_0.show_meta()
 
@@ -376,7 +433,7 @@ you can explore the image with the following command
     ------------------------------
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     data.mosaic_image_0.data_unit[1].data
 
@@ -395,11 +452,23 @@ you can explore the image with the following command
 
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     hdu=data.mosaic_image_0.to_fits_hdu_list()
 
-.. code:: ipython3
+
+.. parsed-literal::
+
+    WARNING: VerifyWarning: Keyword name 'detection_threshold' is greater than 8 characters or contains characters not allowed by the FITS standard; a HIERARCH card will be created. [astropy.io.fits.card]
+    WARNING: VerifyWarning: Keyword name 'instrument' is greater than 8 characters or contains characters not allowed by the FITS standard; a HIERARCH card will be created. [astropy.io.fits.card]
+    WARNING: VerifyWarning: Keyword name 'osa_version' is greater than 8 characters or contains characters not allowed by the FITS standard; a HIERARCH card will be created. [astropy.io.fits.card]
+    WARNING: VerifyWarning: Keyword name 'product_type' is greater than 8 characters or contains characters not allowed by the FITS standard; a HIERARCH card will be created. [astropy.io.fits.card]
+    WARNING: VerifyWarning: Keyword name 'query_status' is greater than 8 characters or contains characters not allowed by the FITS standard; a HIERARCH card will be created. [astropy.io.fits.card]
+    WARNING: VerifyWarning: Keyword name 'query_type' is greater than 8 characters or contains characters not allowed by the FITS standard; a HIERARCH card will be created. [astropy.io.fits.card]
+    WARNING: VerifyWarning: Keyword name 'session_id' is greater than 8 characters or contains characters not allowed by the FITS standard; a HIERARCH card will be created. [astropy.io.fits.card]
+
+
+.. code:: ipython2
 
     data.mosaic_image_0.data_unit[1].data.shape
 
@@ -412,14 +481,14 @@ you can explore the image with the following command
 
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     data.mosaic_image_0.write_fits_file('test.fits',overwrite=True)
 
 the ODA Image plotting tool
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code:: ipython3
+.. code:: ipython2
 
     #interactive
     #%matplotlib notebook
@@ -427,7 +496,7 @@ the ODA Image plotting tool
     %matplotlib inline
     im=OdaImage(data.mosaic_image_0)
 
-.. code:: ipython3
+.. code:: ipython2
 
     im.show(unit_ID=1)
 
@@ -436,7 +505,7 @@ the ODA Image plotting tool
 .. image:: TestAPI_files/TestAPI_37_0.png
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     data.mosaic_image_0.data_unit[1].header
 
@@ -520,7 +589,7 @@ the ODA Image plotting tool
 the ODA LC plotting tool
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code:: ipython3
+.. code:: ipython2
 
     data=disp.get_product(instrument='isgri',
                           product='isgri_lc',
@@ -537,9 +606,26 @@ the ODA LC plotting tool
 
 .. parsed-literal::
 
-    waiting for remote response, please wait run_analysis http://10.194.169.161:32784
+    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
+    T1 2003-03-15T23:27:40.0
+    T2 2003-03-16T00:03:12.0
+    time_bin 70
+    osa_version OSA10.2
+    RA 255.986542
+    DEC -37.844167
+    detection_threshold 5.0
+    radius 15.0
+    instrument isgri
+    product_type isgri_lc
+    query_type Real
+    off_line (False,)
+    query_status ('new',)
+    verbose (False,)
+    session_id SE2BL9IRAZWSKI4W
+    dry_run (False,)
+    api True
     the job has been submitted on the remote server
-     / the job is working remotely, please wait status=done - job_id=815032431550934891  91  
+     / the job is working remotely, please wait status=done - job_id=815032431550934891 
     
     query done succesfully!
 
@@ -547,7 +633,7 @@ the ODA LC plotting tool
 explore LC
 ~~~~~~~~~~
 
-.. code:: ipython3
+.. code:: ipython2
 
     data.show()
 
@@ -586,7 +672,7 @@ explore LC
     isgri_lc_29 29
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     data.isgri_lc_0.show_meta()
 
@@ -602,7 +688,7 @@ explore LC
     ------------------------------
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     for ID,s in enumerate(data._p_list):
         print (ID,s.meta_data['src_name'])
@@ -642,7 +728,7 @@ explore LC
     29 1E 1740.7-2942
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     lc=data._p_list[0]
     lc.data_unit[1].data
@@ -679,7 +765,7 @@ explore LC
 
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     lc.show()
 
@@ -695,7 +781,7 @@ explore LC
     data uniti 1 ,name: ISGR-SRC.-LCR
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     lc.meta_data
 
@@ -712,7 +798,7 @@ explore LC
 
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     %matplotlib inline
     OdaLightCurve(lc).show(unit_ID=1)
@@ -722,7 +808,7 @@ explore LC
 .. image:: TestAPI_files/TestAPI_48_0.png
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     lc.data_unit[0].header
 
@@ -747,12 +833,12 @@ explore LC
      'off_line': 'False',
      'osa_version': 'OSA10.2',
      'product_type': 'isgri_lc',
-     'query_status': 'ready',
+     'query_status': 'submitted',
      'query_type': 'Real',
      'radius': '15.0',
-     'session_id': '7627NJ7QGDZ6OT52',
+     'session_id': 'SE2BL9IRAZWSKI4W',
      'time_bin': '70',
-     'url': 'None/product_type=isgri_lc&verbose=False&dry_run=False&osa_version=OSA10.2&RA=255.986542&T2=2003-03-16T00%3A03%3A12.0&time_bin=70&session_id=7627NJ7QGDZ6OT52&T1=2003-03-15T23%3A27%3A40.0&instrument=isgri&api=True&radius=15.0&detection_threshold=5.0&query_type=Real&off_line=False&DEC=-37.844167&query_status=ready&job_id=815032431550934891',
+     'url': 'http://www.astro.unige.ch/cdci/astrooda_?product_type=isgri_lc&verbose=False&dry_run=False&osa_version=OSA10.2&RA=255.986542&T2=2003-03-16T00%3A03%3A12.0&time_bin=70&session_id=SE2BL9IRAZWSKI4W&T1=2003-03-15T23%3A27%3A40.0&instrument=isgri&api=True&radius=15.0&detection_threshold=5.0&query_type=Real&off_line=False&DEC=-37.844167&query_status=submitted&job_id=815032431550934891',
      'verbose': 'False'}
 
 
@@ -760,7 +846,7 @@ explore LC
 Polar LC
 ~~~~~~~~
 
-.. code:: ipython3
+.. code:: ipython2
 
     #conda create --name=polar_root root=5 python=3 -c nlesc
     #source activate poloar_root
@@ -775,13 +861,25 @@ Polar LC
 
 .. parsed-literal::
 
-    waiting for remote response, please wait run_analysis http://10.194.169.161:32784
+    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
+    T1 2016-12-18T08:32:21.000
+    T2 2016-12-18T08:34:01.000
+    time_bin 0.5
+    instrument polar
+    product_type polar_lc
+    query_type Real
+    off_line (False,)
+    query_status ('new',)
+    verbose (True,)
+    session_id 7EVG3VSE63NRDMLT
+    dry_run (False,)
+    api True
     
     
     query done succesfully!
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     data.show()
 
@@ -792,7 +890,7 @@ Polar LC
     pord_1 1
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     data._p_list[0]
 
@@ -801,11 +899,11 @@ Polar LC
 
 .. parsed-literal::
 
-    <oda_api.data_products.NumpyDataProduct at 0x1178e1fd0>
+    <oda_api.data_products.NumpyDataProduct at 0x11a06db38>
 
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     lc=data._p_list[0]
     root=data._p_list[1]
@@ -820,7 +918,7 @@ Polar LC
 
 
 
-.. code:: ipython3
+.. code:: ipython2
 
      open('lc.root', "wb").write(root)
 
@@ -833,7 +931,7 @@ Polar LC
 
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     %matplotlib inline
     OdaLightCurve(lc).show(unit_ID=1)
@@ -846,7 +944,7 @@ Polar LC
 SPIACS LC
 ~~~~~~~~~
 
-.. code:: ipython3
+.. code:: ipython2
 
     disp.get_instrument_description('spi_acs')
 
@@ -876,7 +974,7 @@ SPIACS LC
      name: time_bin,  value: 1000.0,  units: sec, 
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     data=disp.get_product(instrument='spi_acs',
                           product='spi_acs_lc',
@@ -893,13 +991,30 @@ SPIACS LC
 
 .. parsed-literal::
 
-    waiting for remote response, please wait run_analysis http://10.194.169.161:32784
+    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
+    T1 2003-03-15T23:27:40.0
+    T2 2003-03-15T23:57:12.0
+    time_bin 2
+    osa_version OSA10.2
+    RA 255.986542
+    DEC -37.844167
+    detection_threshold 5.0
+    radius 15.0
+    instrument spi_acs
+    product_type spi_acs_lc
+    query_type Real
+    off_line (False,)
+    query_status ('new',)
+    verbose (False,)
+    session_id CCPC5ORX9N2J45JV
+    dry_run (False,)
+    api True
     
     
     query done succesfully!
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     data.show()
 
@@ -909,12 +1024,12 @@ SPIACS LC
     _0 0
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     lc=data._p_list[0]
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     lc.show()
 
@@ -930,7 +1045,7 @@ SPIACS LC
     data uniti 1 ,name: RATE
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     lc.data_unit[1].header
 
@@ -971,7 +1086,7 @@ SPIACS LC
 
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     lc.data_unit[1].data[0:10]
 
@@ -994,7 +1109,7 @@ SPIACS LC
 
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     OdaLightCurve(lc).show(unit_ID=1)
 
@@ -1006,7 +1121,7 @@ SPIACS LC
 the ODA and spectra
 ~~~~~~~~~~~~~~~~~~~
 
-.. code:: ipython3
+.. code:: ipython2
 
     data=disp.get_product(instrument='isgri',
                           product='isgri_spectrum',
@@ -1023,9 +1138,26 @@ the ODA and spectra
 
 .. parsed-literal::
 
-    waiting for remote response, please wait run_analysis http://10.194.169.161:32784
+    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
+    T1 2003-03-15T23:27:40.0
+    T2 2003-03-16T00:03:12.0
+    time_bin 50
+    osa_version OSA10.2
+    RA 255.986542
+    DEC -37.844167
+    detection_threshold 5.0
+    radius 15.0
+    instrument isgri
+    product_type isgri_spectrum
+    query_type Real
+    off_line (False,)
+    query_status ('new',)
+    verbose (False,)
+    session_id UYMNSS2QGHQ5D38F
+    dry_run (False,)
+    api True
     the job has been submitted on the remote server
-     / the job is working remotely, please wait status=done - job_id=-1255063856769622835  35  
+     \ the job is working remotely, please wait status=done - job_id=-1255063856769622835 2835 
     
     query done succesfully!
 
@@ -1033,7 +1165,7 @@ the ODA and spectra
 explore spectra
 ~~~~~~~~~~~~~~~
 
-.. code:: ipython3
+.. code:: ipython2
 
     for ID,s in enumerate(data._p_list):
         print (ID,s.meta_data)
@@ -1136,14 +1268,14 @@ explore spectra
     92 {'src_name': '1E 1740.7-2942', 'product': 'isgri_rmf'}
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     data._p_list[87].write_fits_file('spec.fits')
     data._p_list[88].write_fits_file('arf.fits')
     data._p_list[89].write_fits_file('rmf.fits')
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     s.show()
 
@@ -1161,12 +1293,12 @@ explore spectra
     data uniti 3 ,name: ISGR-EBDS-MOD
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     d=data._p_list[3]
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     d.data_unit[1].header
 
@@ -1261,7 +1393,7 @@ explore spectra
 JEM-X test
 ~~~~~~~~~~
 
-.. code:: ipython3
+.. code:: ipython2
 
     disp.get_instrument_description('jemx')
 
@@ -1316,7 +1448,7 @@ JEM-X test
      name: time_bin,  value: 1000.0,  units: sec, 
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     data=disp.get_product(instrument='jemx',
                           jemx_num='2',
@@ -1331,14 +1463,28 @@ JEM-X test
 .. parsed-literal::
 
     ['010200230010.001']
-    waiting for remote response, please wait run_analysis http://10.194.169.161:32784
+    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
+    jemx_num 2
+    scw_list ['010200230010.001']
+    osa_version OSA10.2
+    detection_threshold 5.0
+    radius 15.0
+    instrument jemx
+    product_type jemx_image
+    query_type dummy
+    off_line (False,)
+    query_status ('new',)
+    verbose (False,)
+    session_id E2KZC9XLM7312UJX
+    dry_run (False,)
+    api True
     the job has been submitted on the remote server
-     - the job is working remotely, please wait status=done - job_id=734507049305780161  61  
+     / the job is working remotely, please wait status=done - job_id=734507049305780161 0161 
     
     query done succesfully!
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     data=disp.get_product(instrument='jemx',
                           jemx_nume='2',
@@ -1353,14 +1499,28 @@ JEM-X test
 .. parsed-literal::
 
     ['010200230010.001']
-    waiting for remote response, please wait run_analysis http://10.194.169.161:32784
+    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
+    jemx_nume 2
+    scw_list ['010200230010.001']
+    osa_version OSA10.2
+    detection_threshold 5.0
+    radius 15.0
+    instrument jemx
+    product_type jemx_lc
+    query_type Real
+    off_line (False,)
+    query_status ('new',)
+    verbose (False,)
+    session_id A0H5NQLRWCZIR09P
+    dry_run (False,)
+    api True
     the job has been submitted on the remote server
-     - the job is working remotely, please wait status=done - job_id=-73930099223456509  09  
+     \ the job is working remotely, please wait status=done - job_id=-73930099223456509 6509 
     
     query done succesfully!
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     data=disp.get_product(instrument='jemx',
                           jemx_num='2',
@@ -1375,53 +1535,41 @@ JEM-X test
 .. parsed-literal::
 
     ['010200230010.001']
-    waiting for remote response, please wait run_analysis http://10.194.169.161:32784
+    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
+    jemx_num 2
+    scw_list ['010200230010.001']
+    osa_version OSA10.2
+    detection_threshold 5.0
+    radius 15.0
+    instrument jemx
+    product_type jemx_spectrum
+    query_type Real
+    off_line (False,)
+    query_status ('new',)
+    verbose (False,)
+    session_id UDG7NSP6SP1UXBWE
+    dry_run (False,)
+    api True
     the job has been submitted on the remote server
-     / the job is working remotely, please wait status=done - job_id=-8193837570595478341  41  
+     / the job is working remotely, please wait status=done - job_id=-8193837570595478341 8341 
     
     query done succesfully!
 
 
-spectral fitting with threeML
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code:: ipython3
+.. code:: ipython2
 
     from threeML.plugins.OGIPLike import  OGIPLike
     from threeML.io.package_data import get_path_of_data_file
     from threeML import *
     warnings.filterwarnings('ignore')
+    %matplotlib inline
 
+.. code:: ipython2
 
-
-.. parsed-literal::
-
-    
-    WARNING UserWarning: Using default configuration from /Users/orion/anaconda3/envs/threeML/lib/python2.7/site-packages/threeML/data/threeML_config.yml. You might want to copy it to /Users/orion/.threeML/threeML_config.yml to customize it and avoid this warning.
-    
-    INFO:keyring.backend:Loading KWallet
-    INFO:keyring.backend:Loading SecretService
-    INFO:keyring.backend:Loading Windows
-    INFO:keyring.backend:Loading chainer
-    INFO:keyring.backend:Loading macOS
-    
-    WARNING RuntimeWarning: Env. variable OMP_NUM_THREADS is not set. Please set it to 1 for optimal performances in 3ML
-    
-    
-    WARNING RuntimeWarning: Env. variable MKL_NUM_THREADS is not set. Please set it to 1 for optimal performances in 3ML
-    
-    
-    WARNING RuntimeWarning: Env. variable NUMEXPR_NUM_THREADS is not set. Please set it to 1 for optimal performances in 3ML
-    
-
-
-.. code:: ipython3
-
-    
     ogip_data = OGIPLike('ogip',
-                         observation='spec.fits',
-                         arf_file= 'arf.fits' ,
-                         response= 'rmf.fits')
+                         observation='spec_test.fits',
+                         arf_file= 'arf_test.fits' ,
+                         response= 'rmf_test.fits')
 
 
 .. parsed-literal::
@@ -1431,7 +1579,7 @@ spectral fitting with threeML
     - background: None
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     ogip_data.set_active_measurements('20-60')
 
@@ -1443,11 +1591,7 @@ spectral fitting with threeML
     Now using 18 channels out of 62
 
 
-.. code:: ipython3
-
-    import matplotlib.pyplot as plt
-
-.. code:: ipython3
+.. code:: ipython2
 
     ogip_data.view_count_spectrum()
     plt.ylim(1E-5,10)
@@ -1469,12 +1613,11 @@ spectral fitting with threeML
 
 
 
-.. image:: TestAPI_files/TestAPI_85_2.png
+.. image:: TestAPI_files/TestAPI_83_2.png
 
 
-.. code:: ipython3
+.. code:: ipython2
 
-    
     fit_function = Cutoff_powerlaw()
     
     # define the point source
@@ -1560,7 +1703,7 @@ spectral fitting with threeML
 
 .. raw:: html
 
-    <table id="table4882631696">
+    <table id="table9329587792">
     <tr><td>1.00</td><td>-0.93</td><td>0.49</td></tr>
     <tr><td>-0.93</td><td>1.00</td><td>-0.76</td></tr>
     <tr><td>0.49</td><td>-0.76</td><td>1.00</td></tr>
@@ -1657,17 +1800,17 @@ spectral fitting with threeML
     </div>
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     display_spectrum_model_counts(jl, step=True);
 
 
 
 
-.. image:: TestAPI_files/TestAPI_87_0.png
+.. image:: TestAPI_files/TestAPI_85_0.png
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     plot_point_source_spectra(jl.results, ene_min=20, ene_max=60, num_ene=100,
                               flux_unit='erg / (cm2 s)')
@@ -1676,20 +1819,20 @@ spectral fitting with threeML
 
 .. parsed-literal::
 
-    VBox(children=(HTML(value=u'Propagating errors : '), HTML(value=u''), FloatProgress(value=0.0)))
+    A Jupyter Widget
 
 
 
 
-.. image:: TestAPI_files/TestAPI_88_1.png
+.. image:: TestAPI_files/TestAPI_86_1.png
 
 
 
 
-.. image:: TestAPI_files/TestAPI_88_2.png
+.. image:: TestAPI_files/TestAPI_86_2.png
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     
     # A uniform prior can be defined directly, like:
@@ -1799,8 +1942,7 @@ spectral fitting with threeML
     </div><br><br>Fixed parameters (4):<br>(abridged. Use complete=True to see all fixed parameters)<br><br><br>Linked parameters (0):<br><br>(none)<br><br>Independent variables:<br><br>(none)<br>
 
 
-
-.. code:: ipython3
+.. code:: ipython2
 
     bs = BayesianAnalysis(model, datalist)
     
@@ -1811,19 +1953,19 @@ spectral fitting with threeML
 
 .. parsed-literal::
 
-    VBox(children=(HTML(value=u'Burn-in : '), HTML(value=u''), FloatProgress(value=0.0)))
+    A Jupyter Widget
 
 
 
 .. parsed-literal::
 
-    VBox(children=(HTML(value=u'Sampling : '), HTML(value=u''), FloatProgress(value=0.0)))
+    A Jupyter Widget
 
 
 .. parsed-literal::
 
     
-    Mean acceptance fraction: 0.3102
+    Mean acceptance fraction: 0.3236333333333333
     
     Maximum a posteriori probability (MAP) point:
     
@@ -1862,17 +2004,17 @@ spectral fitting with threeML
       <tbody>
         <tr>
           <th>ps.spectrum.main.Cutoff_powerlaw.K</th>
-          <td>(1.1 -0.9 +1.0) x 10^-2</td>
+          <td>(1.3 +/- 1.2) x 10^-2</td>
           <td>1 / (cm2 keV s)</td>
         </tr>
         <tr>
           <th>ps.spectrum.main.Cutoff_powerlaw.index</th>
-          <td>(1 +/- 5) x 10^-1</td>
+          <td>(0 -5 +6) x 10^-1</td>
           <td></td>
         </tr>
         <tr>
           <th>ps.spectrum.main.Cutoff_powerlaw.xc</th>
-          <td>(1.19 +/- 0.24) x 10</td>
+          <td>(1.22 +/- 0.27) x 10</td>
           <td>keV</td>
         </tr>
       </tbody>
@@ -1914,11 +2056,11 @@ spectral fitting with threeML
       <tbody>
         <tr>
           <th>ogip</th>
-          <td>-2.289032</td>
+          <td>-2.306522</td>
         </tr>
         <tr>
           <th>total</th>
-          <td>-2.289032</td>
+          <td>-2.306522</td>
         </tr>
       </tbody>
     </table>
@@ -1959,26 +2101,26 @@ spectral fitting with threeML
       <tbody>
         <tr>
           <th>AIC</th>
-          <td>12.292351</td>
+          <td>12.327331</td>
         </tr>
         <tr>
           <th>BIC</th>
-          <td>13.249180</td>
+          <td>13.284160</td>
         </tr>
         <tr>
           <th>DIC</th>
-          <td>-262.085434</td>
+          <td>-317.198864</td>
         </tr>
         <tr>
           <th>PDIC</th>
-          <td>-270.310299</td>
+          <td>-325.758057</td>
         </tr>
       </tbody>
     </table>
     </div>
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     bs.results.display()
 
@@ -2022,17 +2164,17 @@ spectral fitting with threeML
       <tbody>
         <tr>
           <th>ps.spectrum.main.Cutoff_powerlaw.K</th>
-          <td>(1.1 -0.9 +1.0) x 10^-2</td>
+          <td>(1.3 +/- 1.2) x 10^-2</td>
           <td>1 / (cm2 keV s)</td>
         </tr>
         <tr>
           <th>ps.spectrum.main.Cutoff_powerlaw.index</th>
-          <td>(1 +/- 5) x 10^-1</td>
+          <td>(0 -5 +6) x 10^-1</td>
           <td></td>
         </tr>
         <tr>
           <th>ps.spectrum.main.Cutoff_powerlaw.xc</th>
-          <td>(1.19 +/- 0.24) x 10</td>
+          <td>(1.22 +/- 0.27) x 10</td>
           <td>keV</td>
         </tr>
       </tbody>
@@ -2074,11 +2216,11 @@ spectral fitting with threeML
       <tbody>
         <tr>
           <th>ogip</th>
-          <td>-2.289032</td>
+          <td>-2.306522</td>
         </tr>
         <tr>
           <th>total</th>
-          <td>-2.289032</td>
+          <td>-2.306522</td>
         </tr>
       </tbody>
     </table>
@@ -2119,41 +2261,41 @@ spectral fitting with threeML
       <tbody>
         <tr>
           <th>AIC</th>
-          <td>12.292351</td>
+          <td>12.327331</td>
         </tr>
         <tr>
           <th>BIC</th>
-          <td>13.249180</td>
+          <td>13.284160</td>
         </tr>
         <tr>
           <th>DIC</th>
-          <td>-262.085434</td>
+          <td>-317.198864</td>
         </tr>
         <tr>
           <th>PDIC</th>
-          <td>-270.310299</td>
+          <td>-325.758057</td>
         </tr>
       </tbody>
     </table>
     </div>
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     bs.results.corner_plot()
 
 
 
 
-.. image:: TestAPI_files/TestAPI_93_0.png
+.. image:: TestAPI_files/TestAPI_90_0.png
 
 
 
 
-.. image:: TestAPI_files/TestAPI_93_1.png
+.. image:: TestAPI_files/TestAPI_90_1.png
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     plot_point_source_spectra(bs.results, ene_min=20, ene_max=60, num_ene=100,
                               flux_unit='erg / (cm2 s)')
@@ -2162,20 +2304,20 @@ spectral fitting with threeML
 
 .. parsed-literal::
 
-    VBox(children=(HTML(value=u'Propagating errors : '), HTML(value=u''), FloatProgress(value=0.0)))
+    A Jupyter Widget
 
 
 
 
-.. image:: TestAPI_files/TestAPI_94_1.png
+.. image:: TestAPI_files/TestAPI_91_1.png
 
 
 
 
-.. image:: TestAPI_files/TestAPI_94_2.png
+.. image:: TestAPI_files/TestAPI_91_2.png
 
 
-.. code:: ipython3
+.. code:: ipython2
 
     
     fluxes_bs = bs.results.get_point_source_flux(100 * u.keV, 1 * u.MeV)
@@ -2184,7 +2326,7 @@ spectral fitting with threeML
 
 .. parsed-literal::
 
-    VBox(children=(HTML(value=u'Propagating errors : '), HTML(value=u''), FloatProgress(value=0.0)))
+    A Jupyter Widget
 
 
 
@@ -2214,13 +2356,10 @@ spectral fitting with threeML
       <tbody>
         <tr>
           <th>ps: total</th>
-          <td>(0.33 -0.32 +9) x 10^-11 erg / (cm2 s)</td>
+          <td>(0.26 -0.25 +7) x 10^-11 erg / (cm2 s)</td>
         </tr>
       </tbody>
     </table>
     </div>
-
-
-
 
 
