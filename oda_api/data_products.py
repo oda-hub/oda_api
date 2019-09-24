@@ -31,11 +31,10 @@ import gzip
 import  hashlib
 from numpy import nan,inf
 from sys import version_info
-#try:
-#    from StringIO import StringIO
-#except ImportError:
-
-from io import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 
 __all__=['sanitize_encoded','_chekc_enc_data','BinaryData','NumpyDataUnit','NumpyDataProduct','ApiCatalog','AstropyTable']
@@ -80,10 +79,11 @@ class AstropyTable(object):
             _binarys = base64.b64encode(pickle.dumps(self.table, protocol=2)).decode('utf-8')
             _o_dict['binary'] = _binarys
         else:
-            with StringIO() as fh:
-                self.table.write(fh, format='ascii.ecsv')
-                _text = fh.getvalue()
-
+            #with StringIO() as fh:
+            fh=StringIO()
+            self.table.write(fh, format='ascii.ecsv')
+            _text = fh.getvalue()
+            fh.close()
             _o_dict['ascii'] = _text
 
         _o_dict['name']=self.name
