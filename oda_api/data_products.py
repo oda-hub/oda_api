@@ -31,10 +31,11 @@ import gzip
 import  hashlib
 from numpy import nan,inf
 from sys import version_info
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
+#try:
+#    from StringIO import StringIO
+#except ImportError:
+
+from io import StringIO
 
 
 __all__=['sanitize_encoded','_chekc_enc_data','BinaryData','NumpyDataUnit','NumpyDataProduct','ApiCatalog','AstropyTable']
