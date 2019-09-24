@@ -37,7 +37,7 @@ except ImportError:
     from io import StringIO
 
 
-__all__=['sanitize_encoded','_chekc_enc_data','BinaryData','NumpyDataUnit','NumpyDataProduct','ApiCatalog']
+__all__=['sanitize_encoded','_chekc_enc_data','BinaryData','NumpyDataUnit','NumpyDataProduct','ApiCatalog','AstropyTable']
 
 
 def sanitize_encoded(d):
@@ -62,6 +62,52 @@ def _chekc_enc_data(data):
 
 
 
+class AstropyTable(object):
+
+    def __init__(self,table_object,name='astropy table', meta_data={}):
+        self.name=name
+        self.meta_data=meta_data
+        self.table=table_object
+
+    def encode(self,use_binary=False,to_json = False):
+
+        _o_dict = {}
+        _o_dict['binary']=None
+        _o_dict['ascii']=None
+
+        if use_binary is True:
+            _binarys = base64.b64encode(pickle.dumps(self.table, protocol=2)).decode('utf-8')
+            _o_dict['binary'] = _binarys
+        else:
+            with StringIO() as fh:
+                self.table.write(fh, format='ascii.ecsv')
+                _text = fh.getvalue()
+
+            _o_dict['ascii'] = _text
+
+        _o_dict['name']=self.name
+        _o_dict['meta_data']=dumps(self.meta_data)
+
+        if to_json == True:
+            _o_dict=json.dumps(_o_dict)
+        return   _o_dict
+
+    @classmethod
+    def decode(cls,_o_dict,use_binary=False):
+
+        encoded_name = _o_dict['name']
+        encoded_meta_data = _o_dict['meta_data']
+        if use_binary is True:
+            t_rec = base64.b64decode(_o_dict['binary'])
+            try:
+                t_rec = pickle.loads(t_rec)
+            except:
+                t_rec= pickle.loads(t_rec,encoding='latin')
+
+        else:
+            t_rec = ascii.read(_o_dict['ascii'])
+
+        return cls(t_rec,name=encoded_name,meta_data=encoded_meta_data)
 
 
 class BinaryData(object):
@@ -267,7 +313,7 @@ class NumpyDataUnit(object):
             #print('dec ->', type(_binarys))
             in_file = StringIO()
             if version_info[0] > 2:
-                _binarys=base64.b64decode(_binarys)
+                    _binarys=base64.b64decode(_binarys)
 
             else:
                 _binarys = base64.decodestring(_binarys)

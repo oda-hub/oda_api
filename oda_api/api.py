@@ -16,7 +16,8 @@ import time
 import os
 import inspect
 import sys
-
+from astropy.io import ascii
+import base64
 
 from itertools import cycle
 
@@ -289,6 +290,20 @@ class DispatcherAPI(object):
 
             if 'catalog' in res.json()['products'].keys():
                 data.append(ApiCatalog(js['products']['catalog'],name='dispatcher_catalog'))
+
+            if 'astropy_table_product_ascii_list' in res.json()['products'].keys():
+                data.extend([ascii.read(table_text) for table_text in js['products']['astropy_table_product_ascii_list']])
+
+            if 'astropy_table_product_binary_list' in res.json()['products'].keys():
+                for  table_binary in js['products']['astropy_table_product_binary_list']:
+                    t_rec = base64.b64decode(_o_dict['binary'])
+                    try:
+                        t=data.extend([])
+                    except:
+                        t=data.extend([])
+
+
+                data.extend([ascii.read(table_binary) for table_binary in js['products']['astropy_table_product_binary_list']])
         else:
             self._decode_res_json(res.json()['products']['instrumet_parameters'])
 
