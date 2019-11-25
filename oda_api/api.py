@@ -304,12 +304,16 @@ class DispatcherAPI(object):
 
 
                 data.extend([ascii.read(table_binary) for table_binary in js['products']['astropy_table_product_binary_list']])
+
+            d=DataCollection(data)
+
         else:
             self._decode_res_json(res.json()['products']['instrumet_parameters'])
+            d=None
 
         del(res)
 
-        return DataCollection(data)
+        return d
 
 
 
