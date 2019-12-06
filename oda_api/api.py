@@ -295,14 +295,12 @@ class DispatcherAPI(object):
                 data.extend([ascii.read(table_text) for table_text in js['products']['astropy_table_product_ascii_list']])
 
             if 'astropy_table_product_binary_list' in res.json()['products'].keys():
-                for  table_binary in js['products']['astropy_table_product_binary_list']:
-                    t_rec = base64.b64decode(_o_dict['binary'])
-                    try:
-                        t=data.extend([])
-                    except:
-                        t=data.extend([])
-
-
+                #for  table_binary in js['products']['astropy_table_product_binary_list']:
+                #    t_rec = base64.b64decode(_o_dict['binary'])
+                #    try:
+                #        t=data.extend([])
+                #    except:
+                #        t=data.extend([])
                 data.extend([ascii.read(table_binary) for table_binary in js['products']['astropy_table_product_binary_list']])
 
             d=DataCollection(data)

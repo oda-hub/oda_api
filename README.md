@@ -17,7 +17,8 @@ ISDC Data Centre for Astrophysics, Astronomy Department of the University of Gen
 Installation
 -------------------
 1) Anaconda
-    * `while read requirement; do conda install --yes $requirement; done < requirements.txt`
+    * `conda install -c conda-forge json_tricks`
+    * `conda install --file requirements.txt`
     * `python setup.py install`
     
 2) PIP
