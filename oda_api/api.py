@@ -18,6 +18,7 @@ import inspect
 import sys
 from astropy.io import ascii
 import base64
+import  copy
 
 from itertools import cycle
 
@@ -266,6 +267,20 @@ class DispatcherAPI(object):
         kwargs['verbose'] = verbose,
         kwargs['session_id'] = self.generate_session_id()
         kwargs['dry_run'] = dry_run,
+
+        _ignore_list=['instrument','product_type','query_type','off_line','query_status','verbose','session_id','dry_run']
+        validation_dict=copy.deepcopy(kwargs)
+
+        for _i in _ignore_list:
+            del validation_dict[_i]
+
+        res = requests.get("%s/api/par-names" % self.url, params=dict(instrument=instrument,product_type=product), cookies=self.cookies)
+
+        valid_names=self._decode_res_json(res)
+        for n in validation_dict.keys():
+            if n not in valid_names:
+                raise RuntimeError('the parameter: %s'%n, 'is not among the valid ones:',valid_names)
+
 
         res = self.request(kwargs)
         data = None
