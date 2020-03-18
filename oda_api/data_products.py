@@ -137,9 +137,11 @@ class NumpyDataUnit(object):
 
 
     def to_fits_hdu(self):
-        print("header:", self.header)
-
         try:
+            for k,v in self.header.items():
+                if isinstance(v, list):
+                    self.header[k] = unicode(",".join(map(str,v)))
+
             return  self.new_hdu_from_data(self.data,
                                     header=pf.header.Header(self.header),
                                     hdu_type=self.hdu_type,units_dict=self.units_dict)
