@@ -7,6 +7,7 @@ from builtins import (bytes, str, open, super, range,
 
 __author__ = "Andrea Tramacere"
 
+import  warnings
 import requests
 import ast
 import json
@@ -19,6 +20,7 @@ import sys
 from astropy.io import ascii
 import base64
 import  copy
+import pickle
 
 from itertools import cycle
 
@@ -268,19 +270,24 @@ class DispatcherAPI(object):
         kwargs['session_id'] = self.generate_session_id()
         kwargs['dry_run'] = dry_run,
 
-        _ignore_list=['instrument','product_type','query_type','off_line','query_status','verbose','session_id','dry_run']
-        validation_dict=copy.deepcopy(kwargs)
+        res = requests.get("%s/api/par-names" % self.url)
 
-        for _i in _ignore_list:
-            del validation_dict[_i]
+        if res.status_code == 200:
 
-        res = requests.get("%s/api/par-names" % self.url, params=dict(instrument=instrument,product_type=product), cookies=self.cookies)
+            _ignore_list=['instrument','product_type','query_type','off_line','query_status','verbose','session_id','dry_run']
+            validation_dict=copy.deepcopy(kwargs)
 
-        valid_names=self._decode_res_json(res)
-        for n in validation_dict.keys():
-            if n not in valid_names:
-                raise RuntimeError('the parameter: %s'%n, 'is not among the valid ones:',valid_names)
+            for _i in _ignore_list:
+                del validation_dict[_i]
 
+            res = requests.get("%s/api/par-names" % self.url, params=dict(instrument=instrument,product_type=product), cookies=self.cookies)
+
+            valid_names=self._decode_res_json(res)
+            for n in validation_dict.keys():
+                if n not in valid_names:
+                    raise RuntimeError('the parameter: %s'%n, 'is not among the valid ones:',valid_names)
+        else:
+            warnings.warn('paramter check not available on remote server, check carefully parameters name')
 
         res = self.request(kwargs)
         data = None
@@ -372,21 +379,56 @@ class DispatcherAPI(object):
 class DataCollection(object):
 
 
-    def __init__(self,data_list):
+    def __init__(self,data_list,add_meta_to_name=['src_name','product']):
         self._p_list = []
         self._n_list = []
         for ID,data in enumerate(data_list):
 
             if hasattr(data,'name'):
-                n=data.name+'_%d'%ID
+                name=data.name+'prod_%d_'%ID
             else:
-                n='pord_%d' % ID
+                name='pord_%d_' % ID
 
-            setattr(self, n, data)
+            name = self._build_prod_name(data, name, add_meta_to_name)
+
+            setattr(self, name, data)
 
             self._p_list.append(data)
-            self._n_list.append(n)
+            self._n_list.append(name        )
 
     def show(self):
-        for ID,p in enumerate(self._p_list):
-            print(self._n_list[ID],ID)
+        for ID, s in enumerate(self._p_list):
+            print(ID, s.meta_data)
+
+    def _build_prod_name(self,prod,name,add_meta_to_name):
+        for kw in add_meta_to_name:
+            if kw in prod.meta_data:
+                s = prod.meta_data[kw].replace(' ', '')
+
+                name += s.strip()
+
+        return name
+
+    def save_all_data(self,prenpend_name='',add_meta_to_name=['src_name','product']):
+        for prod in self._p_list:
+            name = prenpend_name
+            name = self._build_prod_name(prod,name,add_meta_to_name)
+
+            name= name +'.fits'
+            prod.write_fits_file(name)
+
+
+    def save(self,file_name):
+        pickle.dump(self, open(file_name, 'wb'), protocol=pickle.HIGHEST_PROTOCOL)
+
+    def new_from_metadata(self,key,val):
+        dc=None
+        _l=[]
+        for p in self._p_list:
+            if p.meta_data[key] == val:
+                _l.append(p)
+
+        if _l !=[]:
+           dc = DataCollection(_l)
+
+        return dc
