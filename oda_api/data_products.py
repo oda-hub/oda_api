@@ -184,11 +184,16 @@ class NumpyDataUnit(object):
 
 
     def to_fits_hdu(self):
+        try:
+            for k,v in self.header.items():
+                if isinstance(v, list):
+                    self.header[k] = unicode(",".join(map(str,v)))
 
-
-         return  self.new_hdu_from_data(self.data,
-                                header=pf.header.Header(self.header),
-                                hdu_type=self.hdu_type,units_dict=self.units_dict)
+            return  self.new_hdu_from_data(self.data,
+                                    header=pf.header.Header(self.header),
+                                    hdu_type=self.hdu_type,units_dict=self.units_dict)
+        except Exception as e:
+            raise Exception("the platfrom encourntered a bug which happens when ScW list is sent as a file; we are working on it! raw message: "+repr(e))
 
 
 
