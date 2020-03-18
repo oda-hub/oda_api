@@ -187,7 +187,12 @@ class NumpyDataUnit(object):
         try:
             for k,v in self.header.items():
                 if isinstance(v, list):
-                    self.header[k] = unicode(",".join(map(str,v)))
+                    s=''
+                    for l in v:
+                        s+='%s,'%str(l)
+                    
+                    self.header[k] = s
+                    #unicode(",".join(map(str,v)))
 
             return  self.new_hdu_from_data(self.data,
                                     header=pf.header.Header(self.header),
