@@ -379,37 +379,41 @@ class DispatcherAPI(object):
 class DataCollection(object):
 
 
-    def __init__(self,data_list,add_meta_to_name=['src_name','product']):
+    def __init__(self,data_list,add_meta_to_name=['src_name']):
         self._p_list = []
         self._n_list = []
         for ID,data in enumerate(data_list):
 
             if hasattr(data,'name'):
-                name=data.name+'prod_%d_'%ID
+                name=data.name+'_%d'%ID
             else:
-                name='pord_%d_' % ID
+                name='pord_%d' % ID
 
             name = self._build_prod_name(data, name, add_meta_to_name)
 
             setattr(self, name, data)
 
             self._p_list.append(data)
-            self._n_list.append(name        )
+            self._n_list.append(name)
 
     def show(self):
-        for ID, s in enumerate(self._p_list):
-            print(ID, s.meta_data)
+        for ID, prod_name in enumerate(self._n_list):
+            print(ID,prod_name)
+            if hasattr(self._p_list[ID], 'meta_data'):
+                print(' meta data', self._p_list[ID].meta_data)
+            print()
 
     def _build_prod_name(self,prod,name,add_meta_to_name):
         for kw in add_meta_to_name:
-            if kw in prod.meta_data:
-                s = prod.meta_data[kw].replace(' ', '')
-
-                name += s.strip()
-
+            if hasattr(prod,'meta_data'):
+                if kw in prod.meta_data:
+                    s = prod.meta_data[kw].replace(' ', '')
+                    if s.strip() !='':
+                        name += '_'+s.strip()
+            #print('test',name)
         return name
 
-    def save_all_data(self,prenpend_name='',add_meta_to_name=['src_name','product']):
+    def save_all_data(self,prenpend_name='',add_meta_to_name=['src_name']):
         for prod in self._p_list:
             name = prenpend_name
             name = self._build_prod_name(prod,name,add_meta_to_name)
