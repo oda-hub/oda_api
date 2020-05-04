@@ -35,7 +35,7 @@ include_package_data=True
 
 scripts_list=glob.glob('./bin/*')
 setup(name='oda_api',
-      version=json,
+      version=__version__,
       description='API plugin  for CDCI online data analysis',
       author='Andrea Tramacere',
       author_email='andrea.tramacere@unige.ch',
