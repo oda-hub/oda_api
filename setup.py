@@ -25,7 +25,7 @@ packs=find_packages()
 
 print ('packs',packs)
 
-with open('jetset/pkg_info.json') as fp:
+with open('oda_api/pkg_info.json') as fp:
     _info = json.load(fp)
 
 __version__ = _info['version']
