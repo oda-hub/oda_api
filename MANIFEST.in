@@ -1,0 +1,5 @@
+include LICENSE.rst
+include requirements.txt
+include proj_descr.md
+include oda_api/pkg_info.json
+
