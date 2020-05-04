@@ -21,7 +21,7 @@ from astropy.io import ascii
 import base64
 import  copy
 import pickle
-
+from . import __version__
 from itertools import cycle
 
 from .data_products import NumpyDataProduct,BinaryData,ApiCatalog
@@ -123,6 +123,7 @@ class DispatcherAPI(object):
         if url is None:
             url=self.url
         parameters_dict['api']='True'
+        parameters_dict['oda_api_version'] = __version__
         print('- waiting for remote response, please wait',handle,url)
         for k in parameters_dict.keys():
             print(k,parameters_dict[k])
@@ -270,7 +271,8 @@ class DispatcherAPI(object):
         kwargs['session_id'] = self.generate_session_id()
         kwargs['dry_run'] = dry_run,
 
-        res = requests.get("%s/api/par-names" % self.url)
+        res = requests.get("%s/api/par-names" % self.url, params=dict(instrument=instrument,product_type=product), cookies=self.cookies)
+
 
         if res.status_code == 200:
 
@@ -280,14 +282,14 @@ class DispatcherAPI(object):
             for _i in _ignore_list:
                 del validation_dict[_i]
 
-            res = requests.get("%s/api/par-names" % self.url, params=dict(instrument=instrument,product_type=product), cookies=self.cookies)
+            #res = requests.get("%s/api/par-names" % self.url, params=dict(instrument=instrument,product_type=product), cookies=self.cookies)
 
             valid_names=self._decode_res_json(res)
             for n in validation_dict.keys():
                 if n not in valid_names:
                     raise RuntimeError('the parameter: %s'%n, 'is not among the valid ones:',valid_names)
         else:
-            warnings.warn('paramter check not available on remote server, check carefully parameters name')
+            warnings.warn('parameter check not available on remote server, check carefully parameters name')
 
         res = self.request(kwargs)
         data = None
