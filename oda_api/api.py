@@ -23,6 +23,7 @@ import  copy
 import pickle
 from . import __version__
 from itertools import cycle
+import re
 
 from .data_products import NumpyDataProduct,BinaryData,ApiCatalog
 
@@ -327,7 +328,7 @@ class DispatcherAPI(object):
                 #        t=data.extend([])
                 data.extend([ascii.read(table_binary) for table_binary in js['products']['astropy_table_product_binary_list']])
 
-            d=DataCollection(data)
+            d=DataCollection(data,instrument=instrument,product=product)
 
         else:
             self._decode_res_json(res.json()['products']['instrumet_parameters'])
@@ -381,47 +382,59 @@ class DispatcherAPI(object):
 class DataCollection(object):
 
 
-    def __init__(self,data_list,add_meta_to_name=['src_name']):
+    def __init__(self,data_list,add_meta_to_name=['src_name','product'],instrument=None,product=None):
         self._p_list = []
         self._n_list = []
         for ID,data in enumerate(data_list):
 
+            name=''
             if hasattr(data,'name'):
-                name=data.name+'_%d'%ID
-            else:
-                name='pord_%d' % ID
+                name=data.name
 
-            name = self._build_prod_name(data, name, add_meta_to_name)
+            if name.strip()=='':
+                if product is not None:
+                    name = '%s'%product
+                elif instrument is not None:
+                    name = '%s' % instrument
+                else:
+                    name = 'prod'
 
-            setattr(self, name, data)
+            name='%s_%d'%(name,ID)
+
+            name,var_name = self._build_prod_name(data, name, add_meta_to_name)
+            setattr(self, var_name, data)
 
             self._p_list.append(data)
             self._n_list.append(name)
 
     def show(self):
         for ID, prod_name in enumerate(self._n_list):
-            print(ID,prod_name)
             if hasattr(self._p_list[ID], 'meta_data'):
-                print(' meta data', self._p_list[ID].meta_data)
+                meta_data=self._p_list[ID].meta_data
+            else:
+                meta_data=''
+            print('ID=%s prod_name=%s'%(ID,prod_name),' meta_data:',meta_data)
             print()
 
     def _build_prod_name(self,prod,name,add_meta_to_name):
+
         for kw in add_meta_to_name:
             if hasattr(prod,'meta_data'):
                 if kw in prod.meta_data:
                     s = prod.meta_data[kw].replace(' ', '')
                     if s.strip() !='':
                         name += '_'+s.strip()
-            #print('test',name)
-        return name
+        return name,clean_var_name(name)
 
-    def save_all_data(self,prenpend_name='',add_meta_to_name=['src_name']):
-        for prod in self._p_list:
-            name = prenpend_name
-            name = self._build_prod_name(prod,name,add_meta_to_name)
+    def save_all_data(self,prenpend_name=None):
+        for pname,prod in zip(self._n_list,self._p_list):
+            if prenpend_name is not  None:
+                file_name=prenpend_name+'_'+pname
+            else:
+                file_name=pname
 
-            name= name +'.fits'
-            prod.write_fits_file(name)
+            file_name= file_name +'.fits'
+            prod.write_fits_file(file_name)
 
 
     def save(self,file_name):
@@ -438,3 +451,17 @@ class DataCollection(object):
            dc = DataCollection(_l)
 
         return dc
+
+
+def clean_var_name(s):
+    s = s.replace('-', 'm')
+    s = s.replace('+', 'p')
+    s = s.replace(' ', '_')
+
+    # Remove invalid characters
+    s = re.sub('[^0-9a-zA-Z_]', '', s)
+
+     # Remove leading characters until we find a letter or underscore
+    s = re.sub('^[^a-zA-Z_]+', '', s)
+
+    return s

@@ -1,8 +1,7 @@
+Quick Start (oda api v1.0.0)
+============================
 
-Quick Start
-===========
-
-.. code:: ipython2
+.. code:: ipython3
 
     from oda_api.api import DispatcherAPI
     from oda_api.plot_tools import OdaImage,OdaLightCurve
@@ -17,11 +16,11 @@ Connection to the dispatcher
 build the dispatcher object
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code:: ipython2
+.. code:: ipython3
 
     disp=DispatcherAPI(host='www.astro.unige.ch/cdci/astrooda/dispatch-data',instrument='mock',protocol='https')
 
-.. code:: ipython2
+.. code:: ipython3
 
     instr_list=disp.get_instruments_list()
     for i in instr_list:
@@ -36,10 +35,11 @@ build the dispatcher object
     spi_acs
 
 
+
 get the description of the instrument
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code:: ipython2
+.. code:: ipython3
 
     disp.get_instrument_description('isgri')
 
@@ -62,6 +62,7 @@ get the description of the instrument
     query_name: isgri_parameters
      name: user_catalog,  value: None,  units: str, 
      name: scw_list,  value: [],  units: names_list, 
+     name: selected_catalog,  value: None,  units: str, 
      name: radius,  value: 5.0,  units: deg, 
      name: max_pointings,  value: 50,  units: None, 
      name: osa_version,  value: None,  units: str, 
@@ -96,7 +97,7 @@ get the description of the instrument
 get the description of the product
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code:: ipython2
+.. code:: ipython3
 
     disp.get_product_description(instrument='isgri',product_name='isgri_image')
 
@@ -121,6 +122,7 @@ get the description of the product
     query_name: isgri_parameters
      name: user_catalog,  value: None,  units: str, 
      name: scw_list,  value: [],  units: names_list, 
+     name: selected_catalog,  value: None,  units: str, 
      name: radius,  value: 5.0,  units: deg, 
      name: max_pointings,  value: 50,  units: None, 
      name: osa_version,  value: None,  units: str, 
@@ -138,27 +140,27 @@ get the description of the product
 check query before submission
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-we pass 'dry\_run' to check if the request is correct without actually
+we pass ‘dry_run’ to check if the request is correct without actually
 submitting it
 
-.. code:: ipython2
+.. code:: ipython3
 
-    data=disp.get_product(instrument='isgri',
-                          product='isgri_image',
-                          T1='2003-03-15T23:27:40.0',
-                          T2='2003-03-16T00:03:12.0',
-                          osa_version='OSA10.2',
-                          RA='a',
-                          DEC=-37.844167,
-                          detection_threshold=5.0,
-                          radius=15.,
-                          product_type='Real',
-                          dry_run=True)
+    data_collection=disp.get_product(instrument='isgri',
+                                     product='isgri_image',
+                                     T1='2003-03-15T23:27:40.0',
+                                     T2='2003-03-16T00:03:12.0',
+                                     osa_version='OSA10.2',
+                                     RA='a',
+                                     DEC=-37.844167,
+                                     detection_threshold=5.0,
+                                     radius=15.,
+                                     product_type='Real',
+                                     dry_run=True)
 
 
 .. parsed-literal::
 
-    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
+    - waiting for remote response, please wait run_analysis https://www.astro.unige.ch/cdci/astrooda/dispatch-data
     T1 2003-03-15T23:27:40.0
     T2 2003-03-16T00:03:12.0
     osa_version OSA10.2
@@ -172,9 +174,10 @@ submitting it
     off_line (False,)
     query_status ('new',)
     verbose (False,)
-    session_id 5CDBXZO4CDYVFNL2
+    session_id 6BBRP68TSYF0SBFR
     dry_run (True,)
     api True
+    oda_api_version 1.0.0
     
     
     query failed!
@@ -189,32 +192,32 @@ submitting it
     An exception has occurred, use %tb to see the full traceback.
 
 
-    SystemExit: RemoteException (line 49): Remote analysis exception
+    SystemExit: RemoteException (line 54): Remote analysis exception
 
 
 
 .. parsed-literal::
 
-    /Users/orion/anaconda3/lib/python3.7/site-packages/IPython/core/interactiveshell.py:3334: UserWarning: To exit: use 'exit', 'quit', or Ctrl-D.
+    /Users/orion/anaconda3/lib/python3.7/site-packages/IPython/core/interactiveshell.py:3339: UserWarning: To exit: use 'exit', 'quit', or Ctrl-D.
       warn("To exit: use 'exit', 'quit', or Ctrl-D.", stacklevel=1)
 
 
 Get ODA products
 ----------------
 
-now we skip the dry\_run to actually get the products
+now we skip the dry_run to actually get the products
 
-.. code:: ipython2
+.. code:: ipython3
 
-    data=disp.get_product(instrument='isgri',
+    data_collection=disp.get_product(instrument='isgri',
                           product='isgri_image',
                           T1='2003-03-15T23:27:40.0',
                           T2='2003-03-16T00:03:15.0',
                           E1_keV=20.0,
                           E2_keV=40.0,
                           osa_version='OSA10.2',
-                          RA=255.986542,
-                          DEC=-37.844167,
+                          RA=257.815417,
+                          DEC=-41.593417,
                           detection_threshold=5.0,
                           radius=15.,
                           product_type='Real')
@@ -222,14 +225,14 @@ now we skip the dry\_run to actually get the products
 
 .. parsed-literal::
 
-    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
+    - waiting for remote response, please wait run_analysis https://www.astro.unige.ch/cdci/astrooda/dispatch-data
     T1 2003-03-15T23:27:40.0
     T2 2003-03-16T00:03:15.0
     E1_keV 20.0
     E2_keV 40.0
     osa_version OSA10.2
-    RA 255.986542
-    DEC -37.844167
+    RA 257.815417
+    DEC -41.593417
     detection_threshold 5.0
     radius 15.0
     instrument isgri
@@ -238,11 +241,11 @@ now we skip the dry\_run to actually get the products
     off_line (False,)
     query_status ('new',)
     verbose (False,)
-    session_id 5SGAP41P0WIE9833
+    session_id MW8JICUUZVN28DF7
     dry_run (False,)
     api True
-    the job has been submitted on the remote server
-     - the job is working remotely, please wait status=done - job_id=-6235342954244489107 9107 
+    oda_api_version 1.0.0
+    
     
     query done succesfully!
 
@@ -250,53 +253,55 @@ now we skip the dry\_run to actually get the products
 the ODA data structure
 ~~~~~~~~~~~~~~~~~~~~~~
 
-.. code:: ipython2
+.. code:: ipython3
 
-    data.show()
+    data_collection.show()
 
 
 .. parsed-literal::
 
-    mosaic_image_0 0
-    dispatcher_catalog_1 1
+    ID=0 prod_name=mosaic_image_0_mosaic  meta_data: {'src_name': '', 'instrument': 'isgri', 'product': 'mosaic', 'query_parameters': '[{"query_name": "isgri_image_query"}, {"product_name": "isgri_image_query"}, {"units": "sigma", "name": "detection_threshold", "value": "5.0"}, {"units": null, "name": "image_scale_min", "value": null}, {"units": null, "name": "image_scale_max", "value": null}]'}
+    
+    ID=1 prod_name=dispatcher_catalog_1  meta_data: 
+    
 
 
 you can acess memeber by name:
 
-.. code:: ipython2
+.. code:: ipython3
 
-    data.mosaic_image_0
+    data_collection.mosaic_image_0_mosaic
 
 
 
 
 .. parsed-literal::
 
-    <oda_api.data_products.NumpyDataProduct at 0x1189f9860>
+    <oda_api.data_products.NumpyDataProduct at 0x11ca3c550>
 
 
 
 or by position in the data list
 
-.. code:: ipython2
+.. code:: ipython3
 
-    data._p_list[0]
+    data_collection._p_list[0]
 
 
 
 
 .. parsed-literal::
 
-    <oda_api.data_products.NumpyDataProduct at 0x1189f9860>
+    <oda_api.data_products.NumpyDataProduct at 0x11ca3c550>
 
 
 
 the ODA catalog
 ~~~~~~~~~~~~~~~
 
-.. code:: ipython2
+.. code:: ipython3
 
-    data.dispatcher_catalog_1.table
+    data_collection.dispatcher_catalog_1.table
 
 
 
@@ -304,7 +309,7 @@ the ODA catalog
 .. raw:: html
 
     <i>Table length=4</i>
-    <table id="table4708081056" class="table-striped table-bordered table-condensed">
+    <table id="table4775492112" class="table-striped table-bordered table-condensed">
     <thead><tr><th>meta_ID</th><th>src_names</th><th>significance</th><th>ra</th><th>dec</th><th>NEW_SOURCE</th><th>ISGRI_FLAG</th><th>FLAG</th><th>ERR_RAD</th></tr></thead>
     <thead><tr><th></th><th></th><th></th><th>deg</th><th>deg</th><th></th><th></th><th></th><th></th></tr></thead>
     <thead><tr><th>int64</th><th>str12</th><th>float64</th><th>float64</th><th>float64</th><th>int64</th><th>int64</th><th>int64</th><th>float64</th></tr></thead>
@@ -317,15 +322,15 @@ the ODA catalog
 
 
 you can use astropy.table commands to modify the table of the catatlog
-http://docs.astropy.org/en/stable/table/modify\_table.html
+http://docs.astropy.org/en/stable/table/modify_table.html
 
 to generate a catalog to pass to the dispatcher api
 
-.. code:: ipython2
+.. code:: ipython3
 
-    api_cat=data.dispatcher_catalog_1.get_api_dictionary()
+    api_cat=data_collection.dispatcher_catalog_1.get_api_dictionary()
 
-.. code:: ipython2
+.. code:: ipython3
 
     api_cat
 
@@ -338,26 +343,26 @@ to generate a catalog to pass to the dispatcher api
 
 
 
-.. code:: ipython2
+.. code:: ipython3
 
-    data=disp.get_product(instrument='isgri',
-                          product='isgri_image',
-                          T1='2003-03-15T23:27:40.0',
-                          T2='2003-03-16T00:03:15.0',
-                          E1_keV=20.0,
-                          E2_keV=40.0,
-                          osa_version='OSA10.2',
-                          RA=255.986542,
-                          DEC=-37.844167,
-                          detection_threshold=5.0,
-                          radius=15.,
-                          product_type='Real',
-                          selected_catalog=api_cat)
+    data_collection=disp.get_product(instrument='isgri',
+                                  product='isgri_image',
+                                  T1='2003-03-15T23:27:40.0',
+                                  T2='2003-03-16T00:03:15.0',
+                                  E1_keV=20.0,
+                                  E2_keV=40.0,
+                                  osa_version='OSA10.2',
+                                  RA=255.986542,
+                                  DEC=-37.844167,
+                                  detection_threshold=5.0,
+                                  radius=15.,
+                                  product_type='Real',
+                                  selected_catalog=api_cat)
 
 
 .. parsed-literal::
 
-    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
+    - waiting for remote response, please wait run_analysis https://www.astro.unige.ch/cdci/astrooda/dispatch-data
     T1 2003-03-15T23:27:40.0
     T2 2003-03-16T00:03:15.0
     E1_keV 20.0
@@ -374,20 +379,20 @@ to generate a catalog to pass to the dispatcher api
     off_line (False,)
     query_status ('new',)
     verbose (False,)
-    session_id CESVQ4RQCY9ED73M
+    session_id OEMY29CY4CPESK8Z
     dry_run (False,)
     api True
-    the job has been submitted on the remote server
-     | the job is working remotely, please wait status=done - job_id=176021827695642761 2761 
+    oda_api_version 1.0.0
+    
     
     query done succesfully!
 
 
 you can explore the image with the following command
 
-.. code:: ipython2
+.. code:: ipython3
 
-    data.mosaic_image_0.show()
+    data_collection.mosaic_image_0_mosaic.show()
 
 
 .. parsed-literal::
@@ -401,9 +406,9 @@ you can explore the image with the following command
     data uniti 1 ,name: ISGR-MOSA-IMA
 
 
-.. code:: ipython2
+.. code:: ipython3
 
-    data.mosaic_image_0.show_meta()
+    data_collection.mosaic_image_0_mosaic.show_meta()
 
 
 .. parsed-literal::
@@ -416,9 +421,9 @@ you can explore the image with the following command
     ------------------------------
 
 
-.. code:: ipython2
+.. code:: ipython3
 
-    data.mosaic_image_0.data_unit[1].data
+    data_collection.mosaic_image_0_mosaic.data_unit[1].data
 
 
 
@@ -435,15 +440,16 @@ you can explore the image with the following command
 
 
 
-.. code:: ipython2
+.. code:: ipython3
 
-    hdu=data.mosaic_image_0.to_fits_hdu_list()
+    hdu=data_collection.mosaic_image_0_mosaic.to_fits_hdu_list()
 
 
 .. parsed-literal::
 
     WARNING: VerifyWarning: Keyword name 'detection_threshold' is greater than 8 characters or contains characters not allowed by the FITS standard; a HIERARCH card will be created. [astropy.io.fits.card]
     WARNING: VerifyWarning: Keyword name 'instrument' is greater than 8 characters or contains characters not allowed by the FITS standard; a HIERARCH card will be created. [astropy.io.fits.card]
+    WARNING: VerifyWarning: Keyword name 'oda_api_version' is greater than 8 characters or contains characters not allowed by the FITS standard; a HIERARCH card will be created. [astropy.io.fits.card]
     WARNING: VerifyWarning: Keyword name 'osa_version' is greater than 8 characters or contains characters not allowed by the FITS standard; a HIERARCH card will be created. [astropy.io.fits.card]
     WARNING: VerifyWarning: Keyword name 'product_type' is greater than 8 characters or contains characters not allowed by the FITS standard; a HIERARCH card will be created. [astropy.io.fits.card]
     WARNING: VerifyWarning: Keyword name 'query_status' is greater than 8 characters or contains characters not allowed by the FITS standard; a HIERARCH card will be created. [astropy.io.fits.card]
@@ -451,9 +457,9 @@ you can explore the image with the following command
     WARNING: VerifyWarning: Keyword name 'session_id' is greater than 8 characters or contains characters not allowed by the FITS standard; a HIERARCH card will be created. [astropy.io.fits.card]
 
 
-.. code:: ipython2
+.. code:: ipython3
 
-    data.mosaic_image_0.data_unit[1].data.shape
+    data_collection.mosaic_image_0_mosaic.data_unit[1].data.shape
 
 
 
@@ -464,33 +470,46 @@ you can explore the image with the following command
 
 
 
-.. code:: ipython2
+.. code:: ipython3
 
-    data.mosaic_image_0.write_fits_file('test.fits',overwrite=True)
+    data_collection.mosaic_image_0_mosaic.write_fits_file('test.fits',overwrite=True)
+
+
+.. parsed-literal::
+
+    WARNING: VerifyWarning: Keyword name 'detection_threshold' is greater than 8 characters or contains characters not allowed by the FITS standard; a HIERARCH card will be created. [astropy.io.fits.card]
+    WARNING: VerifyWarning: Keyword name 'instrument' is greater than 8 characters or contains characters not allowed by the FITS standard; a HIERARCH card will be created. [astropy.io.fits.card]
+    WARNING: VerifyWarning: Keyword name 'oda_api_version' is greater than 8 characters or contains characters not allowed by the FITS standard; a HIERARCH card will be created. [astropy.io.fits.card]
+    WARNING: VerifyWarning: Keyword name 'osa_version' is greater than 8 characters or contains characters not allowed by the FITS standard; a HIERARCH card will be created. [astropy.io.fits.card]
+    WARNING: VerifyWarning: Keyword name 'product_type' is greater than 8 characters or contains characters not allowed by the FITS standard; a HIERARCH card will be created. [astropy.io.fits.card]
+    WARNING: VerifyWarning: Keyword name 'query_status' is greater than 8 characters or contains characters not allowed by the FITS standard; a HIERARCH card will be created. [astropy.io.fits.card]
+    WARNING: VerifyWarning: Keyword name 'query_type' is greater than 8 characters or contains characters not allowed by the FITS standard; a HIERARCH card will be created. [astropy.io.fits.card]
+    WARNING: VerifyWarning: Keyword name 'session_id' is greater than 8 characters or contains characters not allowed by the FITS standard; a HIERARCH card will be created. [astropy.io.fits.card]
+
 
 the ODA Image plotting tool
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code:: ipython2
+.. code:: ipython3
 
     #interactive
     #%matplotlib notebook
     
     %matplotlib inline
-    im=OdaImage(data.mosaic_image_0)
+    im=OdaImage(data_collection.mosaic_image_0_mosaic)
 
-.. code:: ipython2
+.. code:: ipython3
 
     im.show(unit_ID=1)
 
 
 
-.. image:: TestAPI_files/TestAPI_36_0.png
+.. image:: TestAPI_files/TestAPI_37_0.png
 
 
-.. code:: ipython2
+.. code:: ipython3
 
-    data.mosaic_image_0.data_unit[1].header
+    data_collection.mosaic_image_0_mosaic.data_unit[1].header
 
 
 
@@ -509,7 +528,7 @@ the ODA Image plotting tool
      'CHANMAX': 40,
      'CHANMIN': 20,
      'CHANTYPE': 'PI',
-     'CHECKSUM': 'nRMqnQLnnQLnnQLn',
+     'CHECKSUM': 'oVP0oTP0oTP0oTP0',
      'COMMENT': 'STAMP :',
      'CONFIGUR': 'latest_osa_sw_2015-11-10T03:50:02',
      'CREATOR': 'ii_skyimage 5.4.4',
@@ -522,7 +541,7 @@ the ODA Image plotting tool
      'CUNIT1': 'deg',
      'CUNIT2': 'deg',
      'DATASUM': '2370916866',
-     'DATE': '2019-05-27T06:46:26',
+     'DATE': '2019-09-11T09:14:22',
      'DATE-END': '2003-03-15T23:57:39',
      'DATE-OBS': '2003-03-15T23:27:53',
      'DEADC': 0.775885283090927,
@@ -555,7 +574,7 @@ the ODA Image plotting tool
      'ORIGIN': 'ISDC',
      'PCOUNT': 0,
      'RADECSYS': 'FK5',
-     'STAMP': '2019-05-27T06:46:26 ii_skyimage 5.4.4',
+     'STAMP': '2019-09-11T09:14:22 ii_skyimage 5.4.4',
      'TELAPSE': 1589.0,
      'TELESCOP': 'INTEGRAL',
      'TFIRST': 1169.97884473118,
@@ -572,9 +591,9 @@ the ODA Image plotting tool
 the ODA LC plotting tool
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code:: ipython2
+.. code:: ipython3
 
-    data=disp.get_product(instrument='isgri',
+    data_collection=disp.get_product(instrument='isgri',
                           product='isgri_lc',
                           T1='2003-03-15T23:27:40.0',
                           T2='2003-03-16T00:03:12.0',
@@ -582,21 +601,19 @@ the ODA LC plotting tool
                           osa_version='OSA10.2',
                           RA=255.986542,
                           DEC=-37.844167,
-                          detection_threshold=5.0,
                           radius=15.,
                           product_type='Real')
 
 
 .. parsed-literal::
 
-    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
+    - waiting for remote response, please wait run_analysis https://www.astro.unige.ch/cdci/astrooda/dispatch-data
     T1 2003-03-15T23:27:40.0
     T2 2003-03-16T00:03:12.0
     time_bin 70
     osa_version OSA10.2
     RA 255.986542
     DEC -37.844167
-    detection_threshold 5.0
     radius 15.0
     instrument isgri
     product_type isgri_lc
@@ -604,11 +621,11 @@ the ODA LC plotting tool
     off_line (False,)
     query_status ('new',)
     verbose (False,)
-    session_id SE2BL9IRAZWSKI4W
+    session_id 9VLSUGRTNT9PB5GC
     dry_run (False,)
     api True
-    the job has been submitted on the remote server
-     / the job is working remotely, please wait status=done - job_id=815032431550934891 
+    oda_api_version 1.0.0
+    
     
     query done succesfully!
 
@@ -616,64 +633,124 @@ the ODA LC plotting tool
 explore LC
 ~~~~~~~~~~
 
-.. code:: ipython2
+.. code:: ipython3
 
-    data.show()
+    data_collection.show()
 
 
 .. parsed-literal::
 
-    isgri_lc_0 0
-    isgri_lc_1 1
-    isgri_lc_2 2
-    isgri_lc_3 3
-    isgri_lc_4 4
-    isgri_lc_5 5
-    isgri_lc_6 6
-    isgri_lc_7 7
-    isgri_lc_8 8
-    isgri_lc_9 9
-    isgri_lc_10 10
-    isgri_lc_11 11
-    isgri_lc_12 12
-    isgri_lc_13 13
-    isgri_lc_14 14
-    isgri_lc_15 15
-    isgri_lc_16 16
-    isgri_lc_17 17
-    isgri_lc_18 18
-    isgri_lc_19 19
-    isgri_lc_20 20
-    isgri_lc_21 21
-    isgri_lc_22 22
-    isgri_lc_23 23
-    isgri_lc_24 24
-    isgri_lc_25 25
-    isgri_lc_26 26
-    isgri_lc_27 27
-    isgri_lc_28 28
-    isgri_lc_29 29
+    0 isgri_lc_0_GX349+2
+     meta data {'src_name': 'GX 349+2', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
+    
+    1 isgri_lc_1_IGRJ17285-2922
+     meta data {'src_name': 'IGR J17285-2922', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
+    
+    2 isgri_lc_2_AXJ1700.2-4220
+     meta data {'src_name': 'AX J1700.2-4220', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
+    
+    3 isgri_lc_3_IGRJ17507-2856
+     meta data {'src_name': 'IGR J17507-2856', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
+    
+    4 isgri_lc_4_IGRJ17508-3219
+     meta data {'src_name': 'IGR J17508-3219', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
+    
+    5 isgri_lc_5_IGRJ17586-2129
+     meta data {'src_name': 'IGR J17586-2129', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
+    
+    6 isgri_lc_6_OAO1657-415
+     meta data {'src_name': 'OAO 1657-415', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
+    
+    7 isgri_lc_7_GROJ1719-24
+     meta data {'src_name': 'GRO J1719-24', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
+    
+    8 isgri_lc_8_4U1735-444
+     meta data {'src_name': '4U 1735-444', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
+    
+    9 isgri_lc_9_IGRJ17326-3445
+     meta data {'src_name': 'IGR J17326-3445', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
+    
+    10 isgri_lc_10_4U1722-30
+     meta data {'src_name': '4U 1722-30', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
+    
+    11 isgri_lc_11_IGRJ17099-2418
+     meta data {'src_name': 'IGR J17099-2418', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
+    
+    12 isgri_lc_12_NEW_6
+     meta data {'src_name': 'NEW_6', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
+    
+    13 isgri_lc_13_NEW_4
+     meta data {'src_name': 'NEW_4', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
+    
+    14 isgri_lc_14_NEW_5
+     meta data {'src_name': 'NEW_5', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
+    
+    15 isgri_lc_15_NEW_2
+     meta data {'src_name': 'NEW_2', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
+    
+    16 isgri_lc_16_NEW_3
+     meta data {'src_name': 'NEW_3', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
+    
+    17 isgri_lc_17_NEW_1
+     meta data {'src_name': 'NEW_1', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
+    
+    18 isgri_lc_18_IGRJ16248-4603
+     meta data {'src_name': 'IGR J16248-4603', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
+    
+    19 isgri_lc_19_IGRJ17091-3624
+     meta data {'src_name': 'IGR J17091-3624', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
+    
+    20 isgri_lc_20_IGRJ17191-2821
+     meta data {'src_name': 'IGR J17191-2821', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
+    
+    21 isgri_lc_21_IGRJ17103-3341
+     meta data {'src_name': 'IGR J17103-3341', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
+    
+    22 isgri_lc_22_GRS1747-312
+     meta data {'src_name': 'GRS 1747-312', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
+    
+    23 isgri_lc_23_GX354-0
+     meta data {'src_name': 'GX 354-0', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
+    
+    24 isgri_lc_24_IGRJ17314-2854
+     meta data {'src_name': 'IGR J17314-2854', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
+    
+    25 isgri_lc_25_GX1+4
+     meta data {'src_name': 'GX 1+4', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
+    
+    26 isgri_lc_26_H1705-440
+     meta data {'src_name': 'H 1705-440', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
+    
+    27 isgri_lc_27_1RXSJ174607.8-21333
+     meta data {'src_name': '1RXS J174607.8-21333', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
+    
+    28 isgri_lc_28_4U1700-377
+     meta data {'src_name': '4U 1700-377', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
+    
+    29 isgri_lc_29_1E1740.7-2942
+     meta data {'src_name': '1E 1740.7-2942', 'rate': 'RATE', 'time_bin': 0.000810143479094966, 'rate_err': 'ERROR', 'time': 'TIME'}
+    
 
 
-.. code:: ipython2
+.. code:: ipython3
 
-    data.isgri_lc_0.show_meta()
+    data_collection.isgri_lc_0_GX349p2.show()
 
 
 .. parsed-literal::
 
     ------------------------------
-    src_name : GX 349+2
-    rate : RATE
-    time_bin : 0.000810143479094966
-    rate_err : ERROR
-    time : TIME
+    name: isgri_lc
+    meta_data dict_keys(['src_name', 'rate', 'time_bin', 'rate_err', 'time'])
+    number of data units 2
     ------------------------------
+    data uniti 0 ,name: PRIMARY
+    data uniti 1 ,name: ISGR-SRC.-LCR
 
 
-.. code:: ipython2
+.. code:: ipython3
 
-    for ID,s in enumerate(data._p_list):
+    for ID,s in enumerate(data_collection._p_list):
         print (ID,s.meta_data['src_name'])
 
 
@@ -711,9 +788,9 @@ explore LC
     29 1E 1740.7-2942
 
 
-.. code:: ipython2
+.. code:: ipython3
 
-    lc=data._p_list[0]
+    lc=data_collection._p_list[0]
     lc.data_unit[1].data
 
 
@@ -748,7 +825,7 @@ explore LC
 
 
 
-.. code:: ipython2
+.. code:: ipython3
 
     lc.show()
 
@@ -764,7 +841,7 @@ explore LC
     data uniti 1 ,name: ISGR-SRC.-LCR
 
 
-.. code:: ipython2
+.. code:: ipython3
 
     lc.meta_data
 
@@ -781,17 +858,17 @@ explore LC
 
 
 
-.. code:: ipython2
+.. code:: ipython3
 
     %matplotlib inline
     OdaLightCurve(lc).show(unit_ID=1)
 
 
 
-.. image:: TestAPI_files/TestAPI_47_0.png
+.. image:: TestAPI_files/TestAPI_48_0.png
 
 
-.. code:: ipython2
+.. code:: ipython3
 
     lc.data_unit[0].header
 
@@ -809,19 +886,18 @@ explore LC
      'T1': '2003-03-15T23:27:40.0',
      'T2': '2003-03-16T00:03:12.0',
      'api': 'True',
-     'detection_threshold': '5.0',
      'dry_run': 'False',
      'instrument': 'isgri',
-     'job_id': '815032431550934891',
+     'oda_api_version': '1.0.0',
      'off_line': 'False',
      'osa_version': 'OSA10.2',
      'product_type': 'isgri_lc',
-     'query_status': 'submitted',
+     'query_status': 'new',
      'query_type': 'Real',
      'radius': '15.0',
-     'session_id': 'SE2BL9IRAZWSKI4W',
+     'session_id': '9VLSUGRTNT9PB5GC',
      'time_bin': '70',
-     'url': 'http://www.astro.unige.ch/cdci/astrooda_?product_type=isgri_lc&verbose=False&dry_run=False&osa_version=OSA10.2&RA=255.986542&T2=2003-03-16T00%3A03%3A12.0&time_bin=70&session_id=SE2BL9IRAZWSKI4W&T1=2003-03-15T23%3A27%3A40.0&instrument=isgri&api=True&radius=15.0&detection_threshold=5.0&query_type=Real&off_line=False&DEC=-37.844167&query_status=submitted&job_id=815032431550934891',
+     'url': 'http://www.astro.unige.ch/cdci/astrooda_?product_type=isgri_lc&verbose=False&dry_run=False&osa_version=OSA10.2&T2=2003-03-16T00%3A03%3A12.0&time_bin=70&session_id=9VLSUGRTNT9PB5GC&T1=2003-03-15T23%3A27%3A40.0&instrument=isgri&api=True&radius=15.0&RA=255.986542&query_type=Real&off_line=False&DEC=-37.844167&query_status=new&oda_api_version=1.0.0',
      'verbose': 'False'}
 
 
@@ -829,22 +905,14 @@ explore LC
 Polar LC
 ~~~~~~~~
 
-.. code:: ipython2
+.. code:: ipython3
 
-    #conda create --name=polar_root root=5 python=3 -c nlesc
-    #source activate poloar_root
-    #conda install astropy future -c nlesc
-    #conda install -c conda-forge json_tricks
-    #from oda_api.api import DispatcherAPI
-    #from oda_api.data_products import BinaryData
-    #from oda_api.plot_tools import OdaImage,OdaLightCurve
-    #disp=DispatcherAPI(host='10.194.169.161',port=32784,instrument='mock',protocol='http')
-    data=disp.get_product(instrument='polar',product='polar_lc',T1='2016-12-18T08:32:21.000',T2='2016-12-18T08:34:01.000',time_bin=0.5,verbose=True,dry_run=False)
+    data_collection=disp.get_product(instrument='polar',product='polar_lc',T1='2016-12-18T08:32:21.000',T2='2016-12-18T08:34:01.000',time_bin=0.5,verbose=True,dry_run=False)
 
 
 .. parsed-literal::
 
-    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
+    - waiting for remote response, please wait run_analysis https://www.astro.unige.ch/cdci/astrooda/dispatch-data
     T1 2016-12-18T08:32:21.000
     T2 2016-12-18T08:34:01.000
     time_bin 0.5
@@ -854,42 +922,49 @@ Polar LC
     off_line (False,)
     query_status ('new',)
     verbose (True,)
-    session_id 7EVG3VSE63NRDMLT
+    session_id 66B1J0ZNB23TSSWM
     dry_run (False,)
     api True
+    oda_api_version 1.0.0
     
     
     query done succesfully!
 
 
-.. code:: ipython2
+.. code:: ipython3
 
-    data.show()
-
-
-.. parsed-literal::
-
-    _0 0
-    pord_1 1
-
-
-.. code:: ipython2
-
-    data._p_list[0]
-
-
+    data_collection.show()
 
 
 .. parsed-literal::
 
-    <oda_api.data_products.NumpyDataProduct at 0x11a06db38>
+    ID=0 prod_name=polar_lc_0_lc  meta_data: {'src_name': 'lc', 'rate': 'rate', 'time_bin': 0.5, 'rate_err': 'rate_err', 'time': 'time'}
+    
+    ID=1 prod_name=polar_lc_1  meta_data: 
+    
+
+
+.. code:: ipython3
+
+    data_collection._p_list[0].meta_data
 
 
 
-.. code:: ipython2
 
-    lc=data._p_list[0]
-    root=data._p_list[1]
+.. parsed-literal::
+
+    {'src_name': 'lc',
+     'rate': 'rate',
+     'time_bin': 0.5,
+     'rate_err': 'rate_err',
+     'time': 'time'}
+
+
+
+.. code:: ipython3
+
+    lc=data_collection._p_list[0]
+    root=data_collection._p_list[1]
     open('lc.root', "wb").write(root)
 
 
@@ -901,7 +976,7 @@ Polar LC
 
 
 
-.. code:: ipython2
+.. code:: ipython3
 
      open('lc.root', "wb").write(root)
 
@@ -914,20 +989,20 @@ Polar LC
 
 
 
-.. code:: ipython2
+.. code:: ipython3
 
     %matplotlib inline
     OdaLightCurve(lc).show(unit_ID=1)
 
 
 
-.. image:: TestAPI_files/TestAPI_55_0.png
+.. image:: TestAPI_files/TestAPI_56_0.png
 
 
 SPIACS LC
 ~~~~~~~~~
 
-.. code:: ipython2
+.. code:: ipython3
 
     disp.get_instrument_description('spi_acs')
 
@@ -950,6 +1025,7 @@ SPIACS LC
     query_name: spiacs_parameters
      name: user_catalog,  value: None,  units: str, 
      name: [],  value: [],  units: names_list, 
+     name: selected_catalog,  value: None,  units: str, 
     
     --------------
     query_name: spi_acs_lc_query
@@ -957,62 +1033,75 @@ SPIACS LC
      name: time_bin,  value: 1000.0,  units: sec, 
 
 
-.. code:: ipython2
+.. code:: ipython3
 
-    data=disp.get_product(instrument='spi_acs',
+    data_collection=disp.get_product(instrument='spi_acs',
                           product='spi_acs_lc',
                           T1='2003-03-15T23:27:40.0',
                           T2='2003-03-15T23:57:12.0',
                           time_bin=2,
-                          osa_version='OSA10.2',
                           RA=255.986542,
                           DEC=-37.844167,
-                          detection_threshold=5.0,
-                          radius=15.,
                           product_type='Real')
 
 
 .. parsed-literal::
 
-    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
+    - waiting for remote response, please wait run_analysis https://www.astro.unige.ch/cdci/astrooda/dispatch-data
     T1 2003-03-15T23:27:40.0
     T2 2003-03-15T23:57:12.0
     time_bin 2
-    osa_version OSA10.2
     RA 255.986542
     DEC -37.844167
-    detection_threshold 5.0
-    radius 15.0
     instrument spi_acs
     product_type spi_acs_lc
     query_type Real
     off_line (False,)
     query_status ('new',)
     verbose (False,)
-    session_id CCPC5ORX9N2J45JV
+    session_id 2WSIOJ26BO2XQX2F
     dry_run (False,)
     api True
+    oda_api_version 1.0.0
     
     
     query done succesfully!
 
 
-.. code:: ipython2
+.. code:: ipython3
 
-    data.show()
+    data_collection.show()
 
 
 .. parsed-literal::
 
-    _0 0
+    ID=0 prod_name=spi_acs_lc_0_query  meta_data: {'src_name': 'query', 'rate': 'RATE', 'time_bin': 2.0, 'rate_err': 'ERROR', 'time': 'TIME'}
+    
 
 
-.. code:: ipython2
+.. code:: ipython3
 
-    lc=data._p_list[0]
+    lc=data_collection._p_list[0]
 
 
-.. code:: ipython2
+.. code:: ipython3
+
+    lc.meta_data
+
+
+
+
+.. parsed-literal::
+
+    {'src_name': 'query',
+     'rate': 'RATE',
+     'time_bin': 2.0,
+     'rate_err': 'ERROR',
+     'time': 'TIME'}
+
+
+
+.. code:: ipython3
 
     lc.show()
 
@@ -1028,7 +1117,7 @@ SPIACS LC
     data uniti 1 ,name: RATE
 
 
-.. code:: ipython2
+.. code:: ipython3
 
     lc.data_unit[1].header
 
@@ -1069,7 +1158,7 @@ SPIACS LC
 
 
 
-.. code:: ipython2
+.. code:: ipython3
 
     lc.data_unit[1].data[0:10]
 
@@ -1092,43 +1181,39 @@ SPIACS LC
 
 
 
-.. code:: ipython2
+.. code:: ipython3
 
     OdaLightCurve(lc).show(unit_ID=1)
 
 
 
-.. image:: TestAPI_files/TestAPI_64_0.png
+.. image:: TestAPI_files/TestAPI_66_0.png
 
 
 the ODA and spectra
 ~~~~~~~~~~~~~~~~~~~
 
-.. code:: ipython2
+.. code:: ipython3
 
-    data=disp.get_product(instrument='isgri',
+    data_collection=disp.get_product(instrument='isgri',
                           product='isgri_spectrum',
                           T1='2003-03-15T23:27:40.0',
                           T2='2003-03-16T00:03:12.0',
-                          time_bin=50,
                           osa_version='OSA10.2',
                           RA=255.986542,
                           DEC=-37.844167,
-                          detection_threshold=5.0,
                           radius=15.,
                           product_type='Real')
 
 
 .. parsed-literal::
 
-    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
+    - waiting for remote response, please wait run_analysis https://www.astro.unige.ch/cdci/astrooda/dispatch-data
     T1 2003-03-15T23:27:40.0
     T2 2003-03-16T00:03:12.0
-    time_bin 50
     osa_version OSA10.2
     RA 255.986542
     DEC -37.844167
-    detection_threshold 5.0
     radius 15.0
     instrument isgri
     product_type isgri_spectrum
@@ -1136,11 +1221,11 @@ the ODA and spectra
     off_line (False,)
     query_status ('new',)
     verbose (False,)
-    session_id UYMNSS2QGHQ5D38F
+    session_id 2EL2CM3PYEFCY3XQ
     dry_run (False,)
     api True
-    the job has been submitted on the remote server
-     \ the job is working remotely, please wait status=done - job_id=-1255063856769622835 2835 
+    oda_api_version 1.0.0
+    
     
     query done succesfully!
 
@@ -1148,140 +1233,265 @@ the ODA and spectra
 explore spectra
 ~~~~~~~~~~~~~~~
 
-.. code:: ipython2
+.. code:: ipython3
 
-    for ID,s in enumerate(data._p_list):
-        print (ID,s.meta_data)
-
-
-.. parsed-literal::
-
-    0 {'src_name': 'GX 349+2', 'product': 'isgri_spectrum'}
-    1 {'src_name': 'GX 349+2', 'product': 'isgri_arf'}
-    2 {'src_name': 'GX 349+2', 'product': 'isgri_rmf'}
-    3 {'src_name': 'IGR J17285-2922', 'product': 'isgri_spectrum'}
-    4 {'src_name': 'IGR J17285-2922', 'product': 'isgri_arf'}
-    5 {'src_name': 'IGR J17285-2922', 'product': 'isgri_rmf'}
-    6 {'src_name': 'AX J1700.2-4220', 'product': 'isgri_spectrum'}
-    7 {'src_name': 'AX J1700.2-4220', 'product': 'isgri_arf'}
-    8 {'src_name': 'AX J1700.2-4220', 'product': 'isgri_rmf'}
-    9 {'src_name': 'IGR J17507-2856', 'product': 'isgri_spectrum'}
-    10 {'src_name': 'IGR J17507-2856', 'product': 'isgri_arf'}
-    11 {'src_name': 'IGR J17507-2856', 'product': 'isgri_rmf'}
-    12 {'src_name': 'IGR J17508-3219', 'product': 'isgri_spectrum'}
-    13 {'src_name': 'IGR J17508-3219', 'product': 'isgri_arf'}
-    14 {'src_name': 'IGR J17508-3219', 'product': 'isgri_rmf'}
-    15 {'src_name': 'IGR J17586-2129', 'product': 'isgri_spectrum'}
-    16 {'src_name': 'IGR J17586-2129', 'product': 'isgri_arf'}
-    17 {'src_name': 'IGR J17586-2129', 'product': 'isgri_rmf'}
-    18 {'src_name': 'OAO 1657-415', 'product': 'isgri_spectrum'}
-    19 {'src_name': 'OAO 1657-415', 'product': 'isgri_arf'}
-    20 {'src_name': 'OAO 1657-415', 'product': 'isgri_rmf'}
-    21 {'src_name': 'GRO J1719-24', 'product': 'isgri_spectrum'}
-    22 {'src_name': 'GRO J1719-24', 'product': 'isgri_arf'}
-    23 {'src_name': 'GRO J1719-24', 'product': 'isgri_rmf'}
-    24 {'src_name': '4U 1735-444', 'product': 'isgri_spectrum'}
-    25 {'src_name': '4U 1735-444', 'product': 'isgri_arf'}
-    26 {'src_name': '4U 1735-444', 'product': 'isgri_rmf'}
-    27 {'src_name': 'IGR J17326-3445', 'product': 'isgri_spectrum'}
-    28 {'src_name': 'IGR J17326-3445', 'product': 'isgri_arf'}
-    29 {'src_name': 'IGR J17326-3445', 'product': 'isgri_rmf'}
-    30 {'src_name': 'Background', 'product': 'isgri_spectrum'}
-    31 {'src_name': 'Background', 'product': 'isgri_arf'}
-    32 {'src_name': 'Background', 'product': 'isgri_rmf'}
-    33 {'src_name': '4U 1722-30', 'product': 'isgri_spectrum'}
-    34 {'src_name': '4U 1722-30', 'product': 'isgri_arf'}
-    35 {'src_name': '4U 1722-30', 'product': 'isgri_rmf'}
-    36 {'src_name': 'IGR J17099-2418', 'product': 'isgri_spectrum'}
-    37 {'src_name': 'IGR J17099-2418', 'product': 'isgri_arf'}
-    38 {'src_name': 'IGR J17099-2418', 'product': 'isgri_rmf'}
-    39 {'src_name': 'NEW_6', 'product': 'isgri_spectrum'}
-    40 {'src_name': 'NEW_6', 'product': 'isgri_arf'}
-    41 {'src_name': 'NEW_6', 'product': 'isgri_rmf'}
-    42 {'src_name': 'NEW_4', 'product': 'isgri_spectrum'}
-    43 {'src_name': 'NEW_4', 'product': 'isgri_arf'}
-    44 {'src_name': 'NEW_4', 'product': 'isgri_rmf'}
-    45 {'src_name': 'NEW_5', 'product': 'isgri_spectrum'}
-    46 {'src_name': 'NEW_5', 'product': 'isgri_arf'}
-    47 {'src_name': 'NEW_5', 'product': 'isgri_rmf'}
-    48 {'src_name': 'NEW_2', 'product': 'isgri_spectrum'}
-    49 {'src_name': 'NEW_2', 'product': 'isgri_arf'}
-    50 {'src_name': 'NEW_2', 'product': 'isgri_rmf'}
-    51 {'src_name': 'NEW_3', 'product': 'isgri_spectrum'}
-    52 {'src_name': 'NEW_3', 'product': 'isgri_arf'}
-    53 {'src_name': 'NEW_3', 'product': 'isgri_rmf'}
-    54 {'src_name': 'NEW_1', 'product': 'isgri_spectrum'}
-    55 {'src_name': 'NEW_1', 'product': 'isgri_arf'}
-    56 {'src_name': 'NEW_1', 'product': 'isgri_rmf'}
-    57 {'src_name': 'IGR J16248-4603', 'product': 'isgri_spectrum'}
-    58 {'src_name': 'IGR J16248-4603', 'product': 'isgri_arf'}
-    59 {'src_name': 'IGR J16248-4603', 'product': 'isgri_rmf'}
-    60 {'src_name': 'IGR J17091-3624', 'product': 'isgri_spectrum'}
-    61 {'src_name': 'IGR J17091-3624', 'product': 'isgri_arf'}
-    62 {'src_name': 'IGR J17091-3624', 'product': 'isgri_rmf'}
-    63 {'src_name': 'IGR J17191-2821', 'product': 'isgri_spectrum'}
-    64 {'src_name': 'IGR J17191-2821', 'product': 'isgri_arf'}
-    65 {'src_name': 'IGR J17191-2821', 'product': 'isgri_rmf'}
-    66 {'src_name': 'IGR J17103-3341', 'product': 'isgri_spectrum'}
-    67 {'src_name': 'IGR J17103-3341', 'product': 'isgri_arf'}
-    68 {'src_name': 'IGR J17103-3341', 'product': 'isgri_rmf'}
-    69 {'src_name': 'GRS 1747-312', 'product': 'isgri_spectrum'}
-    70 {'src_name': 'GRS 1747-312', 'product': 'isgri_arf'}
-    71 {'src_name': 'GRS 1747-312', 'product': 'isgri_rmf'}
-    72 {'src_name': 'GX 354-0', 'product': 'isgri_spectrum'}
-    73 {'src_name': 'GX 354-0', 'product': 'isgri_arf'}
-    74 {'src_name': 'GX 354-0', 'product': 'isgri_rmf'}
-    75 {'src_name': 'IGR J17314-2854', 'product': 'isgri_spectrum'}
-    76 {'src_name': 'IGR J17314-2854', 'product': 'isgri_arf'}
-    77 {'src_name': 'IGR J17314-2854', 'product': 'isgri_rmf'}
-    78 {'src_name': 'GX 1+4', 'product': 'isgri_spectrum'}
-    79 {'src_name': 'GX 1+4', 'product': 'isgri_arf'}
-    80 {'src_name': 'GX 1+4', 'product': 'isgri_rmf'}
-    81 {'src_name': 'H 1705-440', 'product': 'isgri_spectrum'}
-    82 {'src_name': 'H 1705-440', 'product': 'isgri_arf'}
-    83 {'src_name': 'H 1705-440', 'product': 'isgri_rmf'}
-    84 {'src_name': '1RXS J174607.8-21333', 'product': 'isgri_spectrum'}
-    85 {'src_name': '1RXS J174607.8-21333', 'product': 'isgri_arf'}
-    86 {'src_name': '1RXS J174607.8-21333', 'product': 'isgri_rmf'}
-    87 {'src_name': '4U 1700-377', 'product': 'isgri_spectrum'}
-    88 {'src_name': '4U 1700-377', 'product': 'isgri_arf'}
-    89 {'src_name': '4U 1700-377', 'product': 'isgri_rmf'}
-    90 {'src_name': '1E 1740.7-2942', 'product': 'isgri_spectrum'}
-    91 {'src_name': '1E 1740.7-2942', 'product': 'isgri_arf'}
-    92 {'src_name': '1E 1740.7-2942', 'product': 'isgri_rmf'}
-
-
-.. code:: ipython2
-
-    data._p_list[87].write_fits_file('spec.fits')
-    data._p_list[88].write_fits_file('arf.fits')
-    data._p_list[89].write_fits_file('rmf.fits')
-
-
-.. code:: ipython2
-
-    s.show()
+    data_collection.show()
 
 
 .. parsed-literal::
 
-    ------------------------------
-    name: 
-    meta_data dict_keys(['src_name', 'product'])
-    number of data units 4
-    ------------------------------
-    data uniti 0 ,name: PRIMARY
-    data uniti 1 ,name: GROUPING
-    data uniti 2 ,name: ISGR-RMF.-RSP
-    data uniti 3 ,name: ISGR-EBDS-MOD
+    ID=0 prod_name=isgri_spectrum_0_GX349+2_isgri_spectrum  meta_data: {'src_name': 'GX 349+2', 'product': 'isgri_spectrum'}
+    
+    ID=1 prod_name=isgri_spectrum_1_GX349+2_isgri_arf  meta_data: {'src_name': 'GX 349+2', 'product': 'isgri_arf'}
+    
+    ID=2 prod_name=isgri_spectrum_2_GX349+2_isgri_rmf  meta_data: {'src_name': 'GX 349+2', 'product': 'isgri_rmf'}
+    
+    ID=3 prod_name=isgri_spectrum_3_IGRJ17285-2922_isgri_spectrum  meta_data: {'src_name': 'IGR J17285-2922', 'product': 'isgri_spectrum'}
+    
+    ID=4 prod_name=isgri_spectrum_4_IGRJ17285-2922_isgri_arf  meta_data: {'src_name': 'IGR J17285-2922', 'product': 'isgri_arf'}
+    
+    ID=5 prod_name=isgri_spectrum_5_IGRJ17285-2922_isgri_rmf  meta_data: {'src_name': 'IGR J17285-2922', 'product': 'isgri_rmf'}
+    
+    ID=6 prod_name=isgri_spectrum_6_AXJ1700.2-4220_isgri_spectrum  meta_data: {'src_name': 'AX J1700.2-4220', 'product': 'isgri_spectrum'}
+    
+    ID=7 prod_name=isgri_spectrum_7_AXJ1700.2-4220_isgri_arf  meta_data: {'src_name': 'AX J1700.2-4220', 'product': 'isgri_arf'}
+    
+    ID=8 prod_name=isgri_spectrum_8_AXJ1700.2-4220_isgri_rmf  meta_data: {'src_name': 'AX J1700.2-4220', 'product': 'isgri_rmf'}
+    
+    ID=9 prod_name=isgri_spectrum_9_IGRJ17507-2856_isgri_spectrum  meta_data: {'src_name': 'IGR J17507-2856', 'product': 'isgri_spectrum'}
+    
+    ID=10 prod_name=isgri_spectrum_10_IGRJ17507-2856_isgri_arf  meta_data: {'src_name': 'IGR J17507-2856', 'product': 'isgri_arf'}
+    
+    ID=11 prod_name=isgri_spectrum_11_IGRJ17507-2856_isgri_rmf  meta_data: {'src_name': 'IGR J17507-2856', 'product': 'isgri_rmf'}
+    
+    ID=12 prod_name=isgri_spectrum_12_IGRJ17508-3219_isgri_spectrum  meta_data: {'src_name': 'IGR J17508-3219', 'product': 'isgri_spectrum'}
+    
+    ID=13 prod_name=isgri_spectrum_13_IGRJ17508-3219_isgri_arf  meta_data: {'src_name': 'IGR J17508-3219', 'product': 'isgri_arf'}
+    
+    ID=14 prod_name=isgri_spectrum_14_IGRJ17508-3219_isgri_rmf  meta_data: {'src_name': 'IGR J17508-3219', 'product': 'isgri_rmf'}
+    
+    ID=15 prod_name=isgri_spectrum_15_IGRJ17586-2129_isgri_spectrum  meta_data: {'src_name': 'IGR J17586-2129', 'product': 'isgri_spectrum'}
+    
+    ID=16 prod_name=isgri_spectrum_16_IGRJ17586-2129_isgri_arf  meta_data: {'src_name': 'IGR J17586-2129', 'product': 'isgri_arf'}
+    
+    ID=17 prod_name=isgri_spectrum_17_IGRJ17586-2129_isgri_rmf  meta_data: {'src_name': 'IGR J17586-2129', 'product': 'isgri_rmf'}
+    
+    ID=18 prod_name=isgri_spectrum_18_OAO1657-415_isgri_spectrum  meta_data: {'src_name': 'OAO 1657-415', 'product': 'isgri_spectrum'}
+    
+    ID=19 prod_name=isgri_spectrum_19_OAO1657-415_isgri_arf  meta_data: {'src_name': 'OAO 1657-415', 'product': 'isgri_arf'}
+    
+    ID=20 prod_name=isgri_spectrum_20_OAO1657-415_isgri_rmf  meta_data: {'src_name': 'OAO 1657-415', 'product': 'isgri_rmf'}
+    
+    ID=21 prod_name=isgri_spectrum_21_GROJ1719-24_isgri_spectrum  meta_data: {'src_name': 'GRO J1719-24', 'product': 'isgri_spectrum'}
+    
+    ID=22 prod_name=isgri_spectrum_22_GROJ1719-24_isgri_arf  meta_data: {'src_name': 'GRO J1719-24', 'product': 'isgri_arf'}
+    
+    ID=23 prod_name=isgri_spectrum_23_GROJ1719-24_isgri_rmf  meta_data: {'src_name': 'GRO J1719-24', 'product': 'isgri_rmf'}
+    
+    ID=24 prod_name=isgri_spectrum_24_4U1735-444_isgri_spectrum  meta_data: {'src_name': '4U 1735-444', 'product': 'isgri_spectrum'}
+    
+    ID=25 prod_name=isgri_spectrum_25_4U1735-444_isgri_arf  meta_data: {'src_name': '4U 1735-444', 'product': 'isgri_arf'}
+    
+    ID=26 prod_name=isgri_spectrum_26_4U1735-444_isgri_rmf  meta_data: {'src_name': '4U 1735-444', 'product': 'isgri_rmf'}
+    
+    ID=27 prod_name=isgri_spectrum_27_IGRJ17326-3445_isgri_spectrum  meta_data: {'src_name': 'IGR J17326-3445', 'product': 'isgri_spectrum'}
+    
+    ID=28 prod_name=isgri_spectrum_28_IGRJ17326-3445_isgri_arf  meta_data: {'src_name': 'IGR J17326-3445', 'product': 'isgri_arf'}
+    
+    ID=29 prod_name=isgri_spectrum_29_IGRJ17326-3445_isgri_rmf  meta_data: {'src_name': 'IGR J17326-3445', 'product': 'isgri_rmf'}
+    
+    ID=30 prod_name=isgri_spectrum_30_Background_isgri_spectrum  meta_data: {'src_name': 'Background', 'product': 'isgri_spectrum'}
+    
+    ID=31 prod_name=isgri_spectrum_31_Background_isgri_arf  meta_data: {'src_name': 'Background', 'product': 'isgri_arf'}
+    
+    ID=32 prod_name=isgri_spectrum_32_Background_isgri_rmf  meta_data: {'src_name': 'Background', 'product': 'isgri_rmf'}
+    
+    ID=33 prod_name=isgri_spectrum_33_4U1722-30_isgri_spectrum  meta_data: {'src_name': '4U 1722-30', 'product': 'isgri_spectrum'}
+    
+    ID=34 prod_name=isgri_spectrum_34_4U1722-30_isgri_arf  meta_data: {'src_name': '4U 1722-30', 'product': 'isgri_arf'}
+    
+    ID=35 prod_name=isgri_spectrum_35_4U1722-30_isgri_rmf  meta_data: {'src_name': '4U 1722-30', 'product': 'isgri_rmf'}
+    
+    ID=36 prod_name=isgri_spectrum_36_IGRJ17099-2418_isgri_spectrum  meta_data: {'src_name': 'IGR J17099-2418', 'product': 'isgri_spectrum'}
+    
+    ID=37 prod_name=isgri_spectrum_37_IGRJ17099-2418_isgri_arf  meta_data: {'src_name': 'IGR J17099-2418', 'product': 'isgri_arf'}
+    
+    ID=38 prod_name=isgri_spectrum_38_IGRJ17099-2418_isgri_rmf  meta_data: {'src_name': 'IGR J17099-2418', 'product': 'isgri_rmf'}
+    
+    ID=39 prod_name=isgri_spectrum_39_NEW_6_isgri_spectrum  meta_data: {'src_name': 'NEW_6', 'product': 'isgri_spectrum'}
+    
+    ID=40 prod_name=isgri_spectrum_40_NEW_6_isgri_arf  meta_data: {'src_name': 'NEW_6', 'product': 'isgri_arf'}
+    
+    ID=41 prod_name=isgri_spectrum_41_NEW_6_isgri_rmf  meta_data: {'src_name': 'NEW_6', 'product': 'isgri_rmf'}
+    
+    ID=42 prod_name=isgri_spectrum_42_NEW_4_isgri_spectrum  meta_data: {'src_name': 'NEW_4', 'product': 'isgri_spectrum'}
+    
+    ID=43 prod_name=isgri_spectrum_43_NEW_4_isgri_arf  meta_data: {'src_name': 'NEW_4', 'product': 'isgri_arf'}
+    
+    ID=44 prod_name=isgri_spectrum_44_NEW_4_isgri_rmf  meta_data: {'src_name': 'NEW_4', 'product': 'isgri_rmf'}
+    
+    ID=45 prod_name=isgri_spectrum_45_NEW_5_isgri_spectrum  meta_data: {'src_name': 'NEW_5', 'product': 'isgri_spectrum'}
+    
+    ID=46 prod_name=isgri_spectrum_46_NEW_5_isgri_arf  meta_data: {'src_name': 'NEW_5', 'product': 'isgri_arf'}
+    
+    ID=47 prod_name=isgri_spectrum_47_NEW_5_isgri_rmf  meta_data: {'src_name': 'NEW_5', 'product': 'isgri_rmf'}
+    
+    ID=48 prod_name=isgri_spectrum_48_NEW_2_isgri_spectrum  meta_data: {'src_name': 'NEW_2', 'product': 'isgri_spectrum'}
+    
+    ID=49 prod_name=isgri_spectrum_49_NEW_2_isgri_arf  meta_data: {'src_name': 'NEW_2', 'product': 'isgri_arf'}
+    
+    ID=50 prod_name=isgri_spectrum_50_NEW_2_isgri_rmf  meta_data: {'src_name': 'NEW_2', 'product': 'isgri_rmf'}
+    
+    ID=51 prod_name=isgri_spectrum_51_NEW_3_isgri_spectrum  meta_data: {'src_name': 'NEW_3', 'product': 'isgri_spectrum'}
+    
+    ID=52 prod_name=isgri_spectrum_52_NEW_3_isgri_arf  meta_data: {'src_name': 'NEW_3', 'product': 'isgri_arf'}
+    
+    ID=53 prod_name=isgri_spectrum_53_NEW_3_isgri_rmf  meta_data: {'src_name': 'NEW_3', 'product': 'isgri_rmf'}
+    
+    ID=54 prod_name=isgri_spectrum_54_NEW_1_isgri_spectrum  meta_data: {'src_name': 'NEW_1', 'product': 'isgri_spectrum'}
+    
+    ID=55 prod_name=isgri_spectrum_55_NEW_1_isgri_arf  meta_data: {'src_name': 'NEW_1', 'product': 'isgri_arf'}
+    
+    ID=56 prod_name=isgri_spectrum_56_NEW_1_isgri_rmf  meta_data: {'src_name': 'NEW_1', 'product': 'isgri_rmf'}
+    
+    ID=57 prod_name=isgri_spectrum_57_IGRJ16248-4603_isgri_spectrum  meta_data: {'src_name': 'IGR J16248-4603', 'product': 'isgri_spectrum'}
+    
+    ID=58 prod_name=isgri_spectrum_58_IGRJ16248-4603_isgri_arf  meta_data: {'src_name': 'IGR J16248-4603', 'product': 'isgri_arf'}
+    
+    ID=59 prod_name=isgri_spectrum_59_IGRJ16248-4603_isgri_rmf  meta_data: {'src_name': 'IGR J16248-4603', 'product': 'isgri_rmf'}
+    
+    ID=60 prod_name=isgri_spectrum_60_IGRJ17091-3624_isgri_spectrum  meta_data: {'src_name': 'IGR J17091-3624', 'product': 'isgri_spectrum'}
+    
+    ID=61 prod_name=isgri_spectrum_61_IGRJ17091-3624_isgri_arf  meta_data: {'src_name': 'IGR J17091-3624', 'product': 'isgri_arf'}
+    
+    ID=62 prod_name=isgri_spectrum_62_IGRJ17091-3624_isgri_rmf  meta_data: {'src_name': 'IGR J17091-3624', 'product': 'isgri_rmf'}
+    
+    ID=63 prod_name=isgri_spectrum_63_IGRJ17191-2821_isgri_spectrum  meta_data: {'src_name': 'IGR J17191-2821', 'product': 'isgri_spectrum'}
+    
+    ID=64 prod_name=isgri_spectrum_64_IGRJ17191-2821_isgri_arf  meta_data: {'src_name': 'IGR J17191-2821', 'product': 'isgri_arf'}
+    
+    ID=65 prod_name=isgri_spectrum_65_IGRJ17191-2821_isgri_rmf  meta_data: {'src_name': 'IGR J17191-2821', 'product': 'isgri_rmf'}
+    
+    ID=66 prod_name=isgri_spectrum_66_IGRJ17103-3341_isgri_spectrum  meta_data: {'src_name': 'IGR J17103-3341', 'product': 'isgri_spectrum'}
+    
+    ID=67 prod_name=isgri_spectrum_67_IGRJ17103-3341_isgri_arf  meta_data: {'src_name': 'IGR J17103-3341', 'product': 'isgri_arf'}
+    
+    ID=68 prod_name=isgri_spectrum_68_IGRJ17103-3341_isgri_rmf  meta_data: {'src_name': 'IGR J17103-3341', 'product': 'isgri_rmf'}
+    
+    ID=69 prod_name=isgri_spectrum_69_GRS1747-312_isgri_spectrum  meta_data: {'src_name': 'GRS 1747-312', 'product': 'isgri_spectrum'}
+    
+    ID=70 prod_name=isgri_spectrum_70_GRS1747-312_isgri_arf  meta_data: {'src_name': 'GRS 1747-312', 'product': 'isgri_arf'}
+    
+    ID=71 prod_name=isgri_spectrum_71_GRS1747-312_isgri_rmf  meta_data: {'src_name': 'GRS 1747-312', 'product': 'isgri_rmf'}
+    
+    ID=72 prod_name=isgri_spectrum_72_GX354-0_isgri_spectrum  meta_data: {'src_name': 'GX 354-0', 'product': 'isgri_spectrum'}
+    
+    ID=73 prod_name=isgri_spectrum_73_GX354-0_isgri_arf  meta_data: {'src_name': 'GX 354-0', 'product': 'isgri_arf'}
+    
+    ID=74 prod_name=isgri_spectrum_74_GX354-0_isgri_rmf  meta_data: {'src_name': 'GX 354-0', 'product': 'isgri_rmf'}
+    
+    ID=75 prod_name=isgri_spectrum_75_IGRJ17314-2854_isgri_spectrum  meta_data: {'src_name': 'IGR J17314-2854', 'product': 'isgri_spectrum'}
+    
+    ID=76 prod_name=isgri_spectrum_76_IGRJ17314-2854_isgri_arf  meta_data: {'src_name': 'IGR J17314-2854', 'product': 'isgri_arf'}
+    
+    ID=77 prod_name=isgri_spectrum_77_IGRJ17314-2854_isgri_rmf  meta_data: {'src_name': 'IGR J17314-2854', 'product': 'isgri_rmf'}
+    
+    ID=78 prod_name=isgri_spectrum_78_GX1+4_isgri_spectrum  meta_data: {'src_name': 'GX 1+4', 'product': 'isgri_spectrum'}
+    
+    ID=79 prod_name=isgri_spectrum_79_GX1+4_isgri_arf  meta_data: {'src_name': 'GX 1+4', 'product': 'isgri_arf'}
+    
+    ID=80 prod_name=isgri_spectrum_80_GX1+4_isgri_rmf  meta_data: {'src_name': 'GX 1+4', 'product': 'isgri_rmf'}
+    
+    ID=81 prod_name=isgri_spectrum_81_H1705-440_isgri_spectrum  meta_data: {'src_name': 'H 1705-440', 'product': 'isgri_spectrum'}
+    
+    ID=82 prod_name=isgri_spectrum_82_H1705-440_isgri_arf  meta_data: {'src_name': 'H 1705-440', 'product': 'isgri_arf'}
+    
+    ID=83 prod_name=isgri_spectrum_83_H1705-440_isgri_rmf  meta_data: {'src_name': 'H 1705-440', 'product': 'isgri_rmf'}
+    
+    ID=84 prod_name=isgri_spectrum_84_1RXSJ174607.8-21333_isgri_spectrum  meta_data: {'src_name': '1RXS J174607.8-21333', 'product': 'isgri_spectrum'}
+    
+    ID=85 prod_name=isgri_spectrum_85_1RXSJ174607.8-21333_isgri_arf  meta_data: {'src_name': '1RXS J174607.8-21333', 'product': 'isgri_arf'}
+    
+    ID=86 prod_name=isgri_spectrum_86_1RXSJ174607.8-21333_isgri_rmf  meta_data: {'src_name': '1RXS J174607.8-21333', 'product': 'isgri_rmf'}
+    
+    ID=87 prod_name=isgri_spectrum_87_4U1700-377_isgri_spectrum  meta_data: {'src_name': '4U 1700-377', 'product': 'isgri_spectrum'}
+    
+    ID=88 prod_name=isgri_spectrum_88_4U1700-377_isgri_arf  meta_data: {'src_name': '4U 1700-377', 'product': 'isgri_arf'}
+    
+    ID=89 prod_name=isgri_spectrum_89_4U1700-377_isgri_rmf  meta_data: {'src_name': '4U 1700-377', 'product': 'isgri_rmf'}
+    
+    ID=90 prod_name=isgri_spectrum_90_1E1740.7-2942_isgri_spectrum  meta_data: {'src_name': '1E 1740.7-2942', 'product': 'isgri_spectrum'}
+    
+    ID=91 prod_name=isgri_spectrum_91_1E1740.7-2942_isgri_arf  meta_data: {'src_name': '1E 1740.7-2942', 'product': 'isgri_arf'}
+    
+    ID=92 prod_name=isgri_spectrum_92_1E1740.7-2942_isgri_rmf  meta_data: {'src_name': '1E 1740.7-2942', 'product': 'isgri_rmf'}
+    
 
 
-.. code:: ipython2
+.. code:: ipython3
 
-    d=data._p_list[3]
+    d=data_collection._p_list[0]
+
+.. code:: ipython3
+
+    d.meta_data
 
 
-.. code:: ipython2
+
+
+.. parsed-literal::
+
+    {'src_name': 'GX 349+2', 'product': 'isgri_spectrum'}
+
+
+
+we can select all the products for the same soruce name and build a new
+data collection on-the-fly with a single instruction
+
+.. code:: ipython3
+
+    data_sel=data_collection.new_from_metadata('src_name','4U 1700-377')
+
+
+.. code:: ipython3
+
+    data_sel.show()
+
+
+
+.. parsed-literal::
+
+    ID=0 prod_name=prod_0_4U1700-377_isgri_spectrum  meta_data: {'src_name': '4U 1700-377', 'product': 'isgri_spectrum'}
+    
+    ID=1 prod_name=prod_1_4U1700-377_isgri_arf  meta_data: {'src_name': '4U 1700-377', 'product': 'isgri_arf'}
+    
+    ID=2 prod_name=prod_2_4U1700-377_isgri_rmf  meta_data: {'src_name': '4U 1700-377', 'product': 'isgri_rmf'}
+    
+
+
+and we can save all these products
+
+.. code:: ipython3
+
+    data_sel.save_all_data()
+
+
+.. parsed-literal::
+
+    WARNING: VerifyWarning: Keyword name 'instrument' is greater than 8 characters or contains characters not allowed by the FITS standard; a HIERARCH card will be created. [astropy.io.fits.card]
+    WARNING: VerifyWarning: Keyword name 'oda_api_version' is greater than 8 characters or contains characters not allowed by the FITS standard; a HIERARCH card will be created. [astropy.io.fits.card]
+    WARNING: VerifyWarning: Keyword name 'osa_version' is greater than 8 characters or contains characters not allowed by the FITS standard; a HIERARCH card will be created. [astropy.io.fits.card]
+    WARNING: VerifyWarning: Keyword name 'product_type' is greater than 8 characters or contains characters not allowed by the FITS standard; a HIERARCH card will be created. [astropy.io.fits.card]
+    WARNING: VerifyWarning: Keyword name 'query_status' is greater than 8 characters or contains characters not allowed by the FITS standard; a HIERARCH card will be created. [astropy.io.fits.card]
+    WARNING: VerifyWarning: Keyword name 'query_type' is greater than 8 characters or contains characters not allowed by the FITS standard; a HIERARCH card will be created. [astropy.io.fits.card]
+    WARNING: VerifyWarning: Keyword name 'session_id' is greater than 8 characters or contains characters not allowed by the FITS standard; a HIERARCH card will be created. [astropy.io.fits.card]
+
+
+.. code:: ipython3
+
+    d=data_collection._p_list[3]
+
+.. code:: ipython3
 
     d.data_unit[1].header
 
@@ -1298,14 +1508,14 @@ explore spectra
      'BITPIX': 8,
      'BKGPARAM': 'rebinned_back_spe.fits',
      'CHANTYPE': 'PI',
-     'CHECKSUM': 'lKaDnHXDlHaDlHUD',
+     'CHECKSUM': 'nKYEqJYCnJYCnJYC',
      'COMMENT': '  on the next keyword which has the name CONTINUE.',
      'CONFIGUR': 'latest_osa_sw_2015-11-10T03:50:02',
      'CORRFILE': 'NONE',
      'CORRSCAL': 0,
      'CREATOR': 'ISGRISpectraSum.v5.4.2.extractall',
      'DATASUM': '3507849637',
-     'DATE': '2019-05-28T09:10:50.691804',
+     'DATE': '2019-09-11T12:33:43.097595',
      'DEADC': 0.775885283090927,
      'DEC_OBJ': -29.3624725341797,
      'DETCHANS': 62,
@@ -1376,7 +1586,7 @@ explore spectra
 JEM-X test
 ~~~~~~~~~~
 
-.. code:: ipython2
+.. code:: ipython3
 
     disp.get_instrument_description('jemx')
 
@@ -1399,6 +1609,7 @@ JEM-X test
     query_name: jemx_parameters
      name: user_catalog,  value: None,  units: str, 
      name: scw_list,  value: [],  units: names_list, 
+     name: selected_catalog,  value: None,  units: str, 
      name: radius,  value: 5.0,  units: deg, 
      name: max_pointings,  value: 50,  units: None, 
      name: osa_version,  value: None,  units: str, 
@@ -1431,50 +1642,13 @@ JEM-X test
      name: time_bin,  value: 1000.0,  units: sec, 
 
 
-.. code:: ipython2
+.. code:: ipython3
 
-    data=disp.get_product(instrument='jemx',
+    data_collection=disp.get_product(instrument='jemx',
                           jemx_num='2',
-                          product='jemx_image',
-                          scw_list=['010200230010.001'],
-                          osa_version='OSA10.2',
-                          detection_threshold=5.0,
-                          radius=15.,
-                          product_type='dummy')
-
-
-.. parsed-literal::
-
-    ['010200230010.001']
-    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
-    jemx_num 2
-    scw_list ['010200230010.001']
-    osa_version OSA10.2
-    detection_threshold 5.0
-    radius 15.0
-    instrument jemx
-    product_type jemx_image
-    query_type dummy
-    off_line (False,)
-    query_status ('new',)
-    verbose (False,)
-    session_id E2KZC9XLM7312UJX
-    dry_run (False,)
-    api True
-    the job has been submitted on the remote server
-     / the job is working remotely, please wait status=done - job_id=734507049305780161 0161 
-    
-    query done succesfully!
-
-
-.. code:: ipython2
-
-    data=disp.get_product(instrument='jemx',
-                          jemx_nume='2',
                           product='jemx_lc',
                           scw_list=['010200230010.001'],
                           osa_version='OSA10.2',
-                          detection_threshold=5.0,
                           radius=15.,
                           product_type='Real')
 
@@ -1482,11 +1656,10 @@ JEM-X test
 .. parsed-literal::
 
     ['010200230010.001']
-    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
-    jemx_nume 2
+    - waiting for remote response, please wait run_analysis https://www.astro.unige.ch/cdci/astrooda/dispatch-data
+    jemx_num 2
     scw_list ['010200230010.001']
     osa_version OSA10.2
-    detection_threshold 5.0
     radius 15.0
     instrument jemx
     product_type jemx_lc
@@ -1494,23 +1667,33 @@ JEM-X test
     off_line (False,)
     query_status ('new',)
     verbose (False,)
-    session_id A0H5NQLRWCZIR09P
+    session_id BMR4DAJFZCSZS0QP
     dry_run (False,)
     api True
-    the job has been submitted on the remote server
-     \ the job is working remotely, please wait status=done - job_id=-73930099223456509 6509 
+    oda_api_version 1.0.0
+    
     
     query done succesfully!
 
 
-.. code:: ipython2
+.. code:: ipython3
 
-    data=disp.get_product(instrument='jemx',
+    data_collection.show()
+
+
+.. parsed-literal::
+
+    ID=0 prod_name=jemx_lc_0_Crab  meta_data: {'src_name': 'Crab', 'rate': 'RATE', 'time_bin': 0.01157407, 'rate_err': 'ERROR', 'time': 'TIME'}
+    
+
+
+.. code:: ipython3
+
+    data_collection=disp.get_product(instrument='jemx',
                           jemx_num='2',
                           product='jemx_spectrum',
                           scw_list=['010200230010.001'],
                           osa_version='OSA10.2',
-                          detection_threshold=5.0,
                           radius=15.,
                           product_type='Real')
 
@@ -1518,11 +1701,10 @@ JEM-X test
 .. parsed-literal::
 
     ['010200230010.001']
-    waiting for remote response, please wait run_analysis https://analyse-staging-1.2.reproducible.online/dispatch-data
+    - waiting for remote response, please wait run_analysis https://www.astro.unige.ch/cdci/astrooda/dispatch-data
     jemx_num 2
     scw_list ['010200230010.001']
     osa_version OSA10.2
-    detection_threshold 5.0
     radius 15.0
     instrument jemx
     product_type jemx_spectrum
@@ -1530,16 +1712,32 @@ JEM-X test
     off_line (False,)
     query_status ('new',)
     verbose (False,)
-    session_id UDG7NSP6SP1UXBWE
+    session_id 2HUN0F2V1ENSODGY
     dry_run (False,)
     api True
+    oda_api_version 1.0.0
     the job has been submitted on the remote server
-     / the job is working remotely, please wait status=done - job_id=-8193837570595478341 8341 
+     / the job is working remotely, please wait status=done - job_id=-6687876006000366990  990 
     
     query done succesfully!
 
 
-.. code:: ipython2
+.. code:: ipython3
+
+    data_collection.show()
+
+
+.. parsed-literal::
+
+    ID=0 prod_name=jemx_spectrum_0_Crab_jemx_spectrum  meta_data: {'src_name': 'Crab', 'product': 'jemx_spectrum'}
+    
+    ID=1 prod_name=jemx_spectrum_1_Crab_jemx_arf  meta_data: {'src_name': 'Crab', 'product': 'jemx_arf'}
+    
+    ID=2 prod_name=jemx_spectrum_2_Crab_jemx_rmf  meta_data: {'src_name': 'Crab', 'product': 'jemx_rmf'}
+    
+
+
+.. code:: ipython3
 
     from threeML.plugins.OGIPLike import  OGIPLike
     from threeML.io.package_data import get_path_of_data_file
@@ -1550,8 +1748,34 @@ JEM-X test
 
 .. parsed-literal::
 
+    /Users/orion/anaconda3/envs/threeML/lib/python3.7/site-packages/astromodels/core/parameter.py:555: UserWarning: We have set the min_value of xc to 1e-99 because there was a postive transform
+      warnings.warn('We have set the min_value of %s to 1e-99 because there was a postive transform' % self.path)
     
-    WARNING UserWarning: Using default configuration from /Users/orion/anaconda3/envs/threeML/lib/python2.7/site-packages/threeML-0.4.1199-py2.7.egg/threeML/data/threeML_config.yml. You might want to copy it to /Users/orion/.threeML/threeML_config.yml to customize it and avoid this warning.
+    WARNING UserWarning: Using default configuration from /Users/orion/anaconda3/envs/threeML/lib/python3.7/site-packages/threeML/data/threeML_config.yml. You might want to copy it to /Users/orion/.threeML/threeML_config.yml to customize it and avoid this warning.
+    
+    
+    WARNING RuntimeWarning: numpy.ufunc size changed, may indicate binary incompatibility. Expected 192 from C header, got 216 from PyObject
+    
+    
+    WARNING RuntimeWarning: numpy.ufunc size changed, may indicate binary incompatibility. Expected 192 from C header, got 216 from PyObject
+    
+    
+    WARNING RuntimeWarning: numpy.ufunc size changed, may indicate binary incompatibility. Expected 192 from C header, got 216 from PyObject
+    
+    
+    WARNING RuntimeWarning: numpy.ufunc size changed, may indicate binary incompatibility. Expected 192 from C header, got 216 from PyObject
+    
+    
+    WARNING RuntimeWarning: numpy.ufunc size changed, may indicate binary incompatibility. Expected 192 from C header, got 216 from PyObject
+    
+    
+    WARNING RuntimeWarning: numpy.ufunc size changed, may indicate binary incompatibility. Expected 216, got 192
+    
+    
+    WARNING RuntimeWarning: numpy.ufunc size changed, may indicate binary incompatibility. Expected 216, got 192
+    
+    
+    WARNING RuntimeWarning: numpy.ufunc size changed, may indicate binary incompatibility. Expected 216, got 192
     
     
     WARNING RuntimeWarning: Env. variable OMP_NUM_THREADS is not set. Please set it to 1 for optimal performances in 3ML
@@ -1564,12 +1788,12 @@ JEM-X test
     
 
 
-.. code:: ipython2
+.. code:: ipython3
 
     ogip_data = OGIPLike('ogip',
-                         observation='spec_test.fits',
-                         arf_file= 'arf_test.fits' ,
-                         response= 'rmf_test.fits')
+                         observation='prod_0_4U1700-377_isgri_spectrum.fits',
+                         arf_file= 'prod_1_4U1700-377_isgri_arf.fits' ,
+                         response= 'prod_2_4U1700-377_isgri_rmf.fits')
 
 
 .. parsed-literal::
@@ -1579,7 +1803,7 @@ JEM-X test
     - background: None
 
 
-.. code:: ipython2
+.. code:: ipython3
 
     ogip_data.set_active_measurements('20-60')
 
@@ -1591,7 +1815,7 @@ JEM-X test
     Now using 18 channels out of 62
 
 
-.. code:: ipython2
+.. code:: ipython3
 
     ogip_data.view_count_spectrum()
     plt.ylim(1E-5,10)
@@ -1613,10 +1837,10 @@ JEM-X test
 
 
 
-.. image:: TestAPI_files/TestAPI_82_2.png
+.. image:: TestAPI_files/TestAPI_89_2.png
 
 
-.. code:: ipython2
+.. code:: ipython3
 
     fit_function = Cutoff_powerlaw()
     
@@ -1680,7 +1904,7 @@ JEM-X test
         </tr>
         <tr>
           <th>ps.spectrum.main.Cutoff_powerlaw.index</th>
-          <td>(5.3 +/- 2.5) x 10^-1</td>
+          <td>(5.4 +/- 2.5) x 10^-1</td>
           <td></td>
         </tr>
         <tr>
@@ -1703,10 +1927,10 @@ JEM-X test
 
 .. raw:: html
 
-    <table id="table4595738640">
-    <tr><td>1.00</td><td>-0.93</td><td>0.49</td></tr>
-    <tr><td>-0.93</td><td>1.00</td><td>-0.76</td></tr>
-    <tr><td>0.49</td><td>-0.76</td><td>1.00</td></tr>
+    <table id="table5018363600">
+    <tr><td>1.00</td><td>-0.94</td><td>0.47</td></tr>
+    <tr><td>-0.94</td><td>1.00</td><td>-0.75</td></tr>
+    <tr><td>0.47</td><td>-0.75</td><td>1.00</td></tr>
     </table>
 
 
@@ -1744,11 +1968,11 @@ JEM-X test
       <tbody>
         <tr>
           <th>ogip</th>
-          <td>5.24134</td>
+          <td>5.241368</td>
         </tr>
         <tr>
           <th>total</th>
-          <td>5.24134</td>
+          <td>5.241368</td>
         </tr>
       </tbody>
     </table>
@@ -1789,28 +2013,28 @@ JEM-X test
       <tbody>
         <tr>
           <th>AIC</th>
-          <td>18.196966</td>
+          <td>18.197021</td>
         </tr>
         <tr>
           <th>BIC</th>
-          <td>19.153796</td>
+          <td>19.153850</td>
         </tr>
       </tbody>
     </table>
     </div>
 
 
-.. code:: ipython2
+.. code:: ipython3
 
     display_spectrum_model_counts(jl, step=True);
 
 
 
 
-.. image:: TestAPI_files/TestAPI_84_0.png
+.. image:: TestAPI_files/TestAPI_91_0.png
 
 
-.. code:: ipython2
+.. code:: ipython3
 
     plot_point_source_spectra(jl.results, ene_min=20, ene_max=60, num_ene=100,
                               flux_unit='erg / (cm2 s)')
@@ -1819,20 +2043,20 @@ JEM-X test
 
 .. parsed-literal::
 
-    A Jupyter Widget
+    VBox(children=(HTML(value='Propagating errors : '), HTML(value=''), FloatProgress(value=0.0)))
 
 
 
 
-.. image:: TestAPI_files/TestAPI_85_1.png
+.. image:: TestAPI_files/TestAPI_92_1.png
 
 
 
 
-.. image:: TestAPI_files/TestAPI_85_2.png
+.. image:: TestAPI_files/TestAPI_92_2.png
 
 
-.. code:: ipython2
+.. code:: ipython3
 
     
     # A uniform prior can be defined directly, like:
@@ -1918,22 +2142,22 @@ JEM-X test
       <tbody>
         <tr>
           <th>ps.spectrum.main.Cutoff_powerlaw.K</th>
-          <td>0.00230365</td>
+          <td>0.00227685</td>
           <td>1e-30</td>
           <td>1000</td>
           <td>keV-1 s-1 cm-2</td>
         </tr>
         <tr>
           <th>ps.spectrum.main.Cutoff_powerlaw.index</th>
-          <td>0.531183</td>
+          <td>0.535534</td>
           <td>-10</td>
           <td>10</td>
           <td></td>
         </tr>
         <tr>
           <th>ps.spectrum.main.Cutoff_powerlaw.xc</th>
-          <td>9.7834</td>
-          <td>None</td>
+          <td>9.77204</td>
+          <td>1e-99</td>
           <td>None</td>
           <td>keV</td>
         </tr>
@@ -1942,31 +2166,21 @@ JEM-X test
     </div><br><br>Fixed parameters (4):<br>(abridged. Use complete=True to see all fixed parameters)<br><br><br>Linked parameters (0):<br><br>(none)<br><br>Independent variables:<br><br>(none)<br>
 
 
-.. code:: ipython2
+.. code:: ipython3
 
     bs = BayesianAnalysis(model, datalist)
-    
-    # This uses the emcee sampler
-    samples = bs.sample(n_walkers=30, burn_in=100, n_samples=1000)
+
+.. code:: ipython3
+
+    bs.set_sampler("multinest")
+    bs.sampler.setup(n_live_points=500)
+    bs.sample()
 
 
 
 .. parsed-literal::
 
-    A Jupyter Widget
-
-
-
-.. parsed-literal::
-
-    A Jupyter Widget
-
-
-.. parsed-literal::
-
-    
-    Mean acceptance fraction: 0.3325333333333333
-    
+      analysing data from chains/fit-.txt
     Maximum a posteriori probability (MAP) point:
     
 
@@ -2004,17 +2218,17 @@ JEM-X test
       <tbody>
         <tr>
           <th>ps.spectrum.main.Cutoff_powerlaw.K</th>
-          <td>(1.3 -1.1 +1.2) x 10^-2</td>
+          <td>(2.7 -2.7 +3.5) x 10^-1</td>
           <td>1 / (cm2 keV s)</td>
         </tr>
         <tr>
           <th>ps.spectrum.main.Cutoff_powerlaw.index</th>
-          <td>(1 -6 +5) x 10^-1</td>
+          <td>-1.0 -0.9 +1.1</td>
           <td></td>
         </tr>
         <tr>
           <th>ps.spectrum.main.Cutoff_powerlaw.xc</th>
-          <td>(1.19 +/- 0.25) x 10</td>
+          <td>(2.6 -1.4 +1.5) x 10</td>
           <td>keV</td>
         </tr>
       </tbody>
@@ -2056,11 +2270,11 @@ JEM-X test
       <tbody>
         <tr>
           <th>ogip</th>
-          <td>-2.31802</td>
+          <td>-2.276486</td>
         </tr>
         <tr>
           <th>total</th>
-          <td>-2.31802</td>
+          <td>-2.276486</td>
         </tr>
       </tbody>
     </table>
@@ -2101,201 +2315,45 @@ JEM-X test
       <tbody>
         <tr>
           <th>AIC</th>
-          <td>12.350326</td>
+          <td>12.267258</td>
         </tr>
         <tr>
           <th>BIC</th>
-          <td>13.307156</td>
+          <td>13.224088</td>
         </tr>
         <tr>
           <th>DIC</th>
-          <td>-368.722190</td>
+          <td>-5086.387854</td>
         </tr>
         <tr>
           <th>PDIC</th>
-          <td>-377.146266</td>
+          <td>-5097.895577</td>
+        </tr>
+        <tr>
+          <th>log(Z)</th>
+          <td>-5.729999</td>
         </tr>
       </tbody>
     </table>
     </div>
 
 
-.. code:: ipython2
-
-    bs.results.display()
-
-
-.. parsed-literal::
-
-    Maximum a posteriori probability (MAP) point:
-    
-
-
-
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-    
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-    
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>result</th>
-          <th>unit</th>
-        </tr>
-        <tr>
-          <th>parameter</th>
-          <th></th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>ps.spectrum.main.Cutoff_powerlaw.K</th>
-          <td>(1.3 -1.1 +1.2) x 10^-2</td>
-          <td>1 / (cm2 keV s)</td>
-        </tr>
-        <tr>
-          <th>ps.spectrum.main.Cutoff_powerlaw.index</th>
-          <td>(1 -6 +5) x 10^-1</td>
-          <td></td>
-        </tr>
-        <tr>
-          <th>ps.spectrum.main.Cutoff_powerlaw.xc</th>
-          <td>(1.19 +/- 0.25) x 10</td>
-          <td>keV</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-
-
-.. parsed-literal::
-
-    
-    Values of -log(posterior) at the minimum:
-    
-
-
-
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-    
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-    
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>-log(posterior)</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>ogip</th>
-          <td>-2.31802</td>
-        </tr>
-        <tr>
-          <th>total</th>
-          <td>-2.31802</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-
-
-.. parsed-literal::
-
-    
-    Values of statistical measures:
-    
-
-
-
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-    
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-    
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>statistical measures</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>AIC</th>
-          <td>12.350326</td>
-        </tr>
-        <tr>
-          <th>BIC</th>
-          <td>13.307156</td>
-        </tr>
-        <tr>
-          <th>DIC</th>
-          <td>-368.722190</td>
-        </tr>
-        <tr>
-          <th>PDIC</th>
-          <td>-377.146266</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-
-
-.. code:: ipython2
+.. code:: ipython3
 
     bs.results.corner_plot()
 
 
 
 
-.. image:: TestAPI_files/TestAPI_89_0.png
+.. image:: TestAPI_files/TestAPI_96_0.png
 
 
 
 
-.. image:: TestAPI_files/TestAPI_89_1.png
+.. image:: TestAPI_files/TestAPI_96_1.png
 
 
-.. code:: ipython2
+.. code:: ipython3
 
     plot_point_source_spectra(bs.results, ene_min=20, ene_max=60, num_ene=100,
                               flux_unit='erg / (cm2 s)')
@@ -2304,17 +2362,62 @@ JEM-X test
 
 .. parsed-literal::
 
-    A Jupyter Widget
+    VBox(children=(HTML(value='Propagating errors : '), HTML(value=''), FloatProgress(value=0.0)))
 
 
 
 
-.. image:: TestAPI_files/TestAPI_90_1.png
+.. image:: TestAPI_files/TestAPI_97_1.png
 
 
 
-.. code:: ipython2
+
+.. image:: TestAPI_files/TestAPI_97_2.png
+
+
+.. code:: ipython3
 
     
     fluxes_bs = bs.results.get_point_source_flux(100 * u.keV, 1 * u.MeV)
+
+
+
+.. parsed-literal::
+
+    VBox(children=(HTML(value='Propagating errors : '), HTML(value=''), FloatProgress(value=0.0)))
+
+
+
+.. raw:: html
+
+    <div>
+    <style scoped>
+        .dataframe tbody tr th:only-of-type {
+            vertical-align: middle;
+        }
+    
+        .dataframe tbody tr th {
+            vertical-align: top;
+        }
+    
+        .dataframe thead th {
+            text-align: right;
+        }
+    </style>
+    <table border="1" class="dataframe">
+      <thead>
+        <tr style="text-align: right;">
+          <th></th>
+          <th>flux</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>ps: total</th>
+          <td>(0.015 -0.015 +5) x 10^-9 erg / (cm2 s)</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
 

@@ -1,6 +1,6 @@
 requests
 future
-astropy
+astropy>=3.2
 json_tricks
 matplotlib
 numpy
