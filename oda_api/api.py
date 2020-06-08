@@ -129,22 +129,24 @@ class DispatcherAPI(object):
         for k in parameters_dict.keys():
             print(k,parameters_dict[k])
 
+        #print ('-> sent1')
         res= requests.get("%s/%s" %(url, handle), params=parameters_dict,cookies=self.cookies)
         query_status = res.json()['query_status']
         job_id = res.json()['job_monitor']['job_id']
-
+        #print('-> sent2')
         if query_status != 'done' and query_status != 'failed':
             print ('the job has been submitted on the remote server')
 
         while query_status != 'done' and query_status != 'failed':
             parameters_dict['query_status']=query_status
             parameters_dict['job_id'] = job_id
+            #print('-> sent3')
             res = requests.get("%s/%s" % (url,handle), params=parameters_dict,cookies=self.cookies)
             query_status =res.json()['query_status']
             job_id = res.json()['job_monitor']['job_id']
             info='status=%s - job_id=%s '%(query_status,job_id)
             self._progess_bar(info=info)
-
+            #print('-> sent4')
 
             time.sleep(2)
 
@@ -173,6 +175,8 @@ class DispatcherAPI(object):
 
     def failure_report(self,res):
         print('query failed!')
+        print('status code:-> %s'%res.status_code)
+        print('server message:-> %s'%res.text)
         #print('exit_status, status', res.json()['exit_status']['status'])
         print('Remote server message:->', res.json()['exit_status']['message'])
         print('Remote server error_message->', res.json()['exit_status']['error_message'])
@@ -235,7 +239,27 @@ class DispatcherAPI(object):
             self.dig_list(res)
             return res
         except Exception as e:
-            raise RemoteException(message='remote/connection error, server response is not valid, check your credentials and connection status')
+            #print (json.loads(res.text))
+
+            msg='remote/connection error, server response is not valid \n'
+            msg += 'possible causes: \n'
+            msg += '- connection error\n'
+            msg += '- wrong credentials\n'
+            msg += '- wrong remote address\n'
+            msg += '- error on the remote server\n'
+            msg+="--------------------------------------------------------------\n"
+            if hasattr(res,'status_code'):
+
+                msg += '--- status code:-> %s\n' % res.status_code
+            if hasattr(res,'text'):
+
+                msg +='--- response text ---\n %s\n' % res.text
+            if hasattr(res,'content'):
+
+                msg += '--- res content ---\n %s\n' % res.content
+            msg += "--------------------------------------------------------------"
+
+            raise RemoteException(message=msg)
 
     @safe_run
     def get_instrument_description(self,instrument=None):
@@ -274,7 +298,7 @@ class DispatcherAPI(object):
 
         res = requests.get("%s/api/par-names" % self.url, params=dict(instrument=instrument,product_type=product), cookies=self.cookies)
 
-
+        #print('1-.>',res.status_code,res.text)
         if res.status_code == 200:
 
             _ignore_list=['instrument','product_type','query_type','off_line','query_status','verbose','session_id','dry_run']
@@ -288,11 +312,25 @@ class DispatcherAPI(object):
             valid_names=self._decode_res_json(res)
             for n in validation_dict.keys():
                 if n not in valid_names:
-                    raise RuntimeError('the parameter: %s'%n, 'is not among the valid ones:',valid_names)
+                    #raise RuntimeError('the parameter: %s'%n, 'is not among the valid ones:',valid_names)
+                    msg = '\n'
+                    msg+= '----------------------------------------------------------------------------\n'
+                    msg+='the parameter: %s '%n
+                    msg+='  is not among valid ones:'
+                    msg+= '\n'
+                    msg+='%s'%valid_names
+                    msg+= '\n'
+                    msg+='this will throw an error in a future version \n'
+                    msg+='and might breack the current request!\n '
+                    msg+= '----------------------------------------------------------------------------\n'
+                    warnings.warn(msg)
+                    #print('is not among valid ones:',valid_names)
+                    #print('this will throw an error in a future version')
         else:
             warnings.warn('parameter check not available on remote server, check carefully parameters name')
 
         res = self.request(kwargs)
+        #print('2-.>',res.status_code,res.text)
         data = None
 
         js=json.loads(res.content)
