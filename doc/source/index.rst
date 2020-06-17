@@ -16,7 +16,7 @@ Documentation
    :maxdepth: 1
 
    installation <install.rst>
-   tutorial  <user_guide/tutorial.rst>
+   tutorial  <user_guide/tutorial_main.rst>
    code documentation (API) <api/modules.rst>
 .. user guide <user_guide/user_guide.rst>
 
