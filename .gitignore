@@ -22,7 +22,7 @@ lib64
 /diagrams
 /doc/build
 CL.txt
-/doc/source/user_guide*
-!/doc/source/user_guide/*rst
-!/doc/source/user_guide/*ipynb
-!/doc/source/user_guide/TestAPI_files
+#/doc/source/user_guide*
+#!/doc/source/user_guide/*rst
+#!/doc/source/user_guide/*ipynb
+#!/doc/source/user_guide/TestAPI_files
