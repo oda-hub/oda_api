@@ -355,7 +355,8 @@ class DispatcherAPI(object):
                 data.append(ApiCatalog(js['products']['catalog'],name='dispatcher_catalog'))
 
             if 'astropy_table_product_ascii_list' in res.json()['products'].keys():
-                data.extend([ascii.read(table_text) for table_text in js['products']['astropy_table_product_ascii_list']])
+                #print()
+                data.extend([ascii.read(table_text['ascii']) for table_text in js['products']['astropy_table_product_ascii_list']])
 
             if 'astropy_table_product_binary_list' in res.json()['products'].keys():
                 #for  table_binary in js['products']['astropy_table_product_binary_list']:
@@ -367,7 +368,9 @@ class DispatcherAPI(object):
                 data.extend([ascii.read(table_binary) for table_binary in js['products']['astropy_table_product_binary_list']])
 
             d=DataCollection(data,instrument=instrument,product=product)
-
+            for p in d._p_list:
+                if hasattr(p,'meta_data') is False and hasattr(p,'meta') is True:
+                    p.meta_data = p.meta
         else:
             self._decode_res_json(res.json()['products']['instrumet_parameters'])
             d=None
