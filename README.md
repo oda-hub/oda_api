@@ -1,4 +1,6 @@
 oda_api
+
+[![PyPI version](https://badge.fury.io/py/oda-api.svg)](https://badge.fury.io/py/oda-api)![Upload Python Package](https://github.com/cdcihub/oda_api/workflows/Upload%20Python%20Package/badge.svg)
 ==========================================
 *API for cdci_data_analysis*
 
