@@ -1,9 +1,12 @@
 import os
 import pytest
 
-@pytest.mark.skipif('DISPATCHER_ENDPOINT' not in os.environ, reason="no DISPATCHER_ENDPOINT variable set")
+#@pytest.mark.skipif('DISPATCHER_ENDPOINT' not in os.environ, reason="no DISPATCHER_ENDPOINT variable set")
 def test_instruments():
     from oda_api.api import DispatcherAPI
-    disp=DispatcherAPI(host="cdcihn/staging-1.2/dispatcher",instrument="mock")
+    disp=DispatcherAPI(
+                host=os.environ.get("DISPATCHER_ENDPOINT", "http://cdcihn.isdc.unige.ch/staging-1.2/dispatcher"),
+                instrument="mock"
+            )
     print(disp.get_instruments_list())
     
