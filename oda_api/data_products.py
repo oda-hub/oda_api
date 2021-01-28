@@ -62,12 +62,40 @@ def _chekc_enc_data(data):
 
 
 
-class AstropyTable(object):
+class ODAAstropyTable(object):
 
     def __init__(self,table_object,name='astropy table', meta_data={}):
         self.name=name
         self.meta_data=meta_data
-        self.table=table_object
+        self._table=table_object
+
+    @property
+    def table(self):
+        return self._table
+
+    def write(self,file_name,format='fits',overwrite=True):
+        self._table.write(file_name,format=format,overwrite=overwrite)
+
+    def write_fits_file(self,file_name,overwrite=True):
+        self.write(file_name,overwrite=overwrite,format='fits')
+
+    @classmethod
+    def from_file(cls, file_path, name=None, delimiter=None, format=None):
+        _allowed_formats_=['ascii','ascii.ecsv','fits']
+        if format == 'fits':
+            # print('==>',file_name)
+            table = Table.read(file_path, format=format)
+        elif format == 'ascii.ecsv' or format=='ascii':
+            table = Table.read(file_path, format=format, delimiter=delimiter)
+        else:
+            raise RuntimeError('table format not understood, allowed',_allowed_formats_)
+
+        meta = None
+
+        if hasattr(table, 'meta'):
+            meta = table.meta
+
+        return cls(table, meta_data=meta)
 
     def encode(self,use_binary=False,to_json = False):
 

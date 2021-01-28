@@ -25,6 +25,8 @@ from . import __version__
 from itertools import cycle
 import re
 
+import logging
+
 from .data_products import NumpyDataProduct,BinaryData,ApiCatalog
 
 __all__=['Request','NoTraceBackWithLineNumber','NoTraceBackWithLineNumber','RemoteException','DispatcherAPI']
@@ -59,17 +61,33 @@ class RemoteException(NoTraceBackWithLineNumber):
 def safe_run(func):
 
     def func_wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except Exception as e:
-           message =  'the remote server response is not valid\n'
-           message += 'possible causes: \n'
-           message += '- connection error\n'
-           message += '- wrong credentials\n'
-           message += '- error on the remote server\n'
-           message += '\n exception message: '
-           message += '%s'%e
-           raise RemoteException(message=message)
+        logger = logging.getLogger(func.__name__)
+
+        self = args[0] # because it really is
+
+        n_tries_left = self.n_max_tries
+        while True:
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                message = ''
+                message += '\nunable to complete API call'
+                message += '\nin ' + str(func) + ' called with:'
+                message += '\n... ' + ", ".join([str(arg) for arg in args])
+                message += '\n... ' + ", ".join([k+": "+str(v) for k,v in kwargs])
+                message += '\npossible causes:'
+                message += '\n- connection error'
+                message += '\n- wrong credentials'
+                message += '\n- error on the remote server'
+                message += '\n exception message: '
+                message += '\n\n%s\n'%e
+
+                n_tries_left -= 1 
+
+                if n_tries_left > 0:
+                    logger.warning("problem in API call, %i tries left:\n%s\n sleeping %i seconds until retry", n_tries_left, message, self.retry_sleep_s)
+                else:
+                    raise RemoteException(message=message)
 
     return func_wrapper
 
@@ -80,6 +98,9 @@ class DispatcherAPI(object):
         self.port=port
         self.cookies=cookies
         self.set_instr(instrument)
+
+        self.n_max_tries = 20
+        self.retry_sleep_s = 5
 
         if self.host.startswith('htt'):
             self.url=host
@@ -355,7 +376,8 @@ class DispatcherAPI(object):
                 data.append(ApiCatalog(js['products']['catalog'],name='dispatcher_catalog'))
 
             if 'astropy_table_product_ascii_list' in res.json()['products'].keys():
-                data.extend([ascii.read(table_text) for table_text in js['products']['astropy_table_product_ascii_list']])
+                #print()
+                data.extend([ascii.read(table_text['ascii']) for table_text in js['products']['astropy_table_product_ascii_list']])
 
             if 'astropy_table_product_binary_list' in res.json()['products'].keys():
                 #for  table_binary in js['products']['astropy_table_product_binary_list']:
@@ -367,7 +389,9 @@ class DispatcherAPI(object):
                 data.extend([ascii.read(table_binary) for table_binary in js['products']['astropy_table_product_binary_list']])
 
             d=DataCollection(data,instrument=instrument,product=product)
-
+            for p in d._p_list:
+                if hasattr(p,'meta_data') is False and hasattr(p,'meta') is True:
+                    p.meta_data = p.meta
         else:
             self._decode_res_json(res.json()['products']['instrumet_parameters'])
             d=None
