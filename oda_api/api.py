@@ -22,6 +22,7 @@ import base64
 import  copy
 import pickle
 from . import __version__
+from . import custom_formatters
 from itertools import cycle
 import re
 
@@ -102,6 +103,8 @@ class DispatcherAPI(object):
         self.n_max_tries = 20
         self.retry_sleep_s = 5
 
+        self.custom_progress_formatter = custom_formatters.find_custom_formatter(instrument)
+
         if self.host.startswith('htt'):
             self.url=host
         else:
@@ -116,6 +119,9 @@ class DispatcherAPI(object):
             self.url += ":%d" % (port)
 
         self._progress_iter = cycle(['|', '/', '-', '\\'])
+
+    def set_custom_progress_formatter(self, F):
+        self.custom_progress_formatter = F
 
     @classmethod
     def build_from_envs(cls):
@@ -134,6 +140,15 @@ class DispatcherAPI(object):
 
     def _progress_bar(self,info=''):
         print("\r %s the job is working remotely, please wait %s"%(next(self._progress_iter),info),end='')
+
+    def format_custom_progress(self, full_report_dict_list):
+        F = getattr(self, 'custom_progress_formatter', None)
+
+        if F is not None:
+            return F(full_report_dict_list)
+
+        return ""
+
 
     @safe_run
     def request(self,parameters_dict,handle='run_analysis',url=None):
@@ -156,25 +171,36 @@ class DispatcherAPI(object):
         if query_status != 'done' and query_status != 'failed':
             print ('the job has been submitted on the remote server')
 
+        t0 = time.time()
+
         while query_status != 'done' and query_status != 'failed':
             parameters_dict['query_status']=query_status
             parameters_dict['job_id'] = job_id
-            #print('-> sent3')
             res = requests.get("%s/%s" % (url,handle), params=parameters_dict,cookies=self.cookies)
-            query_status =res.json()['query_status']
-            job_id = res.json()['job_monitor']['job_id']
-            info='status=%s - job_id=%s '%(query_status,job_id)
+            res_json = res.json()
+            query_status =res_json['query_status']
+            job_id = res_json['job_monitor']['job_id']
+            info = 'status=%s job_id=%s in %d messages since %d seconds'%(
+                        query_status, 
+                        job_id, 
+                        len(res_json['job_monitor']['full_report_dict_list']),
+                        time.time() - t0,
+                    )
+
+            custom_info = self.format_custom_progress(res_json['job_monitor']['full_report_dict_list'])
+            if custom_info != "":
+                info += "; " + custom_info
+
+
             self._progress_bar(info=info)
-            #print('-> sent4')
 
             time.sleep(2)
 
         print("\r", end="")
         print('')
         print('')
-        if  res.json()['exit_status']['status']!=0:
+        if res.json()['exit_status']['status']!=0:
             self.failure_report(res)
-
 
         #print('job_monitor', res.json()['job_monitor'])
         #print('query_status', res.json()['query_status'])
