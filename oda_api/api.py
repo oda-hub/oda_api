@@ -132,9 +132,7 @@ class DispatcherAPI(object):
     def set_instr(self,instrument):
         self.instrument=instrument
 
-
-
-    def _progess_bar(self,info=''):
+    def _progress_bar(self,info=''):
         print("\r %s the job is working remotely, please wait %s"%(next(self._progress_iter),info),end='')
 
     @safe_run
@@ -166,7 +164,7 @@ class DispatcherAPI(object):
             query_status =res.json()['query_status']
             job_id = res.json()['job_monitor']['job_id']
             info='status=%s - job_id=%s '%(query_status,job_id)
-            self._progess_bar(info=info)
+            self._progress_bar(info=info)
             #print('-> sent4')
 
             time.sleep(2)
