@@ -23,6 +23,7 @@ import  copy
 import pickle
 from . import __version__
 from . import custom_formatters
+from . import colors as C
 from itertools import cycle
 import re
 import traceback
@@ -102,7 +103,6 @@ class DispatcherAPI(object):
         self.n_max_tries = 20
         self.retry_sleep_s = 5
 
-        self.custom_progress_formatter = custom_formatters.find_custom_formatter(instrument)
 
         if self.host.startswith('htt'):
             self.url=host
@@ -136,6 +136,7 @@ class DispatcherAPI(object):
 
     def set_instr(self,instrument):
         self.instrument=instrument
+        self.custom_progress_formatter = custom_formatters.find_custom_formatter(instrument)
 
     def _progress_bar(self,info=''):
         print("\r %s the job is working remotely, please wait %s"%(next(self._progress_iter),info),end='')
@@ -154,6 +155,9 @@ class DispatcherAPI(object):
         if 'scw_list' in parameters_dict.keys():
             print (parameters_dict['scw_list'])
 
+        self.set_instr(parameters_dict.get('instrument', self.instrument))
+
+
         if url is None:
             url=self.url
         parameters_dict['api']='True'
@@ -164,7 +168,13 @@ class DispatcherAPI(object):
 
         #print ('-> sent1')
         res= requests.get("%s/%s" %(url, handle), params=parameters_dict,cookies=self.cookies)
-        query_status = res.json()['query_status']
+
+        try:
+            query_status = res.json()['query_status']
+        except json.decoder.JSONDecodeError as e:
+            print(f"{C.RED}{C.BOLD}unable to decode json from response:{C.NC}")
+            print(f"{C.RED}{res.text}{C.NC}")
+
         job_id = res.json()['job_monitor']['job_id']
         #print('-> sent2')
         if query_status != 'done' and query_status != 'failed':
@@ -179,14 +189,17 @@ class DispatcherAPI(object):
             res_json = res.json()
             query_status =res_json['query_status']
             job_id = res_json['job_monitor']['job_id']
+
+            full_report_dict_list = res_json['job_monitor'].get('full_report_dict_list', [])
+
             info = 'status=%s job_id=%s in %d messages since %d seconds'%(
                         query_status, 
                         str(job_id)[:8], 
-                        len(res_json['job_monitor']['full_report_dict_list']),
+                        len(full_report_dict_list),
                         time.time() - t0,
                     )
 
-            custom_info = self.format_custom_progress(res_json['job_monitor']['full_report_dict_list'])
+            custom_info = self.format_custom_progress(full_report_dict_list)
             if custom_info != "":
                 info += "; " + custom_info
 
