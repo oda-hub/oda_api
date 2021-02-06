@@ -25,6 +25,7 @@ from . import __version__
 from . import custom_formatters
 from itertools import cycle
 import re
+import traceback
 
 import logging
 
@@ -46,9 +47,6 @@ class NoTraceBackWithLineNumber(Exception):
         self.args = "{0.__name__} (line {1}): {2}".format(type(self), ln, msg),
         sys.exit(self)
 
-
-class NoTraceBackWithLineNumber(NoTraceBackWithLineNumber):
-    pass
 
 
 class RemoteException(NoTraceBackWithLineNumber):
@@ -82,6 +80,7 @@ def safe_run(func):
                 message += '\n- error on the remote server'
                 message += '\n exception message: '
                 message += '\n\n%s\n'%e
+                message += traceback.format_exc()
 
                 n_tries_left -= 1 
 
@@ -182,7 +181,7 @@ class DispatcherAPI(object):
             job_id = res_json['job_monitor']['job_id']
             info = 'status=%s job_id=%s in %d messages since %d seconds'%(
                         query_status, 
-                        job_id, 
+                        str(job_id)[:8], 
                         len(res_json['job_monitor']['full_report_dict_list']),
                         time.time() - t0,
                     )
