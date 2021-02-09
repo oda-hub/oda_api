@@ -5,7 +5,7 @@ from builtins import (bytes, str, open, super, range,
                       zip, round, input, int, pow, object, map, zip)
 
 
-__author__ = "Andrea Tramacere"
+__author__ = "Andrea Tramacere, Volodymyr Savchenko"
 
 import  warnings
 import requests
@@ -27,6 +27,7 @@ from . import colors as C
 from itertools import cycle
 import re
 import traceback
+from jsonschema import validate as validate_json
 
 import logging
 
@@ -119,6 +120,26 @@ class DispatcherAPI(object):
 
         self._progress_iter = cycle(['|', '/', '-', '\\'])
 
+        # TODO this should really be just swagger/bravado
+        self.dispatcher_response_schema = {
+                    'type': 'object',
+                    'properties': {
+                        'exit_status': { 
+                                'type': 'object' ,
+                                'properties': {
+                                        'status': { 'type': 'number' },
+                                    },
+                                },
+                        'query_status': { 'type': 'string' },
+                        'job_monitor': { 
+                                'type': 'object' ,
+                                'properties': {
+                                        'job_id': { 'type': 'string' },
+                                    },
+                                },
+                    }
+                }
+
     def set_custom_progress_formatter(self, F):
         self.custom_progress_formatter = F
 
@@ -160,23 +181,43 @@ class DispatcherAPI(object):
 
         if url is None:
             url=self.url
+
         parameters_dict['api']='True'
         parameters_dict['oda_api_version'] = __version__
-        print('- waiting for remote response, please wait',handle,url)
+
         for k in parameters_dict.keys():
-            print(k,parameters_dict[k])
+            print(f"- {C.BLUE}{k}: {parameters_dict[k]}{C.NC}")
 
-        #print ('-> sent1')
-        res= requests.get("%s/%s" %(url, handle), params=parameters_dict,cookies=self.cookies)
 
-        try:
-            query_status = res.json()['query_status']
-        except json.decoder.JSONDecodeError as e:
-            print(f"{C.RED}{C.BOLD}unable to decode json from response:{C.NC}")
-            print(f"{C.RED}{res.text}{C.NC}")
+        def get_res_json(verbose=False):
+            if verbose:
+                print(f'- waiting for remote response (since {time.strftime("%Y-%m-%d %H:%M:%S")}), please wait: {handle} {url}')
 
-        job_id = res.json()['job_monitor']['job_id']
-        #print('-> sent2')
+            try:
+                #print(f'{C.BLUE}request to {url}{C.NC}')
+                response = requests.get(
+                            "%s/%s" % (url, handle), 
+                            params=parameters_dict,
+                            cookies=self.cookies
+                        )
+
+                response_json = self._decode_res_json(response)
+
+                validate_json(response_json, self.dispatcher_response_schema)
+
+                return response_json
+            except json.decoder.JSONDecodeError as e:
+                print(f"{C.RED}{C.BOLD}unable to decode json from response:{C.NC}")
+                print(f"{C.RED}{res.text}{C.NC}")
+                raise
+
+        res_json = get_res_json(True)
+
+
+        query_status = res_json['query_status']
+
+        job_id = res_json['job_monitor']['job_id']
+
         if query_status != 'done' and query_status != 'failed':
             print ('the job has been submitted on the remote server')
 
@@ -185,8 +226,9 @@ class DispatcherAPI(object):
         while query_status != 'done' and query_status != 'failed':
             parameters_dict['query_status']=query_status
             parameters_dict['job_id'] = job_id
-            res = requests.get("%s/%s" % (url,handle), params=parameters_dict,cookies=self.cookies)
-            res_json = res.json()
+
+            res_json = get_res_json()
+
             query_status =res_json['query_status']
             job_id = res_json['job_monitor']['job_id']
 
@@ -211,8 +253,9 @@ class DispatcherAPI(object):
         print("\r", end="")
         print('')
         print('')
-        if res.json()['exit_status']['status']!=0:
-            self.failure_report(res)
+
+        if res_json['exit_status']['status']!=0:
+            self.failure_report(res_json)
 
         #print('job_monitor', res.json()['job_monitor'])
         #print('query_status', res.json()['query_status'])
@@ -223,21 +266,18 @@ class DispatcherAPI(object):
             print('query done succesfully!')
         else:
 
-            raise RemoteException(debug_message=res.json()['exit_status']['error_message'])
+            raise RemoteException(debug_message=res_json['exit_status']['error_message'])
+
+        return res_json
 
 
-
-        return res
-
-
-    def failure_report(self,res):
+    def failure_report(self, res_json):
         print('query failed!')
-        print('status code:-> %s'%res.status_code)
-        print('server message:-> %s'%res.text)
-        #print('exit_status, status', res.json()['exit_status']['status'])
-        print('Remote server message:->', res.json()['exit_status']['message'])
-        print('Remote server error_message->', res.json()['exit_status']['error_message'])
-        print('Remote server debug_message->', res.json()['exit_status']['debug_message'])
+        #print('status code:-> %s'%res.status_code)
+        #print('server message:-> %s'%res.text)
+        print('Remote server message:->', res_json['exit_status']['message'])
+        print('Remote server error_message->', res_json['exit_status']['error_message'])
+        print('Remote server debug_message->', res_json['exit_status']['debug_message'])
 
     def dig_list(self,b,only_prod=False):
         from astropy.table import Table
@@ -285,7 +325,7 @@ class DispatcherAPI(object):
     @safe_run
     def _decode_res_json(self,res):
         try:
-            if hasattr(res,'content'):
+            if hasattr(res, 'content'):
                 #_js = json.loads(res.content)
                 #fixed issue with python 3.5
                 _js = res.json()
@@ -386,43 +426,40 @@ class DispatcherAPI(object):
         else:
             warnings.warn('parameter check not available on remote server, check carefully parameters name')
 
-        res = self.request(kwargs)
-        #print('2-.>',res.status_code,res.text)
-        data = None
+        res_json = self.request(kwargs)
 
-        js=json.loads(res.content)
-        #print('js-->',type(js))
-        if dry_run  ==False:
+        data = None
+        #js=json.loads(res.content)
+
+        if dry_run == False:
             #print ('-->npd', 'numpy_data_product' in res.json()['products'].keys())
             #print ('-->ndpl',    'numpy_data_product_list'  in res.json()['products'].keys())
 
             data=[]
-            if  'numpy_data_product'  in res.json()['products'].keys():
-                #data= NumpyDataProduct.from_json(res.json()['products']['numpy_data_product'])
-                data.append(NumpyDataProduct.decode(js['products']['numpy_data_product']))
-            elif  'numpy_data_product_list'  in res.json()['products'].keys():
+            if  'numpy_data_product'  in res_json['products'].keys():
+                data.append(NumpyDataProduct.decode(res_json['products']['numpy_data_product']))
+            elif  'numpy_data_product_list'  in res_json['products'].keys():
 
-                #data= [NumpyDataProduct.from_json(d) for d in res.json()['products']['numpy_data_product_list']]
-                data.extend([NumpyDataProduct.decode(d) for d in js['products']['numpy_data_product_list']])
+                data.extend([NumpyDataProduct.decode(d) for d in res_json['products']['numpy_data_product_list']])
 
-            if 'binary_data_product_list' in res.json()['products'].keys():
-                data.extend([BinaryData().decode(d) for d in js['products']['binary_data_product_list']])
+            if 'binary_data_product_list' in res_json['products'].keys():
+                data.extend([BinaryData().decode(d) for d in res_json['products']['binary_data_product_list']])
 
-            if 'catalog' in res.json()['products'].keys():
-                data.append(ApiCatalog(js['products']['catalog'],name='dispatcher_catalog'))
+            if 'catalog' in res_json['products'].keys():
+                data.append(ApiCatalog(res_json['products']['catalog'],name='dispatcher_catalog'))
 
-            if 'astropy_table_product_ascii_list' in res.json()['products'].keys():
+            if 'astropy_table_product_ascii_list' in res_json['products'].keys():
                 #print()
-                data.extend([ascii.read(table_text['ascii']) for table_text in js['products']['astropy_table_product_ascii_list']])
+                data.extend([ascii.read(table_text['ascii']) for table_text in res_json['products']['astropy_table_product_ascii_list']])
 
-            if 'astropy_table_product_binary_list' in res.json()['products'].keys():
+            if 'astropy_table_product_binary_list' in res_json['products'].keys():
                 #for  table_binary in js['products']['astropy_table_product_binary_list']:
                 #    t_rec = base64.b64decode(_o_dict['binary'])
                 #    try:
                 #        t=data.extend([])
                 #    except:
                 #        t=data.extend([])
-                data.extend([ascii.read(table_binary) for table_binary in js['products']['astropy_table_product_binary_list']])
+                data.extend([ascii.read(table_binary) for table_binary in res_json['products']['astropy_table_product_binary_list']])
 
             d=DataCollection(data,instrument=instrument,product=product)
             for p in d._p_list:

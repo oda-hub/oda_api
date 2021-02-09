@@ -3,10 +3,10 @@ import re
 
 def find_custom_formatter(instrument):
     if instrument in ("isgri", "jemx"):
-        print(f"{C.BOLD} {C.CYAN} selected custom formatter {custom_progress_formatter} for instrument {instrument} {C.NC}")
+        print(f"{C.GRAY} selected custom formatter for instrument {instrument} {C.NC}")
         return custom_progress_formatter
     else:
-        print(f"{C.BOLD} {C.RED} NO custom formatter for instrument {instrument} {C.NC}")
+        print(f"{C.GRAY} NO custom formatter for instrument {instrument} {C.NC}")
 
 def custom_progress_formatter(L):
     nscw = len(set([l['scwid'] for l in L if re.match("[0-9]{12}\.00[0-9]", l['scwid'])]))
