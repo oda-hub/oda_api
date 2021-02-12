@@ -170,89 +170,98 @@ class DispatcherAPI(object):
 
         return ""
 
+    def get_res_json(self, verbose=False):
+        if verbose:
+            print(f'- waiting for remote response (since {time.strftime("%Y-%m-%d %H:%M:%S")}), please wait for {url}/{handle}')
+
+        try:
+            timeout = getattr(self, 'timeout', 120)
+
+            response = requests.get(
+                            "%s/%s" % (url, handle), 
+                            params=parameters_dict,
+                            cookies=self.cookies, 
+                            headers={
+                                      'Request-Timeout': str(timeout),
+                                      'Connection-Timeout': str(timeout),
+                                    },
+                            timeout=timeout,
+                       )
+
+            response_json = self._decode_res_json(response)
+
+            validate_json(response_json, self.dispatcher_response_schema)
+
+            return response_json
+        except json.decoder.JSONDecodeError as e:
+            print(f"{C.RED}{C.BOLD}unable to decode json from response:{C.NC}")
+            print(f"{C.RED}{res.text}{C.NC}")
+            raise
+
+    def poll(self):
+        new_query = hasattr(self, 'query_status'):
+
+        self.parameters_dict['query_status'] = self.query_status
+        self.parameters_dict['job_id'] = self.job_id
+
+        res_json = self.get_res_json(verbose=True)
+        
+
+        self.query_status = res_json['query_status']
+        self.job_id = res_json['job_monitor']['job_id']
+        
+
+        full_report_dict_list = res_json['job_monitor'].get('full_report_dict_list', [])
+
+        info = 'status=%s job_id=%s in %d messages since %d seconds'%(
+                    query_status, 
+                    str(job_id)[:8], 
+                    len(full_report_dict_list),
+                    time.time() - t0,
+                )
+        
+        if self.query_status != 'done' and self.query_status != 'failed':
+            if new_query:
+                print('the job has been submitted on the remote server')
+
+        custom_info = self.format_custom_progress(full_report_dict_list)
+        if custom_info != "":
+            info += "; " + custom_info
+
+
+        self._progress_bar(info=info)
 
     @safe_run
     def request(self,parameters_dict,handle='run_analysis',url=None):
-        if 'scw_list' in parameters_dict.keys():
-            print (parameters_dict['scw_list'])
-
-        self.set_instr(parameters_dict.get('instrument', self.instrument))
-
-
         if url is None:
-            url=self.url
+            url = self.url
 
-        parameters_dict['api']='True'
-        parameters_dict['oda_api_version'] = __version__
+        self.parameters_dict = parameters_dict
 
-        for k in parameters_dict.keys():
+        self.parameters_dict['api']='True'
+        self.parameters_dict['oda_api_version'] = __version__
+
+        if 'scw_list' in self.parameters_dict.keys():
+            print(self.parameters_dict['scw_list'])
+
+        self.set_instr(
+                    self.parameters_dict.get('instrument', self.instrument)
+                )
+
+        for k in self.parameters_dict.keys():
             print(f"- {C.BLUE}{k}: {parameters_dict[k]}{C.NC}")
 
 
-        def get_res_json(verbose=False):
-            if verbose:
-                print(f'- waiting for remote response (since {time.strftime("%Y-%m-%d %H:%M:%S")}), please wait for {url}/{handle}')
+        self.t0 = time.time()
 
-            try:
-                timeout = getattr(self, 'timeout', 120)
+        while self.query_status not in ['done', 'failed']:
+            self.poll()
 
-                response = requests.get(
-                                "%s/%s" % (url, handle), 
-                                params=parameters_dict,
-                                cookies=self.cookies, 
-                                headers={
-                                          'Request-Timeout': str(timeout),
-                                          'Connection-Timeout': str(timeout),
-                                        },
-                                timeout=timeout,
-                           )
+            if self.query_status in ['done', 'failed']:
+                break
 
-                response_json = self._decode_res_json(response)
-
-                validate_json(response_json, self.dispatcher_response_schema)
-
-                return response_json
-            except json.decoder.JSONDecodeError as e:
-                print(f"{C.RED}{C.BOLD}unable to decode json from response:{C.NC}")
-                print(f"{C.RED}{res.text}{C.NC}")
-                raise
-
-        res_json = get_res_json(True)
-
-
-        query_status = res_json['query_status']
-
-        job_id = res_json['job_monitor']['job_id']
-
-        if query_status != 'done' and query_status != 'failed':
-            print ('the job has been submitted on the remote server')
-
-        t0 = time.time()
-
-        while query_status != 'done' and query_status != 'failed':
-            parameters_dict['query_status']=query_status
-            parameters_dict['job_id'] = job_id
-
-            res_json = get_res_json()
-
-            query_status =res_json['query_status']
-            job_id = res_json['job_monitor']['job_id']
-
-            full_report_dict_list = res_json['job_monitor'].get('full_report_dict_list', [])
-
-            info = 'status=%s job_id=%s in %d messages since %d seconds'%(
-                        query_status, 
-                        str(job_id)[:8], 
-                        len(full_report_dict_list),
-                        time.time() - t0,
-                    )
-
-            custom_info = self.format_custom_progress(full_report_dict_list)
-            if custom_info != "":
-                info += "; " + custom_info
-
-
-            self._progress_bar(info=info)
+            if not wait:
+                return 
 
             time.sleep(2)
 
