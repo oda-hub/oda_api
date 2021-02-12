@@ -33,7 +33,7 @@ import logging
 
 from .data_products import NumpyDataProduct,BinaryData,ApiCatalog
 
-__all__=['Request','NoTraceBackWithLineNumber','NoTraceBackWithLineNumber','RemoteException','DispatcherAPI']
+__all__ = ['Request', 'NoTraceBackWithLineNumber', 'NoTraceBackWithLineNumber', 'RemoteException', 'DispatcherAPI']
 
 class Request(object):
     def __init__(self,):
@@ -191,15 +191,21 @@ class DispatcherAPI(object):
 
         def get_res_json(verbose=False):
             if verbose:
-                print(f'- waiting for remote response (since {time.strftime("%Y-%m-%d %H:%M:%S")}), please wait: {handle} {url}')
+                print(f'- waiting for remote response (since {time.strftime("%Y-%m-%d %H:%M:%S")}), please wait for {url}/{handle}')
 
             try:
-                #print(f'{C.BLUE}request to {url}{C.NC}')
+                timeout = getattr(self, 'timeout', 120)
+
                 response = requests.get(
-                            "%s/%s" % (url, handle), 
-                            params=parameters_dict,
-                            cookies=self.cookies
-                        )
+                                "%s/%s" % (url, handle), 
+                                params=parameters_dict,
+                                cookies=self.cookies, 
+                                headers={
+                                          'Request-Timeout': str(timeout),
+                                          'Connection-Timeout': str(timeout),
+                                        },
+                                timeout=timeout,
+                           )
 
                 response_json = self._decode_res_json(response)
 
