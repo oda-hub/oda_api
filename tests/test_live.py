@@ -12,5 +12,27 @@ def test_instruments():
                 host=get_platform_dispatcher(),
                 instrument="mock",
             )
-    print(disp.get_instruments_list())
+    assert disp.get_instruments_list() == ['isgri', 'jemx', 'polar', 'spi_acs']
     
+def test_waiting():
+    from oda_api.api import DispatcherAPI, UserError
+    disp=DispatcherAPI(
+                host=get_platform_dispatcher(),
+                instrument="isgri",
+            )
+
+    with pytest.raises(UserError):
+        disp.poll()
+
+    assert disp.wait
+    
+    disp.get_product(
+                instrument="isgri", 
+                product="isgri_image", 
+                product_type="Real", 
+                osa_version="OSA10.2",
+                E1_keV=25.0,
+                E2_keV=80.0,
+                scw_list="066500220010.001",
+            )
+

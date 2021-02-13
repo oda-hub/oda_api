@@ -31,6 +31,8 @@ from jsonschema import validate as validate_json
 
 import logging
 
+logger = logging.getLogger(__name__)
+
 from .data_products import NumpyDataProduct, BinaryData, ApiCatalog
 
 __all__ = ['Request', 'NoTraceBackWithLineNumber', 'NoTraceBackWithLineNumber', 'RemoteException', 'DispatcherAPI']
@@ -49,6 +51,9 @@ class NoTraceBackWithLineNumber(Exception):
         self.args = "{0.__name__} (line {1}): {2}".format(type(self), ln, msg),
         sys.exit(self)
 
+
+class UserError(Exception):
+    pass
 
 
 class RemoteException(NoTraceBackWithLineNumber):
@@ -70,6 +75,9 @@ def safe_run(func):
         while True:
             try:
                 return func(*args, **kwargs)
+            except UserError as e:
+                logger.exception("user error: %s", e)
+                raise
             except Exception as e:
                 message = ''
                 message += '\nunable to complete API call'
@@ -101,7 +109,9 @@ class DispatcherAPI(object):
                  host=None,
                  port=None,
                  cookies=None,
-                 protocol="https"):
+                 protocol="https",
+                 wait=True,
+                 ):
 
 
         self.logger = logging.getLogger(repr(self))
@@ -119,11 +129,13 @@ class DispatcherAPI(object):
                 elif protocol == 'https':
                     self.url = "https://" + host
                 else:
-                    raise  RuntimeError('protocol must be either http or https')
+                    raise UserError('protocol must be either http or https')
         else:
             self.url = url
 
         self.run_analysis_handle = run_analysis_handle
+
+        self.wait = wait
 
         self.strict_parameter_check = False
         
@@ -250,7 +262,7 @@ class DispatcherAPI(object):
 
     @parameters_dict_payload.setter
     def parameters_dict_payload(self, value):
-        raise RuntimeError("please set parameters_dict and not parameters_dict_payload")
+        raise UserError("please set parameters_dict and not parameters_dict_payload")
 
     
     @property
@@ -315,7 +327,7 @@ class DispatcherAPI(object):
         """
 
         if not self.is_prepared:
-            raise RuntimeError(f"can not poll query before parameters are set with {self}.request")
+            raise UserError(f"can not poll query before parameters are set with {self}.request")
 
 
         # >
@@ -368,12 +380,14 @@ class DispatcherAPI(object):
             print(f"- {C.BLUE}{k}: {v}{C.NC}")
 
     @safe_run
-    def request(self, parameters_dict, handle=None, url=None, wait=True):
+    def request(self, parameters_dict, handle=None, url=None, wait=None):
         """
         sets request parameters, optionally polls them in a loop
         """
 
-        self.wait = wait
+        if wait is not None:
+            self.logger.warning("overriding wait mode from request")
+            self.wait = wait
 
         if url is not None:
             self.logger.warning("overriding dispatcher URL from request!")
@@ -556,8 +570,8 @@ class DispatcherAPI(object):
             for n in validation_dict.keys():
                 if n not in valid_names:
                     if self.strict_parameter_check:
-                        raise RuntimeError(f'the parameter: {n} is not among the valid ones: {valid_names}'
-                                           f'(you can set {self}.strict_parameter_check=False, but beware!')
+                        raise UserError(f'the parameter: {n} is not among the valid ones: {valid_names}'
+                                        f'(you can set {self}.strict_parameter_check=False, but beware!')
                     else:
                         msg = '\n'
                         msg+= '----------------------------------------------------------------------------\n'
