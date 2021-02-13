@@ -8,6 +8,7 @@ if colors_enabled:
     PURPLE = "\033[35m"
     CYAN = "\033[36m"
     GRAY = "\033[37m"
+    GREY = "\033[37m"
     NC = "\033[0m"
 
     BOLD = "\033[1m"

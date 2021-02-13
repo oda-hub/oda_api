@@ -101,7 +101,7 @@ def safe_run(func):
 
     return func_wrapper
 
-class DispatcherAPI(object):
+class DispatcherAPI:
     def __init__(self,
                  instrument='mock', 
                  url='https://www.astro.unige.ch/cdci/astrooda/dispatch-data',
@@ -191,7 +191,7 @@ class DispatcherAPI(object):
         self.custom_progress_formatter = custom_formatters.find_custom_formatter(instrument)
 
     def _progress_bar(self,info=''):
-        print("\r %s the job is working remotely, please wait %s"%(next(self._progress_iter),info),end='')
+        print(f"{C.GREY}\r {next(self._progress_iter)} the job is working remotely, please wait {info}{C.NC}", end='')
 
     def format_custom_progress(self, full_report_dict_list):
         F = getattr(self, 'custom_progress_formatter', None)
@@ -335,26 +335,23 @@ class DispatcherAPI(object):
         # <
 
         if self.response_json['query_status'] != self.query_status:
-            print(f"query status changed from {self.query_status} to {self.response_json['query_status']}")
+            print(f"\n... query status {C.PURPLE}{self.query_status}{C.NC} => {C.PURPLE}{self.response_json['query_status']}{C.NC}")
 
-            if not self.is_submitted:
-                print('the job has been submitted on the remote server')
-            
             self.query_status = self.response_json['query_status']
 
         if self.job_id is None:
             self.job_id = self.response_json['job_monitor']['job_id']
-            print(f"assigned job id: {self.job_id}")
+            print(f"... assigned job id: {C.BROWN}{self.job_id}{C.NC}")
         else:
             if self.response_json['query_status'] != self.query_status:
                 raise RuntimeError("request returns job_id {res_json['query_status']} != known job_id {self.query_status}"
                                    "this should not happen! Server must be misbehaving, or client forgot correct job id")
 
         if self.query_status == 'done':
-            print("\033[32mquery COMPLETED SUCCESSFULLY (state {self.query_status})\033[0m")
+            print(f"\033[32mquery COMPLETED SUCCESSFULLY (state {self.query_status})\033[0m")
 
         elif self.query_status == 'failed':
-            print("\033[31mquery COMPLETED with FAILURE (state {self.query_status})\033[0m")
+            print(f"\033[31mquery COMPLETED with FAILURE (state {self.query_status})\033[0m")
 
         else:
             self.show_progress()
@@ -408,13 +405,21 @@ class DispatcherAPI(object):
 
         self.t0 = time.time()
 
-        while self.query_status not in ['done', 'failed']:
-            self.poll()
+
+        verbose = True
+        while True:
+            self.poll(verbose)
+
+            verbose = False
+
+            if self.query_status in ['done', 'failed']:
+                return
 
             if not self.wait:
                 return 
 
             time.sleep(2)
+        
 
     def process_failure(self):
         if self.response_json['exit_status']['status'] != 0:
@@ -598,7 +603,7 @@ class DispatcherAPI(object):
             if self.wait:
                 raise RuntimeError("should have waited, but did not - programming error!")
             else:
-                print("query not complete, please poll again later")
+                print(f"\n{C.BROWN}query not complete, please poll again later{C.NC}")
                 return
         else:
             raise RuntimeError("not failed, ready, but complete? programming error for client!")
