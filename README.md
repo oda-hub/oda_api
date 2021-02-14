@@ -14,26 +14,39 @@ Who's responsible?
 -------------------
 Andrea Tramacere
 
-ISDC Data Centre for Astrophysics, Astronomy Department of the University of Geneva, Chemin d'Ecogia 16, CH-1290 Versoix, Switzerland
+Volodymyr Savchenko
+
+Astronomy Department of the University of Geneva
+
+Chemin d'Ecogia 16
+CH-1290 Versoix
+Switzerland
+
 
 
 Download the code
 -------------------
-   - Get the source code from:  https://github.com/andreatramacere/oda_api/archive/1.0.0.tar.gz
-
-   - Uncompress the  archive  `oda_api-1.0.0.tar.gz`
-   
-   - cd to  the dir  `cd oda_api` 
+   - pip install --upgrade oda-api
 
 Installation
 -------------------
-1) Anaconda
-    * `conda install -c conda-forge --file requirements.txt`
-    * `python setup.py install`
+
+This is the recommended method, equally in [conda environment](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#using-pip-in-an-environment).
+
+```bash
+$ pip install oda-api --upgrade
+```
+
+
+Alternatively, download source and use Anaconda
+
+```bash
+git clone https://github.com/oda-hub/oda_api oda_api
+cd oda_api
+conda install -c conda-forge --file requirements.txt
+python setup.py install
+```
     
-2) PIP
-    * `pip install -r requirements.txt`
-    * `python setup.py install`
 
 Documentation
 -------------------

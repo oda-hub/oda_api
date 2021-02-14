@@ -5,7 +5,7 @@ from builtins import (bytes, str, open, super, range,
                       zip, round, input, int, pow, object, map, zip)
 
 
-__author__ = "Andrea Tramacere"
+__author__ = "Andrea Tramacere, Volodymyr Savchenko"
 
 import  warnings
 import requests
@@ -22,14 +22,20 @@ import base64
 import  copy
 import pickle
 from . import __version__
+from . import custom_formatters
+from . import colors as C
 from itertools import cycle
 import re
+import traceback
+from jsonschema import validate as validate_json
 
 import logging
 
-from .data_products import NumpyDataProduct,BinaryData,ApiCatalog
+logger = logging.getLogger(__name__)
 
-__all__=['Request','NoTraceBackWithLineNumber','NoTraceBackWithLineNumber','RemoteException','DispatcherAPI']
+from .data_products import NumpyDataProduct, BinaryData, ApiCatalog
+
+__all__ = ['Request', 'NoTraceBackWithLineNumber', 'NoTraceBackWithLineNumber', 'RemoteException', 'DispatcherAPI']
 
 class Request(object):
     def __init__(self,):
@@ -46,7 +52,7 @@ class NoTraceBackWithLineNumber(Exception):
         sys.exit(self)
 
 
-class NoTraceBackWithLineNumber(NoTraceBackWithLineNumber):
+class UserError(Exception):
     pass
 
 
@@ -69,6 +75,9 @@ def safe_run(func):
         while True:
             try:
                 return func(*args, **kwargs)
+            except UserError as e:
+                logger.exception("user error: %s", e)
+                raise
             except Exception as e:
                 message = ''
                 message += '\nunable to complete API call'
@@ -81,6 +90,7 @@ def safe_run(func):
                 message += '\n- error on the remote server'
                 message += '\n exception message: '
                 message += '\n\n%s\n'%e
+                message += traceback.format_exc()
 
                 n_tries_left -= 1 
 
@@ -91,31 +101,78 @@ def safe_run(func):
 
     return func_wrapper
 
-class DispatcherAPI(object):
-    def __init__(self,instrument='mock',host='www.astro.unige.ch/cdci/astrooda/dispatch-data',port=None,cookies=None,protocol='https'):
+class DispatcherAPI:
+    def __init__(self,
+                 instrument='mock', 
+                 url='https://www.astro.unige.ch/cdci/astrooda/dispatch-data',
+                 run_analysis_handle='run_analysis',
+                 host=None,
+                 port=None,
+                 cookies=None,
+                 protocol="https",
+                 wait=True,
+                 ):
 
-        self.host=host
-        self.port=port
+
+        self.logger = logging.getLogger(repr(self))
+
+        if host is not None:
+            self.logger.warning("please use 'url' instead of 'host' while providing dispatcher URL")
+            self.logger.warning("for now, we will adopt host, but in the near future it will not be done")
+            self.url = host
+
+            if host.startswith('http'):
+                self.url = host
+            else:
+                if protocol == 'http':
+                    self.url = "http://" + host
+                elif protocol == 'https':
+                    self.url = "https://" + host
+                else:
+                    raise UserError('protocol must be either http or https')
+        else:
+            self.url = url
+
+        self.run_analysis_handle = run_analysis_handle
+
+        self.wait = wait
+
+        self.strict_parameter_check = False
+        
         self.cookies=cookies
         self.set_instr(instrument)
 
         self.n_max_tries = 20
         self.retry_sleep_s = 5
 
-        if self.host.startswith('htt'):
-            self.url=host
-        else:
-            if protocol=='http':
-                self.url= "http://%s"%(host)
-            elif protocol=='https':
-                self.url = "https://%s" % (host)
-            else:
-                raise  RuntimeError('protocol must be either http or https')
 
         if port is not None:
-            self.url += ":%d" % (port)
+            self.logger.warning("please use 'url' to specify entire URL, no need to provide port separately")
 
         self._progress_iter = cycle(['|', '/', '-', '\\'])
+
+        # TODO this should really be just swagger/bravado; or at least derived from resources
+        self.dispatcher_response_schema = {
+                    'type': 'object',
+                    'properties': {
+                        'exit_status': { 
+                                'type': 'object' ,
+                                'properties': {
+                                        'status': { 'type': 'number' },
+                                    },
+                                },
+                        'query_status': { 'type': 'string' },
+                        'job_monitor': { 
+                                'type': 'object' ,
+                                'properties': {
+                                        'job_id': { 'type': 'string' },
+                                    },
+                                },
+                    }
+                }
+
+    def set_custom_progress_formatter(self, F):
+        self.custom_progress_formatter = F
 
     @classmethod
     def build_from_envs(cls):
@@ -130,78 +187,255 @@ class DispatcherAPI(object):
         return ''.join(random.choice(chars) for _ in range(size))
 
     def set_instr(self,instrument):
-        self.instrument=instrument
+        self.instrument = instrument
+        self.custom_progress_formatter = custom_formatters.find_custom_formatter(instrument)
+
+    def _progress_bar(self,info=''):
+        print(f"{C.GREY}\r {next(self._progress_iter)} the job is working remotely, please wait {info}{C.NC}", end='')
+
+    def format_custom_progress(self, full_report_dict_list):
+        F = getattr(self, 'custom_progress_formatter', None)
+
+        if F is not None:
+            return F(full_report_dict_list)
+
+        return ""
+
+    def request_to_json(self, verbose=False):
+        if verbose:
+            print(f'- waiting for remote response (since {time.strftime("%Y-%m-%d %H:%M:%S")}), please wait for {self.url}/{self.run_analysis_handle}')
+
+        try:
+            timeout = getattr(self, 'timeout', 120)
+
+            response = requests.get(
+                            "%s/%s" % (self.url, self.run_analysis_handle), 
+                            params=self.parameters_dict_payload,
+                            cookies=self.cookies, 
+                            headers={
+                                      'Request-Timeout': str(timeout),
+                                      'Connection-Timeout': str(timeout),
+                                    },
+                            timeout=timeout,
+                       )
+
+            response_json = self._decode_res_json(response)
+
+            validate_json(response_json, self.dispatcher_response_schema)
+
+            return response_json
+        except json.decoder.JSONDecodeError as e:
+            print(f"{C.RED}{C.BOLD}unable to decode json from response:{C.NC}")
+            print(f"{C.RED}{response.text}{C.NC}")
+            raise
 
 
+    @property
+    def parameters_dict(self):
+        """
+        as provided in request, not modified by state changes
+        """
+        return getattr(self, '_parameters_dict', None)
+    
+    @parameters_dict.setter
+    def parameters_dict(self, value):
+        self._parameters_dict = value
+        self.query_status = 'prepared'
+    
 
-    def _progess_bar(self,info=''):
-        print("\r %s the job is working remotely, please wait %s"%(next(self._progress_iter),info),end='')
+    @property
+    def parameters_dict_payload(self):
+        p = {
+                **self.parameters_dict,
+                'api': 'True',
+                'oda_api_version': __version__,
+            }
+
+        if self.is_submitted:
+            return {
+                    **p,
+                    'job_id': self.job_id,
+                    'query_status': self.query_status,
+                   }
+        else:
+            return p
+
+    @parameters_dict_payload.setter
+    def parameters_dict_payload(self, value):
+        raise UserError("please set parameters_dict and not parameters_dict_payload")
+
+    
+    @property
+    def job_id(self):
+        return getattr(self, '_job_id', None)
+    
+    @job_id.setter
+    def job_id(self, new_job_id):
+        self._job_id = new_job_id
+
+
+    @property
+    def query_status(self):
+        return getattr(self, '_query_status', 'not-prepared')
+    
+    @query_status.setter
+    def query_status(self, new_status):
+        possible_status = [
+                            "not-prepared",
+                            "prepared",
+                            "submitted",
+                            "progress",
+                            "done",
+                            "ready",
+                            "failed",
+                        ]
+
+        if new_status in possible_status:
+            self._query_status = new_status
+        else:
+            raise RuntimeError(f"unable to set status to {new_status}, possible values are {possible_status}")
+
+    
+    @property
+    def is_submitted(self):
+        return self.query_status not in [ 'prepared', 'not-prepared' ]
+
+    @property
+    def is_prepared(self):
+        return self.query_status not in [ 'not-prepared' ]
+    
+    @property
+    def is_ready(self):
+        return self.query_status in [ 'ready', 'done' ]
+
+    @property
+    def is_complete(self):
+        return self.query_status in [ 'ready', 'done', 'failed' ]
+
+    @property
+    def is_failed(self):
+        return self.query_status in [ 'failed' ]
 
     @safe_run
-    def request(self,parameters_dict,handle='run_analysis',url=None):
-        if 'scw_list' in parameters_dict.keys():
-            print (parameters_dict['scw_list'])
+    def poll(self, verbose=False):
+        """
+        Updates status of query at the remote server
 
-        if url is None:
-            url=self.url
-        parameters_dict['api']='True'
-        parameters_dict['oda_api_version'] = __version__
-        print('- waiting for remote response, please wait',handle,url)
-        for k in parameters_dict.keys():
-            print(k,parameters_dict[k])
+        Relies on self.parameters_dict to set parameters for request
 
-        #print ('-> sent1')
-        res= requests.get("%s/%s" %(url, handle), params=parameters_dict,cookies=self.cookies)
-        query_status = res.json()['query_status']
-        job_id = res.json()['job_monitor']['job_id']
-        #print('-> sent2')
-        if query_status != 'done' and query_status != 'failed':
-            print ('the job has been submitted on the remote server')
+        Relies on self.query_status and self.job_id, which is created as necessary and submitted in paylad
+        """
 
-        while query_status != 'done' and query_status != 'failed':
-            parameters_dict['query_status']=query_status
-            parameters_dict['job_id'] = job_id
-            #print('-> sent3')
-            res = requests.get("%s/%s" % (url,handle), params=parameters_dict,cookies=self.cookies)
-            query_status =res.json()['query_status']
-            job_id = res.json()['job_monitor']['job_id']
-            info='status=%s - job_id=%s '%(query_status,job_id)
-            self._progess_bar(info=info)
-            #print('-> sent4')
+        if not self.is_prepared:
+            raise UserError(f"can not poll query before parameters are set with {self}.request")
+
+
+        # >
+        self.response_json = self.request_to_json(verbose=verbose)
+        # <
+
+        if self.response_json['query_status'] != self.query_status:
+            print(f"\n... query status {C.PURPLE}{self.query_status}{C.NC} => {C.PURPLE}{self.response_json['query_status']}{C.NC}")
+
+            self.query_status = self.response_json['query_status']
+
+        if self.job_id is None:
+            self.job_id = self.response_json['job_monitor']['job_id']
+            print(f"... assigned job id: {C.BROWN}{self.job_id}{C.NC}")
+        else:
+            if self.response_json['query_status'] != self.query_status:
+                raise RuntimeError("request returns job_id {res_json['query_status']} != known job_id {self.query_status}"
+                                   "this should not happen! Server must be misbehaving, or client forgot correct job id")
+
+        if self.query_status == 'done':
+            print(f"\033[32mquery COMPLETED SUCCESSFULLY (state {self.query_status})\033[0m")
+
+        elif self.query_status == 'failed':
+            print(f"\033[31mquery COMPLETED with FAILURE (state {self.query_status})\033[0m")
+
+        else:
+            self.show_progress()
+        
+    def show_progress(self):
+        full_report_dict_list = self.response_json['job_monitor'].get('full_report_dict_list', [])
+
+        info = 'status=%s job_id=%s in %d messages since %d seconds'%(
+                    self.query_status, 
+                    str(self.job_id)[:8], 
+                    len(full_report_dict_list),
+                    time.time() - self.t0,
+                )
+        
+        custom_info = self.format_custom_progress(full_report_dict_list)
+        if custom_info != "":
+            info += "; " + custom_info
+
+        self._progress_bar(info=info)
+
+    def print_parameters(self):
+        for k, v in self.parameters_dict.items():
+            print(f"- {C.BLUE}{k}: {v}{C.NC}")
+
+    @safe_run
+    def request(self, parameters_dict, handle=None, url=None, wait=None):
+        """
+        sets request parameters, optionally polls them in a loop
+        """
+
+        if wait is not None:
+            self.logger.warning("overriding wait mode from request")
+            self.wait = wait
+
+        if url is not None:
+            self.logger.warning("overriding dispatcher URL from request!")
+            self.url = url
+        
+        if handle is not None:
+            self.logger.warning("overriding dispatcher handle from request not allowed, ignored!")
+
+        self.parameters_dict = parameters_dict
+
+
+        if 'scw_list' in self.parameters_dict.keys():
+            print(self.parameters_dict['scw_list'])
+
+        self.set_instr(self.parameters_dict.get('instrument', self.instrument))
+
+        self.print_parameters()
+
+        self.t0 = time.time()
+
+
+        verbose = True
+        while True:
+            self.poll(verbose)
+
+            verbose = False
+
+            if self.query_status in ['done', 'failed']:
+                return
+
+            if not self.wait:
+                return 
 
             time.sleep(2)
+        
 
-        print("\r", end="")
-        print('')
-        print('')
-        if  res.json()['exit_status']['status']!=0:
-            self.failure_report(res)
+    def process_failure(self):
+        if self.response_json['exit_status']['status'] != 0:
+            self.failure_report(self.response_json)
 
-
-        #print('job_monitor', res.json()['job_monitor'])
-        #print('query_status', res.json()['query_status'])
-        #print('products', res.json()['products'].keys())
-
-        if query_status != 'failed':
-
+        if self.query_status != 'failed':
             print('query done succesfully!')
         else:
-
-            raise RemoteException(debug_message=res.json()['exit_status']['error_message'])
-
+            raise RemoteException(debug_message=self.response_json['exit_status']['error_message'])
 
 
-        return res
-
-
-    def failure_report(self,res):
+    def failure_report(self, res_json):
         print('query failed!')
-        print('status code:-> %s'%res.status_code)
-        print('server message:-> %s'%res.text)
-        #print('exit_status, status', res.json()['exit_status']['status'])
-        print('Remote server message:->', res.json()['exit_status']['message'])
-        print('Remote server error_message->', res.json()['exit_status']['error_message'])
-        print('Remote server debug_message->', res.json()['exit_status']['debug_message'])
+        print('Remote server message:->', res_json['exit_status']['message'])
+        print('Remote server error_message->', res_json['exit_status']['error_message'])
+        print('Remote server debug_message->', res_json['exit_status']['debug_message'])
 
     def dig_list(self,b,only_prod=False):
         from astropy.table import Table
@@ -222,7 +456,7 @@ class DispatcherAPI(object):
                 _s = ''
                 for k, v in b.items():
 
-                    if 'query_name' == k or 'instrumet' == k and only_prod==False:
+                    if 'query_name' == k or 'instrument' == k and only_prod==False:
                         print('')
                         print('--------------')
                         _s += '%s' % k + ': ' + v
@@ -249,7 +483,7 @@ class DispatcherAPI(object):
     @safe_run
     def _decode_res_json(self,res):
         try:
-            if hasattr(res,'content'):
+            if hasattr(res, 'content'):
                 #_js = json.loads(res.content)
                 #fixed issue with python 3.5
                 _js = res.json()
@@ -307,7 +541,17 @@ class DispatcherAPI(object):
 
 
 
-    def get_product(self,product,instrument ,verbose=False,dry_run=False,product_type='Real', **kwargs):
+    def get_product(self, 
+                    product: str, 
+                    instrument: str,
+                    verbose: bool=False,
+                    dry_run: bool=False,
+                    product_type: str='Real', 
+                    **kwargs):
+        """
+        submit query, wait (if allowed by self.wait), decode output when found
+        """
+
         kwargs['instrument'] = instrument
         kwargs['product_type'] = product
         kwargs['query_type'] = product_type
@@ -319,7 +563,6 @@ class DispatcherAPI(object):
 
         res = requests.get("%s/api/par-names" % self.url, params=dict(instrument=instrument,product_type=product), cookies=self.cookies)
 
-        #print('1-.>',res.status_code,res.text)
         if res.status_code == 200:
 
             _ignore_list=['instrument','product_type','query_type','off_line','query_status','verbose','session_id','dry_run']
@@ -328,72 +571,74 @@ class DispatcherAPI(object):
             for _i in _ignore_list:
                 del validation_dict[_i]
 
-            #res = requests.get("%s/api/par-names" % self.url, params=dict(instrument=instrument,product_type=product), cookies=self.cookies)
-
             valid_names=self._decode_res_json(res)
             for n in validation_dict.keys():
                 if n not in valid_names:
-                    #raise RuntimeError('the parameter: %s'%n, 'is not among the valid ones:',valid_names)
-                    msg = '\n'
-                    msg+= '----------------------------------------------------------------------------\n'
-                    msg+='the parameter: %s '%n
-                    msg+='  is not among valid ones:'
-                    msg+= '\n'
-                    msg+='%s'%valid_names
-                    msg+= '\n'
-                    msg+='this will throw an error in a future version \n'
-                    msg+='and might breack the current request!\n '
-                    msg+= '----------------------------------------------------------------------------\n'
-                    warnings.warn(msg)
-                    #print('is not among valid ones:',valid_names)
-                    #print('this will throw an error in a future version')
+                    if self.strict_parameter_check:
+                        raise UserError(f'the parameter: {n} is not among the valid ones: {valid_names}'
+                                        f'(you can set {self}.strict_parameter_check=False, but beware!')
+                    else:
+                        msg = '\n'
+                        msg+= '----------------------------------------------------------------------------\n'
+                        msg+='the parameter: %s '%n
+                        msg+='  is not among valid ones:'
+                        msg+= '\n'
+                        msg+='%s'%valid_names
+                        msg+= '\n'
+                        msg+='this will throw an error in a future version \n'
+                        msg+='and might breack the current request!\n '
+                        msg+= '----------------------------------------------------------------------------\n'
+                        warnings.warn(msg)
         else:
             warnings.warn('parameter check not available on remote server, check carefully parameters name')
 
-        res = self.request(kwargs)
-        #print('2-.>',res.status_code,res.text)
+        ## >
+        self.request(kwargs)
+
+        if self.is_failed:
+            return self.process_failure()
+        elif self.is_ready:
+            res_json = self.response_json
+        elif not self.is_complete:
+            if self.wait:
+                raise RuntimeError("should have waited, but did not - programming error!")
+            else:
+                print(f"\n{C.BROWN}query not complete, please poll again later{C.NC}")
+                return
+        else:
+            raise RuntimeError("not failed, ready, but complete? programming error for client!")
+
+        ## <
+
         data = None
 
-        js=json.loads(res.content)
-        #print('js-->',type(js))
-        if dry_run  ==False:
-            #print ('-->npd', 'numpy_data_product' in res.json()['products'].keys())
-            #print ('-->ndpl',    'numpy_data_product_list'  in res.json()['products'].keys())
+        if not dry_run:
 
             data=[]
-            if  'numpy_data_product'  in res.json()['products'].keys():
-                #data= NumpyDataProduct.from_json(res.json()['products']['numpy_data_product'])
-                data.append(NumpyDataProduct.decode(js['products']['numpy_data_product']))
-            elif  'numpy_data_product_list'  in res.json()['products'].keys():
+            if  'numpy_data_product'  in res_json['products'].keys():
+                data.append(NumpyDataProduct.decode(res_json['products']['numpy_data_product']))
+            elif  'numpy_data_product_list'  in res_json['products'].keys():
 
-                #data= [NumpyDataProduct.from_json(d) for d in res.json()['products']['numpy_data_product_list']]
-                data.extend([NumpyDataProduct.decode(d) for d in js['products']['numpy_data_product_list']])
+                data.extend([NumpyDataProduct.decode(d) for d in res_json['products']['numpy_data_product_list']])
 
-            if 'binary_data_product_list' in res.json()['products'].keys():
-                data.extend([BinaryData().decode(d) for d in js['products']['binary_data_product_list']])
+            if 'binary_data_product_list' in res_json['products'].keys():
+                data.extend([BinaryData().decode(d) for d in res_json['products']['binary_data_product_list']])
 
-            if 'catalog' in res.json()['products'].keys():
-                data.append(ApiCatalog(js['products']['catalog'],name='dispatcher_catalog'))
+            if 'catalog' in res_json['products'].keys():
+                data.append(ApiCatalog(res_json['products']['catalog'],name='dispatcher_catalog'))
 
-            if 'astropy_table_product_ascii_list' in res.json()['products'].keys():
-                #print()
-                data.extend([ascii.read(table_text['ascii']) for table_text in js['products']['astropy_table_product_ascii_list']])
+            if 'astropy_table_product_ascii_list' in res_json['products'].keys():
+                data.extend([ascii.read(table_text['ascii']) for table_text in res_json['products']['astropy_table_product_ascii_list']])
 
-            if 'astropy_table_product_binary_list' in res.json()['products'].keys():
-                #for  table_binary in js['products']['astropy_table_product_binary_list']:
-                #    t_rec = base64.b64decode(_o_dict['binary'])
-                #    try:
-                #        t=data.extend([])
-                #    except:
-                #        t=data.extend([])
-                data.extend([ascii.read(table_binary) for table_binary in js['products']['astropy_table_product_binary_list']])
+            if 'astropy_table_product_binary_list' in res_json['products'].keys():
+                data.extend([ascii.read(table_binary) for table_binary in res_json['products']['astropy_table_product_binary_list']])
 
-            d=DataCollection(data,instrument=instrument,product=product)
+            d=DataCollection(data, instrument=instrument, product=product)
             for p in d._p_list:
                 if hasattr(p,'meta_data') is False and hasattr(p,'meta') is True:
                     p.meta_data = p.meta
         else:
-            self._decode_res_json(res.json()['products']['instrumet_parameters'])
+            self._decode_res_json(res.json()['products']['instrument_parameters'])
             d=None
 
         del(res)
