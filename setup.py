@@ -47,7 +47,6 @@ setup(name='oda_api',
       tests_require=[
             "pytest-xdist[psutil]"
         ],
-      install_req,
       python_requires='>=2.7',
       )
 
