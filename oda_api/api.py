@@ -377,7 +377,7 @@ class DispatcherAPI:
             print(f"- {C.BLUE}{k}: {v}{C.NC}")
 
     @safe_run
-    def request(self, parameters_dict, handle=None, url=None, wait=None):
+    def request(self, parameters_dict, handle=None, url=None, wait=None, quiet=True):
         """
         sets request parameters, optionally polls them in a loop
         """
@@ -401,7 +401,8 @@ class DispatcherAPI:
 
         self.set_instr(self.parameters_dict.get('instrument', self.instrument))
 
-        self.print_parameters()
+        if not quiet:
+            self.print_parameters()
 
         self.t0 = time.time()
 

@@ -58,7 +58,8 @@ def test_waiting(scw_kind, platform):
                 scw_list=pick_scw(kind=scw_kind),
             )
 
-@pytest.mark.parametrize("scw_kind,platform", [("failing", "staging-1-2"), ("any", "staging-1-2")])
+#@pytest.mark.parametrize("scw_kind,platform", [("failing", "staging-1-2"), ("any", "staging-1-2")])
+@pytest.mark.parametrize("scw_kind,platform", [("any", "staging-1-2")])
 def test_not_waiting(scw_kind, platform):
     from oda_api.api import DispatcherAPI, UserError
 
