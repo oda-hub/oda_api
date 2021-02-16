@@ -208,6 +208,7 @@ class DispatcherAPI:
         try:
             timeout = getattr(self, 'timeout', 120)
 
+            self.last_request_t0 = time.time()
             response = requests.get(
                             "%s/%s" % (self.url, self.run_analysis_handle), 
                             params=self.parameters_dict_payload,
@@ -218,6 +219,8 @@ class DispatcherAPI:
                                     },
                             timeout=timeout,
                        )
+            self.last_request_t_complete = time.time()
+
 
             response_json = self._decode_res_json(response)
 
@@ -540,6 +543,8 @@ class DispatcherAPI:
         return self._decode_res_json(res)
 
 
+    def report_last_request(self):
+        print(f"{C.GREY}last request completed in {self.last_request_t_complete - self.last_request_t0} seconds{C.NC}")
 
 
     def get_product(self, 
@@ -595,6 +600,7 @@ class DispatcherAPI:
 
         ## >
         self.request(kwargs)
+
 
         if self.is_failed:
             return self.process_failure()
