@@ -1,0 +1,30 @@
+name: Executing Notebook
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: integralsw/osa-python:auto-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Run Tutorial Notebooks
+      run: |
+        set +e
+        cat /init.sh
+        
+        source /etc/pyenvrc
+        which python
+        pip install papermill jupyter_client astroquery astropy oda_api nbconvert --upgrade --ignore-installed
+        export HOME_OVERRRIDE=/tmp/home
+        mkdir -pv /tmp/home
+        export
+        source /init.sh
+        papermill doc/source/user_guide/AsynchronousAPI.ipynb doc/source/user_guide/AsynchronousAPI-output.ipynb
+        jupyter nbconvert --to html doc/source/user_guide/AsynchronousAPI-output.ipynb
