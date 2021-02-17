@@ -320,7 +320,7 @@ class DispatcherAPI:
         return self.query_status in [ 'failed' ]
 
     @safe_run
-    def poll(self, verbose=False):
+    def poll(self, verbose=False, silent=False):
         """
         Updates status of query at the remote server
 
@@ -338,13 +338,16 @@ class DispatcherAPI:
         # <
 
         if self.response_json['query_status'] != self.query_status:
-            print(f"\n... query status {C.PURPLE}{self.query_status}{C.NC} => {C.PURPLE}{self.response_json['query_status']}{C.NC}")
+            if not silent:
+                print(f"\n... query status {C.PURPLE}{self.query_status}{C.NC} => {C.PURPLE}{self.response_json['query_status']}{C.NC}")
 
             self.query_status = self.response_json['query_status']
 
         if self.job_id is None:
             self.job_id = self.response_json['job_monitor']['job_id']
-            print(f"... assigned job id: {C.BROWN}{self.job_id}{C.NC}")
+
+            if not silent:
+                print(f"... assigned job id: {C.BROWN}{self.job_id}{C.NC}")
         else:
             if self.response_json['query_status'] != self.query_status:
                 raise RuntimeError("request returns job_id {res_json['query_status']} != known job_id {self.query_status}"
@@ -357,7 +360,8 @@ class DispatcherAPI:
             print(f"\033[31mquery COMPLETED with FAILURE (state {self.query_status})\033[0m")
 
         else:
-            self.show_progress()
+            if not silent:
+                self.show_progress()
         
     def show_progress(self):
         full_report_dict_list = self.response_json['job_monitor'].get('full_report_dict_list', [])
