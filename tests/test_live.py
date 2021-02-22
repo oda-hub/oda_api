@@ -37,11 +37,11 @@ def get_disp(wait=True, platform="staging-1-2"):
             )
     
 
-@pytest.mark.parametrize("scw_kind,platform", [("any", "staging-1-2"), ("any", "staging-1-3")])
+@pytest.mark.parametrize("scw_kind,platform", [("any", "staging-1-3")])
 def test_waiting(scw_kind, platform):
     from oda_api.api import UserError
 
-    disp = get_disp()
+    disp = get_disp(wait=True, platform=platform)
 
     with pytest.raises(UserError):
         disp.poll()

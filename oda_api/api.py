@@ -26,6 +26,7 @@ from . import custom_formatters
 from . import colors as C
 from itertools import cycle
 import re
+import numpy as np
 import traceback
 from jsonschema import validate as validate_json
 
@@ -201,6 +202,10 @@ class DispatcherAPI:
 
         return ""
 
+    def note_request_time(self):
+        self.request_stats = getattr(self, 'request_stats', [])
+        self.request_stats.append(self.last_request_t_complete-self.last_request_t0)
+
     def request_to_json(self, verbose=False):
         if verbose:
             print(f'- waiting for remote response (since {time.strftime("%Y-%m-%d %H:%M:%S")}), please wait for {self.url}/{self.run_analysis_handle}')
@@ -220,6 +225,8 @@ class DispatcherAPI:
                             timeout=timeout,
                        )
             self.last_request_t_complete = time.time()
+
+            self.note_request_time()
 
 
             response_json = self._decode_res_json(response)
@@ -366,11 +373,13 @@ class DispatcherAPI:
     def show_progress(self):
         full_report_dict_list = self.response_json['job_monitor'].get('full_report_dict_list', [])
 
-        info = 'status=%s job_id=%s in %d messages since %d seconds'%(
+        info = 'status=%s job_id=%s in %d messages since %d seconds (%.2g/%.2g)'%(
                     self.query_status, 
                     str(self.job_id)[:8], 
                     len(full_report_dict_list),
                     time.time() - self.t0,
+                    np.mean(self.request_stats),
+                    np.max(self.request_stats),
                 )
         
         custom_info = self.format_custom_progress(full_report_dict_list)
