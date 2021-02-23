@@ -326,12 +326,12 @@ class DispatcherAPI:
         return self.query_status not in [ 'not-prepared' ]
     
     @property
-    def is_ready(self):
-        return self.query_status in [ 'ready', 'done' ]
+    def is_done(self):
+        return self.query_status in [ 'done' ]
 
     @property
     def is_complete(self):
-        return self.query_status in [ 'ready', 'done', 'failed' ]
+        return self.query_status in [ 'done', 'failed' ]
 
     @property
     def is_failed(self):
@@ -635,7 +635,7 @@ class DispatcherAPI:
 
         if self.is_failed:
             return self.process_failure()
-        elif self.is_ready:
+        elif self.is_done:
             res_json = self.response_json
         elif not self.is_complete:
             if self.wait:
@@ -644,7 +644,7 @@ class DispatcherAPI:
                 self.logger.info(f"\n{C.BROWN}query not complete, please poll again later{C.NC}")
                 return
         else:
-            raise RuntimeError("not failed, ready, but complete? programming error for client!")
+            raise RuntimeError("not failed, not, but complete? programming error for client!")
 
         ## <
 
