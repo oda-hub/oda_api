@@ -456,7 +456,7 @@ class DispatcherAPI:
                 self.logger.info("query complete: terminating")
                 return
 
-            time.sleep(2)
+            time.sleep(1)
         
 
     def process_failure(self):
