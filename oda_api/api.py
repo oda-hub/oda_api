@@ -32,7 +32,7 @@ from jsonschema import validate as validate_json
 
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("oda_api.api")
 
 from .data_products import NumpyDataProduct, BinaryData, ApiCatalog
 
@@ -79,7 +79,7 @@ def safe_run(func):
             except UserError as e:
                 logger.exception("user error: %s", e)
                 raise
-            except Exception as e:
+            except ConnectionError as e:
                 message = ''
                 message += '\nunable to complete API call'
                 message += '\nin ' + str(func) + ' called with:'
@@ -112,14 +112,12 @@ class DispatcherAPI:
                  cookies=None,
                  protocol="https",
                  wait=True,
+                 n_max_tries=20,
                  ):
 
-
-        self.logger = logging.getLogger(repr(self))
-
         if host is not None:
-            self.logger.warning("please use 'url' instead of 'host' while providing dispatcher URL")
-            self.logger.warning("for now, we will adopt host, but in the near future it will not be done")
+            logger.warning("please use 'url' instead of 'host' while providing dispatcher URL")
+            logger.warning("for now, we will adopt host, but in the near future it will not be done")
             self.url = host
 
             if host.startswith('http'):
@@ -133,6 +131,8 @@ class DispatcherAPI:
                     raise UserError('protocol must be either http or https')
         else:
             self.url = url
+        
+        self.logger = logging.getLogger(repr(self))
 
         self.run_analysis_handle = run_analysis_handle
 
@@ -143,7 +143,7 @@ class DispatcherAPI:
         self.cookies=cookies
         self.set_instr(instrument)
 
-        self.n_max_tries = 20
+        self.n_max_tries = n_max_tries
         self.retry_sleep_s = 5
 
 
@@ -172,6 +172,16 @@ class DispatcherAPI:
                     }
                 }
 
+    @property
+    def print_progress_bar(self):
+        return getattr(self, '_print_progress_bar', True)
+
+    @print_progress_bar.setter
+    def print_progress_bar(self, value):
+        # assert
+        self._print_progress_bar = True
+
+
     def set_custom_progress_formatter(self, F):
         self.custom_progress_formatter = F
 
@@ -191,8 +201,9 @@ class DispatcherAPI:
         self.instrument = instrument
         self.custom_progress_formatter = custom_formatters.find_custom_formatter(instrument)
 
-    def _progress_bar(self,info=''):
-        print(f"{C.GREY}\r {next(self._progress_iter)} the job is working remotely, please wait {info}{C.NC}", end='')
+    def _progress_bar(self, info=''):
+        if self.print_progress_bar:
+            print(f"{C.GREY}\r {next(self._progress_iter)} the job is working remotely, please wait {info}{C.NC}", end='')
 
     def format_custom_progress(self, full_report_dict_list):
         F = getattr(self, 'custom_progress_formatter', None)
@@ -207,7 +218,7 @@ class DispatcherAPI:
         self.request_stats.append(self.last_request_t_complete-self.last_request_t0)
 
     def request_to_json(self, verbose=False):
-        if verbose:
+        if verbose and self.print_progress_bar:
             print(f'- waiting for remote response (since {time.strftime("%Y-%m-%d %H:%M:%S")}), please wait for {self.url}/{self.run_analysis_handle}')
 
         try:
@@ -235,8 +246,8 @@ class DispatcherAPI:
 
             return response_json
         except json.decoder.JSONDecodeError as e:
-            print(f"{C.RED}{C.BOLD}unable to decode json from response:{C.NC}")
-            print(f"{C.RED}{response.text}{C.NC}")
+            self.logger.error(f"{C.RED}{C.BOLD}unable to decode json from response:{C.NC}")
+            self.logger.error(f"{C.RED}{response.text}{C.NC}")
             raise
 
 
@@ -344,31 +355,39 @@ class DispatcherAPI:
         self.response_json = self.request_to_json(verbose=verbose)
         # <
 
-        if self.response_json['query_status'] != self.query_status:
-            if not silent:
-                print(f"\n... query status {C.PURPLE}{self.query_status}{C.NC} => {C.PURPLE}{self.response_json['query_status']}{C.NC}")
+        if 'query_status' not in self.response_json:
+            raise RuntimeError("request json does not contain query_status: %s", json.dumps(self.response_json, indent=4))
 
-            self.query_status = self.response_json['query_status']
+        if self.response_json.get('query_status') != self.query_status:
+            if not silent:
+                self.logger.info(f"\n... query status {C.PURPLE}{self.query_status}{C.NC} => {C.PURPLE}{self.response_json.get('query_status')}{C.NC}")
+
+            self.query_status = self.response_json.get('query_status')
 
         if self.job_id is None:
             self.job_id = self.response_json['job_monitor']['job_id']
 
             if not silent:
-                print(f"... assigned job id: {C.BROWN}{self.job_id}{C.NC}")
+                self.logger.info(f"... assigned job id: {C.BROWN}{self.job_id}{C.NC}")
         else:
             if self.response_json['query_status'] != self.query_status:
                 raise RuntimeError("request returns job_id {res_json['query_status']} != known job_id {self.query_status}"
                                    "this should not happen! Server must be misbehaving, or client forgot correct job id")
 
         if self.query_status == 'done':
-            print(f"\033[32mquery COMPLETED SUCCESSFULLY (state {self.query_status})\033[0m")
+            self.logger.info(f"\033[32mquery COMPLETED SUCCESSFULLY (state {self.query_status})\033[0m")
 
         elif self.query_status == 'failed':
-            print(f"\033[31mquery COMPLETED with FAILURE (state {self.query_status})\033[0m")
+            self.logger.info(f"\033[31mquery COMPLETED with FAILURE (state {self.query_status})\033[0m")
 
         else:
             if not silent:
                 self.show_progress()
+
+        if self.is_complete:
+            # TODO: something raising here does not help
+            self.logger.debug("poll returing data: complete")
+            return DataCollection.from_response_json(self.response_json, self.instrument, self.product)
         
     def show_progress(self):
         full_report_dict_list = self.response_json['job_monitor'].get('full_report_dict_list', [])
@@ -390,7 +409,7 @@ class DispatcherAPI:
 
     def print_parameters(self):
         for k, v in self.parameters_dict.items():
-            print(f"- {C.BLUE}{k}: {v}{C.NC}")
+            self.logger.info(f"- {C.BLUE}{k}: {v}{C.NC}")
 
     @safe_run
     def request(self, parameters_dict, handle=None, url=None, wait=None, quiet=True):
@@ -413,7 +432,7 @@ class DispatcherAPI:
 
 
         if 'scw_list' in self.parameters_dict.keys():
-            print(self.parameters_dict['scw_list'])
+            self.logger.debug(self.parameters_dict['scw_list'])
 
         self.set_instr(self.parameters_dict.get('instrument', self.instrument))
 
@@ -429,11 +448,13 @@ class DispatcherAPI:
 
             verbose = False
 
-            if self.query_status in ['done', 'failed']:
-                return
-
             if not self.wait:
+                self.logger.info("non-waiting dispatcher: terminating")
                 return 
+            
+            if self.is_complete:
+                self.logger.info("query complete: terminating")
+                return
 
             time.sleep(2)
         
@@ -443,39 +464,34 @@ class DispatcherAPI:
             self.failure_report(self.response_json)
 
         if self.query_status != 'failed':
-            print('query done succesfully!')
+            self.logger('query done succesfully!')
         else:
             raise RemoteException(debug_message=self.response_json['exit_status']['error_message'])
 
 
     def failure_report(self, res_json):
-        print('query failed!')
-        print('Remote server message:->', res_json['exit_status']['message'])
-        print('Remote server error_message->', res_json['exit_status']['error_message'])
-        print('Remote server debug_message->', res_json['exit_status']['debug_message'])
+        self.logger.error('query failed!')
+        self.logger.error('Remote server message:-> %s', res_json['exit_status']['message'])
+        self.logger.error('Remote server error_message-> %s', res_json['exit_status']['error_message'])
+        self.logger.error('Remote server debug_message-> %s', res_json['exit_status']['debug_message'])
 
     def dig_list(self,b,only_prod=False):
         from astropy.table import Table
-        #print ('start',type(b))
         if isinstance(b, (set, tuple, list)):
             for c in b:
                 self.dig_list(c)
         else:
-            #print('not list',type(b))
             try:
                 b = ast.literal_eval(str(b))
-                #print('b literal eval',(type(b)))
             except:
-                #print ('b exception' ,b,type(b))
                 return str(b)
             if isinstance(b, dict):
-                #print('dict',b)
                 _s = ''
                 for k, v in b.items():
 
                     if 'query_name' == k or 'instrument' == k and only_prod==False:
-                        print('')
-                        print('--------------')
+                        self.logger.info('')
+                        self.logger.info('--------------')
                         _s += '%s' % k + ': ' + v
                     if 'product_name' == k :
                         _s += ' %s' % k + ': ' + v
@@ -488,13 +504,11 @@ class DispatcherAPI:
                         else:
                             _s += 'None,'
                         _s += ' '
-                #if 'prod_dict' in b.keys():
-                #    print ('product dict',b)
 
                 if _s != '':
-                    print(_s)
+                    self.logger.info(_s)
             else:
-                #print('no dict', type(b))
+                self.logger.debug('no dict', type(b))
                 self.dig_list(b)
 
     @safe_run
@@ -543,10 +557,10 @@ class DispatcherAPI:
 
     @safe_run
     def get_product_description(self,instrument,product_name):
-        res = requests.get("%s/api/meta-data" % self.url, params=dict(instrument=instrument,product_type=product_name),cookies=self.cookies)
+        res = requests.get("%s/api/meta-data" % self.url, params=dict(instrument=instrument, product_type=product_name), cookies=self.cookies)
 
-        print('--------------')
-        print ('parameters for  product',product_name,'and instrument',instrument)
+        self.logger.info('--------------')
+        self.logger.info('parameters for  product',product_name,'and instrument',instrument)
         self._decode_res_json(res)
 
     @safe_run
@@ -557,7 +571,7 @@ class DispatcherAPI:
 
 
     def report_last_request(self):
-        print(f"{C.GREY}last request completed in {self.last_request_t_complete - self.last_request_t0} seconds{C.NC}")
+        self.logger.info(f"{C.GREY}last request completed in {self.last_request_t_complete - self.last_request_t0} seconds{C.NC}")
 
 
     def get_product(self, 
@@ -570,6 +584,10 @@ class DispatcherAPI:
         """
         submit query, wait (if allowed by self.wait), decode output when found
         """
+
+        # TODO: it's confusing when and where these are passed
+        self.product = product
+        self.instrument = instrument
 
         kwargs['instrument'] = instrument
         kwargs['product_type'] = product
@@ -623,7 +641,7 @@ class DispatcherAPI:
             if self.wait:
                 raise RuntimeError("should have waited, but did not - programming error!")
             else:
-                print(f"\n{C.BROWN}query not complete, please poll again later{C.NC}")
+                self.logger.info(f"\n{C.BROWN}query not complete, please poll again later{C.NC}")
                 return
         else:
             raise RuntimeError("not failed, ready, but complete? programming error for client!")
@@ -633,30 +651,8 @@ class DispatcherAPI:
         data = None
 
         if not dry_run:
+            d = DataCollection.from_response_json(res_json, instrument, product)
 
-            data=[]
-            if  'numpy_data_product'  in res_json['products'].keys():
-                data.append(NumpyDataProduct.decode(res_json['products']['numpy_data_product']))
-            elif  'numpy_data_product_list'  in res_json['products'].keys():
-
-                data.extend([NumpyDataProduct.decode(d) for d in res_json['products']['numpy_data_product_list']])
-
-            if 'binary_data_product_list' in res_json['products'].keys():
-                data.extend([BinaryData().decode(d) for d in res_json['products']['binary_data_product_list']])
-
-            if 'catalog' in res_json['products'].keys():
-                data.append(ApiCatalog(res_json['products']['catalog'],name='dispatcher_catalog'))
-
-            if 'astropy_table_product_ascii_list' in res_json['products'].keys():
-                data.extend([ascii.read(table_text['ascii']) for table_text in res_json['products']['astropy_table_product_ascii_list']])
-
-            if 'astropy_table_product_binary_list' in res_json['products'].keys():
-                data.extend([ascii.read(table_binary) for table_binary in res_json['products']['astropy_table_product_binary_list']])
-
-            d=DataCollection(data, instrument=instrument, product=product)
-            for p in d._p_list:
-                if hasattr(p,'meta_data') is False and hasattr(p,'meta') is True:
-                    p.meta_data = p.meta
         else:
             self._decode_res_json(res.json()['products']['instrument_parameters'])
             d=None
@@ -705,11 +701,14 @@ class DispatcherAPI:
         return _cmd_
 
 
+    def __repr__(self):
+        return f"[ {self.__class__.__name__}: {self.url} ]"
+
 
 class DataCollection(object):
 
 
-    def __init__(self,data_list,add_meta_to_name=['src_name','product'],instrument=None,product=None):
+    def __init__(self, data_list, add_meta_to_name=['src_name','product'], instrument=None, product=None):
         self._p_list = []
         self._n_list = []
         for ID,data in enumerate(data_list):
@@ -726,13 +725,14 @@ class DataCollection(object):
                 else:
                     name = 'prod'
 
-            name='%s_%d'%(name,ID)
+            name = '%s_%d'%(name,ID)
 
             name,var_name = self._build_prod_name(data, name, add_meta_to_name)
             setattr(self, var_name, data)
 
             self._p_list.append(data)
             self._n_list.append(name)
+
 
     def show(self):
         for ID, prod_name in enumerate(self._n_list):
@@ -779,6 +779,34 @@ class DataCollection(object):
 
         return dc
 
+
+    @classmethod
+    def from_response_json(cls, res_json, instrument, product):
+        data = []
+        if  'numpy_data_product'  in res_json['products'].keys():
+            data.append(NumpyDataProduct.decode(res_json['products']['numpy_data_product']))
+        elif  'numpy_data_product_list'  in res_json['products'].keys():
+
+            data.extend([NumpyDataProduct.decode(d) for d in res_json['products']['numpy_data_product_list']])
+
+        if 'binary_data_product_list' in res_json['products'].keys():
+            data.extend([BinaryData().decode(d) for d in res_json['products']['binary_data_product_list']])
+
+        if 'catalog' in res_json['products'].keys():
+            data.append(ApiCatalog(res_json['products']['catalog'],name='dispatcher_catalog'))
+
+        if 'astropy_table_product_ascii_list' in res_json['products'].keys():
+            data.extend([ascii.read(table_text['ascii']) for table_text in res_json['products']['astropy_table_product_ascii_list']])
+
+        if 'astropy_table_product_binary_list' in res_json['products'].keys():
+            data.extend([ascii.read(table_binary) for table_binary in res_json['products']['astropy_table_product_binary_list']])
+
+        d = cls(data, instrument=instrument, product=product)
+        for p in d._p_list:
+            if hasattr(p,'meta_data') is False and hasattr(p,'meta') is True:
+                p.meta_data = p.meta
+
+        return d
 
 def clean_var_name(s):
     s = s.replace('-', 'm')
