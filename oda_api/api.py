@@ -50,7 +50,7 @@ class NoTraceBackWithLineNumber(Exception):
         except AttributeError:
             ln = inspect.currentframe().f_back.f_lineno
         self.args = "{0.__name__} (line {1}): {2}".format(type(self), ln, msg),
-        sys.exit(self)
+        #sys.exit(self)
 
 
 class UserError(Exception):
@@ -61,8 +61,19 @@ class RemoteException(NoTraceBackWithLineNumber):
 
     def __init__(self, message='Remote analysis exception', debug_message=''):
         super(RemoteException, self).__init__(message)
-        self.message=message
-        self.debug_message=debug_message
+        self.message = message
+        self.debug_message = debug_message
+
+    def __repr__(self):
+        return f"RemoteException: {self.message}, {self.debug_message}"
+
+
+class FailedToFindAnyUsefulResults(RemoteException):
+    pass
+
+exception_by_message = {
+            'failed: get dataserver products ': FailedToFindAnyUsefulResults
+        }
 
 
 def safe_run(func):
@@ -98,7 +109,9 @@ def safe_run(func):
                 if n_tries_left > 0:
                     logger.warning("problem in API call, %i tries left:\n%s\n sleeping %i seconds until retry", n_tries_left, message, self.retry_sleep_s)
                 else:
-                    raise RemoteException(message=message)
+                    raise exception_by_message.get(debug_message, RemoteException)(
+                            message=message
+                        )
 
     return func_wrapper
 
@@ -466,7 +479,12 @@ class DispatcherAPI:
         if self.query_status != 'failed':
             self.logger('query done succesfully!')
         else:
-            raise RemoteException(debug_message=self.response_json['exit_status']['error_message'])
+            logger.error("exception, message: \"%s\"", self.response_json['exit_status']['message'])
+            logger.error("have exception message: keys \"%s\"", exception_by_message.keys())
+            raise exception_by_message.get(self.response_json['exit_status']['message'], RemoteException)(
+                        message=self.response_json['exit_status']['message'],
+                        debug_message=self.response_json['exit_status']['error_message']
+                    )
 
 
     def failure_report(self, res_json):
