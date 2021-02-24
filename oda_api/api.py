@@ -79,7 +79,7 @@ exception_by_message = {
 def safe_run(func):
 
     def func_wrapper(*args, **kwargs):
-        logger = logging.getLogger(func.__name__)
+        logger = logging.getLogger("oda_api.api." + func.__name__)
 
         self = args[0] # because it really is
 
@@ -145,7 +145,11 @@ class DispatcherAPI:
         else:
             self.url = url
         
-        self.logger = logging.getLogger(repr(self))
+        self.logger = logger.getChild(self.__class__.__name__.lower())
+        self.progress_logger = self.logger.getChild("progress")
+
+
+        self._carriage_return_progress = False 
 
         self.run_analysis_handle = run_analysis_handle
 
@@ -185,15 +189,6 @@ class DispatcherAPI:
                     }
                 }
 
-    @property
-    def print_progress_bar(self):
-        return getattr(self, '_print_progress_bar', True)
-
-    @print_progress_bar.setter
-    def print_progress_bar(self, value):
-        # assert
-        self._print_progress_bar = True
-
 
     def set_custom_progress_formatter(self, F):
         self.custom_progress_formatter = F
@@ -214,9 +209,16 @@ class DispatcherAPI:
         self.instrument = instrument
         self.custom_progress_formatter = custom_formatters.find_custom_formatter(instrument)
 
+
     def _progress_bar(self, info=''):
-        if self.print_progress_bar:
-            print(f"{C.GREY}\r {next(self._progress_iter)} the job is working remotely, please wait {info}{C.NC}", end='')
+        if self._carriage_return_progress:
+            c_r = '\x1b[80D' + '\x1b[K' # TODO: this does not really work now
+        else:
+            c_r = ''
+
+        self.progress_logger.info(f"{c_r}{C.GREY}\r {next(self._progress_iter)} the job is working remotely, please wait {info}{C.NC}")
+
+
 
     def format_custom_progress(self, full_report_dict_list):
         F = getattr(self, 'custom_progress_formatter', None)
@@ -231,8 +233,7 @@ class DispatcherAPI:
         self.request_stats.append(self.last_request_t_complete-self.last_request_t0)
 
     def request_to_json(self, verbose=False):
-        if verbose and self.print_progress_bar:
-            print(f'- waiting for remote response (since {time.strftime("%Y-%m-%d %H:%M:%S")}), please wait for {self.url}/{self.run_analysis_handle}')
+        self.progress_logger.info(f'- waiting for remote response (since {time.strftime("%Y-%m-%d %H:%M:%S")}), please wait for {self.url}/{self.run_analysis_handle}')
 
         try:
             timeout = getattr(self, 'timeout', 120)
@@ -351,7 +352,7 @@ class DispatcherAPI:
         return self.query_status in [ 'failed' ]
 
     @safe_run
-    def poll(self, verbose=False, silent=False):
+    def poll(self, verbose=None, silent=None):
         """
         Updates status of query at the remote server
 
@@ -360,28 +361,29 @@ class DispatcherAPI:
         Relies on self.query_status and self.job_id, which is created as necessary and submitted in paylad
         """
 
+        if verbose is not None or silent is not None:
+            self.logger.warning("please set verbosity with logging control, see class loggers")
+
         if not self.is_prepared:
             raise UserError(f"can not poll query before parameters are set with {self}.request")
 
 
         # >
-        self.response_json = self.request_to_json(verbose=verbose)
+        self.response_json = self.request_to_json()
         # <
 
         if 'query_status' not in self.response_json:
             raise RuntimeError("request json does not contain query_status: %s", json.dumps(self.response_json, indent=4))
 
         if self.response_json.get('query_status') != self.query_status:
-            if not silent:
-                self.logger.info(f"\n... query status {C.PURPLE}{self.query_status}{C.NC} => {C.PURPLE}{self.response_json.get('query_status')}{C.NC}")
+            self.logger.info(f"\n... query status {C.PURPLE}{self.query_status}{C.NC} => {C.PURPLE}{self.response_json.get('query_status')}{C.NC}")
 
             self.query_status = self.response_json.get('query_status')
 
         if self.job_id is None:
             self.job_id = self.response_json['job_monitor']['job_id']
 
-            if not silent:
-                self.logger.info(f"... assigned job id: {C.BROWN}{self.job_id}{C.NC}")
+            self.logger.info(f"... assigned job id: {C.BROWN}{self.job_id}{C.NC}")
         else:
             if self.response_json['query_status'] != self.query_status:
                 raise RuntimeError("request returns job_id {res_json['query_status']} != known job_id {self.query_status}"
@@ -394,8 +396,7 @@ class DispatcherAPI:
             self.logger.info(f"\033[31mquery COMPLETED with FAILURE (state {self.query_status})\033[0m")
 
         else:
-            if not silent:
-                self.show_progress()
+            self.show_progress()
 
         if self.is_complete:
             # TODO: something raising here does not help
@@ -455,11 +456,8 @@ class DispatcherAPI:
         self.t0 = time.time()
 
 
-        verbose = True
         while True:
-            self.poll(verbose)
-
-            verbose = False
+            self.poll()
 
             if not self.wait:
                 self.logger.info("non-waiting dispatcher: terminating")
@@ -543,7 +541,6 @@ class DispatcherAPI:
             self.dig_list(res)
             return res
         except Exception as e:
-            #print (json.loads(res.text))
 
             msg='remote/connection error, server response is not valid \n'
             msg += 'possible causes: \n'
@@ -595,7 +592,7 @@ class DispatcherAPI:
     def get_product(self, 
                     product: str, 
                     instrument: str,
-                    verbose: bool=False,
+                    verbose=None,
                     dry_run: bool=False,
                     product_type: str='Real', 
                     **kwargs):
