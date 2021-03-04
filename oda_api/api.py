@@ -568,7 +568,7 @@ class DispatcherAPI:
             instrument=self.instrument
 
         res=requests.get("%s/api/meta-data"%self.url,params=dict(instrument=instrument),cookies=self.cookies)
-        self._decode_res_json(res)
+        return self._decode_res_json(res)
 
     @safe_run
     def get_product_description(self,instrument,product_name):
@@ -576,7 +576,7 @@ class DispatcherAPI:
 
         self.logger.info('--------------')
         self.logger.info('parameters for  product',product_name,'and instrument',instrument)
-        self._decode_res_json(res)
+        return self._decode_res_json(res)
 
     @safe_run
     def get_instruments_list(self):
