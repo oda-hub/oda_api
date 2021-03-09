@@ -3,6 +3,7 @@ import time
 import random
 import requests
 import pytest
+import contextlib
 
 def get_platform_dispatcher(platform="production-1-2"):
     import odakb.sparql as S
@@ -14,15 +15,6 @@ def get_platform_dispatcher(platform="production-1-2"):
         return list(locations.keys())[0]
     except:
         return list(locations)[0]
-
-def test_instruments():
-    from oda_api.api import DispatcherAPI
-    disp=DispatcherAPI(
-                host=get_platform_dispatcher(),
-                instrument="mock",
-            )
-    assert disp.get_instruments_list() == ['isgri', 'jemx', 'polar', 'spi_acs']
-
 
 def pick_scw(kind="any"):
     if kind == "crab":
@@ -55,7 +47,14 @@ def validate_data(data, scw_kind):
 
         assert len(t) == 1
 
-import contextlib
+def test_instruments():
+    from oda_api.api import DispatcherAPI
+    disp=DispatcherAPI(
+                host=get_platform_dispatcher(),
+                instrument="mock",
+            )
+    assert disp.get_instruments_list() == ['isgri', 'jemx', 'polar', 'spi_acs']
+
 
 @contextlib.contextmanager
 def raises_if_failing(scw_kind, exception):
@@ -71,6 +70,7 @@ def raises_if_failing(scw_kind, exception):
         yield
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("platform", ["staging-1-3", "staging-1-2", "production-1-2"])
 @pytest.mark.parametrize("scw_kind", ["crab", "any", "failing"])
 def test_waiting(scw_kind, platform):
@@ -99,7 +99,7 @@ def test_waiting(scw_kind, platform):
 
         validate_data(data, scw_kind)
 
-
+@pytest.mark.slow
 @pytest.mark.parametrize("platform", ["staging-1-3", "staging-1-2", "production-1-2"])
 @pytest.mark.parametrize("scw_kind", ["crab", "any", "failing"])
 def test_not_waiting(scw_kind, platform):
