@@ -23,6 +23,21 @@ def test_instruments():
             )
     assert disp.get_instruments_list() == ['isgri', 'jemx', 'polar', 'spi_acs']
 
+def test_instrument_description_not_null():
+    from oda_api.api import DispatcherAPI
+    disp=DispatcherAPI(
+                host=get_platform_dispatcher(),
+                instrument="mock",
+            )
+    assert disp.get_instrument_description('isgri') != None
+    
+def test_product_description_not_null():
+    from oda_api.api import DispatcherAPI
+    disp=DispatcherAPI(
+                host=get_platform_dispatcher(),
+                instrument="mock",
+            )
+    assert disp.get_product_description('isgri', 'isgri_image') != None
 
 def pick_scw(kind="any"):
     if kind == "crab":
