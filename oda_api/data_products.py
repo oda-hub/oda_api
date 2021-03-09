@@ -37,7 +37,7 @@ except ImportError:
     from io import StringIO
 
 
-__all__=['sanitize_encoded','_chekc_enc_data','BinaryData','NumpyDataUnit','NumpyDataProduct','ApiCatalog','AstropyTable']
+__all__=['sanitize_encoded','_chekc_enc_data','BinaryData','NumpyDataUnit','NumpyDataProduct','ApiCatalog','ODAAstropyTable']
 
 
 def sanitize_encoded(d):
