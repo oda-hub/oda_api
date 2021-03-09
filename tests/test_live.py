@@ -4,7 +4,7 @@ import random
 import requests
 import pytest
 
-def get_platform_dispatcher(platform="staging-1-2"):
+def get_platform_dispatcher(platform="production-1-2"):
     import odakb.sparql as S
 
     R = S.select('?p a oda:platform; oda:location ?loc . ?p ?x ?y', '?p ?x ?y', tojdict=True)
