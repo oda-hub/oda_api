@@ -37,4 +37,5 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
-        python -m pytest tests -k production-1-2 -m 'not slow' # this will currently not run any real requests
+        python -m pytest tests -m 'not slow' # this will currently not run any real requests
+        echo "should maybe also run this: 'python -m pytest tests -k production-1-2'"
