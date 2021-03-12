@@ -23,7 +23,7 @@ jobs:
         which python
         pip install --upgrade pip
         pip install wheel
-        pip install papermill jupyter_client astropy oda-api>=1.1.1 nbconvert --upgrade --ignore-installed
+        pip install papermill jupyter_client astropy oda-api>=1.1.1 nbconvert scipy --upgrade --ignore-installed
         pip install 'git+https://github.com/integral-observatory/astroquery.git#egg=astroquery'
         export HOME_OVERRRIDE=/tmp/home
         mkdir -pv /tmp/home
