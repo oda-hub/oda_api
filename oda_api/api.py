@@ -109,9 +109,9 @@ def safe_run(func):
                 if n_tries_left > 0:
                     logger.warning("problem in API call, %i tries left:\n%s\n sleeping %i seconds until retry", n_tries_left, message, self.retry_sleep_s)
                 else:
-                    raise exception_by_message.get(debug_message, RemoteException)(
-                            message=message
-                        )
+                    raise RemoteException(
+                              message=message
+                          )
 
     return func_wrapper
 

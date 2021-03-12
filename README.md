@@ -5,6 +5,7 @@ oda_api
 ![Upload Python Package](https://github.com/cdcihub/oda_api/workflows/Upload%20Python%20Package/badge.svg)
 ![Prose Linting](https://github.com/volodymyrss/integral-isgri-rate-meaning/workflows/Prose%20Linting/badge.svg)
 ![Executing Notebook](https://github.com/volodymyrss/integral-isgri-rate-meaning/workflows/Executing%20Notebook/badge.svg)
+[![Python package](https://github.com/oda-hub/oda_api/actions/workflows/python-package.yml/badge.svg)](https://github.com/oda-hub/oda_api/actions/workflows/python-package.yml)
 
 *API for cdci_data_analysis*
 
