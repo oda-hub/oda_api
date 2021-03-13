@@ -55,6 +55,21 @@ def test_instruments():
             )
     assert disp.get_instruments_list() == ['isgri', 'jemx', 'polar', 'spi_acs']
 
+def test_instrument_description_not_null():
+    from oda_api.api import DispatcherAPI
+    disp=DispatcherAPI(
+                host=get_platform_dispatcher(),
+                instrument="mock",
+            )
+    assert disp.get_instrument_description('isgri') is not None
+    
+def test_product_description_not_null():
+    from oda_api.api import DispatcherAPI
+    disp=DispatcherAPI(
+                host=get_platform_dispatcher(),
+                instrument="mock",
+            )
+    assert disp.get_product_description('isgri', 'isgri_image') is not None
 
 @contextlib.contextmanager
 def raises_if_failing(scw_kind, exception):
