@@ -31,3 +31,9 @@ jobs:
         source /init.sh
         papermill doc/source/user_guide/AsynchronousAPI.ipynb doc/source/user_guide/AsynchronousAPI-output.ipynb
         jupyter nbconvert --to html doc/source/user_guide/AsynchronousAPI-output.ipynb
+        
+    - uses: actions/upload-artifact@v2
+      with:
+        name: AsynchronousAPI-output.html
+        path: oc/source/user_guide/AsynchronousAPI-output.html
+
