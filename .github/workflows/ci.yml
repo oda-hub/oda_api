@@ -35,5 +35,5 @@ jobs:
     - uses: actions/upload-artifact@v2
       with:
         name: AsynchronousAPI-output.html
-        path: oc/source/user_guide/AsynchronousAPI-output.html
+        path: doc/source/user_guide/AsynchronousAPI-output.html
 
