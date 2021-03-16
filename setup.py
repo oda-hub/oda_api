@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 
 from __future__ import absolute_import, division, print_function
 
@@ -7,19 +8,16 @@ from builtins import (bytes, str, open, super, range,
 __author__ = 'andrea tramacere'
 
 
-
-
-#!/usr/bin/env python
-
 from setuptools import setup, find_packages
-import  glob
+import glob
 import json
 
 
 f = open("./requirements.txt",'r')
-install_req=f.readlines()
+install_req = f.readlines()
 f.close()
 
+print("install requirements from requirements.txt:", install_req)
 
 packs=find_packages()
 
