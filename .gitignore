@@ -28,3 +28,4 @@ CL.txt
 #!/doc/source/user_guide/TestAPI_files
 *.gpg
 data
+.ipynb_checkpoints

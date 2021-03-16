@@ -4,6 +4,7 @@ import random
 import requests
 import pytest
 import logging
+import contextlib
 
 
 # this can be set by pytest ... --log-cli-level DEBUG
@@ -11,7 +12,7 @@ logging.getLogger('oda_api').setLevel(logging.DEBUG)
 logging.getLogger('oda_api').addHandler(logging.StreamHandler())
 
 
-def get_platform_dispatcher(platform="staging-1-2"):
+def get_platform_dispatcher(platform="production-1-2"):
     import odakb.sparql as S
 
     R = S.select('?p a oda:platform; oda:location ?loc . ?p ?x ?y', '?p ?x ?y', tojdict=True)
@@ -21,15 +22,6 @@ def get_platform_dispatcher(platform="staging-1-2"):
         return list(locations.keys())[0]
     except:
         return list(locations)[0]
-
-def test_instruments():
-    from oda_api.api import DispatcherAPI
-    disp=DispatcherAPI(
-                host=get_platform_dispatcher(),
-                instrument="mock",
-            )
-    assert disp.get_instruments_list() == ['isgri', 'jemx', 'polar', 'spi_acs']
-
 
 def pick_scw(kind="any"):
     if kind == "crab":
@@ -62,7 +54,29 @@ def validate_data(data, scw_kind):
 
         assert len(t) == 1
 
-import contextlib
+def test_instruments():
+    from oda_api.api import DispatcherAPI
+    disp=DispatcherAPI(
+                host=get_platform_dispatcher(),
+                instrument="mock",
+            )
+    assert disp.get_instruments_list() == ['isgri', 'jemx', 'polar', 'spi_acs']
+
+def test_instrument_description_not_null():
+    from oda_api.api import DispatcherAPI
+    disp=DispatcherAPI(
+                host=get_platform_dispatcher(),
+                instrument="mock",
+            )
+    assert disp.get_instrument_description('isgri') is not None
+    
+def test_product_description_not_null():
+    from oda_api.api import DispatcherAPI
+    disp=DispatcherAPI(
+                host=get_platform_dispatcher(),
+                instrument="mock",
+            )
+    assert disp.get_product_description('isgri', 'isgri_image') is not None
 
 @contextlib.contextmanager
 def raises_if_failing(scw_kind, exception):
@@ -78,6 +92,7 @@ def raises_if_failing(scw_kind, exception):
         yield
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("platform", ["staging-1-3", "staging-1-2", "production-1-2"])
 @pytest.mark.parametrize("scw_kind", ["crab", "any", "failing"])
 def test_waiting(scw_kind, platform):
@@ -106,7 +121,7 @@ def test_waiting(scw_kind, platform):
 
         validate_data(data, scw_kind)
 
-
+@pytest.mark.slow
 @pytest.mark.parametrize("platform", ["staging-1-3", "staging-1-2", "production-1-2"])
 @pytest.mark.parametrize("scw_kind", ["crab", "any", "failing"])
 def test_not_waiting(scw_kind, platform):

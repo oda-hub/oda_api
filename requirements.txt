@@ -5,3 +5,4 @@ json_tricks
 matplotlib
 numpy
 jsonschema
+git+https://github.com/integral-observatory/astroquery.git#egg=astroquery

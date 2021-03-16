@@ -109,9 +109,9 @@ def safe_run(func):
                 if n_tries_left > 0:
                     logger.warning("problem in API call, %i tries left:\n%s\n sleeping %i seconds until retry", n_tries_left, message, self.retry_sleep_s)
                 else:
-                    raise exception_by_message.get(debug_message, RemoteException)(
-                            message=message
-                        )
+                    raise RemoteException(
+                              message=message
+                          )
 
     return func_wrapper
 
@@ -540,7 +540,7 @@ class DispatcherAPI:
                 if _s != '':
                     self.logger.info(_s)
             else:
-                self.logger.debug('no dict', type(b))
+                self.logger.debug('unable to dig list, instance not a dict by %s; object was %s', type(b), b)
                 self.dig_list(b)
 
     @safe_run
@@ -584,15 +584,15 @@ class DispatcherAPI:
             instrument=self.instrument
 
         res=requests.get("%s/api/meta-data"%self.url,params=dict(instrument=instrument),cookies=self.cookies)
-        self._decode_res_json(res)
+        return self._decode_res_json(res)
 
     @safe_run
     def get_product_description(self,instrument,product_name):
         res = requests.get("%s/api/meta-data" % self.url, params=dict(instrument=instrument, product_type=product_name), cookies=self.cookies)
 
         self.logger.info('--------------')
-        self.logger.info('parameters for  product',product_name,'and instrument',instrument)
-        self._decode_res_json(res)
+        self.logger.info('parameters for product %s and instrument %s', product_name, instrument)
+        return self._decode_res_json(res)
 
     @safe_run
     def get_instruments_list(self):
