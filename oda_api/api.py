@@ -362,7 +362,23 @@ class DispatcherAPI:
         """
 
         if verbose is not None or silent is not None:
-            self.logger.warning("please set verbosity with logging control, see class loggers")
+            self.logger.warning("please set verbosity with standard python \"logging\" module")
+            self.logger.warning("these option will be removed in the future")
+            if verbose:
+                if silent:
+                    self.logger.error("can not be verbose and silent at once! ignoring verbose and silent options")
+                else:
+                    self.logger.warning("legacy verbose option: setting oda_api logging level to DEBUG and one stream handler")
+                    logging.getLogger('oda_api').setLevel(logging.DEBUG)
+                    logging.getLogger('oda_api').addHandler(logging.StreamHandler())
+            else:
+                if silent:
+                    self.logger.warning("legacy silent option, no special logging config - silent by default")
+                else:
+                    self.logger.warning("legacy verbose but not silet option: setting oda_api logging level to INFO and one stream handler")
+                    logging.getLogger('oda_api').setLevel(logging.INFO)
+                    logging.getLogger('oda_api').addHandler(logging.StreamHandler())
+
 
         if not self.is_prepared:
             raise UserError(f"can not poll query before parameters are set with {self}.request")

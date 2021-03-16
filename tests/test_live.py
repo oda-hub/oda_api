@@ -3,6 +3,13 @@ import time
 import random
 import requests
 import pytest
+import logging
+
+
+# this can be set by pytest ... --log-cli-level DEBUG
+logging.getLogger('oda_api').setLevel(logging.DEBUG)
+logging.getLogger('oda_api').addHandler(logging.StreamHandler())
+
 
 def get_platform_dispatcher(platform="staging-1-2"):
     import odakb.sparql as S
