@@ -45,6 +45,11 @@ setup(name='oda_api',
       tests_require=[
             "pytest-xdist[psutil]"
         ],
+      entry_points={
+          "console_scripts": [
+            "oda-api = oda_api.cli:main"
+          ]
+        },
       python_requires='>=2.7',
       )
 
