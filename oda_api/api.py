@@ -118,7 +118,7 @@ def safe_run(func):
 class DispatcherAPI:
     def __init__(self,
                  instrument='mock', 
-                 url='https://www.astro.unige.ch/cdci/astrooda/dispatch-data',
+                 url=None
                  run_analysis_handle='run_analysis',
                  host=None,
                  port=None,
@@ -127,6 +127,9 @@ class DispatcherAPI:
                  wait=True,
                  n_max_tries=20,
                  ):
+
+        if url is None:
+            url = "https://www.astro.unige.ch/cdci/astrooda/dispatch-data"
 
         if host is not None:
             logger.warning("please use 'url' instead of 'host' while providing dispatcher URL")
@@ -144,6 +147,7 @@ class DispatcherAPI:
                     raise UserError('protocol must be either http or https')
         else:
             self.url = url
+
         
         self.logger = logger.getChild(self.__class__.__name__.lower())
         self.progress_logger = self.logger.getChild("progress")
