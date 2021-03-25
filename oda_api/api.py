@@ -118,7 +118,7 @@ def safe_run(func):
 class DispatcherAPI:
     def __init__(self,
                  instrument='mock', 
-                 url=None
+                 url=None,
                  run_analysis_handle='run_analysis',
                  host=None,
                  port=None,
@@ -777,6 +777,21 @@ class DataCollection(object):
                 meta_data=''
             print('ID=%s prod_name=%s'%(ID,prod_name),' meta_data:',meta_data)
             print()
+
+    def as_list(self):
+        L = []
+
+        for ID, prod_name in enumerate(self._n_list):
+            if hasattr(self._p_list[ID], 'meta_data'):
+                meta_data=self._p_list[ID].meta_data
+            else:
+                meta_data=''
+
+            L.append({
+                'ID':ID, 'prod_name':prod_name, 'meta_data:': meta_data
+                })
+
+        return L
 
     def _build_prod_name(self,prod,name,add_meta_to_name):
 
