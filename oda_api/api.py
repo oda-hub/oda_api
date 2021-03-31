@@ -661,7 +661,7 @@ class DispatcherAPI:
         res = requests.get("%s/api/par-names" % self.url, params=dict(instrument=instrument,product_type=product), cookies=self.cookies)
 
         if res.status_code != 200:
-            raise UnexpectedDispatcherStatusCode(f"status: {status_code}, raw: {res.text}")
+            warnings.warn('parameter check not available on remote server, check carefully parameters name')
         else:
             _ignore_list=['instrument','product_type','query_type','off_line','query_status','verbose','session_id','dry_run']
             validation_dict=copy.deepcopy(kwargs)
@@ -687,8 +687,6 @@ class DispatcherAPI:
                         msg+='and might breack the current request!\n '
                         msg+= '----------------------------------------------------------------------------\n'
                         warnings.warn(msg)
-        else:
-            warnings.warn('parameter check not available on remote server, check carefully parameters name')
 
         ## >
         self.request(kwargs)
