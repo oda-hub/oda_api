@@ -129,6 +129,7 @@ class DispatcherAPI:
                  protocol="https",
                  wait=True,
                  n_max_tries=20,
+                 session_id=None,
                  ):
 
         if url is None:
@@ -151,6 +152,8 @@ class DispatcherAPI:
         else:
             self.url = url
 
+        if session_id is not None:
+            self._session_id = session_id
         
         self.logger = logger.getChild(self.__class__.__name__.lower())
         self.progress_logger = self.logger.getChild("progress")
