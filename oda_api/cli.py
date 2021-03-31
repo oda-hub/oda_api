@@ -46,7 +46,15 @@ def get(obj, instrument, product, argument):
 
             logger.debug("request to dispatcher %s", request)
 
-            obj['dispatcher'].get_product(**request)
+            product = obj['dispatcher'].get_product(**request)
+
+            logger.info("got product: %s", product.as_list())
+
+            for p in product._p_list:
+                logger.info("> %s", p)
+                for du in p.data_unit:
+                    logger.info(">> %s", du.data)
+
     
 
 def main():
