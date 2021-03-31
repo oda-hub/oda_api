@@ -265,7 +265,7 @@ class DispatcherAPI:
                        )
 
             if response.status_code != 200:
-                raise UnexpectedDispatcherStatusCode(f"status: {status_code}, raw: {res.text}")
+                raise UnexpectedDispatcherStatusCode(f"status: {response.status_code}, raw: {response.text}")
 
             self.last_request_t_complete = time.time()
 
@@ -604,7 +604,7 @@ class DispatcherAPI:
         res = requests.get("%s/api/meta-data"%self.url,params=dict(instrument=instrument),cookies=self.cookies)
 
         if res.status_code != 200:
-            raise UnexpectedDispatcherStatusCode(f"status: {status_code}, raw: {res.text}")
+            raise UnexpectedDispatcherStatusCode(f"status: {res.status_code}, raw: {res.text}")
 
         return self._decode_res_json(res)
 
@@ -613,7 +613,7 @@ class DispatcherAPI:
         res = requests.get("%s/api/meta-data" % self.url, params=dict(instrument=instrument, product_type=product_name), cookies=self.cookies)
 
         if res.status_code != 200:
-            raise UnexpectedDispatcherStatusCode(f"status: {status_code}, raw: {res.text}")
+            raise UnexpectedDispatcherStatusCode(f"status: {res.status_code}, raw: {res.text}")
 
         self.logger.info('--------------')
         self.logger.info('parameters for product %s and instrument %s', product_name, instrument)
@@ -625,7 +625,7 @@ class DispatcherAPI:
         res = requests.get("%s/api/instr-list" % self.url,params=dict(instrument=self.instrument),cookies=self.cookies)
 
         if res.status_code != 200:
-            raise UnexpectedDispatcherStatusCode(f"status: {status_code}, raw: {res.text}")
+            raise UnexpectedDispatcherStatusCode(f"status: {res.status_code}, raw: {res.text}")
 
         return self._decode_res_json(res)
 
