@@ -263,6 +263,10 @@ class DispatcherAPI:
                                     },
                             timeout=timeout,
                        )
+
+            if response.status_code != 200:
+                raise UnexpectedDispatcherStatusCode(f"status: {status_code}, raw: {res.text}")
+
             self.last_request_t_complete = time.time()
 
             self.note_request_time()
@@ -608,6 +612,9 @@ class DispatcherAPI:
     def get_product_description(self,instrument,product_name):
         res = requests.get("%s/api/meta-data" % self.url, params=dict(instrument=instrument, product_type=product_name), cookies=self.cookies)
 
+        if res.status_code != 200:
+            raise UnexpectedDispatcherStatusCode(f"status: {status_code}, raw: {res.text}")
+
         self.logger.info('--------------')
         self.logger.info('parameters for product %s and instrument %s', product_name, instrument)
         return self._decode_res_json(res)
@@ -616,6 +623,10 @@ class DispatcherAPI:
     def get_instruments_list(self):
         #print ('instr',self.instrument)
         res = requests.get("%s/api/instr-list" % self.url,params=dict(instrument=self.instrument),cookies=self.cookies)
+
+        if res.status_code != 200:
+            raise UnexpectedDispatcherStatusCode(f"status: {status_code}, raw: {res.text}")
+
         return self._decode_res_json(res)
 
 
@@ -649,8 +660,9 @@ class DispatcherAPI:
 
         res = requests.get("%s/api/par-names" % self.url, params=dict(instrument=instrument,product_type=product), cookies=self.cookies)
 
-        if res.status_code == 200:
-
+        if res.status_code != 200:
+            raise UnexpectedDispatcherStatusCode(f"status: {status_code}, raw: {res.text}")
+        else:
             _ignore_list=['instrument','product_type','query_type','off_line','query_status','verbose','session_id','dry_run']
             validation_dict=copy.deepcopy(kwargs)
 
