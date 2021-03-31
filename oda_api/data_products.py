@@ -352,11 +352,7 @@ class NumpyDataUnit(object):
         if _binarys is not None:
             #print('dec ->', type(_binarys))
             in_file = StringIO()
-            if version_info[0] > 2:
-                    _binarys=base64.b64decode(_binarys)
-
-            else:
-                _binarys = base64.decodestring(_binarys)
+            _binarys = base64.b64decode(_binarys)
 
             if use_gzip ==True:
                 in_file.write(_binarys)
