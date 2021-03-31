@@ -18,6 +18,7 @@ __author__ = "Andrea Tramacere"
 
 from json_tricks import numpy_encode,dumps,loads,numeric_types_hook,hashodict,json_numpy_obj_hook
 from astropy.io import fits as pf
+from astropy.io import ascii as astropy_io_ascii
 import json
 from astropy.utils.misc import JsonCustomEncoder
 
@@ -134,7 +135,7 @@ class ODAAstropyTable(object):
                 t_rec= pickle.loads(t_rec,encoding='latin')
 
         else:
-            t_rec = ascii.read(_o_dict['ascii'])
+            t_rec = astropy_io_ascii.read(_o_dict['ascii'])
 
         return cls(t_rec,name=encoded_name,meta_data=encoded_meta_data)
 
@@ -322,10 +323,10 @@ class NumpyDataUnit(object):
                    'meta_data': self.meta_data,
                    'hdu_type': self.hdu_type}
 
-        if to_json == True:
-            _o_dict=json.dump(_o_dict)
+        if to_json:
+            _o_dict_json = json.dumps(_o_dict)
 
-        return   _o_dict
+        return  _o_dict_json
 
 
     @classmethod
