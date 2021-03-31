@@ -205,9 +205,16 @@ class DispatcherAPI:
 
         return cls(host=host_url, instrument='mock', cookies=cookies, protocol='http')
 
-    def generate_session_id(self,size=16):
+    def generate_session_id(self, size=16):
         chars = string.ascii_uppercase + string.digits
         return ''.join(random.choice(chars) for _ in range(size))
+
+    @property
+    def session_id(self):
+        if not hasattr(self, '_session_id'):
+            self._session_id = self.generate_session_id()
+
+        return self._session_id
 
     def set_instr(self,instrument):
         self.instrument = instrument
@@ -630,7 +637,7 @@ class DispatcherAPI:
         kwargs['off_line'] = False,
         kwargs['query_status'] = 'new',
         kwargs['verbose'] = verbose,
-        kwargs['session_id'] = self.generate_session_id()
+        kwargs['session_id'] = self.session_id
         kwargs['dry_run'] = dry_run,
 
         res = requests.get("%s/api/par-names" % self.url, params=dict(instrument=instrument,product_type=product), cookies=self.cookies)
