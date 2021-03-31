@@ -71,6 +71,9 @@ class RemoteException(NoTraceBackWithLineNumber):
 class FailedToFindAnyUsefulResults(RemoteException):
     pass
 
+class UnexpectedDispatcherStatusCode(RemoteException):
+    pass
+
 exception_by_message = {
             'failed: get dataserver products ': FailedToFindAnyUsefulResults
         }
@@ -90,7 +93,7 @@ def safe_run(func):
             except UserError as e:
                 logger.exception("user error: %s", e)
                 raise
-            except ConnectionError as e:
+            except (ConnectionError, UnexpectedDispatcherStatusCode) as e:
                 message = ''
                 message += '\nunable to complete API call'
                 message += '\nin ' + str(func) + ' called with:'
@@ -594,7 +597,11 @@ class DispatcherAPI:
         if instrument is None:
             instrument=self.instrument
 
-        res=requests.get("%s/api/meta-data"%self.url,params=dict(instrument=instrument),cookies=self.cookies)
+        res = requests.get("%s/api/meta-data"%self.url,params=dict(instrument=instrument),cookies=self.cookies)
+
+        if res.status_code != 200:
+            raise UnexpectedDispatcherStatusCode(f"status: {status_code}, raw: {res.text}")
+
         return self._decode_res_json(res)
 
     @safe_run
