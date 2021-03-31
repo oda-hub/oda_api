@@ -39,3 +39,9 @@ jobs:
       run: |
         python -m pytest tests -m 'not slow' # this will currently not run any real requests
         echo "should maybe also run this: 'python -m pytest tests -k production-1-2'"
+
+    - name: Codecov
+      uses: codecov/codecov-action@v1.3.1
+      with:
+      token: ${{ secrets.CODECOV_TOKEN }}
+      verbose: true
