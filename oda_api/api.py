@@ -71,6 +71,9 @@ class RemoteException(NoTraceBackWithLineNumber):
 class FailedToFindAnyUsefulResults(RemoteException):
     pass
 
+class UnexpectedDispatcherStatusCode(RemoteException):
+    pass
+
 exception_by_message = {
             'failed: get dataserver products ': FailedToFindAnyUsefulResults
         }
@@ -90,7 +93,7 @@ def safe_run(func):
             except UserError as e:
                 logger.exception("user error: %s", e)
                 raise
-            except ConnectionError as e:
+            except (ConnectionError, UnexpectedDispatcherStatusCode) as e:
                 message = ''
                 message += '\nunable to complete API call'
                 message += '\nin ' + str(func) + ' called with:'
@@ -126,6 +129,7 @@ class DispatcherAPI:
                  protocol="https",
                  wait=True,
                  n_max_tries=20,
+                 session_id=None,
                  ):
 
         if url is None:
@@ -148,6 +152,8 @@ class DispatcherAPI:
         else:
             self.url = url
 
+        if session_id is not None:
+            self._session_id = session_id
         
         self.logger = logger.getChild(self.__class__.__name__.lower())
         self.progress_logger = self.logger.getChild("progress")
@@ -205,9 +211,16 @@ class DispatcherAPI:
 
         return cls(host=host_url, instrument='mock', cookies=cookies, protocol='http')
 
-    def generate_session_id(self,size=16):
+    def generate_session_id(self, size=16):
         chars = string.ascii_uppercase + string.digits
         return ''.join(random.choice(chars) for _ in range(size))
+
+    @property
+    def session_id(self):
+        if not hasattr(self, '_session_id'):
+            self._session_id = self.generate_session_id()
+
+        return self._session_id
 
     def set_instr(self,instrument):
         self.instrument = instrument
@@ -253,6 +266,10 @@ class DispatcherAPI:
                                     },
                             timeout=timeout,
                        )
+
+            if response.status_code != 200:
+                raise UnexpectedDispatcherStatusCode(f"status: {response.status_code}, raw: {response.text}")
+
             self.last_request_t_complete = time.time()
 
             self.note_request_time()
@@ -587,12 +604,19 @@ class DispatcherAPI:
         if instrument is None:
             instrument=self.instrument
 
-        res=requests.get("%s/api/meta-data"%self.url,params=dict(instrument=instrument),cookies=self.cookies)
+        res = requests.get("%s/api/meta-data"%self.url,params=dict(instrument=instrument),cookies=self.cookies)
+
+        if res.status_code != 200:
+            raise UnexpectedDispatcherStatusCode(f"status: {res.status_code}, raw: {res.text}")
+
         return self._decode_res_json(res)
 
     @safe_run
     def get_product_description(self,instrument,product_name):
         res = requests.get("%s/api/meta-data" % self.url, params=dict(instrument=instrument, product_type=product_name), cookies=self.cookies)
+
+        if res.status_code != 200:
+            raise UnexpectedDispatcherStatusCode(f"status: {res.status_code}, raw: {res.text}")
 
         self.logger.info('--------------')
         self.logger.info('parameters for product %s and instrument %s', product_name, instrument)
@@ -602,6 +626,10 @@ class DispatcherAPI:
     def get_instruments_list(self):
         #print ('instr',self.instrument)
         res = requests.get("%s/api/instr-list" % self.url,params=dict(instrument=self.instrument),cookies=self.cookies)
+
+        if res.status_code != 200:
+            raise UnexpectedDispatcherStatusCode(f"status: {res.status_code}, raw: {res.text}")
+
         return self._decode_res_json(res)
 
 
@@ -630,13 +658,14 @@ class DispatcherAPI:
         kwargs['off_line'] = False,
         kwargs['query_status'] = 'new',
         kwargs['verbose'] = verbose,
-        kwargs['session_id'] = self.generate_session_id()
+        kwargs['session_id'] = self.session_id
         kwargs['dry_run'] = dry_run,
 
         res = requests.get("%s/api/par-names" % self.url, params=dict(instrument=instrument,product_type=product), cookies=self.cookies)
 
-        if res.status_code == 200:
-
+        if res.status_code != 200:
+            warnings.warn('parameter check not available on remote server, check carefully parameters name')
+        else:
             _ignore_list=['instrument','product_type','query_type','off_line','query_status','verbose','session_id','dry_run']
             validation_dict=copy.deepcopy(kwargs)
 
@@ -661,8 +690,6 @@ class DispatcherAPI:
                         msg+='and might breack the current request!\n '
                         msg+= '----------------------------------------------------------------------------\n'
                         warnings.warn(msg)
-        else:
-            warnings.warn('parameter check not available on remote server, check carefully parameters name')
 
         ## >
         self.request(kwargs)

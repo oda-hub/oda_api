@@ -9,7 +9,7 @@ logger = logging.getLogger('cli')
 @click.option("-d", "--debug", is_flag=True)
 @click.option("-u", "--dispatcher-url", type=str, default=None)
 @click.pass_obj
-def cli(obj, debug, dispatcher_url):
+def cli(obj, debug=False, dispatcher_url=None):
     if debug:
         logging.basicConfig(level="DEBUG")
     else:
