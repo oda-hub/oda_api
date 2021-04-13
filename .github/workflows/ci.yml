@@ -14,6 +14,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     
+    - name: Sphinx Docs build with ReadTheDocs Docker
+      uses: DavidLeoni/readthedocs-to-actions@v1.2
+   
     - name: Run Tutorial Notebooks
       run: |
         set +e
