@@ -16,6 +16,15 @@ jobs:
     
     - name: Sphinx Docs build with ReadTheDocs Docker
       uses: DavidLeoni/readthedocs-to-actions@v1.2
+      with:
+        RTD_PRJ_NAME: oda-api        
+        GIT_URL: https://github.com/${{ github.repository }}.git
+        GIT_TAG: ${{ env.GIT_TAG }}
+        VERSION: ${{ env.VERSION }}
+        REQUIREMENTS: requirements.txt
+        LANGUAGE: ${{ env.LANGUAGE }}
+        RTD_HTML_SINGLE: false
+        RTD_HTML_EXT: false              
    
     - name: Run Tutorial Notebooks
       run: |
