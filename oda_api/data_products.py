@@ -325,8 +325,9 @@ class NumpyDataUnit(object):
 
         if to_json:
             _o_dict_json = json.dumps(_o_dict)
-
-        return  _o_dict_json
+            return  _o_dict_json
+        
+        return _o_dict
 
 
     @classmethod

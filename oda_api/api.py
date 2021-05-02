@@ -36,6 +36,8 @@ logger = logging.getLogger("oda_api.api")
 
 from .data_products import NumpyDataProduct, BinaryData, ApiCatalog
 
+from astropy.table import Table
+
 __all__ = ['Request', 'NoTraceBackWithLineNumber', 'NoTraceBackWithLineNumber', 'RemoteException', 'DispatcherAPI']
 
 class Request(object):
@@ -410,7 +412,8 @@ class DispatcherAPI:
         # <
 
         if 'query_status' not in self.response_json:
-            raise RuntimeError("request json does not contain query_status: %s", json.dumps(self.response_json, indent=4))
+            logg.error(json.dumps(self.response_json, indent=4))
+            raise RuntimeError("request json does not contain query_status: %s", self.response_json)
 
         if self.response_json.get('query_status') != self.query_status:
             self.logger.info(f"\n... query status {C.PURPLE}{self.query_status}{C.NC} => {C.PURPLE}{self.response_json.get('query_status')}{C.NC}")
@@ -529,15 +532,17 @@ class DispatcherAPI:
         self.logger.error('Remote server debug_message-> %s', res_json['exit_status']['debug_message'])
 
     def dig_list(self,b,only_prod=False):
-        from astropy.table import Table
         if isinstance(b, (set, tuple, list)):
             for c in b:
                 self.dig_list(c)
         else:
             try:
-                b = ast.literal_eval(str(b))
-            except:
+                original_b = b
+                b = ast.literal_eval(str(b)) # uh
+            except Exception as e:
+                logger.warning("dig_list unable to literal_eval %s; problem %s", b, e)
                 return str(b)
+
             if isinstance(b, dict):
                 _s = ''
                 for k, v in b.items():
@@ -561,8 +566,11 @@ class DispatcherAPI:
                 if _s != '':
                     self.logger.info(_s)
             else:
-                self.logger.debug('unable to dig list, instance not a dict by %s; object was %s', type(b), b)
-                self.dig_list(b)
+                self.logger.warning('unable to dig list, instance not a dict by %s; object was %s', type(b), b)
+
+                if original_b != b:
+                    self.dig_list(b)
+
 
     @safe_run
     def _decode_res_json(self,res):
@@ -580,6 +588,7 @@ class DispatcherAPI:
         except Exception as e:
 
             msg='remote/connection error, server response is not valid \n'
+            msg += f'exception: {e}'
             msg += 'possible causes: \n'
             msg += '- connection error\n'
             msg += '- wrong credentials\n'
