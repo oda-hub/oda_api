@@ -301,7 +301,7 @@ class DispatcherAPI:
                     timeout=timeout,
                 )
             elif self.preferred_request_method == 'POST':
-                response = requests.get(
+                response = requests.post(
                     "%s/%s" % (self.url, self.run_analysis_handle),
                     data=self.parameters_dict_payload,
                     cookies=self.cookies,
