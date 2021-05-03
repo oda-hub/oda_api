@@ -5,4 +5,4 @@ json_tricks
 matplotlib
 numpy
 jsonschema
-astroquery-integral==0.1.0
+astroquery-integral==0.1.0 # not needed apart from test
