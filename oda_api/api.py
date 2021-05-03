@@ -461,7 +461,7 @@ class DispatcherAPI:
         # <
 
         if 'query_status' not in self.response_json:
-            logg.error(json.dumps(self.response_json, indent=4))
+            logger.error(json.dumps(self.response_json, indent=4))
             raise RuntimeError(
                 "request json does not contain query_status: %s", self.response_json)
 
