@@ -17,4 +17,10 @@ def custom_progress_formatter(L):
     ndone = len(set([l.get('node', 'none') for l in L if l.get('message', 'none') == 'main done']))
     nrestored = len(set([l.get('node', 'none') for l in L if l['message'] == 'restored from cache']))
     nnodes = len(set([l.get('node', 'none') for l in L]))
-    return f"in {nscw} SCW so far; nodes ({nnodes}): {ndone} computed {nrestored} restored"
+
+    if len(L) > 0:
+        last_message = f"{L[-1].get('node', 'none')} : {L[-1].get('message')} : {L[-1].get('scwid', 'none')}"
+    else:
+        last_message = ""
+
+    return f"in {nscw} SCW so far; nodes ({nnodes}): {ndone} computed {nrestored} restored\n... \033[32m{last_message}\033[0m"

@@ -459,6 +459,8 @@ class DispatcherAPI:
         # >
         self.response_json = self.request_to_json()
         # <
+            
+        logger.info("job: %s session %s", self.response_json['job_monitor']['session_id'], self.response_json['job_monitor']['job_id'])
 
         if 'query_status' not in self.response_json:
             logger.error(json.dumps(self.response_json, indent=4))
