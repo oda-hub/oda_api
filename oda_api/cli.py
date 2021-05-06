@@ -12,6 +12,8 @@ logger = logging.getLogger('cli')
 def cli(obj, debug=False, dispatcher_url=None):
     if debug:
         logging.basicConfig(level="DEBUG")
+        logging.getLogger("oda_api").setLevel("DEBUG")
+        logging.getLogger("cli").setLevel("DEBUG")
     else:
         logging.basicConfig(level="INFO")
 
