@@ -12,16 +12,7 @@ from setuptools import setup, find_packages
 import glob
 import json
 
-
-f = open("./requirements.txt",'r')
-install_req = f.readlines()
-f.close()
-
-print("install requirements from requirements.txt:", install_req)
-
 packs=find_packages()
-
-print ('packs',packs)
 
 with open('oda_api/pkg_info.json') as fp:
     _info = json.load(fp)
@@ -41,9 +32,18 @@ setup(name='oda_api',
       packages=packs,
       package_data={'oda_api':['config_dir/*']},
       include_package_data=True,
-      install_requires=install_req,
+      install_requires=[
+            "requests",
+            "future",
+            "astropy>=3.2",
+            "json_tricks",
+            "matplotlib",
+            "numpy",
+            "jsonschema"
+        ],
       tests_require=[
-            "pytest-xdist[psutil]"
+            "pytest-xdist[psutil]",
+            "astroquery-integral==0.1.0",
         ],
       entry_points={
           "console_scripts": [
