@@ -415,8 +415,11 @@ class NumpyDataProduct(object):
         print ('------------------------------')
 
 
-    def get_data_unit(self,ID   ):
-        return self.data_unit[ID]
+    def get_data_unit(self, ID):
+        try:
+            return self.data_unit[ID]
+        except IndexError as e:
+            raise RuntimeError(f"problem get_data_unit ID:{ID} in self.data_unit:{self.data_unit}")
 
     def get_data_unit_by_name(self,name):
         _du=None
