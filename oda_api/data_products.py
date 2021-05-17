@@ -427,13 +427,13 @@ class NumpyDataProduct(object):
         for du in self.data_unit:
             if du.name == name:
                 if _du is not None:
-                    raise RuntimeError(f"get_data_unit_by_name found multiple du for name {name}")
+                    print(f"\033[31mWARNING: get_data_unit_by_name found multiple du for name {name}\033[0m")
                 _du = du
             print('--> NAME',du.name)
 
         if _du is None:
             found_names = '; '.join([ str(_du.name) + ":" + repr(du) for _du in self.data_unit ])
-            raise RuntimeError(f"get_data_unit_by_name found no du for name {name}, have {found_names}")
+            print(f"\033[31mWARNING: get_data_unit_by_name found no du for name {name}, have {found_names}\033[0m")
 
         return _du
 
