@@ -366,7 +366,7 @@ class NumpyDataUnit(object):
                 gzip_file.close()
             else:
                 if version_info[0] > 2:
-                    _data=pickle.loads(_binarys,encoding='bytes')
+                    _data = pickle.loads(_binarys,encoding='bytes')
                 else:
                     _data = pickle.loads(_binarys)
 
