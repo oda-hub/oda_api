@@ -222,9 +222,8 @@ def test_large_request(platform):
     )
 
 @pytest.mark.slow
-#@pytest.mark.parametrize("platform", ["staging-1-3", "staging-1-2", "production-1-2"])
-#def test_pickling(platform):
-def test_pickling():
+@pytest.mark.parametrize("platform", ["staging-1-3", "staging-1-2", "production-1-2"])
+def test_peculiar_request_causing_pickling_problem(platform):
     import logging
     logging.basicConfig(level='DEBUG')
     logging.getLogger('oda_api').setLevel('DEBUG')
