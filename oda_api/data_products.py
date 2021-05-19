@@ -366,7 +366,7 @@ class NumpyDataUnit(object):
                 gzip_file.close()
             else:
                 if version_info[0] > 2:
-                    _data=pickle.loads(_binarys,encoding='bytes')
+                    _data = pickle.loads(_binarys,encoding='bytes')
                 else:
                     _data = pickle.loads(_binarys)
 
@@ -423,13 +423,17 @@ class NumpyDataProduct(object):
 
     def get_data_unit_by_name(self,name):
         _du=None
+
         for du in self.data_unit:
             if du.name == name:
-
-                _du=du
+                if _du is not None:
+                    print(f"\033[31mWARNING: get_data_unit_by_name found multiple du for name {name}\033[0m")
+                _du = du
             print('--> NAME',du.name)
 
-        #TODO raise RuntimeError if _du is None
+        if _du is None:
+            found_names = '; '.join([ str(_du.name) + ":" + repr(du) for _du in self.data_unit ])
+            print(f"\033[31mWARNING: get_data_unit_by_name found no du for name {name}, have {found_names}\033[0m")
 
         return _du
 

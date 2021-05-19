@@ -220,3 +220,32 @@ def test_large_request(platform):
         E2_keV=200.0,
         scw_list=[f"0665{i:04d}0010.001" for i in range(200)],
     )
+
+@pytest.mark.slow
+@pytest.mark.parametrize("platform", ["staging-1-3", "staging-1-2", "production-1-2"])
+def test_peculiar_request_causing_pickling_problem(platform):
+    import logging
+    logging.basicConfig(level='DEBUG')
+    logging.getLogger('oda_api').setLevel('DEBUG')
+    logging.getLogger('oda_api.api').setLevel('DEBUG')
+
+
+    import oda_api.api
+    disp = oda_api.api.DispatcherAPI(url="http://dispatcher.staging.internal.odahub.io")
+    print(disp.get_instruments_list())
+
+    disp.get_product(
+        'isgri_image',
+        scw_list='193200210010.001,193300510010.001,193400100010.001,193600090010.001,193600150010.001,193800020010.001,193900120010.001,193900160010.001,194000130010.001,194100100010.001,194100130010.001,194300090010.001,194400490010.001,194500020010.001,194500100010.001,194800270010.001,194800310010.001,194900080010.001,194900110010.001,195000330010.001',
+        E1_keV='28.0',
+        E2_keV='80.0',
+        osa_version='OSA11.0',
+        RA='275.0914266666666',
+        DEC='7.185355',
+        detection_threshold=7.0,
+        instrument='isgri',
+        query_type='Real',
+        session_id='EV49GW1UN9427QD9',
+     )
+
+
