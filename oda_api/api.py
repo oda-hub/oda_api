@@ -275,7 +275,7 @@ class DispatcherAPI:
             request_size = len(json.dumps(self.parameters_dict_payload))
             max_get_method_size = getattr(self, 'max_get_method_size', 1000)
 
-            self.logger.warning('payload size %s, max for GET is %s', request_size, max_get_method_size)
+            self.logger.debug('payload size %s, max for GET is %s', request_size, max_get_method_size)
 
             if request_size > max_get_method_size:
                 self.logger.warning(
@@ -330,6 +330,8 @@ class DispatcherAPI:
 
             validate_json(response_json, self.dispatcher_response_schema)
 
+            self.returned_analysis_parameters = response_json['products']['analysis_parameters']
+
             return response_json
         except json.decoder.JSONDecodeError as e:
             self.logger.error(
@@ -337,6 +339,21 @@ class DispatcherAPI:
             self.logger.error(f"{C.RED}{response.text}{C.NC}")
             raise
 
+    def returned_analysis_parameters_consistency(self):    
+        mismatching_parameters = []
+        for k in self.parameters_dict.keys():
+            # these do not correspond to meaning
+            if k in ['query_status', 'off_line', 'verbose', 'dry_run']:                
+                continue
+
+            returned = self.returned_analysis_parameters.get(k, None)
+            requested = self.parameters_dict.get(k, None)
+            if str(returned) != str(requested):
+                mismatching_parameters.append(f"{k}: returned {returned} != requested {requested}")
+
+        if mismatching_parameters != []:
+            raise RuntimeError(f"dispatcher return different parameters: {'; '.join(mismatching_parameters)}")
+    
     @property
     def parameters_dict(self):
         """

@@ -213,7 +213,7 @@ def test_large_request(platform):
         osa_version="OSA10.2",
         E1_keV=40.0,
         E2_keV=200.0,
-        scw_list=[f"066500550010.001"*300],
+        scw_list="066500550010.001"*300,
         # this needs role
         #scw_list=[f"0665{i:04d}0010.001" for i in range(200)],
     )
@@ -229,6 +229,7 @@ def test_large_request(platform):
     product = disp.get_product(
         **dummy_request_parameters
     )
+    disp.returned_analysis_parameters_consistency()
 
     assert disp.preferred_request_method == "GET"
     assert disp.selected_request_method == "POST"
@@ -236,9 +237,10 @@ def test_large_request(platform):
     product = disp.get_product(
         **{            
             **dummy_request_parameters,
-            'scw_list': ["066500550010.001"]
+            'scw_list': "066500550010.001"
         }
     )
+    disp.returned_analysis_parameters_consistency()
 
     assert disp.preferred_request_method == "GET"
     assert disp.selected_request_method == "GET"
