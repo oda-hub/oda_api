@@ -6,3 +6,4 @@ matplotlib
 numpy
 jsonschema
 astroquery-integral==0.1.0 # not needed apart from test
+-e git+https://github.com/oda-hub/dispatcher-app.git@master#egg=cdci_data_analysis[test]

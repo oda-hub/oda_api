@@ -271,12 +271,16 @@ class DispatcherAPI:
 
     @property
     def selected_request_method(self):
-        request_size = len(json.dumps(self.parameters_dict_payload))
-        max_get_method_size = getattr(self, 'max_get_method_size', 1000)
-        if request_size > max_get_method_size:
-            self.logger.warning(
-                'switching to POST request due to large payload: %s > %s', request_size, max_get_method_size)
-            return 'POST'
+        if self.parameters_dict_payload is not None:
+            request_size = len(json.dumps(self.parameters_dict_payload))
+            max_get_method_size = getattr(self, 'max_get_method_size', 1000)
+
+            self.logger.debug('payload size %s, max for GET is %s', request_size, max_get_method_size)
+
+            if request_size > max_get_method_size:
+                self.logger.warning(
+                    'switching to POST request due to large payload: %s > %s', request_size, max_get_method_size)
+                return 'POST'
 
         return self.preferred_request_method
 
@@ -289,7 +293,7 @@ class DispatcherAPI:
 
             self.last_request_t0 = time.time()
 
-            if self.preferred_request_method == 'GET':
+            if self.selected_request_method == 'GET':
                 response = requests.get(
                     "%s/%s" % (self.url, self.run_analysis_handle),
                     params=self.parameters_dict_payload,
@@ -300,7 +304,7 @@ class DispatcherAPI:
                     },
                     timeout=timeout,
                 )
-            elif self.preferred_request_method == 'POST':
+            elif self.selected_request_method == 'POST':
                 response = requests.post(
                     "%s/%s" % (self.url, self.run_analysis_handle),
                     data=self.parameters_dict_payload,
@@ -325,6 +329,8 @@ class DispatcherAPI:
             response_json = self._decode_res_json(response)
 
             validate_json(response_json, self.dispatcher_response_schema)
+            
+            self.returned_analysis_parameters = response_json['products'].get('analysis_parameters', None)
 
             return response_json
         except json.decoder.JSONDecodeError as e:
@@ -333,6 +339,21 @@ class DispatcherAPI:
             self.logger.error(f"{C.RED}{response.text}{C.NC}")
             raise
 
+    def returned_analysis_parameters_consistency(self):    
+        mismatching_parameters = []
+        for k in self.parameters_dict.keys():
+            # these do not correspond to meaning
+            if k in ['query_status', 'off_line', 'verbose', 'dry_run']:                
+                continue
+
+            returned = self.returned_analysis_parameters.get(k, None)
+            requested = self.parameters_dict.get(k, None)
+            if str(returned) != str(requested):
+                mismatching_parameters.append(f"{k}: returned {returned} != requested {requested}")
+
+        if mismatching_parameters != []:
+            raise RuntimeError(f"dispatcher return different parameters: {'; '.join(mismatching_parameters)}")
+    
     @property
     def parameters_dict(self):
         """
@@ -347,6 +368,9 @@ class DispatcherAPI:
 
     @property
     def parameters_dict_payload(self):
+        if self.parameters_dict is None:
+            return None
+
         p = {
             **self.parameters_dict,
             'api': 'True',

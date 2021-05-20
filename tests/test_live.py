@@ -102,7 +102,7 @@ def raises_if_failing(scw_kind, exception):
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize("platform", ["staging-1-3", "staging-1-2", "production-1-2"])
+@pytest.mark.parametrize("platform", ["staging", "staging-1-2", "production-1-2"])
 @pytest.mark.parametrize("scw_kind", ["crab", "any", "failing"])
 def test_waiting(scw_kind, platform):
     from oda_api.api import UserError, FailedToFindAnyUsefulResults
@@ -131,7 +131,7 @@ def test_waiting(scw_kind, platform):
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize("platform", ["staging-1-3", "staging-1-2", "production-1-2"])
+@pytest.mark.parametrize("platform", ["staging", "staging-1-2", "production-1-2"])
 @pytest.mark.parametrize("scw_kind", ["crab", "any", "failing"])
 def test_not_waiting(scw_kind, platform):
     from oda_api.api import DispatcherAPI, UserError, FailedToFindAnyUsefulResults
@@ -203,26 +203,51 @@ def test_not_waiting(scw_kind, platform):
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize("platform", ["staging-1-3", "staging-1-2", "production-1-2"])
+@pytest.mark.parametrize("platform", ["staging", "staging-1-2", "production-1-2"])
 def test_large_request(platform):
-    disp = get_disp(wait=False, platform=platform)
 
-    'isgri' in disp.get_instruments_list()
-
-    disp.preferred_request_method = 'POST'
-
-    product = disp.get_product(
+    dummy_request_parameters = dict(
         instrument="isgri",
         product="isgri_image",
         product_type="Dummy",
         osa_version="OSA10.2",
         E1_keV=40.0,
         E2_keV=200.0,
-        scw_list=[f"0665{i:04d}0010.001" for i in range(200)],
+        scw_list="066500550010.001"*300,
+        # this needs role
+        #scw_list=[f"0665{i:04d}0010.001" for i in range(200)],
     )
 
+
+    disp = get_disp(wait=True, platform=platform)
+
+    'isgri' in disp.get_instruments_list()
+
+    assert disp.preferred_request_method == "GET"
+    assert disp.selected_request_method == "GET"
+
+    product = disp.get_product(
+        **dummy_request_parameters
+    )
+    disp.returned_analysis_parameters_consistency()
+
+    assert disp.preferred_request_method == "GET"
+    assert disp.selected_request_method == "POST"
+
+    product = disp.get_product(
+        **{            
+            **dummy_request_parameters,
+            'scw_list': "066500550010.001"
+        }
+    )
+    disp.returned_analysis_parameters_consistency()
+
+    assert disp.preferred_request_method == "GET"
+    assert disp.selected_request_method == "GET"
+
+
 @pytest.mark.slow
-@pytest.mark.parametrize("platform", ["staging-1-3", "staging-1-2", "production-1-2"])
+@pytest.mark.parametrize("platform", ["staging", "staging-1-2", "production-1-2"])
 def test_peculiar_request_causing_pickling_problem(platform):
     import logging
     logging.basicConfig(level='DEBUG')

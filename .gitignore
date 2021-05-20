@@ -30,3 +30,7 @@ CL.txt
 data
 .ipynb_checkpoints
 *.swp
+Crab*fits*
+*.log
+scratch*
+response.json
