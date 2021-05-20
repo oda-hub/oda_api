@@ -271,12 +271,16 @@ class DispatcherAPI:
 
     @property
     def selected_request_method(self):
-        request_size = len(json.dumps(self.parameters_dict_payload))
-        max_get_method_size = getattr(self, 'max_get_method_size', 1000)
-        if request_size > max_get_method_size:
-            self.logger.warning(
-                'switching to POST request due to large payload: %s > %s', request_size, max_get_method_size)
-            return 'POST'
+        if self.parameters_dict_payload is not None:
+            request_size = len(json.dumps(self.parameters_dict_payload))
+            max_get_method_size = getattr(self, 'max_get_method_size', 1000)
+
+            self.logger.warning('payload size %s, max for GET is %s', request_size, max_get_method_size)
+
+            if request_size > max_get_method_size:
+                self.logger.warning(
+                    'switching to POST request due to large payload: %s > %s', request_size, max_get_method_size)
+                return 'POST'
 
         return self.preferred_request_method
 
@@ -289,7 +293,7 @@ class DispatcherAPI:
 
             self.last_request_t0 = time.time()
 
-            if self.preferred_request_method == 'GET':
+            if self.selected_request_method == 'GET':
                 response = requests.get(
                     "%s/%s" % (self.url, self.run_analysis_handle),
                     params=self.parameters_dict_payload,
@@ -300,7 +304,7 @@ class DispatcherAPI:
                     },
                     timeout=timeout,
                 )
-            elif self.preferred_request_method == 'POST':
+            elif self.selected_request_method == 'POST':
                 response = requests.post(
                     "%s/%s" % (self.url, self.run_analysis_handle),
                     data=self.parameters_dict_payload,
@@ -347,6 +351,9 @@ class DispatcherAPI:
 
     @property
     def parameters_dict_payload(self):
+        if self.parameters_dict is None:
+            return None
+
         p = {
             **self.parameters_dict,
             'api': 'True',
