@@ -102,7 +102,7 @@ def raises_if_failing(scw_kind, exception):
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize("platform", ["staging-1-3", "staging-1-2", "production-1-2"])
+@pytest.mark.parametrize("platform", ["staging", "staging-1-2", "production-1-2"])
 @pytest.mark.parametrize("scw_kind", ["crab", "any", "failing"])
 def test_waiting(scw_kind, platform):
     from oda_api.api import UserError, FailedToFindAnyUsefulResults
@@ -131,7 +131,7 @@ def test_waiting(scw_kind, platform):
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize("platform", ["staging-1-3", "staging-1-2", "production-1-2"])
+@pytest.mark.parametrize("platform", ["staging", "staging-1-2", "production-1-2"])
 @pytest.mark.parametrize("scw_kind", ["crab", "any", "failing"])
 def test_not_waiting(scw_kind, platform):
     from oda_api.api import DispatcherAPI, UserError, FailedToFindAnyUsefulResults

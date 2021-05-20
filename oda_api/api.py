@@ -329,8 +329,8 @@ class DispatcherAPI:
             response_json = self._decode_res_json(response)
 
             validate_json(response_json, self.dispatcher_response_schema)
-
-            self.returned_analysis_parameters = response_json['products']['analysis_parameters']
+            
+            self.returned_analysis_parameters = response_json['products'].get('analysis_parameters', None)
 
             return response_json
         except json.decoder.JSONDecodeError as e:
