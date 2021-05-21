@@ -78,6 +78,8 @@ class FailedToFindAnyUsefulResults(RemoteException):
 class UnexpectedDispatcherStatusCode(RemoteException):
     pass
 
+class Unauthorized(RemoteException):
+    pass
 
 exception_by_message = {
     'failed: get dataserver products ': FailedToFindAnyUsefulResults
@@ -97,6 +99,8 @@ def safe_run(func):
                 return func(*args, **kwargs)
             except UserError as e:
                 logger.exception("user error: %s", e)
+                raise
+            except Unauthorized:
                 raise
             except (ConnectionError, UnexpectedDispatcherStatusCode) as e:
                 message = ''
@@ -317,6 +321,9 @@ class DispatcherAPI:
                 )
             else:
                 NotImplementedError
+
+            if response.status_code == 403:
+                raise Unauthorized(response.json()['exit_status']['message'])
 
             if response.status_code != 200:
                 raise UnexpectedDispatcherStatusCode(
@@ -623,7 +630,7 @@ class DispatcherAPI:
                 original_b = b
                 b = ast.literal_eval(str(b))  # uh
             except Exception as e:
-                logger.warning(
+                logger.debug(
                     "dig_list unable to literal_eval %s; problem %s", b, e)
                 return str(b)
 
