@@ -6,7 +6,7 @@ import pytest
 import logging
 import contextlib
 
-from oda_api.api import DispatcherAPI
+from oda_api.api import DispatcherAPI, Unauthorized
 
 # this can be set by pytest ... --log-cli-level DEBUG
 logging.getLogger('oda_api').setLevel(logging.DEBUG)
@@ -128,6 +128,31 @@ def test_waiting(scw_kind, platform):
         print(data._n_list)
 
         validate_data(data, scw_kind)
+
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize("platform", ["staging"])
+def test_unauthorized(platform):
+    from oda_api.api import UserError, FailedToFindAnyUsefulResults
+
+    disp = get_disp(wait=True, platform=platform)
+
+    with pytest.raises(UserError):
+        disp.poll()
+
+    assert disp.wait
+
+    with pytest.raises(Unauthorized):
+        data = disp.get_product(
+                instrument="isgri",
+                product="isgri_image",
+                product_type="Real",
+                osa_version="OSA10.2",
+                E1_keV=25.0,
+                E2_keV=80.0,
+                max_pointings=1000,
+            )
 
 
 @pytest.mark.slow
