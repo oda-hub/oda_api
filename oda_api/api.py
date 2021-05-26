@@ -837,7 +837,7 @@ class DispatcherAPI:
         return d
 
     @staticmethod
-    def set_api_code(query_dict):
+    def set_api_code(query_dict, url="www.astro.unige.ch/cdci/astrooda/dispatch-data"):
 
         _skip_list_ = ['job_id', 'query_status',
                        'session_id', 'use_resolver[local]', 'use_scws']
@@ -846,9 +846,9 @@ class DispatcherAPI:
         _alias_dict['product_type'] = 'product'
         _alias_dict['query_type'] = 'product_type'
 
-        _header = '''
+        _header = f'''
         from oda_api.api import DispatcherAPI\n
-        disp=DispatcherAPI(url='www.astro.unige.ch/cdci/astrooda/dispatch-data', instrument='mock', protocol='https')'''
+        disp=DispatcherAPI(url='{url}', instrument='mock', protocol='https')'''
 
         _cmd_prod_ = 'data_collection = disp.get_product(**par_dict)'
 
