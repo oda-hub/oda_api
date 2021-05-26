@@ -846,8 +846,7 @@ class DispatcherAPI:
         _alias_dict['product_type'] = 'product'
         _alias_dict['query_type'] = 'product_type'
 
-        _header = f'''
-        from oda_api.api import DispatcherAPI\n
+        _header = f'''from oda_api.api import DispatcherAPI
         disp=DispatcherAPI(url='{url}', instrument='mock', protocol='https')'''
 
         _cmd_prod_ = 'data_collection = disp.get_product(**par_dict)'
@@ -864,11 +863,12 @@ class DispatcherAPI:
 
                 _api_dict[n] = query_dict[k]
 
-        _cmd_ = '%s\n' % _header
-        _cmd_ += 'par_dict='
-        _cmd_ += '%s' % json.dumps(_api_dict, indent=0)
-        _cmd_ += '\n'
-        _cmd_ += '%s' % _cmd_prod_
+        _cmd_ = f'''{_header}
+        
+        par_dict={json.dumps(_api_dict, indent=4)}
+        
+        {_cmd_prod_} 
+        '''
 
         return _cmd_
 
