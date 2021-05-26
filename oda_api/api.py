@@ -850,7 +850,7 @@ class DispatcherAPI:
         from oda_api.api import DispatcherAPI\n
         disp=DispatcherAPI(url='www.astro.unige.ch/cdci/astrooda/dispatch-data', instrument='mock', protocol='https')'''
 
-        _cmd_prod_ = 'disp.get_product(**par_dict)'
+        _cmd_prod_ = 'data_collection = disp.get_product(**par_dict)'
 
         _api_dict = {}
         for k in query_dict.keys():
