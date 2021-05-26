@@ -866,7 +866,7 @@ class DispatcherAPI:
 
         _cmd_ = '%s\n' % _header
         _cmd_ += 'par_dict='
-        _cmd_ += '%s' % _api_dict
+        _cmd_ += '%s' % json.dumps(_api_dict, indent=0)
         _cmd_ += '\n'
         _cmd_ += '%s' % _cmd_prod_
 
