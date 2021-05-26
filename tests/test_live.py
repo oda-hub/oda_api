@@ -134,7 +134,7 @@ def test_waiting(scw_kind, platform):
 @pytest.mark.slow
 @pytest.mark.parametrize("platform", ["staging"])
 def test_unauthorized(platform):
-    from oda_api.api import UserError, FailedToFindAnyUsefulResults
+    from oda_api.api import UserError
 
     disp = get_disp(wait=True, platform=platform)
 
@@ -299,3 +299,21 @@ def test_peculiar_request_causing_pickling_problem(platform):
      )
 
 
+@pytest.mark.slow
+@pytest.mark.parametrize("platform", ["staging"])
+def test_bad_request(platform):
+    from oda_api.api import RequestNotUnderstood
+
+    disp = get_disp(wait=True, platform=platform)
+    assert disp.wait
+
+    with pytest.raises(RequestNotUnderstood):
+        data = disp.get_product(
+                instrument="isgri_with_typo",
+                product="isgri_image_with_typo",
+                product_type="Real",
+                osa_version="OSA10.2",
+                E1_keV=25.0,
+                E2_keV=80.0,
+                max_pointings=1000,
+            )
