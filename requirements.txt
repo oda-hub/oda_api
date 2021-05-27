@@ -7,4 +7,4 @@ numpy
 jsonschema
 astroquery-integral==0.1.0 # not needed apart from test
 # temporary
--e git+https://github.com/oda-hub/dispatcher-app.git@param-to-set_api_code#egg=cdci_data_analysis[test]
+-e git+https://github.com/oda-hub/dispatcher-app.git@master#egg=cdci_data_analysis[test]
