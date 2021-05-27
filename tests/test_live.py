@@ -18,7 +18,11 @@ def get_platform_dispatcher(platform="production-1-2"):
 
     R = S.select('?p a oda:platform; oda:location ?loc . ?p ?x ?y',
                  '?p ?x ?y', tojdict=True)
-    locations = R["oda:"+platform]["oda:location"]
+
+    try:
+        locations = R["oda:"+platform]["oda:location"]
+    except:
+        return platform
 
     try:
         return list(locations.keys())[0]
@@ -134,7 +138,7 @@ def test_waiting(scw_kind, platform):
 @pytest.mark.slow
 @pytest.mark.parametrize("platform", ["staging"])
 def test_unauthorized(platform):
-    from oda_api.api import UserError, FailedToFindAnyUsefulResults
+    from oda_api.api import UserError
 
     disp = get_disp(wait=True, platform=platform)
 
@@ -298,4 +302,76 @@ def test_peculiar_request_causing_pickling_problem(platform):
         session_id='EV49GW1UN9427QD9',
      )
 
+
+@pytest.mark.slow
+@pytest.mark.parametrize("platform", ["staging"])
+def test_bad_request(platform):
+    from oda_api.api import RequestNotUnderstood
+
+    disp = get_disp(wait=True, platform=platform)
+    assert disp.wait
+
+    with pytest.raises(RequestNotUnderstood):
+        data = disp.get_product(
+                instrument="isgri_with_typo",
+                product="isgri_image_with_typo",
+                product_type="Real",
+                osa_version="OSA10.2",
+                E1_keV=25.0,
+                E2_keV=80.0,
+                max_pointings=1000,
+            )
+
+
+def test_reusing_disp_instance(dispatcher_live_fixture):
+
+    disp = get_disp(wait=True, platform=dispatcher_live_fixture)
+    assert disp.wait
+
+    assert disp.job_id is None
+    assert disp.query_status == 'not-prepared'
+
+    data = disp.get_product(
+            instrument="empty",
+            product="dummy",
+            product_type="Dummy",
+            T1="2021-05-01T11:11:11",
+            T2="2021-05-02T11:11:11",
+        )
+
+    assert disp.job_id is not None
+    assert disp.query_status == 'done'
+
+    previous_job_id =  disp.job_id
+
+    data = disp.get_product(
+            instrument="empty",
+            product="dummy",
+            product_type="Dummy",
+            T1="2021-05-01T11:11:11",
+            T2="2021-05-02T11:11:11",
+        )
+
+    assert disp.job_id is not None
+    assert disp.query_status == 'done'
+    assert disp.query_status == 'done'
+
+    # identical request results in the same job id
+    assert previous_job_id == disp.job_id
+
+    previous_job_id =  disp.job_id
+
+    data = disp.get_product(
+            instrument="empty",
+            product="dummy",
+            product_type="Dummy",
+            T1="2021-05-01T11:11:11",
+            T2="2021-05-03T11:11:11",
+        )
+
+    assert disp.job_id is not None
+    assert disp.query_status is not None
+
+    # different request results in different job id
+    assert previous_job_id != disp.job_id
 
