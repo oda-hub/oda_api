@@ -41,7 +41,7 @@ par_dict={
     "off_line": "False",
     "dry_run": "False",
     "api": "True",
-    "oda_api_version": "1.1.8"
+    "oda_api_version": "1.1.10"
 }
 
 data_collection = disp.get_product(**par_dict)
