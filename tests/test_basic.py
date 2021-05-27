@@ -3,8 +3,8 @@ import os
 
 
 def test_oda_api_code(dispatcher_live_fixture):
-    from oda_api.api import DispatcherAPI
-    disp = DispatcherAPI(
+    import oda_api.api
+    disp = oda_api.api.DispatcherAPI(
         url=dispatcher_live_fixture
     )
 
@@ -31,18 +31,18 @@ def test_oda_api_code(dispatcher_live_fixture):
     assert 'api_code' in jdata_output['prod_dictionary']
     output_api_code = jdata_output['prod_dictionary']['api_code']
 
-    expected_api_code = '''from oda_api.api import DispatcherAPI
+    expected_api_code = f'''from oda_api.api import DispatcherAPI
 disp=DispatcherAPI(url='http://0.0.0.0:8001', instrument='mock')
 
-par_dict={
+par_dict={{
     "instrument": "empty",
     "product": "dummy",
     "product_type": "Dummy",
     "off_line": "False",
     "dry_run": "False",
     "api": "True",
-    "oda_api_version": "1.1.8"
-}
+    "oda_api_version": "{oda_api.__version__}"
+}}
 
 data_collection = disp.get_product(**par_dict)
 '''
