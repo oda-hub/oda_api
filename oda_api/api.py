@@ -78,6 +78,16 @@ class FailedToFindAnyUsefulResults(RemoteException):
 class UnexpectedDispatcherStatusCode(RemoteException):
     pass
 
+class RequestNotUnderstood(Exception):
+    def __init__(self, details_json) -> None:
+        self.details_json = details_json
+
+    def __repr__(self) -> str:
+        return f"[ RequestNotUnderstood: {self.details_json['error']} ]"
+
+    def __str__(self) -> str:
+        return repr(self)
+
 class Unauthorized(RemoteException):
     pass
 
@@ -102,7 +112,12 @@ def safe_run(func):
                 raise
             except Unauthorized:
                 raise
-            except (ConnectionError, UnexpectedDispatcherStatusCode) as e:
+            except RequestNotUnderstood as e:
+                raise
+            except UnexpectedDispatcherStatusCode as e:
+                message = f'unexpected status code: {e}'
+                raise
+            except ConnectionError as e:
                 message = ''
                 message += '\nunable to complete API call'
                 message += '\nin ' + str(func) + ' called with:'
@@ -111,7 +126,6 @@ def safe_run(func):
                     ", ".join([k+": "+str(v) for k, v in kwargs])
                 message += '\npossible causes:'
                 message += '\n- connection error'
-                message += '\n- wrong credentials'
                 message += '\n- error on the remote server'
                 message += '\n exception message: '
                 message += '\n\n%s\n' % e
@@ -121,11 +135,12 @@ def safe_run(func):
 
                 if n_tries_left > 0:
                     logger.warning("problem in API call, %i tries left:\n%s\n sleeping %i seconds until retry",
-                                   n_tries_left, message, self.retry_sleep_s)
-                else:
-                    raise RemoteException(
-                        message=message
-                    )
+                                    n_tries_left, message, self.retry_sleep_s)
+                    time.sleep(self.retry_sleep_s)
+            
+            raise RemoteException(
+                message=message
+            )
 
     return func_wrapper
 
@@ -154,6 +169,7 @@ class DispatcherAPI:
                 "for now, we will adopt host, but in the near future it will not be done")
             self.url = host
 
+            #TODO: disregard this, but leave parameter for compatibility
             if host.startswith('http'):
                 self.url = host
             else:
@@ -282,7 +298,7 @@ class DispatcherAPI:
             self.logger.debug('payload size %s, max for GET is %s', request_size, max_get_method_size)
 
             if request_size > max_get_method_size:
-                self.logger.warning(
+                self.logger.debug(
                     'switching to POST request due to large payload: %s > %s', request_size, max_get_method_size)
                 return 'POST'
 
@@ -324,6 +340,10 @@ class DispatcherAPI:
 
             if response.status_code == 403:
                 raise Unauthorized(response.json()['exit_status']['message'])
+            
+            if response.status_code == 400:
+                raise RequestNotUnderstood(
+                    response.json())
 
             if response.status_code != 200:
                 raise UnexpectedDispatcherStatusCode(
@@ -385,13 +405,13 @@ class DispatcherAPI:
         }
 
         if self.is_submitted:
-            return {
-                **p,
-                'job_id': self.job_id,
-                'query_status': self.query_status,
-            }
+             return {
+                 **p,
+        #         'job_id': self.job_id,
+        #         'query_status': self.query_status,
+             }
         else:
-            return p
+             return p
 
     @parameters_dict_payload.setter
     def parameters_dict_payload(self, value):
@@ -491,12 +511,12 @@ class DispatcherAPI:
         self.response_json = self.request_to_json()
         # <
             
-        logger.info("job: %s session %s", self.response_json['job_monitor']['session_id'], self.response_json['job_monitor']['job_id'])
+        logger.info("session: %s job: %s", self.response_json['job_monitor']['session_id'], self.response_json['job_monitor']['job_id'])
 
         if 'query_status' not in self.response_json:
             logger.error(json.dumps(self.response_json, indent=4))
             raise RuntimeError(
-                "request json does not contain query_status: %s", self.response_json)
+                f"request json does not contain query_status: {self.response_json}")
 
         if self.response_json.get('query_status') != self.query_status:
             self.logger.info(
@@ -504,15 +524,22 @@ class DispatcherAPI:
 
             self.query_status = self.response_json.get('query_status')
 
+        returned_job_id = self.response_json['job_monitor']['job_id']
+
         if self.job_id is None:
-            self.job_id = self.response_json['job_monitor']['job_id']
+            self.job_id = returned_job_id
 
             self.logger.info(
                 f"... assigned job id: {C.BROWN}{self.job_id}{C.NC}")
         else:
             if self.response_json['query_status'] != self.query_status:
-                raise RuntimeError("request returns job_id {res_json['query_status']} != known job_id {self.query_status}"
-                                   "this should not happen! Server must be misbehaving, or client forgot correct job id")
+                raise RuntimeError(f"request returns query_status {self.response_json['query_status']} != recorded query_status {self.query_status}"
+                                   f"this should not happen! Server must be misbehaving, or client forgot correct query_status")
+
+            if self.job_id != returned_job_id:
+                raise RuntimeError(f"request returns job_id {returned_job_id} != recorded job_id {self.job_id}"
+                                   f"this should not happen! Server must be misbehaving, or client forgot correct job id")
+
 
         if self.query_status == 'done':
             self.logger.info(
@@ -753,6 +780,8 @@ class DispatcherAPI:
         """
         submit query, wait (if allowed by self.wait), decode output when found
         """
+
+        self.job_id = None
 
         # TODO: it's confusing when and where these are passed
         self.product = product
