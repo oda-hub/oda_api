@@ -888,7 +888,7 @@ disp=DispatcherAPI(url='{url}', instrument='mock')'''
                 else:
                     n = k
 
-                if query_dict[k] is None:
+                if query_dict[k] is not None:
                     _api_dict[n] = query_dict[k]
 
         _cmd_ = f'''{_header}
