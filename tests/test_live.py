@@ -18,7 +18,11 @@ def get_platform_dispatcher(platform="production-1-2"):
 
     R = S.select('?p a oda:platform; oda:location ?loc . ?p ?x ?y',
                  '?p ?x ?y', tojdict=True)
-    locations = R["oda:"+platform]["oda:location"]
+
+    try:
+        locations = R["oda:"+platform]["oda:location"]
+    except:
+        return platform
 
     try:
         return list(locations.keys())[0]
@@ -317,3 +321,40 @@ def test_bad_request(platform):
                 E2_keV=80.0,
                 max_pointings=1000,
             )
+
+
+def test_reusing_disp_instance(dispatcher_live_fixture):
+    from oda_api.api import RequestNotUnderstood 
+
+    disp = get_disp(wait=True, platform=dispatcher_live_fixture)
+    assert disp.wait
+
+    assert disp.job_id is None
+    assert disp.query_status == 'not-prepared'
+
+    data = disp.get_product(
+            instrument="empty",
+            product="dummy",
+            product_type="Dummy",
+            T1="2021-05-01T11:11:11",
+            T2="2021-05-02T11:11:11",
+        )
+
+    assert disp.job_id is not None
+    assert disp.query_status == 'done'
+
+    stored_disp_dict =  disp.__dict__.copy()
+
+    data = disp.get_product(
+            instrument="empty",
+            product="Dummy",
+            product_type="Real",
+            T1="2021-05-01T11:11:11",
+            T2="2021-05-03T11:11:11",
+        )
+
+    assert disp.job_id is not None
+    assert disp.query_status is not None
+
+    assert stored_disp_dict['job_id'] != disp.job_id
+

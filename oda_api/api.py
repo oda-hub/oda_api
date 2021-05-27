@@ -169,6 +169,7 @@ class DispatcherAPI:
                 "for now, we will adopt host, but in the near future it will not be done")
             self.url = host
 
+            #TODO: disregard this, but leave parameter for compatibility
             if host.startswith('http'):
                 self.url = host
             else:
@@ -515,7 +516,7 @@ class DispatcherAPI:
         if 'query_status' not in self.response_json:
             logger.error(json.dumps(self.response_json, indent=4))
             raise RuntimeError(
-                "request json does not contain query_status: %s", self.response_json)
+                f"request json does not contain query_status: {self.response_json}")
 
         if self.response_json.get('query_status') != self.query_status:
             self.logger.info(
@@ -523,15 +524,22 @@ class DispatcherAPI:
 
             self.query_status = self.response_json.get('query_status')
 
+        returned_job_id = self.response_json['job_monitor']['job_id']
+
         if self.job_id is None:
-            self.job_id = self.response_json['job_monitor']['job_id']
+            self.job_id = returned_job_id
 
             self.logger.info(
                 f"... assigned job id: {C.BROWN}{self.job_id}{C.NC}")
         else:
             if self.response_json['query_status'] != self.query_status:
-                raise RuntimeError("request returns job_id {res_json['query_status']} != known job_id {self.query_status}"
-                                   "this should not happen! Server must be misbehaving, or client forgot correct job id")
+                raise RuntimeError(f"request returns query_status {self.response_json['query_status']} != recorded query_status {self.query_status}"
+                                   f"this should not happen! Server must be misbehaving, or client forgot correct query_status")
+
+            if self.job_id != returned_job_id:
+                raise RuntimeError(f"request returns job_id {returned_job_id} != recorded job_id {self.job_id}"
+                                   f"this should not happen! Server must be misbehaving, or client forgot correct job id")
+
 
         if self.query_status == 'done':
             self.logger.info(
