@@ -847,7 +847,7 @@ class DispatcherAPI:
         _alias_dict['query_type'] = 'product_type'
 
         _header = f'''from oda_api.api import DispatcherAPI
-disp=DispatcherAPI(url='{url}', instrument='mock', protocol='https')'''
+disp=DispatcherAPI(url='{url}', instrument='mock')'''
 
         _api_dict = {}
         for k in query_dict.keys():
