@@ -324,7 +324,6 @@ def test_bad_request(platform):
 
 
 def test_reusing_disp_instance(dispatcher_live_fixture):
-    from oda_api.api import RequestNotUnderstood 
 
     disp = get_disp(wait=True, platform=dispatcher_live_fixture)
     assert disp.wait
