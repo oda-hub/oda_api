@@ -343,12 +343,29 @@ def test_reusing_disp_instance(dispatcher_live_fixture):
     assert disp.job_id is not None
     assert disp.query_status == 'done'
 
-    stored_disp_dict =  disp.__dict__.copy()
+    previous_job_id =  disp.job_id
 
     data = disp.get_product(
             instrument="empty",
-            product="Dummy",
-            product_type="Real",
+            product="dummy",
+            product_type="Dummy",
+            T1="2021-05-01T11:11:11",
+            T2="2021-05-02T11:11:11",
+        )
+
+    assert disp.job_id is not None
+    assert disp.query_status == 'done'
+    assert disp.query_status == 'done'
+
+    # identical request results in the same job id
+    assert previous_job_id == disp.job_id
+
+    previous_job_id =  disp.job_id
+
+    data = disp.get_product(
+            instrument="empty",
+            product="dummy",
+            product_type="Dummy",
             T1="2021-05-01T11:11:11",
             T2="2021-05-03T11:11:11",
         )
@@ -356,5 +373,6 @@ def test_reusing_disp_instance(dispatcher_live_fixture):
     assert disp.job_id is not None
     assert disp.query_status is not None
 
-    assert stored_disp_dict['job_id'] != disp.job_id
+    # different request results in different job id
+    assert previous_job_id != disp.job_id
 

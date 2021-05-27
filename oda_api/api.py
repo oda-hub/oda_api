@@ -781,6 +781,8 @@ class DispatcherAPI:
         submit query, wait (if allowed by self.wait), decode output when found
         """
 
+        self.job_id = None
+
         # TODO: it's confusing when and where these are passed
         self.product = product
         self.instrument = instrument
