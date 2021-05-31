@@ -1,4 +1,4 @@
-import os
+import jwt
 import time
 import random
 import requests
@@ -8,9 +8,26 @@ import contextlib
 
 from oda_api.api import DispatcherAPI, Unauthorized
 
+
 # this can be set by pytest ... --log-cli-level DEBUG
 logging.getLogger('oda_api').setLevel(logging.DEBUG)
 logging.getLogger('oda_api').addHandler(logging.StreamHandler())
+
+
+secret_key = 'secretkey_test'
+
+default_exp_time = int(time.time()) + 5000
+default_token_payload = dict(
+    sub="mtm@mtmco.net",
+    name="mmeharga",
+    roles="general",
+    exp=default_exp_time,
+    tem=0,
+    mstout=True,
+    mssub=True,
+    intsub=5
+)
+
 
 
 def get_platform_dispatcher(platform="production-1-2"):
@@ -135,28 +152,68 @@ def test_waiting(scw_kind, platform):
 
 
 
-@pytest.mark.slow
-@pytest.mark.parametrize("platform", ["staging"])
-def test_unauthorized(platform):
+
+def test_unauthorized(dispatcher_live_fixture):
     from oda_api.api import UserError
 
-    disp = get_disp(wait=True, platform=platform)
+    disp = get_disp(wait=True, platform=dispatcher_live_fixture)
 
     with pytest.raises(UserError):
         disp.poll()
 
     assert disp.wait
 
-    with pytest.raises(Unauthorized):
+    try:        
         data = disp.get_product(
-                instrument="isgri",
-                product="isgri_image",
-                product_type="Real",
-                osa_version="OSA10.2",
-                E1_keV=25.0,
-                E2_keV=80.0,
+                instrument="empty",
+                product="numerical",
+                product_type="Dummy",
+                T1="2011-11-11T11:11:11",
+                T2="2011-11-11T11:11:11",
                 max_pointings=1000,
             )
+
+        raise RuntimeError('did not raise Unauthorized for expired token')
+    except Unauthorized as e:
+        assert e.message == "Unfortunately, your priviledges are not sufficient to make the request for this particular product and parameter combination.\n"\
+                            "- Your priviledge roles include []\n"\
+                            "- You are lacking all of the following roles:\n"\
+                            " - general: please refer to support for details\n"\
+                            "You can request support if you think you should be able to make this request."
+    
+
+def test_token_expired(dispatcher_live_fixture):
+    from oda_api.api import UserError
+
+    disp = get_disp(wait=True, platform=dispatcher_live_fixture)
+
+    with pytest.raises(UserError):
+        disp.poll()
+
+    assert disp.wait
+
+    token_payload = {
+                        **default_token_payload,
+                        'exp': int(time.time()) - 10,
+                    }   
+
+    encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
+
+
+    try:        
+        data = disp.get_product(
+                instrument="empty",
+                product="dummy",
+                product_type="Dummy",
+                T1=25.0,
+                T2=80.0,
+                token=encoded_token
+            )
+
+        raise RuntimeError('did not raise Unauthorized for expired token')
+    except Unauthorized as e:
+        assert e.message == "RequestNotAuthorized():token expired"
+    
 
 
 @pytest.mark.slow

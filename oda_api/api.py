@@ -339,7 +339,10 @@ class DispatcherAPI:
                 NotImplementedError
 
             if response.status_code == 403:
-                raise Unauthorized(response.json()['exit_status']['message'])
+                try:
+                    raise Unauthorized(response.json()['exit_status']['message'])
+                except KeyError:
+                    raise Unauthorized(response.json()['error'])
             
             if response.status_code == 400:
                 raise RequestNotUnderstood(
