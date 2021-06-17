@@ -2,6 +2,7 @@ oda_api
 ==========================================
 
 [![PyPI version](https://badge.fury.io/py/oda-api.svg)](https://badge.fury.io/py/oda-api)
+[![Documentation Status](https://readthedocs.org/projects/oda-api/badge/?version=latest)](https://oda-api.readthedocs.io/en/latest/?badge=latest)
 ![Upload Python Package](https://github.com/cdcihub/oda_api/workflows/Upload%20Python%20Package/badge.svg)
 ![Prose Linting](https://github.com/volodymyrss/integral-isgri-rate-meaning/workflows/Prose%20Linting/badge.svg)
 ![Executing Notebook](https://github.com/volodymyrss/integral-isgri-rate-meaning/workflows/Executing%20Notebook/badge.svg)
