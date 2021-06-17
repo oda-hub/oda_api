@@ -35,3 +35,4 @@ Crab*fits*
 *.log
 scratch*
 response.json
+.coverage

@@ -23,7 +23,7 @@ on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 # -- Project information -----------------------------------------------------
 
 project = 'oda_api'
-copyright = '2019, andrea tramacere'
+copyright = '2021, andrea tramacere'
 author = 'andrea tramacere'
 
 
