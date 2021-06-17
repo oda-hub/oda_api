@@ -3,18 +3,12 @@ Installation
 
 Download code
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-https://github.com/andreatramacere/oda_api/archive/1.1.13.tar.gz
+https://github.com/oda-hub/oda_api/archive/refs/tags/v1.1.13.tar.gz
 
 Installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-1) PIP
-    .. code-block:: bash
+.. code-block:: bash
 
-        - pip install oda-api
+    - pip install oda-api
 
-2) Anaconda
-     .. code-block:: bash
-
-        - conda install -c conda-forge --file requirements.txt
-        - python setup.py install
 
