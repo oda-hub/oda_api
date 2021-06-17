@@ -26,10 +26,6 @@ project = 'oda_api'
 copyright = '2019, andrea tramacere'
 author = 'andrea tramacere'
 
-# The short X.Y version
-#version = ''
-# The full version, including alpha/beta/rc tags
-#release = '1.0.0'
 
 with open('../../oda_api/pkg_info.json') as fp:
     _info = json.load(fp)
