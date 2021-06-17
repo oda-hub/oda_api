@@ -1,4 +1,4 @@
-Quick Start (oda api v1.0.0)
+Quick Start (oda api v1.1.12)
 ============================
 
 .. code:: ipython3
@@ -177,7 +177,7 @@ submitting it
     session_id 6BBRP68TSYF0SBFR
     dry_run (True,)
     api True
-    oda_api_version 1.0.0
+    oda_api_version 1.1.12
     
     
     query failed!
@@ -244,7 +244,7 @@ now we skip the dry_run to actually get the products
     session_id MW8JICUUZVN28DF7
     dry_run (False,)
     api True
-    oda_api_version 1.0.0
+    oda_api_version 1.1.12
     
     
     query done succesfully!
@@ -382,7 +382,7 @@ to generate a catalog to pass to the dispatcher api
     session_id OEMY29CY4CPESK8Z
     dry_run (False,)
     api True
-    oda_api_version 1.0.0
+    oda_api_version 1.1.12
     
     
     query done succesfully!
@@ -624,7 +624,7 @@ the ODA LC plotting tool
     session_id 9VLSUGRTNT9PB5GC
     dry_run (False,)
     api True
-    oda_api_version 1.0.0
+    oda_api_version 1.1.12
     
     
     query done succesfully!
@@ -888,7 +888,7 @@ explore LC
      'api': 'True',
      'dry_run': 'False',
      'instrument': 'isgri',
-     'oda_api_version': '1.0.0',
+     'oda_api_version': '1.1.12',
      'off_line': 'False',
      'osa_version': 'OSA10.2',
      'product_type': 'isgri_lc',
@@ -897,7 +897,7 @@ explore LC
      'radius': '15.0',
      'session_id': '9VLSUGRTNT9PB5GC',
      'time_bin': '70',
-     'url': 'http://www.astro.unige.ch/cdci/astrooda_?product_type=isgri_lc&verbose=False&dry_run=False&osa_version=OSA10.2&T2=2003-03-16T00%3A03%3A12.0&time_bin=70&session_id=9VLSUGRTNT9PB5GC&T1=2003-03-15T23%3A27%3A40.0&instrument=isgri&api=True&radius=15.0&RA=255.986542&query_type=Real&off_line=False&DEC=-37.844167&query_status=new&oda_api_version=1.0.0',
+     'url': 'http://www.astro.unige.ch/cdci/astrooda_?product_type=isgri_lc&verbose=False&dry_run=False&osa_version=OSA10.2&T2=2003-03-16T00%3A03%3A12.0&time_bin=70&session_id=9VLSUGRTNT9PB5GC&T1=2003-03-15T23%3A27%3A40.0&instrument=isgri&api=True&radius=15.0&RA=255.986542&query_type=Real&off_line=False&DEC=-37.844167&query_status=new&oda_api_version=1.1.12',
      'verbose': 'False'}
 
 
@@ -925,7 +925,7 @@ Polar LC
     session_id 66B1J0ZNB23TSSWM
     dry_run (False,)
     api True
-    oda_api_version 1.0.0
+    oda_api_version 1.1.12
     
     
     query done succesfully!
@@ -1062,7 +1062,7 @@ SPIACS LC
     session_id 2WSIOJ26BO2XQX2F
     dry_run (False,)
     api True
-    oda_api_version 1.0.0
+    oda_api_version 1.1.12
     
     
     query done succesfully!
@@ -1224,7 +1224,7 @@ the ODA and spectra
     session_id 2EL2CM3PYEFCY3XQ
     dry_run (False,)
     api True
-    oda_api_version 1.0.0
+    oda_api_version 1.1.12
     
     
     query done succesfully!
@@ -1670,7 +1670,7 @@ JEM-X test
     session_id BMR4DAJFZCSZS0QP
     dry_run (False,)
     api True
-    oda_api_version 1.0.0
+    oda_api_version 1.1.12
     
     
     query done succesfully!
@@ -1715,7 +1715,7 @@ JEM-X test
     session_id 2HUN0F2V1ENSODGY
     dry_run (False,)
     api True
-    oda_api_version 1.0.0
+    oda_api_version 1.1.12
     the job has been submitted on the remote server
      / the job is working remotely, please wait status=done - job_id=-6687876006000366990  990 
     
