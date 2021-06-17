@@ -32,7 +32,7 @@ def test_oda_api_code(dispatcher_live_fixture):
     output_api_code = jdata_output['prod_dictionary']['api_code']
 
     expected_api_code = f'''from oda_api.api import DispatcherAPI
-disp=DispatcherAPI(url='http://www.astro.unige.ch/cdci/astrooda_', instrument='mock')
+disp=DispatcherAPI(url='http://0.0.0.0:8001', instrument='mock')
 
 par_dict={{
     "instrument": "empty",

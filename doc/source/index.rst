@@ -7,7 +7,7 @@ ODA API documentation
 ===================================
 API for cdci_data_analysis
 
-:Authors: `Andrea Tramacere <andrea.tramacere@unige.ch>`_
+:Authors: `Andrea Tramacere <andrea.tramacere@unige.ch>, Carlo Ferrigno <Carlo.Ferrigno@unige.ch>`_
 
 Documentation
 -------------
@@ -15,10 +15,10 @@ Documentation
 .. toctree::
    :maxdepth: 1
 
-   installation <install.rst>
-   tutorial  <user_guide/tutorial_main.rst>
-   code documentation (API) <api/modules.rst>
-.. user guide <user_guide/user_guide.rst>
+   Installation <install.rst>
+   Tutorial  <user_guide/tutorial_main.rst>
+   Code documentation (API) <api/modules.rst>
+.. User guide <user_guide/user_guide.rst>
 
 
 
