@@ -1,5 +1,6 @@
 
 from __future__ import absolute_import, division, print_function
+from json.decoder import JSONDecodeError
 from astropy.table import Table
 from .data_products import NumpyDataProduct, BinaryData, ApiCatalog
 
@@ -13,6 +14,7 @@ import warnings
 import requests
 import ast
 import json
+import simplejson
 import random
 import string
 import time
@@ -20,7 +22,6 @@ import os
 import inspect
 import sys
 from astropy.io import ascii
-import base64
 import copy
 import pickle
 from . import __version__
@@ -340,9 +341,14 @@ class DispatcherAPI:
 
             if response.status_code == 403:
                 try:
-                    raise Unauthorized(response.json()['exit_status']['message'])
+                    response_json = response.json()                                    
+                except (json.decoder.JSONDecodeError, simplejson.errors.JSONDecodeError):
+                    raise Unauthorized(f"undecodable: {response.text}")
+
+                try:
+                    raise Unauthorized(response_json['exit_status']['message'])
                 except KeyError:
-                    raise Unauthorized(response.json()['error'])
+                    raise Unauthorized(response_json['error'])
             
             if response.status_code == 400:
                 raise RequestNotUnderstood(
