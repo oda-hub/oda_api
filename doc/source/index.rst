@@ -7,7 +7,7 @@ ODA API documentation
 ===================================
 API for cdci_data_analysis
 
-:Author: `Andrea Tramacere <andrea.tramacere@unige.ch>`_
+:Authors: `Andrea Tramacere <andrea.tramacere@unige.ch>`_
 
 Documentation
 -------------
