@@ -3,7 +3,7 @@ Installation
 
 Download code
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-https://github.com/andreatramacere/oda_api/archive/1.0.0.tar.gz
+https://github.com/andreatramacere/oda_api/archive/1.1.13.tar.gz
 
 Installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
