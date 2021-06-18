@@ -2,6 +2,7 @@ import json
 import os
 import jwt
 import time
+import pytest
 
 secret_key = 'secretkey_test'
 default_exp_time = int(time.time()) + 5000
