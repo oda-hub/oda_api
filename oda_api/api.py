@@ -930,10 +930,11 @@ class DataCollection(object):
 
             name, var_name = self._build_prod_name(
                 data, name, add_meta_to_name)
-            setattr(self, var_name, data)
+            # TODO what is the reason for this ?
+            # setattr(self, var_name, data)
 
             self._p_list.append(data)
-            self._n_list.append(name)
+            self._n_list.append(var_name)
 
     def show(self):
         for ID, prod_name in enumerate(self._n_list):
