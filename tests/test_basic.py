@@ -16,7 +16,7 @@ default_token_payload = dict(
 )
 
 
-def test_show_product_isgri_lc(dispatcher_live_fixture, capsys):
+def test_show_product(dispatcher_live_fixture, capsys):
     with capsys.disabled():
         from oda_api.api import DispatcherAPI
 
@@ -37,6 +37,7 @@ def test_show_product_isgri_lc(dispatcher_live_fixture, capsys):
     products.show()
 
     captured = capsys.readouterr()
+    print("Show() output: ", captured.out)
     assert captured.out == "ID=0 prod_name=isgri_lc_0_OAO1657m415  meta_data: {'src_name': 'OAO 1657-415', 'time_bin': 0.0115739687598762, 'time': 'TIME', 'rate': 'RATE', 'rate_err': 'ERROR'}\n\n"
 
 
