@@ -955,7 +955,7 @@ class DataCollection(object):
                 meta_data = ''
 
             L.append({
-                'ID': ID, 'prod_name': prod_name, 'meta_data:': meta_data
+                'ID': ID, 'prod_name': prod_name, 'meta_data': meta_data
             })
 
         return L
