@@ -16,6 +16,7 @@ default_token_payload = dict(
 )
 
 
+@pytest.mark.slow
 def test_show_product(dispatcher_live_fixture, capsys):
     with capsys.disabled():
         from oda_api.api import DispatcherAPI
