@@ -939,7 +939,7 @@ class DataCollection(object):
             setattr(self, var_name, data)
 
             self._p_list.append(data)
-            self._n_list.append(name)
+            self._n_list.append(var_name)
 
     def show(self):
         for ID, prod_name in enumerate(self._n_list):
