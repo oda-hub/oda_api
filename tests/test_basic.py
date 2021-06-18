@@ -42,6 +42,20 @@ def test_show_product(dispatcher_live_fixture, capsys):
     print("Show() output: ", captured.out)
     assert captured.out == "ID=0 prod_name=isgri_lc_0_OAO1657m415  meta_data: {'src_name': 'OAO 1657-415', 'time_bin': 0.0115739687598762, 'time': 'TIME', 'rate': 'RATE', 'rate_err': 'ERROR'}\n\n"
 
+    assert hasattr(products, "isgri_lc_0_OAO1657m415")
+    assert 'isgri_lc_0_OAO1657m415' in products._n_list
+    assert len(products._p_list) == 1
+    assert products._p_list[0].name == 'isgri_lc'
+    meta_data_dic = dict(
+        src_name='OAO 1657-415',
+        time_bin=0.0115739687598762,
+        time='TIME',
+        rate='RATE',
+        rate_err='ERROR'
+    )
+    assert products._p_list[0].meta_data == meta_data_dic
+
+
 
 def test_oda_api_code(dispatcher_live_fixture):
     import oda_api.api
