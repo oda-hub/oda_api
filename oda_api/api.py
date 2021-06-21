@@ -18,9 +18,9 @@ import json
 
 try:
     #compatibility in some remaining environments
-    import simplejson
+    import simplejson # type: ignore
 except ImportError:
-    import json as simplejson
+    import json as simplejson # type: ignore
 
 import random
 import string
