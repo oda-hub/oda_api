@@ -13,8 +13,15 @@ __author__ = "Andrea Tramacere, Volodymyr Savchenko"
 import warnings
 import requests
 import ast
+
 import json
-import simplejson
+
+try:
+    #compatibility in some remaining environments
+    import simplejson
+except ImportError:
+    import json as simplejson
+
 import random
 import string
 import time
