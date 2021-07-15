@@ -212,8 +212,7 @@ def test_token_expired(dispatcher_live_fixture):
 
         raise RuntimeError('did not raise Unauthorized for expired token')
     except Unauthorized as e:
-        assert e.message == "RequestNotAuthorized():token expired"
-    
+        assert e.message == "RequestNotAuthorized():the token provided is expired, please try to logout and login again"
 
 
 @pytest.mark.slow
