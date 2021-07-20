@@ -16,6 +16,8 @@ __author__ = "Andrea Tramacere"
 # Project
 # relative import eg: from .mod import f
 
+import typing
+
 from json_tricks import numpy_encode,dumps,loads,numeric_types_hook,hashodict,json_numpy_obj_hook
 from astropy.io import fits as pf
 from astropy.io import ascii as astropy_io_ascii
@@ -446,8 +448,8 @@ class NumpyDataProduct(object):
         except IndexError as e:
             raise RuntimeError(f"problem get_data_unit ID:{ID} in self.data_unit:{self.data_unit}")
 
-    def get_data_unit_by_name(self, name: str) -> NumpyDataUnit:
-        _du=None
+    def get_data_unit_by_name(self, name: str) -> typing.Union[NumpyDataUnit, None]:
+        _du = None
 
         for du in self.data_unit:
             if du.name == name:
@@ -540,18 +542,25 @@ class NumpyDataProduct(object):
         return cls(data_unit=[NumpyDataUnit.from_fits_hdu(h) for h in  hdul],meta_data=meta_data,name=name)
 
     @classmethod
-    def decode(cls, encoded_obj: str, from_json=False):
-        # from_json has the opposite meaning of what the name implies
+    def decode(cls, encoded_obj: typing.Union[str, dict], from_json=False):
         if encoded_obj is not None:
-            if not from_json:
+            # from_json has the opposite meaning of what the name implies
+            if from_json:
+                if isinstance(encoded_obj, dict):
+                    obj_dict: dict = encoded_obj
+                else:
+                    logger.warning('decoding from unexpected object')
+                    obj_dict = encoded_obj # type: ignore
+            else:
                 try:
-                    encoded_obj = json.loads(literal_to_json(encoded_obj))
+                    obj_dict = json.loads(literal_to_json(encoded_obj))
                 except Exception as e:
                     logger.debug('unable to decode json object: %s', e)
+                    # why not raise here?                
 
-            encoded_data_unit_list = encoded_obj['data_unit_list']
-            encoded_name = encoded_obj['name']
-            encoded_meta_data = encoded_obj['meta_data']
+            encoded_data_unit_list = obj_dict['data_unit_list']
+            encoded_name = obj_dict['name']
+            encoded_meta_data = obj_dict['meta_data']
 
             _data_unit_list=[]
             #print('encoded_data_unit_list',encoded_data_unit_list)
@@ -561,8 +570,6 @@ class NumpyDataProduct(object):
             _data_unit_list=[]
             encoded_name=None
             encoded_meta_data={}
-
-
 
         return cls(data_unit=_data_unit_list,name=encoded_name,meta_data=eval(encoded_meta_data))
 
