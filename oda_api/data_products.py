@@ -33,7 +33,7 @@ import  pickle
 import gzip
 import  hashlib
 from numpy import nan,inf
-from sys import version_info
+from sys import path_importer_cache, version_info
 
 from io import StringIO
 
@@ -42,6 +42,10 @@ import logging
 logger = logging.getLogger('oda_api.data_products')
 
 __all__=['sanitize_encoded','_chekc_enc_data','BinaryData','NumpyDataUnit','NumpyDataProduct','ApiCatalog','ODAAstropyTable']
+
+import astropy.io.fits.fitsrec
+import numpy as np
+
 
 # these 3 functions are remnants of misusing repr() to serialize data instead of json
 def sanitize_encoded(d):
@@ -325,21 +329,25 @@ class NumpyDataUnit(object):
 
             if use_pickle is True:
 
+                if isinstance(self.data, astropy.io.fits.fitsrec.FITS_rec):
+                    pickled_data = pickle.dumps(self.data)
+                else:
+                    pickled_data = pickle.dumps(numpy.array(self.data))
+
                 if use_gzip==True:
-                    print ('gizziping')
-                    out_file = StringIO()
+                    out_file = StringIO(pickled_data)
                     gzip_file = gzip.GzipFile(fileobj=out_file, mode='wb')
 
-
-                    gzip_file.write(pickle.dumps(numpy.array(self.data)))
+                    gzip_file.write()
                     _binarys = base64.b64encode(out_file.getvalue())
                     gzip_file.close()
                 else:
-                    _binarys= base64.b64encode(pickle.dumps(numpy.array(self.data),2))
-
+                    _binarys= base64.b64encode(
+                        pickled_data
+                    )
 
             else:
-                _d= json.dumps(self.data, cls=JsonCustomEncoder)
+                _d= json.dumps(self.data, cls=JsonCustomEncoderPatched)
 
 
         _o_dict = {'data': _d,
@@ -398,8 +406,7 @@ class NumpyDataUnit(object):
                     _data = pickle.loads(_binarys)
 
         elif encoded_data is not None:
-            #print('using JsonCustomEncoder')
-            encoded_data=eval(encoded_data)
+            encoded_data=eval(encoded_data) # !!
 
             for ID,c in enumerate(encoded_data):
                 encoded_data[ID]=tuple(c)
