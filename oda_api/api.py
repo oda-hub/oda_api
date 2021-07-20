@@ -882,7 +882,7 @@ class DispatcherAPI:
         return d
 
     @staticmethod
-    def set_api_code(query_dict, url="www.astro.unige.ch/cdci/astrooda/dispatch-data"):
+    def set_api_code(query_dict, url="www.astro.unige.ch/mmoda/dispatch-data"):
 
         _skip_list_ = ['job_id', 'query_status',
                        'session_id', 'use_resolver[local]', 'use_scws']
