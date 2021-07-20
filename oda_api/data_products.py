@@ -32,15 +32,16 @@ import gzip
 import  hashlib
 from numpy import nan,inf
 from sys import version_info
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
 
+from io import StringIO
+
+import logging
+
+logger = logging.getLogger('oda_api.data_products')
 
 __all__=['sanitize_encoded','_chekc_enc_data','BinaryData','NumpyDataUnit','NumpyDataProduct','ApiCatalog','ODAAstropyTable']
 
-
+# these 3 functions are remnants of misusing repr() to serialize data instead of json
 def sanitize_encoded(d):
     d = d.replace('null', 'None')
     d = d.replace('true', 'True')
@@ -49,6 +50,21 @@ def sanitize_encoded(d):
     d = d.replace('Infinity', 'inf')
     return d
 
+def json_to_literal(d):
+    d = d.replace('null', 'None')
+    d = d.replace('true', 'True')
+    d = d.replace('false', 'False')
+    d = d.replace('NaN', 'nan')
+    d = d.replace('Infinity', 'inf')
+    return d
+
+def literal_to_json(d):
+    d = d.replace('None', 'null')
+    d = d.replace('True', 'true')
+    d = d.replace('False', 'false')
+    d = d.replace('nan', 'NaN')
+    d = d.replace('inf', 'Infinity')
+    return d
 
 
 def _chekc_enc_data(data):
@@ -59,10 +75,7 @@ def _chekc_enc_data(data):
 
     return _l
 
-
-
-
-
+# not used?
 class ODAAstropyTable(object):
 
     def __init__(self,table_object,name='astropy table', meta_data={}):
@@ -160,14 +173,14 @@ class BinaryData(object):
 
 class NumpyDataUnit(object):
 
-    def __init__(self,data,data_header={},meta_data={},hdu_type=None,name='table',units_dict=None):
+    def __init__(self, data, data_header={}, meta_data={}, hdu_type=None, name='table', units_dict=None):
         self._hdu_type_list_ = ['primary', 'image', 'table', 'bintable']
 
         self.name=name
-        self._chekc_data(data)
-        self._chekc_hdu_type(hdu_type)
-        self._chekc_dict(data_header)
-        self._chekc_dict(meta_data)
+        self._check_data(data)
+        self._check_hdu_type(hdu_type)
+        self._check_dict(data_header)
+        self._check_dict(meta_data)
 
         self.data=data
         self.header=data_header
@@ -175,25 +188,37 @@ class NumpyDataUnit(object):
         self.hdu_type=hdu_type
         self.units_dict=units_dict
 
-    def _chekc_data(self,data):
+    # interface with a typo, preserving with a warning
+    def _warn_chekc_typo(self):
+        logger.debug('please _check_* instead of _chekc_* functions, they will be removed')
+    
+    def _chekc_data(self, data):
+        self._warn_chekc_typo()
+        return self._check_data(data)        
+
+    def _chekc_hdu_type(self,hdu_type):
+        return self._check_hdu_type(hdu_type)
+
+    def _chekc_dict(self, _kw):
+        self._warn_chekc_typo()
+        return self._check_dict(_kw)
 
 
+    def _check_data(self,data):
         if isinstance(data, numpy.ndarray) or data is None:
             pass
         else:
             raise RuntimeError('data is not numpy ndarray object')
 
-    def _chekc_hdu_type(self,hdu_type):
+    def _check_hdu_type(self,hdu_type):
         if hdu_type is None:
             pass
         elif hdu_type in self._hdu_type_list_:
             pass
         else:
             raise RuntimeError('hdu type ', hdu_type, 'not in allowed', self._hdu_type_list_)
-
-
-
-    def _chekc_dict(self,_kw):
+    
+    def _check_dict(self,_kw):
 
         if isinstance(_kw, dict):
             pass
@@ -415,13 +440,13 @@ class NumpyDataProduct(object):
         print ('------------------------------')
 
 
-    def get_data_unit(self, ID):
+    def get_data_unit(self, ID: int) -> NumpyDataUnit:
         try:
             return self.data_unit[ID]
         except IndexError as e:
             raise RuntimeError(f"problem get_data_unit ID:{ID} in self.data_unit:{self.data_unit}")
 
-    def get_data_unit_by_name(self,name):
+    def get_data_unit_by_name(self, name: str) -> NumpyDataUnit:
         _du=None
 
         for du in self.data_unit:
@@ -443,8 +468,8 @@ class NumpyDataProduct(object):
         else:
             _dl = [data]
 
-        for ID,_d  in enumerate(_dl):
-            if isinstance(_d,NumpyDataUnit):
+        for ID, _d  in enumerate(_dl):
+            if isinstance(_d, NumpyDataUnit):
                 pass
             else:
                 raise RuntimeError ('DataUnit not valid')
@@ -465,13 +490,19 @@ class NumpyDataProduct(object):
 
 
 
-    def encode(self,use_pickle=True,use_gzip=False,to_json=False):
-        _enc=[]
-        #print('use_gzip',use_gzip)
-        for ID, ed in enumerate(self.data_unit):
-            #print('data_unit',ID)
-            _enc.append(self.data_unit[ID].encode(use_pickle=use_pickle,use_gzip=use_gzip))
+    def encode(self, use_pickle=True, use_gzip=False, to_json=False):
+        _enc = []
+
+        for ID, data_unit in enumerate(self.data_unit):
+            _enc.append(
+                data_unit.encode(
+                        use_pickle=use_pickle,
+                        use_gzip=use_gzip
+                    )
+                )
+
         _o_dict={'data_unit_list':_enc,'name':self.name,'meta_data':dumps(self.meta_data)}
+
         if to_json==True:
             return json.dumps(_o_dict)
 
@@ -509,13 +540,14 @@ class NumpyDataProduct(object):
         return cls(data_unit=[NumpyDataUnit.from_fits_hdu(h) for h in  hdul],meta_data=meta_data,name=name)
 
     @classmethod
-    def decode(cls,encoded_obj,from_json=False):
+    def decode(cls, encoded_obj: str, from_json=False):
+        # from_json has the opposite meaning of what the name implies
         if encoded_obj is not None:
-            if from_json==False:
+            if not from_json:
                 try:
-                    encoded_obj = json.loads(sanitize_encoded(encoded_obj))
-                except:
-                    pass
+                    encoded_obj = json.loads(literal_to_json(encoded_obj))
+                except Exception as e:
+                    logger.debug('unable to decode json object: %s', e)
 
             encoded_data_unit_list = encoded_obj['data_unit_list']
             encoded_name = encoded_obj['name']
