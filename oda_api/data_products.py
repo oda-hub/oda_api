@@ -338,7 +338,7 @@ class NumpyDataUnit(object):
                     out_file = StringIO(pickled_data)
                     gzip_file = gzip.GzipFile(fileobj=out_file, mode='wb')
 
-                    gzip_file.write()
+                    gzip_file.write(pickled_data)
                     _binarys = base64.b64encode(out_file.getvalue())
                     gzip_file.close()
                 else:
@@ -347,7 +347,7 @@ class NumpyDataUnit(object):
                     )
 
             else:
-                _d= json.dumps(self.data, cls=JsonCustomEncoderPatched)
+                _d= json.dumps(self.data, cls=JsonCustomEncoder)
 
 
         _o_dict = {'data': _d,
