@@ -168,7 +168,7 @@ class DispatcherAPI:
                  ):
 
         if url is None:
-            url = "https://www.astro.unige.ch/cdci/astrooda/dispatch-data"
+            url = "https://www.astro.unige.ch/mmoda/dispatch-data"
 
         if host is not None:
             logger.warning(

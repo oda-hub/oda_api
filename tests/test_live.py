@@ -51,7 +51,7 @@ def pick_scw(kind="any"):
     if kind == "crab":
         return "066500220010.001"
     elif kind == "any":
-        scwlist = requests.get("https://www.astro.unige.ch/cdci/astrooda/dispatch-data/"
+        scwlist = requests.get("https://www.astro.unige.ch/mmoda/dispatch-data/"
                                "gw/timesystem/api/v1.0/scwlist/cons/"
                                "2002-12-17T08:00:00/2020-12-21T08:00:00"
                                "?&ra=83&dec=22&radius=200.0&min_good_isgri=1000").json()
