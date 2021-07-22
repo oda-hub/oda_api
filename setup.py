@@ -45,6 +45,11 @@ setup(name='oda_api',
             "pytest-xdist[psutil]",
             "astroquery-integral==0.1.0",
         ],
+      extras_require={
+            "jwt": [
+                "pyjwt"
+            ]
+          },
       entry_points={
           "console_scripts": [
             "oda-api = oda_api.cli:main"
