@@ -559,11 +559,15 @@ class NumpyDataProduct(object):
                     logger.warning('decoding from unexpected object')
                     obj_dict = encoded_obj # type: ignore
             else:
-                try:
-                    obj_dict = json.loads(literal_to_json(encoded_obj))
-                except Exception as e:
-                    logger.debug('unable to decode json object: %s', e)
-                    # why not raise here?                
+                if isinstance(encoded_obj, dict):
+                    obj_dict: dict = encoded_obj
+                else:
+                    logger.warning('decoding from unexpected object')
+                    try:
+                        obj_dict = json.loads(literal_to_json(encoded_obj))
+                    except Exception as e:
+                        logger.debug('unable to decode json object: %s', e)                    
+                        # why not raise here?                
 
             encoded_data_unit_list = obj_dict['data_unit_list']
             encoded_name = obj_dict['name']
