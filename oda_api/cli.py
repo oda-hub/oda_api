@@ -1,5 +1,6 @@
 import click
 import logging
+import time
 
 import oda_api.api as api
 from oda_api.token import discover_token, decode_oda_token, format_token, update_token
@@ -74,25 +75,45 @@ def inspect(obj):
 
     decoded_token = decode_oda_token(token, secret_key=obj['secret_key'])
 
-    logger.info("your token: %s", format_token(decoded_token))
+    logger.info("your token payload: %s", format_token(decoded_token))
+
+    expires_in_s = decoded_token['exp'] - time.time()
+
+    if expires_in_s < 0:
+        logger.warning("token expired %.1f h ago!", -expires_in_s/3600)    
+    else:
+        logger.info("expires in %.1f h", expires_in_s/3600)
 
     
 @tokencli.command()
-@click.option("--disable-email", default=False)
+@click.option("--disable-email", default=False, is_flag=True)
+@click.option("--allow-invalid", default=False, is_flag=True)
+@click.option("--new-validity-hours", default=None, type=float)
 @click.pass_obj
-def update(obj, disable_email):
+def modify(obj, disable_email, allow_invalid, new_validity_hours):
     token = discover_token()
 
-    decoded_token = decode_oda_token(token, secret_key=obj['secret_key'])
+    decoded_token = decode_oda_token(token, secret_key=obj['secret_key'], allow_invalid=allow_invalid)
 
     logger.info("your current token payload: %s", format_token(decoded_token))
 
     def mutate_token_payload(payload):
-        return payload
+        new_payload = payload.copy()
+        if disable_email:
+            logger.info("disabling email submission")
+            new_payload['mssub'] = False
+            new_payload['msdone'] = False
 
-    updated_token = update_token(token, secret_key=obj['secret_key'])
+        if new_validity_hours is not None:
+            new_payload['exp'] = time.time() + new_validity_hours * 3600
+            logger.info("updating validity to %s h from now, until %s", new_validity_hours, time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime(new_payload['exp'])))
 
-    logger.info("your new current token: %s", format_token(decoded_token))
+        return new_payload
+
+    updated_token = update_token(token, secret_key=obj['secret_key'], payload_mutation=mutate_token_payload, allow_invalid=allow_invalid)
+
+    logger.info("your new token payload: %s", format_token(decoded_token))
+    logger.info("your new token (secret!): %s", updated_token.decode())
 
 
 def main():
