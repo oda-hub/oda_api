@@ -9,6 +9,7 @@ if colors_enabled:
     CYAN = "\033[36m"
     GRAY = "\033[37m"
     GREY = "\033[37m"
+    YELLOW = "\033[33m"
     NC = "\033[0m"
 
     BOLD = "\033[1m"
