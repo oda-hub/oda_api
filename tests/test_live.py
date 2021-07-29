@@ -199,6 +199,8 @@ def test_token_expired(dispatcher_live_fixture):
 
     encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
 
+    if isinstance(encoded_token, bytes):
+        encoded_token = encoded_token.decode()
 
     try:        
         data = disp.get_product(
