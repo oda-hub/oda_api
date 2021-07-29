@@ -552,15 +552,16 @@ class NumpyDataProduct(object):
     def decode(cls, encoded_obj: typing.Union[str, dict], from_json=False):
         if encoded_obj is not None:
             # from_json has the opposite meaning of what the name implies
+            obj_dict: dict 
             if from_json:
                 if isinstance(encoded_obj, dict):
-                    obj_dict: dict = encoded_obj
+                    obj_dict = encoded_obj
                 else:
                     logger.warning('decoding from unexpected object')
                     obj_dict = encoded_obj # type: ignore
             else:
                 if isinstance(encoded_obj, dict):
-                    obj_dict: dict = encoded_obj
+                    obj_dict = encoded_obj
                 else:
                     logger.warning('decoding from unexpected object')
                     try:

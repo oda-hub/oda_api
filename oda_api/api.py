@@ -112,6 +112,7 @@ def safe_run(func):
         self = args[0]  # because it really is
 
         n_tries_left = self.n_max_tries
+        retry_sleep_s = self.retry_sleep_s
         while True:
             try:
                 return func(*args, **kwargs)
@@ -125,7 +126,7 @@ def safe_run(func):
             except UnexpectedDispatcherStatusCode as e:
                 message = f'unexpected status code: {e}'
                 raise
-            except ConnectionError as e:
+            except (ConnectionError, requests.adapters.ReadTimeout) as e:
                 message = ''
                 message += '\nunable to complete API call'
                 message += '\nin ' + str(func) + ' called with:'
@@ -143,8 +144,8 @@ def safe_run(func):
 
                 if n_tries_left > 0:
                     logger.warning("problem in API call, %i tries left:\n%s\n sleeping %i seconds until retry",
-                                    n_tries_left, message, self.retry_sleep_s)
-                    time.sleep(self.retry_sleep_s)
+                                    n_tries_left, message, retry_sleep_s)
+                    time.sleep(retry_sleep_s)
             
             raise RemoteException(
                 message=message
