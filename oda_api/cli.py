@@ -111,9 +111,10 @@ def modify(obj, disable_email, allow_invalid, new_validity_hours):
         return new_payload
 
     updated_token = update_token(token, secret_key=obj['secret_key'], payload_mutation=mutate_token_payload, allow_invalid=allow_invalid)
+    decoded_token = decode_oda_token(updated_token, secret_key=obj['secret_key'], allow_invalid=allow_invalid)
 
     logger.info("your new token payload: %s", format_token(decoded_token))
-    logger.info("your new token (secret!): %s", updated_token.decode())
+    logger.info("your new token (secret!): %s", updated_token.decode() if isinstance(updated_token, bytes) else updated_token)
 
 
 def main():
