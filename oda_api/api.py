@@ -40,6 +40,8 @@ import numpy as np
 import traceback
 from jsonschema import validate as validate_json
 
+import oda_api.token
+
 import logging
 
 logger = logging.getLogger("oda_api.api")
@@ -845,6 +847,12 @@ class DispatcherAPI:
                         msg += 'and might breack the current request!\n '
                         msg += '----------------------------------------------------------------------------\n'
                         warnings.warn(msg)
+
+        if kwargs.get('token', None) is None:
+            discovered_token = oda_api.token.discover_token()
+            if discovered_token is not None:
+                logger.info("discovered token in environment")
+                kwargs['token'] = discovered_token            
 
         # >
         self.request(kwargs)

@@ -1,3 +1,4 @@
+import oda_api
 import json
 import base64
 import logging
@@ -5,6 +6,7 @@ from os import environ, getcwd, path
 from posixpath import join
 from types import FunctionType, ModuleType
 from typing import Optional
+import time
 
 from jwt.exceptions import ExpiredSignatureError # type: ignore
 
@@ -79,14 +81,28 @@ def discover_token():
             ).read().strip()),
     ]:
         try:
-            logger.info("searching for token in %s", n)
+            logger.debug("searching for token in %s", n)
             token = m()
+            decoded_token = oda_api.token.decode_oda_token(token)            
+
+            expires_in_s = decoded_token['exp'] - time.time()
+
+            if expires_in_s < 0:
+                logger.debug("token expired %.1f h ago!", -expires_in_s/3600)    
+                token = None
+            else:
+                logger.info("found token in %s your token payload: %s", n, format_token(decoded_token))
+                logger.info("token expires in %.1f h", expires_in_s/3600)                
+                break
         except Exception as e:
             failed_methods.append(f"{n}: {e}")
             logger.debug("failed to find token with current method: %s", failed_methods[-1])
+            token = None
 
     if token is None:
         logger.debug("failed to discover token with any known method")        
+    else:
+        logger.debug("discovered token method %s", n)        
 
     return token
 
