@@ -816,7 +816,7 @@ class DispatcherAPI:
             instrument=instrument, product_type=product), cookies=self.cookies)
 
         if res.status_code != 200:
-            warnings.warn(
+            self.logger.warning(
                 'parameter check not available on remote server, check carefully parameters name')
         else:
             _ignore_list = ['instrument', 'product_type', 'query_type',
@@ -841,9 +841,9 @@ class DispatcherAPI:
                         msg += '%s' % valid_names
                         msg += '\n'
                         msg += 'this will throw an error in a future version \n'
-                        msg += 'and might breack the current request!\n '
+                        msg += 'and might brake the current request!\n '
                         msg += '----------------------------------------------------------------------------\n'
-                        warnings.warn(msg)
+                        self.logger.debug(msg)
 
         # >
         self.request(kwargs)
