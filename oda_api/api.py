@@ -700,7 +700,7 @@ class DispatcherAPI:
                 if _s != '':
                     self.logger.info(_s)
             else:
-                self.logger.warning(
+                self.logger.debug(
                     'unable to dig list, instance not a dict by %s; object was %s', type(b), b)
 
                 if original_b != b:
