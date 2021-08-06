@@ -10,8 +10,9 @@ logger = logging.getLogger('oda_api')
 @click.group()
 @click.option("-d", "--debug", is_flag=True)
 @click.option("-u", "--dispatcher-url", type=str, default=None)
+@click.option("-t", "--test-connection", is_flag=True, default=False)
 @click.pass_obj
-def cli(obj, debug=False, dispatcher_url=None):
+def cli(obj, debug=False, dispatcher_url=None, test_connection=False):
     if debug:
         logging.basicConfig(level="DEBUG")
         logging.getLogger('oda_api').setLevel("DEBUG")
@@ -23,9 +24,9 @@ def cli(obj, debug=False, dispatcher_url=None):
 
     logger.info("created dispatcher: %s", obj['dispatcher'])
 
-    instruments = obj['dispatcher'].get_instruments_list()
-
-    logger.info("dispatcher has instruments: %s", list([i for i in instruments]))
+    if test_connection:
+        instruments = obj['dispatcher'].get_instruments_list()
+        logger.info("dispatcher has instruments: %s", list([i for i in instruments]))
 
 
 @cli.command()

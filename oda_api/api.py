@@ -160,7 +160,7 @@ class DispatcherAPI:
 
     # allowing token discovery by default changes the user interface in some cases, 
     # but in desirable way
-    allow_token_discovery = True 
+    token_discovery_methods = None
 
     def __init__(self,
                  instrument='mock',
@@ -853,8 +853,8 @@ class DispatcherAPI:
                         msg += '----------------------------------------------------------------------------\n'
                         warnings.warn(msg)
 
-        if kwargs.get('token', None) is None and self.allow_token_discovery:
-            discovered_token = oda_api.token.discover_token()
+        if kwargs.get('token', None) is None and self.token_discovery_methods is not None:
+            discovered_token = oda_api.token.discover_token(self.token_discovery_methods)
             if discovered_token is not None:
                 logger.info("discovered token in environment")
                 kwargs['token'] = discovered_token            

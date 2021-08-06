@@ -37,3 +37,5 @@ scratch*
 response.json
 .coverage
 .vscode
+one_image.fits
+vlf_table.fits

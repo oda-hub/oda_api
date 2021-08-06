@@ -4,8 +4,7 @@ import base64
 import logging
 from os import environ, getcwd, path
 from posixpath import join
-from types import FunctionType, ModuleType
-from typing import Optional
+from types import FunctionType
 import time
 
 from jwt.exceptions import ExpiredSignatureError # type: ignore
