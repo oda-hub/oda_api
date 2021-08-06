@@ -87,7 +87,7 @@ def test_oda_api_code(dispatcher_live_fixture):
     output_api_code = jdata_output['prod_dictionary']['api_code']
 
     expected_api_code = f'''from oda_api.api import DispatcherAPI
-disp=DispatcherAPI(url='PRODUCTS_URL', instrument='mock')
+disp=DispatcherAPI(url='PRODUCTS_URL/dispatch-data', instrument='mock')
 
 par_dict={{
     "instrument": "empty",

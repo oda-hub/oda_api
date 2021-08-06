@@ -700,7 +700,7 @@ class DispatcherAPI:
                 if _s != '':
                     self.logger.info(_s)
             else:
-                self.logger.warning(
+                self.logger.debug(
                     'unable to dig list, instance not a dict by %s; object was %s', type(b), b)
 
                 if original_b != b:
@@ -841,9 +841,10 @@ class DispatcherAPI:
                         msg += '%s' % valid_names
                         msg += '\n'
                         msg += 'this will throw an error in a future version \n'
-                        msg += 'and might breack the current request!\n '
+                        msg += 'and might break the current request!\n '
                         msg += '----------------------------------------------------------------------------\n'
                         warnings.warn(msg)
+
 
         # >
         self.request(kwargs)
