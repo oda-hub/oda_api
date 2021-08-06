@@ -64,8 +64,7 @@ def decode_oauth2_token(token: str):
     # usually comes in cookies['_oauth2_proxy']
     return json.loads(base64.b64decode(token.split(".")[0]+"=").decode())
 
-## preserving
-
+#TODO: move to dynaconf
 def discover_token(token_discovery_methods=(
         "environment variable ODA_TOKEN",
         "file in current directory",
