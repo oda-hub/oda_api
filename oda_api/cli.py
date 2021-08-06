@@ -73,6 +73,10 @@ def tokencli(obj, secret):
 def inspect(obj):
     token = discover_token()
 
+    if token is None:
+        logger.warn("no token found!")
+        return
+
     decoded_token = decode_oda_token(token, secret_key=obj['secret_key'])
 
     logger.info("your token payload: %s", format_token(decoded_token))
