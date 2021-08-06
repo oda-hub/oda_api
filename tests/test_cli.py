@@ -61,7 +61,7 @@ def test_get(dispatcher_live_fixture, caplog):
     assert "'prod_dict': {'dummy': 'empty_parameters_dummy_query', 'numerical': '" in caplog.text
 
     runner = CliRunner()
-    result = runner.invoke(cli.cli, ['-u', dispatcher_live_fixture, '--no-wait', 'get', '-i', 'empty', '-p', 'dummy'], obj={})
-    assert result.exit_code == 1    
+    result = runner.invoke(cli.cli, ['-u', dispatcher_live_fixture, '--no-wait', 'get', '-i', 'empty', '-p', 'dummy', '-a', 'product_type=Dummy'], obj={})
+    assert result.exit_code == 0  
 
     
