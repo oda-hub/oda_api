@@ -11,8 +11,9 @@ logger = logging.getLogger('oda_api')
 @click.option("-d", "--debug", is_flag=True)
 @click.option("-u", "--dispatcher-url", type=str, default=None)
 @click.option("-t", "--test-connection", is_flag=True, default=False)
+@click.option("-w/-nw", "--wait/--no-wait", default=True)
 @click.pass_obj
-def cli(obj, debug=False, dispatcher_url=None, test_connection=False):
+def cli(obj, debug=False, dispatcher_url=None, test_connection=False, wait=True):
     if debug:
         logging.basicConfig(level="DEBUG")
         logging.getLogger('oda_api').setLevel("DEBUG")
@@ -20,7 +21,7 @@ def cli(obj, debug=False, dispatcher_url=None, test_connection=False):
         logging.basicConfig(level="INFO")
         logging.getLogger('oda_api').setLevel("INFO")
 
-    obj['dispatcher'] = api.DispatcherAPI(url=dispatcher_url)
+    obj['dispatcher'] = api.DispatcherAPI(url=dispatcher_url, wait=wait)
 
     logger.info("created dispatcher: %s", obj['dispatcher'])
 
