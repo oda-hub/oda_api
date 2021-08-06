@@ -70,7 +70,7 @@ def decode_oauth2_token(token: str):
 def discover_token():
     failed_methods = []
     token = None
-
+    
     for n, m in [
         ("environment variable ODA_TOKEN", lambda: environ['ODA_TOKEN'].strip()),
         ("file in current directory", lambda: open(

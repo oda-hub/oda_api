@@ -4,6 +4,9 @@ import jwt
 import time
 import pytest
 
+import oda_api.api
+
+
 secret_key = 'secretkey_test'
 default_exp_time = int(time.time()) + 5000
 default_token_payload = dict(
@@ -55,13 +58,17 @@ def test_show_product(dispatcher_live_fixture, capsys):
     )
     assert products._p_list[0].meta_data == meta_data_dic
 
-
-
-def test_oda_api_code(dispatcher_live_fixture):
-    import oda_api.api
+@pytest.fixture
+def dispatcher_api(dispatcher_live_fixture):
     disp = oda_api.api.DispatcherAPI(
         url=dispatcher_live_fixture
     )
+    disp.allow_token_discovery = False
+    return disp
+    
+
+def test_oda_api_code(dispatcher_api):
+    disp = dispatcher_api
 
     disp.get_product(
         product_type="Dummy",

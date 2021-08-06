@@ -157,6 +157,11 @@ def safe_run(func):
 
 
 class DispatcherAPI:
+
+    # allowing token discovery by default changes the user interface in some cases, 
+    # but in desirable way
+    allow_token_discovery = True 
+
     def __init__(self,
                  instrument='mock',
                  url=None,
@@ -848,7 +853,7 @@ class DispatcherAPI:
                         msg += '----------------------------------------------------------------------------\n'
                         warnings.warn(msg)
 
-        if kwargs.get('token', None) is None:
+        if kwargs.get('token', None) is None and self.allow_token_discovery:
             discovered_token = oda_api.token.discover_token()
             if discovered_token is not None:
                 logger.info("discovered token in environment")

@@ -25,3 +25,13 @@ def pytest_collection_modifyitems(config, items):
         if "slow" in item.keywords:
             item.add_marker(skip_slow)
 
+
+@pytest.fixture
+def dispatcher_api(dispatcher_live_fixture):
+    import oda_api
+    disp = oda_api.api.DispatcherAPI(
+        url=dispatcher_live_fixture
+    )
+    disp.allow_token_discovery = False
+    return disp
+    

@@ -153,10 +153,11 @@ def test_waiting(scw_kind, platform):
 
 
 
-def test_unauthorized(dispatcher_live_fixture):
+def test_unauthorized(dispatcher_api):
     from oda_api.api import UserError
 
-    disp = get_disp(wait=True, platform=dispatcher_live_fixture)
+    disp = dispatcher_api
+    disp.wait=True
 
     with pytest.raises(UserError):
         disp.poll()
@@ -381,10 +382,10 @@ def test_bad_request(platform):
             )
 
 
-def test_reusing_disp_instance(dispatcher_live_fixture):
+def test_reusing_disp_instance(dispatcher_api):
 
-    disp = get_disp(wait=True, platform=dispatcher_live_fixture)
-    assert disp.wait
+    disp = dispatcher_api
+    disp.wait = True
 
     assert disp.job_id is None
     assert disp.query_status == 'not-prepared'
