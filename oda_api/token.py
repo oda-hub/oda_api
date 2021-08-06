@@ -67,10 +67,13 @@ def decode_oauth2_token(token: str):
 
 ## preserving
 
-def discover_token():
+def discover_token(token_discovery_methods=(
+        "environment variable ODA_TOKEN",
+        "file in current directory",
+        "file in home")):
     failed_methods = []
-    token = None
-    
+    token = None    
+
     for n, m in [
         ("environment variable ODA_TOKEN", lambda: environ['ODA_TOKEN'].strip()),
         ("file in current directory", lambda: open(
@@ -80,24 +83,25 @@ def discover_token():
                 path.join(environ["HOME"], ".oda-token")
             ).read().strip()),
     ]:
-        try:
-            logger.debug("searching for token in %s", n)
-            token = m()
-            decoded_token = oda_api.token.decode_oda_token(token)            
+        if n in token_discovery_methods:
+            try:
+                logger.debug("searching for token in %s", n)
+                token = m()
+                decoded_token = oda_api.token.decode_oda_token(token)            
 
-            expires_in_s = decoded_token['exp'] - time.time()
+                expires_in_s = decoded_token['exp'] - time.time()
 
-            if expires_in_s < 0:
-                logger.debug("token expired %.1f h ago!", -expires_in_s/3600)    
+                if expires_in_s < 0:
+                    logger.debug("token expired %.1f h ago!", -expires_in_s/3600)    
+                    token = None
+                else:
+                    logger.info("found token in %s your token payload: %s", n, format_token(decoded_token))
+                    logger.info("token expires in %.1f h", expires_in_s/3600)                
+                    break
+            except Exception as e:
+                failed_methods.append(f"{n}: {e}")
+                logger.debug("failed to find token with current method: %s", failed_methods[-1])
                 token = None
-            else:
-                logger.info("found token in %s your token payload: %s", n, format_token(decoded_token))
-                logger.info("token expires in %.1f h", expires_in_s/3600)                
-                break
-        except Exception as e:
-            failed_methods.append(f"{n}: {e}")
-            logger.debug("failed to find token with current method: %s", failed_methods[-1])
-            token = None
 
     if token is None:
         logger.debug("failed to discover token with any known method")        
