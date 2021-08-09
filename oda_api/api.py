@@ -123,12 +123,14 @@ def safe_run(func):
                 raise
             except Unauthorized:
                 raise
-            except RequestNotUnderstood as e:
+            except RequestNotUnderstood:
                 raise
             except UnexpectedDispatcherStatusCode as e:
                 message = f'unexpected status code: {e}'
                 raise
-            except (ConnectionError, requests.adapters.ReadTimeout) as e:
+            except (ConnectionError,
+                    requests.exceptions.ConnectionError,
+                    requests.exceptions.Timeout) as e:
                 message = ''
                 message += '\nunable to complete API call'
                 message += '\nin ' + str(func) + ' called with:'
@@ -146,7 +148,7 @@ def safe_run(func):
 
                 if n_tries_left > 0:
                     logger.warning("problem in API call, %i tries left:\n%s\n sleeping %i seconds until retry",
-                                    n_tries_left, message, retry_sleep_s)
+                                   n_tries_left, message, retry_sleep_s)
                     time.sleep(retry_sleep_s)
             
             raise RemoteException(
