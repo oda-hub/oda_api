@@ -40,6 +40,8 @@ import numpy as np
 import traceback
 from jsonschema import validate as validate_json
 
+import oda_api.token
+
 import logging
 
 logger = logging.getLogger("oda_api.api")
@@ -112,6 +114,7 @@ def safe_run(func):
         self = args[0]  # because it really is
 
         n_tries_left = self.n_max_tries
+        retry_sleep_s = self.retry_sleep_s
         while True:
             try:
                 return func(*args, **kwargs)
@@ -125,7 +128,7 @@ def safe_run(func):
             except UnexpectedDispatcherStatusCode as e:
                 message = f'unexpected status code: {e}'
                 raise
-            except ConnectionError as e:
+            except (ConnectionError, requests.adapters.ReadTimeout) as e:
                 message = ''
                 message += '\nunable to complete API call'
                 message += '\nin ' + str(func) + ' called with:'
@@ -143,8 +146,8 @@ def safe_run(func):
 
                 if n_tries_left > 0:
                     logger.warning("problem in API call, %i tries left:\n%s\n sleeping %i seconds until retry",
-                                    n_tries_left, message, self.retry_sleep_s)
-                    time.sleep(self.retry_sleep_s)
+                                    n_tries_left, message, retry_sleep_s)
+                    time.sleep(retry_sleep_s)
             
             raise RemoteException(
                 message=message
@@ -154,6 +157,11 @@ def safe_run(func):
 
 
 class DispatcherAPI:
+
+    # allowing token discovery by default changes the user interface in some cases, 
+    # but in desirable way
+    token_discovery_methods = None
+
     def __init__(self,
                  instrument='mock',
                  url=None,
@@ -845,6 +853,11 @@ class DispatcherAPI:
                         msg += '----------------------------------------------------------------------------\n'
                         warnings.warn(msg)
 
+        if kwargs.get('token', None) is None and self.token_discovery_methods is not None:
+            discovered_token = oda_api.token.discover_token(self.token_discovery_methods)
+            if discovered_token is not None:
+                logger.info("discovered token in environment")
+                kwargs['token'] = discovered_token            
 
         # >
         self.request(kwargs)

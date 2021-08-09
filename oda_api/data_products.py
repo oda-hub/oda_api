@@ -552,18 +552,23 @@ class NumpyDataProduct(object):
     def decode(cls, encoded_obj: typing.Union[str, dict], from_json=False):
         if encoded_obj is not None:
             # from_json has the opposite meaning of what the name implies
+            obj_dict: dict 
             if from_json:
                 if isinstance(encoded_obj, dict):
-                    obj_dict: dict = encoded_obj
+                    obj_dict = encoded_obj
                 else:
                     logger.warning('decoding from unexpected object')
                     obj_dict = encoded_obj # type: ignore
             else:
-                try:
-                    obj_dict = json.loads(literal_to_json(encoded_obj))
-                except Exception as e:
-                    logger.debug('unable to decode json object: %s', e)
-                    # why not raise here?                
+                if isinstance(encoded_obj, dict):
+                    obj_dict = encoded_obj
+                else:
+                    logger.warning('decoding from unexpected object')
+                    try:
+                        obj_dict = json.loads(literal_to_json(encoded_obj))
+                    except Exception as e:
+                        logger.debug('unable to decode json object: %s', e)                    
+                        # why not raise here?                
 
             encoded_data_unit_list = obj_dict['data_unit_list']
             encoded_name = obj_dict['name']
