@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Neronov"
+  given-names: "Andrii"
+  orcid: "https://orcid.org/0000-0000-0000-0000"
+- family-names: "Savchenko"
+  given-names: "Volodymyr"
+  orcid: "https://orcid.org/0000-0001-6353-0808"
+title: "oda_api"
+version: 1.0.0
+doi: 10.5281/zenodo.1234
+date-released: 2021-08-28
+url: "https://github.com/oda-hub/oda_api"
