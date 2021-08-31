@@ -188,23 +188,19 @@ class DispatcherAPI:
             if host.startswith('http'):
                 self.url = host
             else:
-                if protocol == 'http':
-                    self.url = "http://" + host
-                elif protocol == 'https':
-                    self.url = "https://" + host
-                else:
+                if protocol != 'http' and protocol != 'https':
                     raise UserError('protocol must be either http or https')
+                else:
+                    self.url = protocol + host
         else:
             if url is None:
                 url = "https://www.astro.unige.ch/mmoda/dispatch-data"
             else:
                 if not url.startswith('http'):
-                    if protocol == 'http':
-                        url = "http://" + url
-                    elif protocol == 'https':
-                        url = "https://" + url
-                    else:
+                    if protocol != 'http' and protocol != 'https':
                         raise UserError('protocol must be either http or https')
+                    else:
+                        url = protocol + url
 
             self.url = url
 
