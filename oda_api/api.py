@@ -177,9 +177,6 @@ class DispatcherAPI:
                  session_id=None,
                  ):
 
-        if url is None:
-            url = "https://www.astro.unige.ch/mmoda/dispatch-data"
-
         if host is not None:
             logger.warning(
                 "please use 'url' instead of 'host' while providing dispatcher URL")
@@ -198,6 +195,17 @@ class DispatcherAPI:
                 else:
                     raise UserError('protocol must be either http or https')
         else:
+            if url is None:
+                url = "https://www.astro.unige.ch/mmoda/dispatch-data"
+            else:
+                if not url.startswith('http'):
+                    if protocol == 'http':
+                        url = "http://" + url
+                    elif protocol == 'https':
+                        url = "https://" + url
+                    else:
+                        raise UserError('protocol must be either http or https')
+
             self.url = url
 
         if session_id is not None:
