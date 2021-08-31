@@ -191,7 +191,7 @@ class DispatcherAPI:
                 if protocol != 'http' and protocol != 'https':
                     raise UserError('protocol must be either http or https')
                 else:
-                    self.url = protocol + host
+                    self.url = protocol + "://" + host
         else:
             if url is None:
                 url = "https://www.astro.unige.ch/mmoda/dispatch-data"
@@ -200,7 +200,7 @@ class DispatcherAPI:
                     if protocol != 'http' and protocol != 'https':
                         raise UserError('protocol must be either http or https')
                     else:
-                        url = protocol + url
+                        url = protocol + "://" + url
 
             self.url = url
 
