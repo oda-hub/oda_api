@@ -175,7 +175,7 @@ class DispatcherAPI:
                  wait=True,
                  n_max_tries=20,
                  session_id=None,
-                 ):
+                 ) -> object:
 
         if host is not None:
             logger.warning(

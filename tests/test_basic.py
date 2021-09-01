@@ -3,6 +3,7 @@ import os
 import jwt
 import time
 import pytest
+import re
 
 import oda_api.api
 
@@ -102,3 +103,31 @@ data_collection = disp.get_product(**par_dict)
 '''
 
     assert output_api_code == expected_api_code or output_api_code == expected_api_code.replace('PRODUCTS_URL', 'http://0.0.0.0:8001')
+
+
+@pytest.mark.parametrize("protocol_url", ['http://', 'https://', ''])
+@pytest.mark.parametrize("init_parameter", ['host', 'url'])
+@pytest.mark.parametrize("protocol_parameter_value", ['http', 'https', '', None, 'not_included'])
+def test_host_url_init(dispatcher_live_fixture, protocol_url, init_parameter, protocol_parameter_value):
+    from oda_api.api import UserError
+
+    dispatcher_live_fixture_parameter = re.sub(r"https?://?", protocol_url, dispatcher_live_fixture)
+
+    args_init = {
+        init_parameter: dispatcher_live_fixture_parameter,
+    }
+
+    if protocol_parameter_value != 'not_included':
+        args_init['protocol'] = protocol_parameter_value
+
+    if (protocol_parameter_value is None or protocol_parameter_value == '') and protocol_url == '':
+        with pytest.raises(UserError):
+            oda_api.api.DispatcherAPI(
+                **args_init
+            )
+    else:
+        disp = oda_api.api.DispatcherAPI(
+            **args_init
+        )
+        assert disp.url.startswith('http://') or disp.url.startswith('https://')
+        assert re.sub(r"https?://?", '', disp.url) == re.sub(r"https?://?", '', dispatcher_live_fixture)
