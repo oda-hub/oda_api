@@ -13,7 +13,7 @@ __author__ = "Andrea Tramacere, Volodymyr Savchenko"
 import warnings
 import requests
 import ast
-
+import validators
 import json
 
 try:
@@ -175,7 +175,10 @@ class DispatcherAPI:
                  wait=True,
                  n_max_tries=20,
                  session_id=None,
-                 ) -> object:
+                 ):
+
+        if url is None:
+            url = "https://www.astro.unige.ch/mmoda/dispatch-data"
 
         if host is not None:
             logger.warning(
@@ -193,15 +196,9 @@ class DispatcherAPI:
                 else:
                     self.url = protocol + "://" + host
         else:
-            if url is None:
-                url = "https://www.astro.unige.ch/mmoda/dispatch-data"
-            else:
-                if not url.startswith('http'):
-                    if protocol != 'http' and protocol != 'https':
-                        raise UserError('protocol must be either http or https')
-                    else:
-                        url = protocol + "://" + url
-
+            if not validators.url(url):
+                raise UserError(f'{url} is not a valid url, '
+                                f'please check it and try to issue again the request')
             self.url = url
 
         if session_id is not None:
