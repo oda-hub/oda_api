@@ -120,7 +120,10 @@ def test_host_url_init(dispatcher_live_fixture, protocol_url, init_parameter, pr
     if protocol_parameter_value != 'not_included':
         args_init['protocol'] = protocol_parameter_value
 
-    if (protocol_parameter_value is None or protocol_parameter_value == '') and protocol_url == '':
+    if (init_parameter == 'url' and protocol_url == '') or \
+            (init_parameter == 'host' and
+             (protocol_parameter_value is None or
+              protocol_parameter_value == '') and protocol_url == ''):
         with pytest.raises(UserError):
             oda_api.api.DispatcherAPI(
                 **args_init
