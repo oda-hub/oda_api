@@ -185,7 +185,7 @@ class DispatcherAPI:
             msg += 'support for the parameter host will end soon \n'
             msg += 'please use "url" instead of "host" while providing dispatcher URL \n'
             msg += '----------------------------------------------------------------------------\n'
-            warnings.warn(msg)
+            warnings.warn(msg, DeprecationWarning)
             self.url = host
 
             #TODO: disregard this, but leave parameter for compatibility
