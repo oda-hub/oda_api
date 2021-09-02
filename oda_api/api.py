@@ -13,7 +13,6 @@ __author__ = "Andrea Tramacere, Volodymyr Savchenko"
 import warnings
 import requests
 import ast
-import re
 import json
 
 try:
@@ -35,12 +34,12 @@ from . import __version__
 from . import custom_formatters
 from . import colors as C
 from itertools import cycle
-import re
 import numpy as np
 import traceback
 from jsonschema import validate as validate_json
 
 import oda_api.token
+import oda_api.misc_helpers
 
 import logging
 
@@ -196,16 +195,10 @@ class DispatcherAPI:
                 else:
                     self.url = protocol + "://" + host
         else:
-            regex = re.compile(
-                r'^(?:http|ftp)s?://'  # http:// or https://
-                r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'  # domain...
-                r'localhost|'  # localhost...
-                r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
-                r'(?::\d+)?'  # optional port
-                r'(?:/?|[/?]\S+)$', re.IGNORECASE)
-            if re.match(regex, url) is None:
+            if not oda_api.misc_helpers.validate_url(url):
                 raise UserError(f'{url} is not a valid url, '
                                 f'please check it and try to issue again the request')
+
             self.url = url
 
         if session_id is not None:
@@ -1005,7 +998,7 @@ class DataCollection(object):
                     s = prod.meta_data[kw].replace(' ', '')
                     if s.strip() != '':
                         name += '_'+s.strip()
-        return name, clean_var_name(name)
+        return name, oda_api.misc_helpers.clean_var_name(name)
 
     def save_all_data(self, prenpend_name=None):
         for pname, prod in zip(self._n_list, self._p_list):
@@ -1067,16 +1060,3 @@ class DataCollection(object):
 
         return d
 
-
-def clean_var_name(s):
-    s = s.replace('-', 'm')
-    s = s.replace('+', 'p')
-    s = s.replace(' ', '_')
-
-    # Remove invalid characters
-    s = re.sub('[^0-9a-zA-Z_]', '', s)
-
-    # Remove leading characters until we find a letter or underscore
-    s = re.sub('^[^a-zA-Z_]+', '', s)
-
-    return s
