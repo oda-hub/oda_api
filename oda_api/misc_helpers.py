@@ -1,6 +1,4 @@
 import re
-from oda_api.api import UserError
-
 
 regex_url = re.compile(
                 r'^(?:http|ftp)s?://'  # http:// or https://
