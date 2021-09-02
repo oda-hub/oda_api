@@ -199,8 +199,9 @@ class DispatcherAPI:
         else:
             if not oda_api.misc_helpers.validate_url(url):
                 raise UserError(f'{url} is not a valid url. \n'
-                                'A valid url should be like `http://www.example.com`, '
-                                'you might verify if, for example, a valid schema is provided.\n'
+                                'A valid url should be like `https://www.astro.unige.ch/mmoda/`, '
+                                'you might verify if, for example, a valid schema is provided, '
+                                'i.e. url should start with http:// or https:// .\n'
                                 'Please check it and try to issue again the request')
 
             self.url = url
