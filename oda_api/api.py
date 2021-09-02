@@ -180,10 +180,12 @@ class DispatcherAPI:
             url = "https://www.astro.unige.ch/mmoda/dispatch-data"
 
         if host is not None:
-            logger.warning(
-                "please use 'url' instead of 'host' while providing dispatcher URL")
-            logger.warning(
-                "for now, we will adopt host, but in the near future it will not be done")
+            msg = '\n'
+            msg += '----------------------------------------------------------------------------\n'
+            msg += 'support for the parameter host will end soon \n'
+            msg += 'please use "url" instead of "host" while providing dispatcher URL \n'
+            msg += '----------------------------------------------------------------------------\n'
+            warnings.warn(msg)
             self.url = host
 
             #TODO: disregard this, but leave parameter for compatibility
