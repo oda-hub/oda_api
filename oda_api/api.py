@@ -165,7 +165,7 @@ class DispatcherAPI:
 
     def __init__(self,
                  instrument='mock',
-                 url=None,
+                 url="https://www.astro.unige.ch/mmoda/dispatch-data",
                  run_analysis_handle='run_analysis',
                  host=None,
                  port=None,
@@ -175,9 +175,6 @@ class DispatcherAPI:
                  n_max_tries=20,
                  session_id=None,
                  ):
-
-        if url is None:
-            url = "https://www.astro.unige.ch/mmoda/dispatch-data"
 
         if host is not None:
             msg = '\n'
