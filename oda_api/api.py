@@ -13,7 +13,6 @@ __author__ = "Andrea Tramacere, Volodymyr Savchenko"
 import warnings
 import requests
 import ast
-
 import json
 
 try:
@@ -35,12 +34,12 @@ from . import __version__
 from . import custom_formatters
 from . import colors as C
 from itertools import cycle
-import re
 import numpy as np
 import traceback
 from jsonschema import validate as validate_json
 
 import oda_api.token
+import oda_api.misc_helpers
 
 import logging
 
@@ -166,7 +165,7 @@ class DispatcherAPI:
 
     def __init__(self,
                  instrument='mock',
-                 url=None,
+                 url="https://www.astro.unige.ch/mmoda/dispatch-data",
                  run_analysis_handle='run_analysis',
                  host=None,
                  port=None,
@@ -177,27 +176,31 @@ class DispatcherAPI:
                  session_id=None,
                  ):
 
-        if url is None:
-            url = "https://www.astro.unige.ch/mmoda/dispatch-data"
-
         if host is not None:
-            logger.warning(
-                "please use 'url' instead of 'host' while providing dispatcher URL")
-            logger.warning(
-                "for now, we will adopt host, but in the near future it will not be done")
+            msg = '\n'
+            msg += '----------------------------------------------------------------------------\n'
+            msg += 'support for the parameter host will end soon \n'
+            msg += 'please use "url" instead of "host" while providing dispatcher URL \n'
+            msg += '----------------------------------------------------------------------------\n'
+            warnings.warn(msg, DeprecationWarning)
             self.url = host
 
             #TODO: disregard this, but leave parameter for compatibility
             if host.startswith('http'):
                 self.url = host
             else:
-                if protocol == 'http':
-                    self.url = "http://" + host
-                elif protocol == 'https':
-                    self.url = "https://" + host
-                else:
+                if protocol != 'http' and protocol != 'https':
                     raise UserError('protocol must be either http or https')
+                else:
+                    self.url = protocol + "://" + host
         else:
+            if not oda_api.misc_helpers.validate_url(url):
+                raise UserError(f'{url} is not a valid url. \n'
+                                'A valid url should be like `https://www.astro.unige.ch/mmoda/dispatch-data`, '
+                                'you might verify if, for example, a valid schema is provided, '
+                                'i.e. url should start with http:// or https:// .\n'
+                                'Please check it and try to issue again the request')
+
             self.url = url
 
         if session_id is not None:
@@ -997,7 +1000,7 @@ class DataCollection(object):
                     s = prod.meta_data[kw].replace(' ', '')
                     if s.strip() != '':
                         name += '_'+s.strip()
-        return name, clean_var_name(name)
+        return name, oda_api.misc_helpers.clean_var_name(name)
 
     def save_all_data(self, prenpend_name=None):
         for pname, prod in zip(self._n_list, self._p_list):
@@ -1059,16 +1062,3 @@ class DataCollection(object):
 
         return d
 
-
-def clean_var_name(s):
-    s = s.replace('-', 'm')
-    s = s.replace('+', 'p')
-    s = s.replace(' ', '_')
-
-    # Remove invalid characters
-    s = re.sub('[^0-9a-zA-Z_]', '', s)
-
-    # Remove leading characters until we find a letter or underscore
-    s = re.sub('^[^a-zA-Z_]+', '', s)
-
-    return s
