@@ -111,7 +111,7 @@ data_collection = disp.get_product(**par_dict)
 def test_host_url_init(dispatcher_live_fixture, protocol_url, init_parameter, protocol_parameter_value):
     from oda_api.api import UserError
 
-    dispatcher_live_fixture_parameter = re.sub(r"https?://?", protocol_url, dispatcher_live_fixture)
+    dispatcher_live_fixture_parameter = re.sub(r"https?://", protocol_url, dispatcher_live_fixture)
 
     args_init = {
         init_parameter: dispatcher_live_fixture_parameter,
