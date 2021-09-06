@@ -13,6 +13,8 @@ The following tutorial covers a large fraction of the code features. The example
 
    Authentication  <Authentication.rst>
 
+   Obtaining a Science Window List with python <ScienceWindowList.rst>
+
    Examples <https://github.com/cdcihub/oda_api_benchmark>
    
 
