@@ -19,30 +19,30 @@ __author__ = "Andrea Tramacere"
 
 
 # must
-import  numpy
-from matplotlib import  pylab as plt
+import numpy
+from matplotlib import pylab as plt
 #from ipywidgets import *
 from matplotlib.widgets import Slider, Button, RadioButtons
 
 
-__all__=['OdaImage','OdaLightCurve']
+__all__ = ['OdaImage', 'OdaLightCurve']
 
 class OdaImage(object):
 
-    def __init__(self,data):
+    def __init__(self, data):
         self.data = data
 
         self.meta = data
 
-    def show(self,data=None,meta=None,unit_ID=0):
+    def show(self, data=None, meta=None, unit_ID=4):
         if data is None:
-            data=self.data.data_unit[unit_ID].data
+            data = self.data.data_unit[unit_ID].data
         if meta is None:
-            self.meta=self.data.meta_data
+            self.meta = self.data.meta_data
 
-        fig = plt.figure(figsize=(8 ,6))
-        ax = fig.subplots(1,1)
-        self.line =ax.imshow(data ,interpolation='nearest')
+        fig = plt.figure(figsize=(8, 6))
+        ax = fig.subplots(1, 1)
+        self.line =ax.imshow(data, interpolation='nearest')
         cmin = plt.axes([0.1, 0.05, 0.8, 0.02])
         cmax = plt.axes([0.1, 0.01, 0.8, 0.02])
         self.smin = Slider(cmin, 'vmin',  data.min(), data.max(), valinit=data.min(),)
@@ -53,31 +53,31 @@ class OdaImage(object):
 
         plt.show()
 
-    def update(self,x):
+    def update(self, x):
         #print('x',x)
-        if self.smin.val<self.smax.val:
-            self.line.set_clim(self.smin.val,self.smax.val)
+        if self.smin.val < self.smax.val:
+            self.line.set_clim(self.smin.val, self.smax.val)
 
 
 
 
 class OdaLightCurve(object):
 
-    def __init__(self,data):
-        self.data =data
+    def __init__(self, data):
+        self.data = data
 
 
 
-    def show(self,data=None,meta=None,unit_ID=0):
+    def show(self, data=None, meta=None, unit_ID=0):
 
         if data is None:
-            data=self.data.data_unit[unit_ID].data
+            data = self.data.data_unit[unit_ID].data
         if meta is None:
             meta = self.data.meta_data
 
         #print(data,meta['time'],data[meta['time']])
-        fig = plt.figure(figsize=(8 ,6))
-        ax = fig.subplots(1,1)
+        fig = plt.figure(figsize=(8, 6))
+        ax = fig.subplots(1, 1)
         x = data[meta['time']]
         y=data[meta['rate']]
         dy=data[meta['rate_err']]
