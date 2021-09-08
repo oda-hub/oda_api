@@ -100,6 +100,10 @@ class RequestNotUnderstood(Exception):
 class Unauthorized(RemoteException):
     pass
 
+class URLRedirected(Exception):
+    pass
+
+
 exception_by_message = {
     'failed: get dataserver products ': FailedToFindAnyUsefulResults
 }
@@ -334,9 +338,11 @@ class DispatcherAPI:
 
             self.last_request_t0 = time.time()
 
+            url = "%s/%s" % (self.url, self.run_analysis_handle)
+
             if self.selected_request_method == 'GET':
                 response = requests.get(
-                    "%s/%s" % (self.url, self.run_analysis_handle),
+                    url,
                     params=self.parameters_dict_payload,
                     cookies=self.cookies,
                     headers={
@@ -344,10 +350,11 @@ class DispatcherAPI:
                         'Connection-Timeout': str(timeout),
                     },
                     timeout=timeout,
+                    allow_redirects=False
                 )
             elif self.selected_request_method == 'POST':
                 response = requests.post(
-                    "%s/%s" % (self.url, self.run_analysis_handle),
+                    url,
                     data=self.parameters_dict_payload,
                     cookies=self.cookies,
                     headers={
@@ -355,9 +362,19 @@ class DispatcherAPI:
                         'Connection-Timeout': str(timeout),
                     },
                     timeout=timeout,
-                )
+                    allow_redirects=False
+                )                
             else:
                 NotImplementedError
+
+            if response.status_code in (301, 302):
+                # we can not automatically redirect with POST due to unexpected behavior of requests module
+                # there is a very strange and mysterious story about this:
+                # * https://github.com/psf/requests/blob/1e5fad7433772b648fcbc921e2a79de5c4c6be8b/requests/sessions.py#L329-L332
+                # * https://github.com/psf/requests/issues/1704
+                # to avoid confusion, we will instruct the user to change the code:
+                raise URLRedirected(f"the service was moved{' permanently' if response.status_code == 301 else ''}, "
+                                    f"please reinitialize DispatcherAPI with \"{response.headers['Location']}\" (you asked for \"{url}\")")
 
             if response.status_code == 403:
                 try:
