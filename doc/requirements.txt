@@ -1,4 +1,5 @@
-sphinx-bootstrap-theme
+#sphinx-bootstrap-theme
+furo
 sphinx-automodapi
 nbsphinx
 numpydoc

@@ -2,7 +2,9 @@
 ODA API Tutorial
 ==================
 
-The following tutorial covers a large fraction of the code features. The examples notebooks reproduce the analysis published in ...
+The following tutorial covers a large fraction of the code features. The examples of workflows reproduce the analysis published in `Neronov et al. A\&A 651, A97 (2021)`_
+
+.. _Neronov et al. A\&A 651, A97 (2021): https://www.aanda.org/articles/aa/abs/2021/07/aa37850-20/aa37850-20.html
 
 .. toctree::
    :maxdepth: 1
@@ -15,7 +17,7 @@ The following tutorial covers a large fraction of the code features. The example
 
    Obtaining a Science Window List with python <ScienceWindowList.rst>
 
-   Examples <https://github.com/cdcihub/oda_api_benchmark>
+   Examples of workflows <https://github.com/cdcihub/oda_api_benchmark>
    
 
 
