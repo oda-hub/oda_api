@@ -108,10 +108,10 @@ data_collection = disp.get_product(**par_dict)
 @pytest.mark.parametrize("protocol_url", ['http://', 'https://', ''])
 @pytest.mark.parametrize("init_parameter", ['host', 'url'])
 @pytest.mark.parametrize("protocol_parameter_value", ['http', 'https', '', None, 'not_included'])
-def test_host_url_init(dispatcher_live_fixture, protocol_url, init_parameter, protocol_parameter_value):
+def test_host_url_init(dispatcher_long_living_fixture, protocol_url, init_parameter, protocol_parameter_value):
     from oda_api.api import UserError
 
-    dispatcher_live_fixture_parameter = re.sub(r"https?://", protocol_url, dispatcher_live_fixture)
+    dispatcher_live_fixture_parameter = re.sub(r"https?://", protocol_url, dispatcher_long_living_fixture)
 
     args_init = {
         init_parameter: dispatcher_live_fixture_parameter,
@@ -133,4 +133,4 @@ def test_host_url_init(dispatcher_live_fixture, protocol_url, init_parameter, pr
             **args_init
         )
         assert disp.url.startswith('http://') or disp.url.startswith('https://')
-        assert re.sub(r"https?://?", '', disp.url) == re.sub(r"https?://?", '', dispatcher_live_fixture)
+        assert re.sub(r"https?://?", '', disp.url) == re.sub(r"https?://?", '', dispatcher_long_living_fixture)
