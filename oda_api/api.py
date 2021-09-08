@@ -453,8 +453,8 @@ class DispatcherAPI:
         if self.is_submitted:
              return {
                  **p,
-        #         'job_id': self.job_id,
-        #         'query_status': self.query_status,
+                'job_id': self.job_id,
+                'query_status': self.query_status,
              }
         else:
              return p

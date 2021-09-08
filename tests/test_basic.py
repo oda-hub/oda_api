@@ -5,8 +5,10 @@ import time
 import pytest
 import re
 
+import requests
 import oda_api.api
 
+from cdci_data_analysis.pytest_fixtures import DispatcherJobState, make_hash, ask
 
 secret_key = 'secretkey_test'
 default_exp_time = int(time.time()) + 5000
@@ -134,3 +136,36 @@ def test_host_url_init(dispatcher_long_living_fixture, protocol_url, init_parame
         )
         assert disp.url.startswith('http://') or disp.url.startswith('https://')
         assert re.sub(r"https?://?", '', disp.url) == re.sub(r"https?://?", '', dispatcher_long_living_fixture)
+
+
+def test_progress(dispatcher_live_fixture):
+    DispatcherJobState.remove_scratch_folders()
+
+    disp = oda_api.api.DispatcherAPI(url=dispatcher_live_fixture, wait=False)
+
+    disp.get_product(
+        product="dummy",
+        instrument="empty-async",
+    )
+
+    assert disp.query_status == "submitted"
+
+    disp.poll()
+
+    assert disp.query_status == "submitted"
+
+    c = requests.get(dispatcher_live_fixture + "/call_back",
+                     params=dict(
+                        job_id=disp.job_id,
+                        session_id=disp.session_id,
+                        #instrument_name="empty-async",
+                        action='progress',
+                        node_id=f'node',
+                        message='progressing',
+                        #token=disp,
+                        #time_original_request=time_request
+                    ))
+    # TODO: file file    
+
+    disp.poll()
+    assert disp.query_status == "progress"
