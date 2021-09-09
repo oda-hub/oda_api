@@ -155,17 +155,37 @@ def test_progress(dispatcher_live_fixture):
     assert disp.query_status == "submitted"
 
     c = requests.get(dispatcher_live_fixture + "/call_back",
-                     params=dict(
+                        params=dict(
                         job_id=disp.job_id,
                         session_id=disp.session_id,
-                        #instrument_name="empty-async",
+                        instrument_name="empty-async",
                         action='progress',
-                        node_id=f'node',
+                        node_id=f'special_node',
                         message='progressing',
-                        #token=disp,
-                        #time_original_request=time_request
+                        # token=disp,
+                        # time_original_request=time_request
                     ))
-    # TODO: file file    
+
+    disp_state = DispatcherJobState(session_id=disp.session_id, job_id=disp.job_id)
+    assert disp_state.load_job_state_record("special_node", "progressing")['full_report_dict']['action'] == 'progress'
 
     disp.poll()
     assert disp.query_status == "progress"
+
+    c = requests.get(dispatcher_live_fixture + "/call_back",
+                    params=dict(
+                    job_id=disp.job_id,
+                    session_id=disp.session_id,
+                    # instrument_name="empty-async",
+                    action='done',
+                    node_id=f'node',
+                    message='progressing',
+                    # token=disp,
+                    # time_original_request=time_request
+                ))
+
+    disp_state = DispatcherJobState(session_id=disp.session_id, job_id=disp.job_id)
+    assert json.load(open(disp_state.job_monitor_json_fn))['full_report_dict']['action'] == 'done'
+
+    disp.poll()
+    assert disp.query_status == "ready"
