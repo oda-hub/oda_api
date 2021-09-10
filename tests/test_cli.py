@@ -5,6 +5,7 @@ import os
 
 from oda_api import cli
 
+
 @pytest.mark.parametrize('token_placement', ['env', 'homedotfile', 'cwddotfile'])
 def test_token_inspect(token_placement, default_token, monkeypatch, caplog):
     if token_placement == 'env':
@@ -19,14 +20,12 @@ def test_token_inspect(token_placement, default_token, monkeypatch, caplog):
         with open(os.path.join(fakehome, ".oda-token"), "w") as f:
             f.write(default_token)
 
-
     runner = CliRunner()
     result = runner.invoke(cli.tokencli, ['inspect'], obj={})
     assert result.exit_code == 0
     
     assert '"sub": "mtm@mtmco.net"' in caplog.text
     assert '"mssub": true' in caplog.text    
-
 
 def test_token_modify(default_token, secret_key, monkeypatch, caplog):
     monkeypatch.setenv('ODA_TOKEN', default_token)
@@ -62,6 +61,4 @@ def test_get(dispatcher_live_fixture, caplog):
 
     runner = CliRunner()
     result = runner.invoke(cli.cli, ['-u', dispatcher_live_fixture, '--no-wait', 'get', '-i', 'empty', '-p', 'dummy', '-a', 'product_type=Dummy'], obj={})
-    assert result.exit_code == 0  
-
-    
+    assert result.exit_code == 0

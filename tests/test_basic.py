@@ -5,8 +5,10 @@ import time
 import pytest
 import re
 
+import requests
 import oda_api.api
 
+from cdci_data_analysis.pytest_fixtures import DispatcherJobState, make_hash, ask
 
 secret_key = 'secretkey_test'
 default_exp_time = int(time.time()) + 5000
@@ -108,10 +110,10 @@ data_collection = disp.get_product(**par_dict)
 @pytest.mark.parametrize("protocol_url", ['http://', 'https://', ''])
 @pytest.mark.parametrize("init_parameter", ['host', 'url'])
 @pytest.mark.parametrize("protocol_parameter_value", ['http', 'https', '', None, 'not_included'])
-def test_host_url_init(dispatcher_live_fixture, protocol_url, init_parameter, protocol_parameter_value):
+def test_host_url_init(dispatcher_long_living_fixture, protocol_url, init_parameter, protocol_parameter_value):
     from oda_api.api import UserError
 
-    dispatcher_live_fixture_parameter = re.sub(r"https?://", protocol_url, dispatcher_live_fixture)
+    dispatcher_live_fixture_parameter = re.sub(r"https?://", protocol_url, dispatcher_long_living_fixture)
 
     args_init = {
         init_parameter: dispatcher_live_fixture_parameter,
@@ -133,4 +135,57 @@ def test_host_url_init(dispatcher_live_fixture, protocol_url, init_parameter, pr
             **args_init
         )
         assert disp.url.startswith('http://') or disp.url.startswith('https://')
-        assert re.sub(r"https?://?", '', disp.url) == re.sub(r"https?://?", '', dispatcher_live_fixture)
+        assert re.sub(r"https?://?", '', disp.url) == re.sub(r"https?://?", '', dispatcher_long_living_fixture)
+
+
+def test_progress(dispatcher_live_fixture):
+    DispatcherJobState.remove_scratch_folders()
+
+    disp = oda_api.api.DispatcherAPI(url=dispatcher_live_fixture, wait=False)
+
+    disp.get_product(
+        product="dummy",
+        instrument="empty-async",
+    )
+
+    assert disp.query_status == "submitted"
+
+    disp.poll()
+
+    assert disp.query_status == "submitted"
+
+    c = requests.get(dispatcher_live_fixture + "/call_back",
+                        params=dict(
+                        job_id=disp.job_id,
+                        session_id=disp.session_id,
+                        instrument_name="empty-async",
+                        action='progress',
+                        node_id=f'special_node',
+                        message='progressing',
+                        # token=disp,
+                        # time_original_request=time_request
+                    ))
+
+    disp_state = DispatcherJobState(session_id=disp.session_id, job_id=disp.job_id)
+    assert disp_state.load_job_state_record("special_node", "progressing")['full_report_dict']['action'] == 'progress'
+
+    disp.poll()
+    assert disp.query_status == "progress"
+
+    c = requests.get(dispatcher_live_fixture + "/call_back",
+                    params=dict(
+                    job_id=disp.job_id,
+                    session_id=disp.session_id,
+                    # instrument_name="empty-async",
+                    action='done',
+                    node_id=f'node',
+                    message='progressing',
+                    # token=disp,
+                    # time_original_request=time_request
+                ))
+
+    disp_state = DispatcherJobState(session_id=disp.session_id, job_id=disp.job_id)
+    assert json.load(open(disp_state.job_monitor_json_fn))['full_report_dict']['action'] == 'done'
+
+    disp.poll()
+    assert disp.query_status == "ready"
