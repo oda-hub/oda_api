@@ -22,7 +22,6 @@ default_token_payload = dict(
     mssub=True
 )
 
-
 @pytest.mark.slow
 def test_show_product(dispatcher_live_fixture, capsys):
     with capsys.disabled():
@@ -105,6 +104,13 @@ data_collection = disp.get_product(**par_dict)
 '''
 
     assert output_api_code == expected_api_code or output_api_code == expected_api_code.replace('PRODUCTS_URL', 'http://0.0.0.0:8001')
+
+
+def test_default_url_init():
+    disp = oda_api.api.DispatcherAPI(
+        url=None
+    )
+    assert disp.url == "https://www.astro.unige.ch/mmoda/dispatch-data"
 
 
 @pytest.mark.parametrize("protocol_url", ['http://', 'https://', ''])
