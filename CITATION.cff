@@ -1,14 +1,32 @@
-cff-version: 1.2.0
-message: "If you use this software, please cite it as below."
+# YAML 1.2
+# Metadata for citation of this software according to the CFF format (https://citation-file-format.github.io/)
+cff-version: 1.0.3
+message: If you use this software, please cite it using these metadata.
+title: Online data analysis system of the INTEGRAL telescope
+doi: 10.1051/0004-6361/202037850
 authors:
-- family-names: "Neronov"
-  given-names: "Andrii"
-  orcid: "https://orcid.org/0000-0000-0000-0000"
-- family-names: "Savchenko"
-  given-names: "Volodymyr"
-  orcid: "https://orcid.org/0000-0001-6353-0808"
-title: "oda_api"
-version: 1.0.0
-doi: 10.5281/zenodo.1234
-date-released: 2021-08-28
-url: "https://github.com/oda-hub/oda_api"
+- given-names: A.
+  family-names: Neronov
+- given-names: V.
+  family-names: Savchenko
+- given-names: A.
+  family-names: Tramacere
+- given-names: M.
+  family-names: Meharga
+- given-names: C.
+  family-names: Ferrigno
+- given-names: S.
+  family-names: Paltani
+version: x
+date-released: 2021-07-01
+repository-code: x
+license:
+- URL: https://www.edpsciences.org/en/authors/copyright-and-licensing
+  start:
+    date-parts:
+    - - 2021
+      - 7
+      - 23
+    date-time: '2021-07-23T00:00:00Z'
+    timestamp: 1626998400000
+  delay-in-days: 22
