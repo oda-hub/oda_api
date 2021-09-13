@@ -1,5 +1,8 @@
 # YAML 1.2
 # Metadata for citation of this software according to the CFF format (https://citation-file-format.github.io/)
+#
+# made with fork of https://github.com/citation-file-format/doi2cff 
+# doi2cff init 10.1051/0004-6361/202037850
 cff-version: 1.0.3
 message: If you use this software, please cite it using these metadata.
 title: Online data analysis system of the INTEGRAL telescope
@@ -17,9 +20,7 @@ authors:
   family-names: Ferrigno
 - given-names: S.
   family-names: Paltani
-version: x
 date-released: 2021-07-01
-repository-code: x
 license:
 - URL: https://www.edpsciences.org/en/authors/copyright-and-licensing
   start:
