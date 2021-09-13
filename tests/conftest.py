@@ -11,11 +11,11 @@ from cdci_data_analysis.pytest_fixtures import (
             dispatcher_long_living_fixture,
             default_token_payload,
         )
+
 def pytest_addoption(parser):
     parser.addoption(
         "--runslow", action="store_true", default=False, help="run slow tests"
     )
-
 
 def pytest_collection_modifyitems(config, items):
     if config.getoption("--runslow"):
