@@ -105,6 +105,46 @@ data_collection = disp.get_product(**par_dict)
     assert output_api_code == expected_api_code or output_api_code == expected_api_code.replace('PRODUCTS_URL', dispatcher_api.url)
 
 
+@pytest.mark.parametrize("dry_run_value", [True, False, None, 'not_included'])
+def test_dry_run_param(dispatcher_api, dry_run_value):
+    disp = dispatcher_api
+
+    params_dic = dict(
+        product_type="Dummy",
+        instrument="empty",
+        product="dummy"
+    )
+
+    if dry_run_value != 'not_included':
+        params_dic['dry_run'] = dry_run_value
+
+    disp.get_product(
+        **params_dic
+    )
+
+    job_id = disp.job_id
+    session_id = disp.session_id
+    scratch_path = f'scratch_sid_{session_id}_jid_{job_id}'
+    scratch_path_aliased = f'scratch_sid_{session_id}_jid_{job_id}_aliased'
+    assert os.path.exists(scratch_path) or os.path.exists(scratch_path_aliased)
+
+    if os.path.exists(scratch_path):
+        f_query_output = open(scratch_path + '/query_output.json')
+    else:
+        f_query_output = open(scratch_path_aliased + '/query_output.json')
+
+    jdata_output = json.load(f_query_output)
+
+    assert 'prod_dictionary' in jdata_output
+    assert 'api_code' in jdata_output['prod_dictionary']
+    output_api_code = jdata_output['prod_dictionary']['api_code']
+
+    if dry_run_value is not None and dry_run_value != 'not_included':
+        assert 'dry_run' in output_api_code
+    else:
+        assert 'dry_run' not in output_api_code
+
+
 def test_default_url_init():
     disp = oda_api.api.DispatcherAPI(
         url=None
