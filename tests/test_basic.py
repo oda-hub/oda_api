@@ -95,7 +95,6 @@ par_dict={{
     "product": "dummy",
     "product_type": "Dummy",
     "off_line": "False",
-    "dry_run": "False",
     "api": "True",
     "oda_api_version": "{oda_api.__version__}"
 }}
@@ -103,7 +102,7 @@ par_dict={{
 data_collection = disp.get_product(**par_dict)
 '''
 
-    assert output_api_code == expected_api_code or output_api_code == expected_api_code.replace('PRODUCTS_URL', 'http://0.0.0.0:8001')
+    assert output_api_code == expected_api_code or output_api_code == expected_api_code.replace('PRODUCTS_URL', dispatcher_api)
 
 
 def test_default_url_init():

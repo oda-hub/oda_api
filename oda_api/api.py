@@ -823,7 +823,6 @@ class DispatcherAPI:
                     product: str,
                     instrument: str,
                     verbose=None,
-                    dry_run: bool = False,
                     product_type: str = 'Real',
                     **kwargs):
         """
@@ -843,7 +842,6 @@ class DispatcherAPI:
         kwargs['query_status'] = 'new',
         kwargs['verbose'] = verbose,
         kwargs['session_id'] = self.session_id
-        kwargs['dry_run'] = dry_run,
 
         res = requests.get("%s/api/par-names" % self.url, params=dict(
             instrument=instrument, product_type=product), cookies=self.cookies)
@@ -853,8 +851,9 @@ class DispatcherAPI:
                 'parameter check not available on remote server, check carefully parameters name')
         else:
             _ignore_list = ['instrument', 'product_type', 'query_type',
-                            'off_line', 'query_status', 'verbose', 'session_id', 'dry_run']
+                            'off_line', 'query_status', 'verbose', 'session_id']
             validation_dict = copy.deepcopy(kwargs)
+
 
             for _i in _ignore_list:
                 del validation_dict[_i]
@@ -903,18 +902,8 @@ class DispatcherAPI:
             raise RuntimeError(
                 "not failed, not, but complete? programming error for client!")
 
-        # <
-
-        data = None
-
-        if not dry_run:
-            d = DataCollection.from_response_json(
-                res_json, instrument, product)
-
-        else:
-            self._decode_res_json(
-                res.json()['products']['instrument_parameters'])
-            d = None
+        d = DataCollection.from_response_json(
+            res_json, instrument, product)
 
         del(res)
 
