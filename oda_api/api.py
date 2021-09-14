@@ -419,6 +419,7 @@ class DispatcherAPI:
         mismatching_parameters = []
         for k in self.parameters_dict.keys():
             # these do not correspond to meaning
+            # TODO can it be removed from here too? This function to be used only within a test
             if k in ['query_status', 'off_line', 'verbose', 'dry_run']:                
                 continue
 
