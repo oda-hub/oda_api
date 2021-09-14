@@ -419,8 +419,14 @@ class DispatcherAPI:
         mismatching_parameters = []
         for k in self.parameters_dict.keys():
             # these do not correspond to meaning
-            # TODO can it be removed from here too? This function to be used only within a test
-            if k in ['query_status', 'off_line', 'verbose', 'dry_run']:                
+            ''' 
+            The dry_run parameter is not actually considered within the oda_api,
+            but we keep it here for  consistency.
+            As discussed in: 
+            * https://github.com/oda-hub/oda_api/pull/85
+            * https://github.com/oda-hub/oda_api/issues/84
+            '''
+            if k in ['query_status', 'off_line', 'verbose', 'dry_run']:
                 continue
 
             returned = self.returned_analysis_parameters.get(k, None)
