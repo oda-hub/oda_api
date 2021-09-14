@@ -102,7 +102,7 @@ par_dict={{
 data_collection = disp.get_product(**par_dict)
 '''
 
-    assert output_api_code == expected_api_code or output_api_code == expected_api_code.replace('PRODUCTS_URL', dispatcher_api)
+    assert output_api_code == expected_api_code or output_api_code == expected_api_code.replace('PRODUCTS_URL', dispatcher_api.url)
 
 
 def test_default_url_init():
