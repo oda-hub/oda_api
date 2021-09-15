@@ -850,6 +850,10 @@ class DispatcherAPI:
         kwargs['verbose'] = verbose,
         kwargs['session_id'] = self.session_id
 
+        if 'dry_run' in kwargs:
+            warnings.warn('The dry_run parameter you included is not going to have any effect on the execution.\n'
+                          'However the oda_api will perform a check of the list opf valid parameters for your request.')
+
         res = requests.get("%s/api/par-names" % self.url, params=dict(
             instrument=instrument, product_type=product), cookies=self.cookies)
 
