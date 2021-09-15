@@ -139,10 +139,10 @@ def test_dry_run_param(dispatcher_api, dry_run_value):
     assert 'api_code' in jdata_output['prod_dictionary']
     output_api_code = jdata_output['prod_dictionary']['api_code']
 
-    if dry_run_value is not None and dry_run_value != 'not_included':
-        assert 'dry_run' in output_api_code
-    else:
-        assert 'dry_run' not in output_api_code
+    assert 'dry_run' not in output_api_code
+
+    assert 'analysis_parameters' in jdata_output['prod_dictionary']
+    assert 'dry_run' not in jdata_output['prod_dictionary']['analysis_parameters']
 
 
 def test_default_url_init():
