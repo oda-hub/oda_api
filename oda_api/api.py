@@ -853,6 +853,7 @@ class DispatcherAPI:
         if 'dry_run' in kwargs:
             warnings.warn('The dry_run parameter you included is not going to have any effect on the execution.\n'
                           'However the oda_api will perform a check of the list of valid parameters for your request.')
+            del kwargs['dry_run']
 
         res = requests.get("%s/api/par-names" % self.url, params=dict(
             instrument=instrument, product_type=product), cookies=self.cookies)
@@ -864,7 +865,6 @@ class DispatcherAPI:
             _ignore_list = ['instrument', 'product_type', 'query_type',
                             'off_line', 'query_status', 'verbose', 'session_id']
             validation_dict = copy.deepcopy(kwargs)
-
 
             for _i in _ignore_list:
                 del validation_dict[_i]
