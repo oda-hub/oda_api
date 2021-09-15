@@ -419,7 +419,14 @@ class DispatcherAPI:
         mismatching_parameters = []
         for k in self.parameters_dict.keys():
             # these do not correspond to meaning
-            if k in ['query_status', 'off_line', 'verbose', 'dry_run']:                
+            ''' 
+            The dry_run parameter is not actually considered within the oda_api,
+            but we keep it here for  consistency.
+            As discussed in: 
+            * https://github.com/oda-hub/oda_api/pull/85
+            * https://github.com/oda-hub/oda_api/issues/84
+            '''
+            if k in ['query_status', 'off_line', 'verbose', 'dry_run']:
                 continue
 
             returned = self.returned_analysis_parameters.get(k, None)
@@ -823,7 +830,6 @@ class DispatcherAPI:
                     product: str,
                     instrument: str,
                     verbose=None,
-                    dry_run: bool = False,
                     product_type: str = 'Real',
                     **kwargs):
         """
@@ -843,7 +849,11 @@ class DispatcherAPI:
         kwargs['query_status'] = 'new',
         kwargs['verbose'] = verbose,
         kwargs['session_id'] = self.session_id
-        kwargs['dry_run'] = dry_run,
+
+        if 'dry_run' in kwargs:
+            warnings.warn('The dry_run parameter you included is not going to have any effect on the execution.\n'
+                          'However the oda_api will perform a check of the list of valid parameters for your request.')
+            del kwargs['dry_run']
 
         res = requests.get("%s/api/par-names" % self.url, params=dict(
             instrument=instrument, product_type=product), cookies=self.cookies)
@@ -853,7 +863,7 @@ class DispatcherAPI:
                 'parameter check not available on remote server, check carefully parameters name')
         else:
             _ignore_list = ['instrument', 'product_type', 'query_type',
-                            'off_line', 'query_status', 'verbose', 'session_id', 'dry_run']
+                            'off_line', 'query_status', 'verbose', 'session_id']
             validation_dict = copy.deepcopy(kwargs)
 
             for _i in _ignore_list:
@@ -903,18 +913,8 @@ class DispatcherAPI:
             raise RuntimeError(
                 "not failed, not, but complete? programming error for client!")
 
-        # <
-
-        data = None
-
-        if not dry_run:
-            d = DataCollection.from_response_json(
-                res_json, instrument, product)
-
-        else:
-            self._decode_res_json(
-                res.json()['products']['instrument_parameters'])
-            d = None
+        d = DataCollection.from_response_json(
+            res_json, instrument, product)
 
         del(res)
 

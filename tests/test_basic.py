@@ -95,7 +95,6 @@ par_dict={{
     "product": "dummy",
     "product_type": "Dummy",
     "off_line": "False",
-    "dry_run": "False",
     "api": "True",
     "oda_api_version": "{oda_api.__version__}"
 }}
@@ -103,7 +102,47 @@ par_dict={{
 data_collection = disp.get_product(**par_dict)
 '''
 
-    assert output_api_code == expected_api_code or output_api_code == expected_api_code.replace('PRODUCTS_URL', 'http://0.0.0.0:8001')
+    assert output_api_code == expected_api_code or output_api_code == expected_api_code.replace('PRODUCTS_URL', dispatcher_api.url)
+
+
+@pytest.mark.parametrize("dry_run_value", [True, False, None, 'not_included'])
+def test_dry_run_param(dispatcher_api, dry_run_value):
+    disp = dispatcher_api
+
+    params_dic = dict(
+        product_type="Dummy",
+        instrument="empty",
+        product="dummy"
+    )
+
+    if dry_run_value != 'not_included':
+        params_dic['dry_run'] = dry_run_value
+
+    disp.get_product(
+        **params_dic
+    )
+
+    job_id = disp.job_id
+    session_id = disp.session_id
+    scratch_path = f'scratch_sid_{session_id}_jid_{job_id}'
+    scratch_path_aliased = f'scratch_sid_{session_id}_jid_{job_id}_aliased'
+    assert os.path.exists(scratch_path) or os.path.exists(scratch_path_aliased)
+
+    if os.path.exists(scratch_path):
+        f_query_output = open(scratch_path + '/query_output.json')
+    else:
+        f_query_output = open(scratch_path_aliased + '/query_output.json')
+
+    jdata_output = json.load(f_query_output)
+
+    assert 'prod_dictionary' in jdata_output
+    assert 'api_code' in jdata_output['prod_dictionary']
+    output_api_code = jdata_output['prod_dictionary']['api_code']
+
+    assert 'dry_run' not in output_api_code
+
+    assert 'analysis_parameters' in jdata_output['prod_dictionary']
+    assert 'dry_run' not in jdata_output['prod_dictionary']['analysis_parameters']
 
 
 def test_default_url_init():
