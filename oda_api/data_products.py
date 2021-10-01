@@ -598,7 +598,7 @@ class ApiCatalog(object):
         if 'cat_lon_name' in cat_dict.keys():
             lon_name =  cat_dict['cat_lon_name']
 
-            lat_name = None
+        lat_name = None
         if 'cat_lat_name' in cat_dict.keys():
             lat_name = cat_dict['cat_lat_name']
 
