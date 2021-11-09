@@ -91,18 +91,18 @@ def test_oda_api_code(dispatcher_api):
 disp=DispatcherAPI(url='PRODUCTS_URL/dispatch-data', instrument='mock')
 
 par_dict={{
+    "DEC": -29.74516667,
+    "RA": 265.97845833,
+    "T1": "2017-03-06T13:26:48.000",
+    "T2": "2017-03-06T15:32:27.000",
+    "api": "True",
     "instrument": "empty",
+    "oda_api_version": "{oda_api.__version__}",
+    "off_line": "False",
+    "p_list": [],
     "product": "dummy",
     "product_type": "Dummy",
-    "off_line": "False",
-    "api": "True",
-    "oda_api_version": "{oda_api.__version__}",
-    "p_list": [],
-    "src_name": "1E 1740.7-2942",
-    "RA": 265.97845833,
-    "DEC": -29.74516667,
-    "T1": "2017-03-06T13:26:48.000",
-    "T2": "2017-03-06T15:32:27.000"
+    "src_name": "1E 1740.7-2942"
 }}
 
 data_collection = disp.get_product(**par_dict)
