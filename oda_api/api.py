@@ -925,9 +925,7 @@ class DispatcherAPI:
     @staticmethod
     def set_api_code(query_dict, url="www.astro.unige.ch/mmoda/dispatch-data"):
 
-        query_dict = OrderedDict({
-            k: query_dict[k] for k in sorted(query_dict.keys())
-        })
+        query_dict = OrderedDict(sorted(query_dict.items()))
 
         _skip_list_ = ['job_id', 'query_status',
                        'session_id', 'use_resolver[local]', 'use_scws']
