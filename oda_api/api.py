@@ -1,5 +1,7 @@
 
 from __future__ import absolute_import, division, print_function
+
+from collections import OrderedDict
 from json.decoder import JSONDecodeError
 from astropy.table import Table
 from .data_products import NumpyDataProduct, BinaryData, ApiCatalog
@@ -922,6 +924,8 @@ class DispatcherAPI:
 
     @staticmethod
     def set_api_code(query_dict, url="www.astro.unige.ch/mmoda/dispatch-data"):
+
+        query_dict = OrderedDict(sorted(query_dict.items()))
 
         _skip_list_ = ['job_id', 'query_status',
                        'session_id', 'use_resolver[local]', 'use_scws']
