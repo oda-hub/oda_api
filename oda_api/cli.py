@@ -66,20 +66,24 @@ def get(obj, instrument, product, argument):
 
 @cli.group("token")
 @click.option("-s", "--secret", default=None)
+@click.option('--allow-invalid', is_flag=True, default=False)
 @click.pass_obj
-def tokencli(obj, secret):
+def tokencli(obj, secret, allow_invalid):
     obj['secret_key'] = secret
+    obj['token'] = discover_token(allow_invalid=allow_invalid)
+    obj['decoded_token'] = decode_oda_token(obj['token'], secret_key=obj['secret_key'])
+    obj['allow_invalid'] = allow_invalid
+
+    if obj['token'] is None:
+        logger.warn("no token found!")
+        return
+
 
 @tokencli.command()
 @click.pass_obj
 def inspect(obj):
-    token = discover_token()
 
-    if token is None:
-        logger.warn("no token found!")
-        return
-
-    decoded_token = decode_oda_token(token, secret_key=obj['secret_key'])
+    decoded_token = obj['decoded_token']
 
     logger.info("your token payload: %s", format_token(decoded_token))
 
@@ -93,13 +97,11 @@ def inspect(obj):
     
 @tokencli.command()
 @click.option("--disable-email", default=False, is_flag=True)
-@click.option("--allow-invalid", default=False, is_flag=True)
 @click.option("--new-validity-hours", default=None, type=float)
 @click.pass_obj
-def modify(obj, disable_email, allow_invalid, new_validity_hours):
-    token = discover_token()
-
-    decoded_token = decode_oda_token(token, secret_key=obj['secret_key'], allow_invalid=allow_invalid)
+def modify(obj, disable_email, new_validity_hours):
+    token = obj['token']
+    decoded_token = obj['decoded_token']
 
     logger.info("your current token payload: %s", format_token(decoded_token))
 
@@ -116,8 +118,8 @@ def modify(obj, disable_email, allow_invalid, new_validity_hours):
 
         return new_payload
 
-    updated_token = update_token(token, secret_key=obj['secret_key'], payload_mutation=mutate_token_payload, allow_invalid=allow_invalid)
-    decoded_token = decode_oda_token(updated_token, secret_key=obj['secret_key'], allow_invalid=allow_invalid)
+    updated_token = update_token(token, secret_key=obj['secret_key'], payload_mutation=mutate_token_payload, allow_invalid=obj['allow_invalid'])    
+    decoded_token = decode_oda_token(updated_token, secret_key=obj['secret_key'], allow_invalid=True)
 
     logger.info("your new token payload: %s", format_token(decoded_token))
     logger.info("your new token (secret!): %s", updated_token.decode() if isinstance(updated_token, bytes) else updated_token)

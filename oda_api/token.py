@@ -26,6 +26,9 @@ def format_token(decoded_oda_token: dict):
 ## decoding
 
 def decode_oda_token(token: str, secret_key=None, allow_invalid=False):
+    if token is None:
+        raise RuntimeError
+
     if jwt is None:
         logger.info("decoding token without jwt")
         return json.loads(base64.b64decode(token.split(".")[1]+"=").decode())
@@ -36,7 +39,8 @@ def decode_oda_token(token: str, secret_key=None, allow_invalid=False):
                             "", 
                             algorithms=[default_algorithm],
                             options=dict(
-                                verify_signature=False
+                                verify_signature=False,
+                                verify_exp=False
                             ))
         else:
             logger.info("decoding token with jwt and verifying")
@@ -45,7 +49,8 @@ def decode_oda_token(token: str, secret_key=None, allow_invalid=False):
                                 secret_key, 
                                 algorithms=[default_algorithm],
                                 options=dict(
-                                    verify_signature=True
+                                    verify_signature=True,
+                                    verify_exp=False
                                 ))
             except ExpiredSignatureError as e:
                 logger.warning("token invalid: %s", e)
@@ -59,16 +64,21 @@ def decode_oda_token(token: str, secret_key=None, allow_invalid=False):
                                     ))
                 else:
                     raise
+            except Exception as e:
+                logger.warning('unknown exception in decode token: %s', repr(e))
+                raise
 
 def decode_oauth2_token(token: str):
     # usually comes in cookies['_oauth2_proxy']
     return json.loads(base64.b64decode(token.split(".")[0]+"=").decode())
 
 #TODO: move to dynaconf
-def discover_token(token_discovery_methods=(
-        "environment variable ODA_TOKEN",
-        "file in current directory",
-        "file in home")):
+def discover_token(
+        allow_invalid=False,
+        token_discovery_methods=(
+            "environment variable ODA_TOKEN",
+            "file in current directory",
+            "file in home")):
     failed_methods = []
     token = None    
 
@@ -85,13 +95,16 @@ def discover_token(token_discovery_methods=(
             try:
                 logger.debug("searching for token in %s", n)
                 token = m()
-                decoded_token = oda_api.token.decode_oda_token(token)            
+                decoded_token = decode_oda_token(token, allow_invalid=allow_invalid)            
 
                 expires_in_s = decoded_token['exp'] - time.time()
 
                 if expires_in_s < 0:
                     logger.debug("token expired %.1f h ago!", -expires_in_s/3600)    
-                    token = None
+                    if allow_invalid:
+                        break
+                    else:
+                        token = None
                 else:
                     logger.info("found token in %s your token payload: %s", n, format_token(decoded_token))
                     logger.info("token expires in %.1f h", expires_in_s/3600)                
@@ -119,7 +132,7 @@ def update_token(token, secret_key, payload_mutation: FunctionType, allow_invali
     except ExpiredSignatureError as e:
         logger.warning("provided token is invalid: %s", e)
         if allow_invalid:
-            token_payload = jwt.decode(token, secret_key, algorithms=[default_algorithm], options=dict(verify_signature=False)) 
+            token_payload = jwt.decode(token, secret_key, algorithms=[default_algorithm], options=dict(verify_signature=False, verify_exp=False)) 
             logger.warning("invalid token payload will be used as requested")
         else:
             raise RuntimeError("refusing to update invalid token")
