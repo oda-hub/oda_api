@@ -46,6 +46,7 @@ import oda_api.misc_helpers
 import logging
 
 logger = logging.getLogger("oda_api.api")
+advice_logger = logging.getLogger("oda_api.advice")
 
 
 __all__ = ['Request', 'NoTraceBackWithLineNumber',
@@ -833,15 +834,18 @@ class DispatcherAPI:
                     instrument: str,
                     verbose=None,
                     product_type: str = 'Real',
+                    silent=False,
                     **kwargs):
         """
         submit query, wait (if allowed by self.wait), decode output when found
         """
 
-        self.logger.warning('please beware that by default, in a typical setup, oda_api will not output much. '
-                            'To learn how to increase the verbosity, please refer to the documentation: '
-                            'https://oda-api.readthedocs.io/en/latest/user_guide/ScienceWindowList.html?highlight=logging#Let\'s-get-some-logging'
-                            )
+        if not silent:
+            advice_logger.warning('please beware that by default, in a typical setup, oda_api will not output much. '
+                                'To learn how to increase the verbosity, please refer to the documentation: '
+                                'https://oda-api.readthedocs.io/en/latest/user_guide/ScienceWindowList.html?highlight=logging#Let\'s-get-some-logging . \n'
+                                'To disable this message you can pass `.get_product(..., silent=True)`'
+                                )
 
         self.job_id = None
 
