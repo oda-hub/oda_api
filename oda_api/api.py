@@ -838,6 +838,11 @@ class DispatcherAPI:
         submit query, wait (if allowed by self.wait), decode output when found
         """
 
+        self.logger.warning('please beware that by default, in a typical setup, oda_api will not output much. '
+                            'To learn how to increase the verbosity, please refer to the documentation: '
+                            'https://oda-api.readthedocs.io/en/latest/user_guide/ScienceWindowList.html?highlight=logging#Let\'s-get-some-logging'
+                            )
+
         self.job_id = None
 
         # TODO: it's confusing when and where these are passed
