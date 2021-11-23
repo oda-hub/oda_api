@@ -60,6 +60,8 @@ def decode_oda_token(token: str, secret_key=None, allow_invalid=False) -> dict:
         logger.error(f'unexplained exception in decode token: %s\n%s\n%s', token, repr(e), traceback.format_exc())
         raise
 
+    raise RuntimeError()
+
 def decode_oauth2_token(token: str):
     # usually comes in cookies['_oauth2_proxy']
     return json.loads(base64.b64decode(token.split(".")[0]+"=").decode())
