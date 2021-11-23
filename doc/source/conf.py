@@ -23,8 +23,8 @@ on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 # -- Project information -----------------------------------------------------
 
 project = 'oda_api'
-copyright = '2021, andrea tramacere'
-author = 'andrea tramacere'
+copyright = '2021, Andrea Tramacere, Volodymyr Savchenko, Gabriele Barni'
+author = 'Andrea Tramacere, Volodymyr Savchenko, Gabriele Barni'
 
 
 with open('../../oda_api/pkg_info.json') as fp:
