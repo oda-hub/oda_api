@@ -25,7 +25,7 @@ def test_token_inspect(token_placement, default_token, monkeypatch, caplog):
     runner = CliRunner()
     result = runner.invoke(cli.tokencli, ['inspect'], obj={})
     assert result.exit_code == 0
-    
+        
     assert '"sub": "mtm@mtmco.net"' in caplog.text
     assert '"mssub": true' in caplog.text    
 
