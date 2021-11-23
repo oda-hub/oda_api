@@ -2,8 +2,13 @@ furo
 sphinx-automodapi
 nbsphinx
 numpydoc
-matplotlib
-simplejson
+
 IPython
 extension-helpers
+jsonschema
+json-tricks
+simplejson
+requests
+
+matplotlib
 astropy==4.3.1
