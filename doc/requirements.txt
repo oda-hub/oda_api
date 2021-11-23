@@ -6,3 +6,4 @@ matplotlib
 simplejson
 IPython
 extension-helpers
+astropy<5.0.0

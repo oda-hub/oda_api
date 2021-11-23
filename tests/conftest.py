@@ -44,5 +44,9 @@ def secret_key(dispatcher_test_conf):
     return dispatcher_test_conf['secret_key']
 
 @pytest.fixture
-def default_token(default_token_payload, secret_key) -> str:
-    return jwt.encode(default_token_payload, secret_key, algorithm='HS256').decode()
+def default_token(default_token_payload, secret_key) -> str:    
+    token = jwt.encode(default_token_payload, secret_key, algorithm='HS256')
+    # this changes depending on jwt implementation
+    if isinstance(token, bytes):
+        token = token.decode()
+    return token
