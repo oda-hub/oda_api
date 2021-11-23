@@ -35,20 +35,20 @@ def decode_oda_token(token: str, secret_key=None, allow_invalid=False) -> dict:
         return json.loads(base64.b64decode(token.split(".")[1]+"=").decode())
     
     if secret_key is None:
+        secret_key = ""
         allow_invalid = True
+    
+    decode_options = {}
 
     if allow_invalid:
-        verify_signature = False
-        verify_exp = False
+        decode_options['verify_signature'] = False
+        decode_options['verify_exp'] = False
 
     try:
         return jwt.decode(token, 
                           secret_key, 
                           algorithms=[default_algorithm],
-                          options=dict(
-                              verify_signature=verify_signature,
-                              verify_exp=verify_exp
-                          ))
+                          options=decode_options)
                 
     except ExpiredSignatureError as e:
         logger.warning("problem decoding token: %s", repr(e))
@@ -57,7 +57,7 @@ def decode_oda_token(token: str, secret_key=None, allow_invalid=False) -> dict:
 
     except Exception as e:
         traceback.format_exc()
-        logger.error(f'unexplained exception in decode token: \%s\n%s\n%s', token, repr(e), traceback.format_exc())
+        logger.error(f'unexplained exception in decode token: %s\n%s\n%s', token, repr(e), traceback.format_exc())
         raise
 
 def decode_oauth2_token(token: str):

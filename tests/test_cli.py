@@ -12,14 +12,14 @@ def test_token_inspect(token_placement, default_token, monkeypatch, caplog):
         monkeypatch.setenv('ODA_TOKEN', default_token)
         
     elif token_placement == 'cwddotfile':
-        with open(".oda-token", "wb") as f:
+        with open(".oda-token", "w") as f:
             f.write(default_token)
 
     elif token_placement == 'homedotfile':
         fakehome = "fake-home"
         os.makedirs(fakehome, exist_ok=True)
         monkeypatch.setenv('HOME', fakehome)
-        with open(os.path.join(fakehome, ".oda-token"), "wb") as f:
+        with open(os.path.join(fakehome, ".oda-token"), "w") as f:
             f.write(default_token)
 
     runner = CliRunner()
@@ -54,7 +54,9 @@ def test_get(dispatcher_live_fixture, caplog):
     runner = CliRunner()
     result = runner.invoke(cli.cli, ['-u', dispatcher_live_fixture, 'get'], obj={})
     assert result.exit_code == 0
-    assert "found instruments: ['empty', 'empty-async', 'empty-semi-async']" in caplog.text
+
+    assert "found instruments: ['empty', 'empty-async', 'empty-semi-async']" in caplog.text or \
+           "found instruments:  ['empty', 'empty-async', 'empty-semi-async', 'isgri', 'jemx', 'osa_fake']"
 
     runner = CliRunner()
     result = runner.invoke(cli.cli, ['-u', dispatcher_live_fixture, 'get', '-i', 'empty'], obj={})
