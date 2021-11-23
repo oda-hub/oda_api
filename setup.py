@@ -44,7 +44,7 @@ setup(name='oda_api',
         ],
       tests_require=[
             "pytest-xdist[psutil]",
-            "astroquery-integral==0.1.0",
+            "astroquery>=0.4.4",
         ],      
       entry_points={
           "console_scripts": [

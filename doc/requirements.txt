@@ -10,5 +10,7 @@ json-tricks
 simplejson
 requests
 
-matplotlib
+matplotlib==3.5.0
 astropy==4.3.1
+pyjwt==2.3.0
+astroquery==0.4.4
