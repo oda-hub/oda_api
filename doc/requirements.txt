@@ -1,4 +1,4 @@
-#sphinx-bootstrap-theme
+wheel
 furo
 sphinx-automodapi
 nbsphinx
