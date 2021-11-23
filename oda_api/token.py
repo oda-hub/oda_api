@@ -6,6 +6,7 @@ from os import environ, getcwd, path
 from posixpath import join
 from types import FunctionType
 import time
+import traceback
 
 from jwt.exceptions import ExpiredSignatureError # type: ignore
 
@@ -25,48 +26,39 @@ def format_token(decoded_oda_token: dict):
 
 ## decoding
 
-def decode_oda_token(token: str, secret_key=None, allow_invalid=False):
+def decode_oda_token(token: str, secret_key=None, allow_invalid=False) -> dict:
     if token is None:
-        raise RuntimeError
+        raise RuntimeError('provided token is None')
 
     if jwt is None:
         logger.info("decoding token without jwt")
         return json.loads(base64.b64decode(token.split(".")[1]+"=").decode())
-    else:
-        if secret_key is None:
-            logger.info("decoding token with jwt and NOT verifying")
-            return jwt.decode(token, 
-                            "", 
-                            algorithms=[default_algorithm],
-                            options=dict(
-                                verify_signature=False,
-                                verify_exp=False
-                            ))
-        else:
-            logger.info("decoding token with jwt and verifying")
-            try:
-                return jwt.decode(token, 
-                                secret_key, 
-                                algorithms=[default_algorithm],
-                                options=dict(
-                                    verify_signature=True,
-                                    verify_exp=False
-                                ))
-            except ExpiredSignatureError as e:
-                logger.warning("token invalid: %s", e)
-                if allow_invalid:
-                    logger.warning("allowing invalid token")
-                    return jwt.decode(token, 
-                                    secret_key, 
-                                    algorithms=[default_algorithm],
-                                    options=dict(
-                                        verify_signature=False
-                                    ))
-                else:
-                    raise
-            except Exception as e:
-                logger.warning('unknown exception in decode token: %s', repr(e))
-                raise
+    
+    if secret_key is None:
+        allow_invalid = True
+
+    if allow_invalid:
+        verify_signature = False
+        verify_exp = False
+
+    try:
+        return jwt.decode(token, 
+                          secret_key, 
+                          algorithms=[default_algorithm],
+                          options=dict(
+                              verify_signature=verify_signature,
+                              verify_exp=verify_exp
+                          ))
+                
+    except ExpiredSignatureError as e:
+        logger.warning("problem decoding token: %s", repr(e))
+        if allow_invalid:
+            raise RuntimeError("expired token despite no verification?")
+
+    except Exception as e:
+        traceback.format_exc()
+        logger.error(f'unexplained exception in decode token: \%s\n%s\n%s', token, repr(e), traceback.format_exc())
+        raise
 
 def decode_oauth2_token(token: str):
     # usually comes in cookies['_oauth2_proxy']
