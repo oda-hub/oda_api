@@ -70,13 +70,14 @@ def get(obj, instrument, product, argument):
 @click.pass_obj
 def tokencli(obj, secret, allow_invalid):
     obj['secret_key'] = secret
-    obj['token'] = discover_token(allow_invalid=allow_invalid)
-    obj['decoded_token'] = decode_oda_token(obj['token'], secret_key=obj['secret_key'])
     obj['allow_invalid'] = allow_invalid
+    obj['token'] = discover_token(allow_invalid=allow_invalid)
+    obj['decoded_token'] = decode_oda_token(
+                                obj['token'], 
+                                secret_key=obj['secret_key'], 
+                                allow_invalid=obj['allow_invalid'])
+                            
 
-    if obj['token'] is None:
-        logger.warn("no token found!")
-        return
 
 
 @tokencli.command()
