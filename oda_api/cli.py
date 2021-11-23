@@ -111,6 +111,9 @@ def modify(obj, disable_email, new_validity_hours):
             logger.info("disabling email submission")
             new_payload['mssub'] = False
             new_payload['msdone'] = False
+            # TODO: think if need this
+            # new_payload['msfail'] = False
+
 
         if new_validity_hours is not None:
             new_payload['exp'] = time.time() + new_validity_hours * 3600

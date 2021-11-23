@@ -136,11 +136,3 @@ def update_token(token, secret_key, payload_mutation: FunctionType, allow_invali
     out_token = jwt.encode(mutated_token_payload, secret_key, algorithm=default_algorithm)
 
     return out_token
-
-def update_token_suppress_email(token, secret_key):
-    def payload_mutation(token_payload):
-        token_payload['mssub'] = False
-        token_payload['msdone'] = False
-        token_payload['msfail'] = False
-
-    return update_token(token, secret_key, payload_mutation)
