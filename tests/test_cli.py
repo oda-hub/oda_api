@@ -10,14 +10,16 @@ from oda_api import cli
 def test_token_inspect(token_placement, default_token, monkeypatch, caplog):
     if token_placement == 'env':
         monkeypatch.setenv('ODA_TOKEN', default_token)
+        
     elif token_placement == 'cwddotfile':
-        with open(".oda-token", "w") as f:
+        with open(".oda-token", "wb") as f:
             f.write(default_token)
+
     elif token_placement == 'homedotfile':
         fakehome = "fake-home"
         os.makedirs(fakehome, exist_ok=True)
         monkeypatch.setenv('HOME', fakehome)
-        with open(os.path.join(fakehome, ".oda-token"), "w") as f:
+        with open(os.path.join(fakehome, ".oda-token"), "wb") as f:
             f.write(default_token)
 
     runner = CliRunner()
