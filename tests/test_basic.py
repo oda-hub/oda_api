@@ -95,6 +95,7 @@ par_dict={{
     "RA": 265.97845833,
     "T1": "2017-03-06T13:26:48.000",
     "T2": "2017-03-06T15:32:27.000",
+    "T_format": "isot",
     "api": "True",
     "instrument": "empty",
     "oda_api_version": "{oda_api.__version__}",
@@ -108,7 +109,7 @@ par_dict={{
 data_collection = disp.get_product(**par_dict)
 '''
 
-    assert output_api_code == expected_api_code or output_api_code == expected_api_code.replace('PRODUCTS_URL', dispatcher_api.url)
+    assert output_api_code.replace('PRODUCTS_URL', dispatcher_api.url) == expected_api_code.replace('PRODUCTS_URL', dispatcher_api.url)
 
 
 @pytest.mark.parametrize("dry_run_value", [True, False, None, 'not_included'])
