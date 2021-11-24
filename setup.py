@@ -35,7 +35,7 @@ setup(name='oda_api',
       install_requires=[
             "requests",
             "future",
-            "astropy>=3.2",
+            "astropy>=3.2<5.0.0",
             "json_tricks",
             "matplotlib",
             "numpy",
@@ -44,7 +44,7 @@ setup(name='oda_api',
         ],
       tests_require=[
             "pytest-xdist[psutil]",
-            "astroquery-integral==0.1.0",
+            "astroquery>=0.4.4",
         ],      
       entry_points={
           "console_scripts": [
