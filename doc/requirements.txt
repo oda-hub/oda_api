@@ -6,3 +6,5 @@ numpydoc
 matplotlib
 simplejson
 IPython
+astropy>=3.2
+scipy
