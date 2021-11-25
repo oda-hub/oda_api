@@ -25,6 +25,7 @@ from matplotlib import pylab as plt
 from matplotlib.widgets import Slider, Button, RadioButtons
 from matplotlib import cm
 import astropy.wcs as wcs
+from astropy.io import fits
 
 import logging
 
@@ -32,12 +33,15 @@ logger = logging.getLogger("oda_api.plot_tools")
 
 __all__ = ['OdaImage', 'OdaLightCurve']
 
-class OdaImage(object):
+class OdaProduct(object):
 
     def __init__(self, data):
         self.data = data
         self.meta = None
+        self.logger = logger.getChild(self.__class__.__name__.lower())
+        self.progress_logger = self.logger.getChild("progress")
 
+class OdaImage(OdaProduct):
 
     def show(self, data=None, meta=None, header=None, sources=None,
              levels=numpy.linspace(1, 10, 10), cmap=cm.gist_earth,
@@ -176,8 +180,12 @@ class OdaImage(object):
         #Nice to have : slider
         cmin = plt.axes([0.85, 0.05, 0.02, 0.4])
         cmax = plt.axes([0.85, 0.55, 0.02, 0.4])
-        self.smin = Slider(cmin, 'Min',  data.min(), data.max(), valinit=1., orientation='vertical')
-        self.smax = Slider(cmax, 'Max', data.min(), data.max(), valinit=10., orientation='vertical')
+
+        data_min = data[numpy.isfinite(data)].min()
+        data_max = data[numpy.isfinite(data)].max()
+
+        self.smin = Slider(cmin, 'Min',  data_min, data_max, valinit=1., orientation='vertical')
+        self.smax = Slider(cmax, 'Max', data_min, data_max, valinit=10., orientation='vertical')
         self.smin.on_changed(self.update)
         self.smax.on_changed(self.update)
 
@@ -192,14 +200,11 @@ class OdaImage(object):
             #self.cb = plt.colorbar(self.cs)
 
 
+    def write_fits(self, file_prefix=''):
+        self.data.mosaic_image_0_mosaic.write_fits_file('%smosaic.fits' %file_prefix,  overwrite=True)
 
+class OdaLightCurve(OdaProduct):
 
-class OdaLightCurve(object):
-
-    def __init__(self, data):
-        self.data = data
-        self.logger = logger.getChild(self.__class__.__name__.lower())
-        self.progress_logger = self.logger.getChild("progress")
 
     def get_lc(self, source_name, systematic_fraction=0):
 
@@ -339,3 +344,194 @@ class OdaLightCurve(object):
         if save_plot:
             _ = plt.savefig(name_base+'%d.png' % i)
         return fig
+    
+    def write_fits(self, source_name, file_suffix='', output_dir='.'):
+        # In LC name has no "-" nor "+" ??????
+        lc = self.data
+        patched_source_name = source_name.replace('-', ' ').replace('+', ' ')
+        lcprod = [l for l in lc._p_list if l.meta_data['src_name'] == source_name or \
+                  l.meta_data['src_name'] == patched_source_name]
+        if (len(lcprod) < 1):
+            self.logger.warning("source %s not found in light curve products" % source_name)
+            return "none", 0, 0, 0
+
+        if (len(lcprod) > 1):
+            self.logger.warning(
+                "source %s is found more than once light curve products, writing only the first one" % source_name)
+
+        instrument = lcprod[0].data_unit[1].header['INSTRUME']
+        if instrument == 'IBIS':
+            ind_extension = 1
+        else:
+            ind_extension = 2
+
+        lc_fn = output_dir + "/%s_lc_%s%s.fits" % (instrument, source_name.replace(' ', '_'), file_suffix)
+        hdu = lcprod[0].data_unit[ind_extension].to_fits_hdu()
+        timedel = hdu.header['TIMEDEL']
+        timepixr = hdu.header['TIMEPIXR']
+
+        dt = timedel * timepixr
+
+        hdu.header['TSTART'] = hdu.data['TIME'][0] - dt
+        hdu.header['TSTOP'] = hdu.data['TIME'][-1] + dt
+        hdu.header['TFIRST'] = hdu.data['TIME'][0] - dt
+        hdu.header['TLAST'] = hdu.data['TIME'][-1] + dt
+        hdu.header['TELAPSE'] = hdu.header['TLAST'] - hdu.header['TFIRST']
+
+        ontime=0
+        for x in hdu.data['FRACEXP']:
+            ontime += x * timedel
+
+        hdu.header['ONTIME'] = ontime
+
+        fits.writeto(lc_fn, hdu.data, header=hdu.header, overwrite=True)
+
+        mjdref = float(hdu.header['MJDREF'])
+        tstart = float(hdu.header['TSTART']) + mjdref
+        tstop = float(hdu.header['TSTOP']) + mjdref
+        try:
+            exposure = float(hdu.header['EXPOSURE'])
+        except:
+            exposure = -1
+
+        return lc_fn, tstart, tstop, exposure
+
+
+class OdaSpectrum(OdaProduct):
+
+    def show_spectral_products(self):
+
+        summed_data = self.data
+
+        for dd, nn in zip(summed_data._p_list, summed_data._n_list):
+            self.logger.debug(nn)
+            dd.show_meta()
+            # for kk in dd.meta_data.items():
+            if 'spectrum' in dd.meta_data['product']:
+                self.logger.debug(dd.data_unit[1].header['EXPOSURE'])
+            dd.show()
+
+    def get_spectrum_products(self, in_source_name='none'):
+        if in_source_name == 'none':
+            return None
+
+        specprod = [l for l in self.data._p_list if l.meta_data['src_name'] == in_source_name]
+
+        if (len(specprod) < 1):
+            self.logger.warning("source %s not found in spectral products" % in_source_name)
+            return None
+
+        return specprod
+
+    def show(self, in_source_name='', systematic_fraction=0, xlim=[]):
+
+        specprod = self.get_spectrum_products(in_source_name)
+        if specprod is None:
+            return
+
+        spec = specprod[0].data_unit[1].to_fits_hdu()
+        ebounds = specprod[2].data_unit[1].to_fits_hdu()
+
+        x = (ebounds.data['E_MAX'] + ebounds.data['E_MIN'])/2.
+        dx = (ebounds.data['E_MAX'] - ebounds.data['E_MIN']) / 2.
+        y = spec.data['RATE']
+        dy = numpy.sqrt(spec.data['STAT_ERR']**2 + spec.data['SYS_ERR']**2 + (y*systematic_fraction)**2)
+
+        fig = plt.figure()
+        _ = plt.errorbar(x, y, xerr=dx, yerr=dy, marker='o', capsize=0, linestyle='', label='spectrum')
+
+        _ = plt.xlabel('Energy [keV]')
+        _ = plt.xscale('log')
+        _ = plt.yscale('log')
+        _ = plt.ylabel('Rate')
+        _ = plt.title(in_source_name)
+        if len(xlim) == 2:
+            _ = plt.xlim(xlim)
+
+        return fig
+    
+    def write_fits(self, source_name='', file_suffix='', grouping=[0, 0, 0], systematic_fraction=0,
+                                  output_dir='.'):
+
+        # Grouping argument is [minimum_energy, maximum_energy, number_of_bins]
+        # number of bins > 0, linear grouping
+        # number_of_bins < 0, logarithmic binning
+
+        if source_name == '':
+            self.show_spectral_products()
+            self.logger.warning('PLease specify a source to save the spectral products')
+            return "none", 0, 0, 0
+
+        specprod = self.get_spectrum_products(source_name)
+        if specprod is None:
+            return "none", 0, 0, 0
+
+        instrument = specprod[0].data_unit[1].header['INSTRUME']
+
+        out_name = source_name.replace(' ', '_').replace('+', 'p')
+        spec_fn = output_dir + "/%s_spectrum_%s%s.fits" % (instrument, out_name, file_suffix)
+        arf_fn = output_dir + "/%s_arf_%s%s.fits" % (instrument, out_name, file_suffix)
+        rmf_fn = output_dir + "/%s_rmf_%s%s.fits" % (instrument, out_name, file_suffix)
+
+        self.logger.info("Saving spectrum %s with rmf %s and arf %s" % (spec_fn, rmf_fn, arf_fn))
+
+        specprod[0].write_fits_file(spec_fn)
+        specprod[1].write_fits_file(arf_fn)
+        specprod[2].write_fits_file(rmf_fn)
+
+        ff = fits.open(spec_fn, mode='update')
+
+        ff[1].header['RESPFILE'] = rmf_fn
+        ff[1].header['ANCRFILE'] = arf_fn
+        mjdref = ff[1].header['MJDREF']
+        tstart = float(ff[1].header['TSTART']) + mjdref
+        tstop = float(ff[1].header['TSTOP']) + mjdref
+        exposure = ff[1].header['EXPOSURE']
+        ff[1].data['SYS_ERR'] = numpy.zeros(len(ff[1].data['SYS_ERR'])) + systematic_fraction
+        ind = numpy.isfinite(ff[1].data['RATE'])
+        ff[1].data['QUALITY'][ind] = 0
+
+        if numpy.sum(grouping) != 0:
+
+            if grouping[1] <= grouping[0] or grouping[2] == 0:
+                raise RuntimeError('Wrong grouping arguments')
+
+            ff_rmf = fits.open(rmf_fn)
+
+            e_min = ff_rmf['EBOUNDS'].data['E_MIN']
+            e_max = ff_rmf['EBOUNDS'].data['E_MAX']
+
+            ff_rmf.close()
+
+            ind1 = numpy.argmin(numpy.abs(e_min - grouping[0]))
+            ind2 = numpy.argmin(numpy.abs(e_max - grouping[1]))
+
+            n_bins = numpy.abs(grouping[2])
+
+            ff[1].data['GROUPING'][0:ind1] = 0
+            ff[1].data['GROUPING'][ind2:] = 0
+
+            ff[1].data['QUALITY'][0:ind1] = 1
+            ff[1].data['QUALITY'][ind2:] = 1
+
+            if grouping[2] > 0:
+                step = int((ind2 - ind1 + 1) / n_bins)
+                self.logger.info('Linear grouping with step %d' % step)
+                for i in range(1, step):
+                    j = range(ind1 + i, ind2, step)
+                    ff[1].data['GROUPING'][j] = -1
+            else:
+                ff[1].data['GROUPING'][ind1:ind2] = -1
+                e_step = (e_max[ind2] / e_min[ind1]) ** (1.0 / n_bins)
+                self.logger.info('Geometric grouping with step %.3f' % e_step)
+                loc_e = e_min[ind1]
+                while (loc_e < e_max[ind2]):
+                    ind_loc_e = numpy.argmin(numpy.abs(e_min - loc_e))
+                    ff[1].data['GROUPING'][ind_loc_e] = 1
+                    loc_e *= e_step
+
+        ff.flush()
+        ff.close()
+
+        return spec_fn, tstart, tstop, exposure
+
