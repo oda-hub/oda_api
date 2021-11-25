@@ -25,7 +25,13 @@ from matplotlib import pylab as plt
 from matplotlib.widgets import Slider, Button, RadioButtons
 from matplotlib import cm
 import astropy.wcs as wcs
+from astropy import table
+from astropy import units as u
+from astropy.coordinates import SkyCoord
 from astropy.io import fits
+from astroquery.simbad import Simbad
+import copy
+
 
 import logging
 
@@ -202,9 +208,125 @@ class OdaImage(OdaProduct):
 
     def write_fits(self, file_prefix=''):
         self.data.mosaic_image_0_mosaic.write_fits_file('%smosaic.fits' %file_prefix,  overwrite=True)
+    
+    
+    def extract_catalog_from_image(self, include_new_sources=False, det_sigma=5, objects_of_interest=[],
+                                          flag=1, isgri_flag=2, update_catalog=False):
+        import json
+        catalog_str = self.extract_catalog_string_from_image(include_new_sources, det_sigma, objects_of_interest,
+                                              flag, isgri_flag, update_catalog)
+        return json.loads(catalog_str)
+
+    def extract_catalog_string_from_image(self, include_new_sources=False, det_sigma=5, objects_of_interest=[],
+                                          flag=1, isgri_flag=2, update_catalog=True):
+
+        # Example: objects_of_interest=['Her X-1']
+        #         objects_of_interest=[('Her X-1', Simbad.query )]
+        #         objects_of_interest=[('Her X-1', Skycoord )]
+        #         objects_of_interest=[ Skycoord(....) ]
+        image=self.data
+        
+        if image.dispatcher_catalog_1.table is None:
+            self.logger.warning("No sources in the catalog")
+            if objects_of_interest != []:
+                return OdaImage.add_objects_of_interest(None, objects_of_interest,
+                                                    flag, isgri_flag)
+            else:
+                return 'none'
+
+        sources = image.dispatcher_catalog_1.table[image.dispatcher_catalog_1.table['significance'] >= det_sigma]
+
+        if len(sources) == 0:
+            self.logger.warning('No sources in the catalog with det_sigma > %.1f' % det_sigma)
+            if objects_of_interest != []:
+                return self.add_objects_of_interest(None, objects_of_interest,
+                                                    flag, isgri_flag)
+            else:
+                return 'none'
+
+        if not include_new_sources:
+            ind = [not 'NEW' in ss for ss in sources['src_names']]
+            clean_sources = sources[ind]
+            self.logger.debug(ind)
+            self.logger.debug(sources)
+            self.logger.debug(clean_sources)
+        else:
+            clean_sources = sources
+
+        unique_sources = self.add_objects_of_interest(clean_sources, objects_of_interest,
+                                                                 flag, isgri_flag)
+
+        copied_image = copy.deepcopy(image)
+        copied_image.dispatcher_catalog_1.table = unique_sources
+
+        if update_catalog:
+            image.dispatcher_catalog_1.table = unique_sources
+
+        return copied_image.dispatcher_catalog_1.get_api_dictionary()
+
+    @staticmethod
+    def make_one_source_catalog_string(name, ra, dec, isgri_flag, flag):
+        out_str_templ ='{"cat_frame": "fk5", "cat_coord_units": "deg", "cat_column_list": [[1], ["%s"], [0.0], [%f], [%f], [-32768], [%d], [%d], [0.001]], "cat_column_names": ["meta_ID", "src_names", "significance", "ra", "dec", "NEW_SOURCE", "ISGRI_FLAG", "FLAG", "ERR_RAD"], "cat_column_descr": [["meta_ID", "<i8"], ["src_names", "<U7"], ["significance", "<f8"], ["ra", "<f8"], ["dec", "<f8"], ["NEW_SOURCE", "<i8"], ["ISGRI_FLAG", "<i8"], ["FLAG", "<i8"], ["ERR_RAD", "<f8"]], "cat_lat_name": "dec", "cat_lon_name": "ra"}'
+        return out_str_templ % (name, ra, dec, isgri_flag, flag)
+
+    def add_objects_of_interest(self, clean_sources, objects_of_interest, flag=1, isgri_flag=2, tolerance = 1./60.):
+        for ooi in objects_of_interest:
+            if isinstance(ooi, tuple):
+                ooi, t = ooi
+                if isinstance(t, SkyCoord):
+                    source_coord = t
+            # elif isinstance(ooi, SkyCoord):
+            #     t = Simbad.query_region(ooi)
+            elif isinstance(ooi, str):
+                t = Simbad.query_object(ooi)
+            else:
+                raise Exception("fail to elaborate object of interest")
+
+            if isinstance(t, table.Table):
+                source_coord = SkyCoord(t['RA'], t['DEC'], unit=(u.hourangle, u.deg), frame="fk5")
+
+            self.logger.info("Elaborating object of interest: %s %f %f" %
+                                       (ooi, source_coord.ra.deg, source_coord.dec.deg))
+            ra = source_coord.ra.deg
+            dec = source_coord.dec.deg
+            self.logger.info("RA=%g Dec=%g" % (ra, dec))
+
+            if clean_sources is not None:
+                #Look for the source of interest in NEW sources by coordinates
+                for ss in clean_sources:
+                    if 'NEW' in ss['src_names']:
+                        if numpy.abs(ra - ss['ra']) <= tolerance and numpy.abs(dec - ss['dec']) <= tolerance:
+                            self.logger.info('Found ' + ooi + ' in catalog as ' + ss['src_names'])
+                            ind = clean_sources['src_names'] == ss['src_names']
+                            clean_sources['FLAG'][ind] = flag
+                            clean_sources['ISGRI_FLAG'][ind] = isgri_flag
+                            clean_sources['src_names'][ind] = ooi
+
+                #Look for the source of interest in
+                ind = clean_sources['src_names'] == ooi
+                if numpy.count_nonzero(ind) > 0:
+                    self.logger.info('Found ' + ooi + ' in catalog')
+                    clean_sources['FLAG'][ind] = flag
+                    if 'ISGRI_FLAG' in clean_sources.keys():
+                       clean_sources['ISGRI_FLAG'][ind] = isgri_flag
+                    if 'JEMX_FLAG' in clean_sources.keys():
+                       clean_sources['JEMX_FLAG'][ind] = isgri_flag
+                else:
+                    self.logger.info('Adding ' + ooi + ' to catalog')
+                    try:
+                        self.logger.debug('Flux is present')
+                        clean_sources.add_row((0, ooi, 0, ra, dec, 0, isgri_flag, flag, 1e-3, 0, 0))
+                    except:
+                        self.logger.debug('Flux is NOT present')
+                        clean_sources.add_row((0, ooi, 0, ra, dec, 0, isgri_flag, flag, 1e-3))
+
+                unique_sources = table.unique(clean_sources, keys=['src_names'])
+
+                return unique_sources
+            else:
+                return self.make_one_source_catalog_string(ooi, ra, dec, isgri_flag, flag)
 
 class OdaLightCurve(OdaProduct):
-
 
     def get_lc(self, source_name, systematic_fraction=0):
 

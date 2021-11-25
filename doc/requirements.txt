@@ -8,3 +8,4 @@ simplejson
 IPython
 astropy>=3.2
 scipy
+astroquery

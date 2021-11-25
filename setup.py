@@ -30,7 +30,7 @@ setup(name='oda_api',
       author_email='contact@odahub.io',
       scripts=scripts_list,
       packages=packs,
-      package_data={'oda_api':['config_dir/*']},
+      package_data={'oda_api': ['config_dir/*']},
       include_package_data=True,
       install_requires=[
             "requests",
@@ -41,6 +41,8 @@ setup(name='oda_api',
             "numpy",
             "jsonschema",
             "pyjwt"
+            "astroquery",
+            "scipy"
         ],
       tests_require=[
             "pytest-xdist[psutil]",
