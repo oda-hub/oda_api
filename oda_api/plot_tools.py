@@ -547,12 +547,18 @@ class OdaSpectrum(OdaProduct):
 
     def show(self, in_source_name='', systematic_fraction=0, xlim=[]):
 
+        if in_source_name == '':
+            self.show_spectral_products()
+            return
+
         specprod = self.get_spectrum_products(in_source_name)
         if specprod is None:
             return
 
         spec = specprod[0].data_unit[1].to_fits_hdu()
-        ebounds = specprod[2].data_unit[1].to_fits_hdu()
+        for hh in specprod[2].data_unit:
+            if hh.to_fits_hdu().header['EXTNAME'] == 'EBOUNDS':
+                ebounds = hh.to_fits_hdu()
 
         x = (ebounds.data['E_MAX'] + ebounds.data['E_MIN'])/2.
         dx = (ebounds.data['E_MAX'] - ebounds.data['E_MIN']) / 2.
