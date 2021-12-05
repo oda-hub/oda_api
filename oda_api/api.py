@@ -153,13 +153,15 @@ def safe_run(func):
                 n_tries_left -= 1
 
                 if n_tries_left > 0:
-                    logger.warning("problem in API call, %i tries left:\n%s\n sleeping %i seconds until retry",
+                    logger.debug("problem in API call, %i tries left:\n%s\n sleeping %i seconds until retry",
                                    n_tries_left, message, retry_sleep_s)
+                    logger.warning("possibly temporary problem in API call, %i tries left, sleeping %i seconds until retry",
+                                   n_tries_left, retry_sleep_s)                                   
                     time.sleep(retry_sleep_s)
-            
-            raise RemoteException(
-                message=message
-            )
+                else:
+                    raise RemoteException(
+                        message=message
+                    )
 
     return func_wrapper
 
@@ -179,7 +181,7 @@ class DispatcherAPI:
                  cookies=None,
                  protocol="https",
                  wait=True,
-                 n_max_tries=20,
+                 n_max_tries=200,
                  session_id=None,
                  ):
 
@@ -231,7 +233,7 @@ class DispatcherAPI:
         self.set_instr(instrument)
 
         self.n_max_tries = n_max_tries
-        self.retry_sleep_s = 5
+        self.retry_sleep_s = 10
 
         if port is not None:
             self.logger.warning(
