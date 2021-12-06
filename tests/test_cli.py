@@ -64,7 +64,6 @@ def test_token_modify(default_token, secret_key, monkeypatch, caplog):
     assert '"msdone": false' in caplog.text    
     assert '"mssub": false' in caplog.text    
     
-
 def test_get(dispatcher_live_fixture, caplog):
     runner = CliRunner()
     result = runner.invoke(cli.cli, ['-u', dispatcher_live_fixture, 'get'], obj={})
@@ -77,7 +76,7 @@ def test_get(dispatcher_live_fixture, caplog):
     result = runner.invoke(cli.cli, ['-u', dispatcher_live_fixture, 'get', '-i', 'empty'], obj={})
     assert result.exit_code == 0
 
-    print("caplog.text:", caplog.text)
+    print("caplog.text:", "\n>>> ".join(caplog.text.split("\n")))
 
     assert "'prod_dict': {'dummy': 'empty_parameters_dummy_query', 'numerical': '" in caplog.text
 
