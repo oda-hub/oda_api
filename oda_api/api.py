@@ -121,6 +121,7 @@ def safe_run(func):
 
         n_tries_left = self.n_max_tries
         retry_sleep_s = self.retry_sleep_s
+        t0 = time.time()
         while True:
             try:
                 return func(*args, **kwargs)
@@ -155,8 +156,8 @@ def safe_run(func):
                 if n_tries_left > 0:
                     logger.debug("problem in API call, %i tries left:\n%s\n sleeping %i seconds until retry",
                                    n_tries_left, message, retry_sleep_s)
-                    logger.warning("possibly temporary problem in API call, %i tries left, sleeping %i seconds until retry",
-                                   n_tries_left, retry_sleep_s)                                   
+                    logger.warning("possibly temporary problem in calling server: %s in %.1f seconds, %i tries left, sleeping %i seconds until retry",
+                                   repr(e), time.time() - t0, n_tries_left, retry_sleep_s)                                   
                     time.sleep(retry_sleep_s)
                 else:
                     raise RemoteException(

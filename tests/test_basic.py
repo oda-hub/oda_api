@@ -268,9 +268,10 @@ def test_retry(dispatcher_live_fixture, caplog):
     for level, message, number in [
         ('DEBUG', '- error on the remote server', 3),
         ('INFO', '- error on the remote server', 0),
-        ('WARNING', 'possibly temporary problem in API call, ', 3),
+        ('WARNING', 'possibly temporary problem in calling server', 3),
     ]:
-        assert len([record for record in caplog.records if record.levelname == level and message in record.message]) == number
+        assert len([record for record in caplog.records if record.levelname == level and message in record.message]) == number, \
+               "lacking message '{}' in: \n{}".format(message, '\n>>>> '.join([record.message for record in caplog.records if record.levelname == level]))
     
     disp.n_max_tries = 1
     requests.ntries_left = 3
