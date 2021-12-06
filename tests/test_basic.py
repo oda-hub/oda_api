@@ -241,3 +241,34 @@ def test_progress(dispatcher_live_fixture):
 
     disp.poll()
     assert disp.query_status == "ready"
+
+
+def test_retry(dispatcher_live_fixture, caplog):
+    DispatcherJobState.remove_scratch_folders()
+
+    def third_try_get(*args, **kwargs):        
+        if 'run_analysis' in args[0] and requests.ntries_left > 0:
+            requests.ntries_left -= 1
+            raise requests.exceptions.Timeout()
+
+        return requests._get(*args, **kwargs)
+
+    requests._get = requests.get
+    requests.get = third_try_get
+    requests.ntries_left = 3
+
+    disp = oda_api.api.DispatcherAPI(url=dispatcher_live_fixture, wait=False)
+    disp.n_max_tries = 4
+    disp.retry_sleep_s = 0.1
+
+    disp.get_product(
+        product="dummy",
+        instrument="empty-async")
+    
+    for level, message, number in [
+        ('DEBUG', '- error on the remote server', 3),
+        ('INFO', '- error on the remote server', 0),
+        ('WARNING', 'possibly temporary problem in API call, ', 3),
+    ]:
+        assert len([record for record in caplog.records if record.levelname == level and message in record.message]) == number
+    

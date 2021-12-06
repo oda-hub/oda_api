@@ -233,7 +233,7 @@ class DispatcherAPI:
         self.set_instr(instrument)
 
         self.n_max_tries = n_max_tries
-        self.retry_sleep_s = 10
+        self.retry_sleep_s = 10.
 
         if port is not None:
             self.logger.warning(
