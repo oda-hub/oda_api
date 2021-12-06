@@ -272,3 +272,11 @@ def test_retry(dispatcher_live_fixture, caplog):
     ]:
         assert len([record for record in caplog.records if record.levelname == level and message in record.message]) == number
     
+    disp.n_max_tries = 1
+    requests.ntries_left = 3
+    
+    with pytest.raises(oda_api.api.RemoteException):
+        disp.get_product(
+            product="dummy",
+            instrument="empty-async")
+    
