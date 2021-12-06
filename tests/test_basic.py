@@ -247,15 +247,14 @@ def test_retry(dispatcher_live_fixture, caplog):
     DispatcherJobState.remove_scratch_folders()
 
     def third_try_get(*args, **kwargs):        
-        if 'run_analysis' in args[0] and requests.ntries_left > 0:
-            requests.ntries_left -= 1
-            raise requests.exceptions.Timeout()
+        if 'run_analysis' in args[0] and len(requests.exceptions_to_raise) > 0:
+            raise requests.exceptions_to_raise.pop()
 
         return requests._get(*args, **kwargs)
 
     requests._get = requests.get
     requests.get = third_try_get
-    requests.ntries_left = 3
+    requests.exceptions_to_raise = [requests.exceptions.Timeout, ConnectionError, oda_api.api.DispatcherNotAvailable]
 
     disp = oda_api.api.DispatcherAPI(url=dispatcher_live_fixture, wait=False)
     disp.n_max_tries = 4
@@ -274,7 +273,7 @@ def test_retry(dispatcher_live_fixture, caplog):
                "lacking message '{}' in: \n{}".format(message, '\n>>>> '.join([record.message for record in caplog.records if record.levelname == level]))
     
     disp.n_max_tries = 1
-    requests.ntries_left = 3
+    requests.exceptions_to_raise = [requests.exceptions.Timeout]
     
     with pytest.raises(oda_api.api.RemoteException):
         disp.get_product(

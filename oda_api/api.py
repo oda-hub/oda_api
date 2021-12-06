@@ -90,6 +90,9 @@ class FailedToFindAnyUsefulResults(RemoteException):
 class UnexpectedDispatcherStatusCode(RemoteException):
     pass
 
+class DispatcherNotAvailable(RemoteException):
+    pass
+
 class RequestNotUnderstood(Exception):
     def __init__(self, details_json) -> None:
         self.details_json = details_json
@@ -137,7 +140,8 @@ def safe_run(func):
                 raise
             except (ConnectionError,
                     requests.exceptions.ConnectionError,
-                    requests.exceptions.Timeout) as e:
+                    requests.exceptions.Timeout,
+                    DispatcherNotAvailable) as e:
                 message = ''
                 message += '\nunable to complete API call'
                 message += '\nin ' + str(func) + ' called with:'
@@ -399,6 +403,9 @@ class DispatcherAPI:
             if response.status_code == 400:
                 raise RequestNotUnderstood(
                     response.json())
+
+            if response.status_code == 502:
+                raise DispatcherNotAvailable()
 
             if response.status_code != 200:
                 raise UnexpectedDispatcherStatusCode(
