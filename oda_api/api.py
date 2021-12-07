@@ -402,7 +402,7 @@ class DispatcherAPI:
                 raise RequestNotUnderstood(
                     response.json())
 
-            if response.status_code == 502:
+            if response.status_code in [502, 503]:
                 raise DispatcherNotAvailable()
 
             if response.status_code != 200:
