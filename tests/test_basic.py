@@ -287,8 +287,9 @@ def test_dispatcher_exception(dispatcher_live_fixture, caplog):
 
     DispatcherJobState.remove_scratch_folders()
 
-    #TODO: the whole HTTP 410 is not relevant
-
+    #TODO: the whole HTTP 410 is not relevant, this should be adressed in the dispatcher
+    # https://github.com/oda-hub/dispatcher-app/issues/139
+ 
     def get_exception(*args, **kwargs):                        
         response = Response()
         response.status_code = 410
