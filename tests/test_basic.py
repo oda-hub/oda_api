@@ -280,3 +280,47 @@ def test_retry(dispatcher_live_fixture, caplog):
             product="dummy",
             instrument="empty-async")
     
+    requests.get = requests._get
+
+def test_dispatcher_exception(dispatcher_live_fixture, caplog):
+    from requests.models import Response
+
+    DispatcherJobState.remove_scratch_folders()
+
+    #TODO: the whole HTTP 410 is not relevant, this should be adressed in the dispatcher
+    # https://github.com/oda-hub/dispatcher-app/issues/139
+ 
+    def get_exception(*args, **kwargs):                        
+        response = Response()
+        response.status_code = 410
+        response._content = json.dumps({"cdci_data_analysis_version":"1.3.1",
+                "config":{"dispatcher-config":
+                    {"cfg_dict":
+                        {"dispatcher":
+                            {"bind_options":
+                                {"bind_host":"0.0.0.0","bind_port":8000},
+                            "dispatcher_callback_url_base":"http://dispatcher.production.iu.odahub.io:31611",
+                            "dummy_cache":"dummy-cache",
+                            "products_url":"https://frontend-staging.obsuks1.unige.ch/mmoda/"}},
+                            "origin":{"filepath":"/dispatcher/conf/conf_env.yml","set_by":"command line /pyenv/versions/3.8.5/lib/python3.8/site-packages/cdci_data_analysis/flask_app/app.py:cdci_data_analysis.flask_app.app"}
+                            }},
+                "debug_mode":"no",
+                "error_message":"Expecting value: line 1 column 1 (char 0)",
+                "installed_instruments":["magic","isgri","jemx","polar","antares","spi_acs"],
+                "message":"request not valid",
+                "oda_api_version":"1.1.25"}).encode()
+        return response
+
+    requests._get = requests.get
+    requests.get = get_exception
+    
+    disp = oda_api.api.DispatcherAPI(url=dispatcher_live_fixture, wait=False)
+
+    with pytest.raises(oda_api.api.DispatcherException) as e:
+        disp.get_product(
+            product="dummy",            
+            instrument="empty-async")
+
+    assert repr(e.value) == "[ DispatcherException: Expecting value: line 1 column 1 (char 0)]"
+    
+    requests.get = requests._get
