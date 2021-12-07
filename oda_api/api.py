@@ -90,6 +90,9 @@ class FailedToFindAnyUsefulResults(RemoteException):
 class UnexpectedDispatcherStatusCode(RemoteException):
     pass
 
+class DispatcherNotAvailable(RemoteException):
+    pass
+
 class RequestNotUnderstood(Exception):
     def __init__(self, details_json) -> None:
         self.details_json = details_json
@@ -121,22 +124,22 @@ def safe_run(func):
 
         n_tries_left = self.n_max_tries
         retry_sleep_s = self.retry_sleep_s
+        t0 = time.time()
         while True:
             try:
                 return func(*args, **kwargs)
             except UserError as e:
-                logger.exception("user error: %s", e)
+                logger.exception("probably an unfortunate user input: %s", e)
                 raise
-            except Unauthorized:
-                raise
-            except RequestNotUnderstood:
-                raise
-            except UnexpectedDispatcherStatusCode as e:
-                message = f'unexpected status code: {e}'
+            except (Unauthorized, RequestNotUnderstood, UnexpectedDispatcherStatusCode) as e:
+                logger.exception("something went quite wrong, and we think it's not likely to recover on its own: %s", e)
                 raise
             except (ConnectionError,
                     requests.exceptions.ConnectionError,
-                    requests.exceptions.Timeout) as e:
+                    requests.exceptions.Timeout,
+                    DispatcherNotAvailable) as e:
+                # TODO: these are probably all server or access errors, 
+                # TODO: and they may need to be communicated back to server (if possible)
                 message = ''
                 message += '\nunable to complete API call'
                 message += '\nin ' + str(func) + ' called with:'
@@ -153,13 +156,15 @@ def safe_run(func):
                 n_tries_left -= 1
 
                 if n_tries_left > 0:
-                    logger.warning("problem in API call, %i tries left:\n%s\n sleeping %i seconds until retry",
+                    logger.debug("problem in API call, %i tries left:\n%s\n sleeping %i seconds until retry",
                                    n_tries_left, message, retry_sleep_s)
+                    logger.warning("possibly temporary problem in calling server: %s in %.1f seconds, %i tries left, sleeping %i seconds until retry",
+                                   repr(e), time.time() - t0, n_tries_left, retry_sleep_s)                                   
                     time.sleep(retry_sleep_s)
-            
-            raise RemoteException(
-                message=message
-            )
+                else:
+                    raise RemoteException(
+                        message=message
+                    )
 
     return func_wrapper
 
@@ -179,7 +184,7 @@ class DispatcherAPI:
                  cookies=None,
                  protocol="https",
                  wait=True,
-                 n_max_tries=20,
+                 n_max_tries=200,
                  session_id=None,
                  ):
 
@@ -231,7 +236,7 @@ class DispatcherAPI:
         self.set_instr(instrument)
 
         self.n_max_tries = n_max_tries
-        self.retry_sleep_s = 5
+        self.retry_sleep_s = 10.
 
         if port is not None:
             self.logger.warning(
@@ -396,6 +401,9 @@ class DispatcherAPI:
             if response.status_code == 400:
                 raise RequestNotUnderstood(
                     response.json())
+
+            if response.status_code == 502:
+                raise DispatcherNotAvailable()
 
             if response.status_code != 200:
                 raise UnexpectedDispatcherStatusCode(
