@@ -95,6 +95,7 @@ par_dict={{
     "RA": 265.97845833,
     "T1": "2017-03-06T13:26:48.000",
     "T2": "2017-03-06T15:32:27.000",
+    "T_format": "isot",
     "api": "True",
     "instrument": "empty",
     "oda_api_version": "{oda_api.__version__}",
@@ -108,7 +109,7 @@ par_dict={{
 data_collection = disp.get_product(**par_dict)
 '''
 
-    assert output_api_code == expected_api_code or output_api_code == expected_api_code.replace('PRODUCTS_URL', dispatcher_api.url)
+    assert output_api_code.replace('PRODUCTS_URL', dispatcher_api.url) == expected_api_code.replace('PRODUCTS_URL', dispatcher_api.url)
 
 
 @pytest.mark.parametrize("dry_run_value", [True, False, None, 'not_included'])
@@ -240,3 +241,42 @@ def test_progress(dispatcher_live_fixture):
 
     disp.poll()
     assert disp.query_status == "ready"
+
+
+def test_retry(dispatcher_live_fixture, caplog):
+    DispatcherJobState.remove_scratch_folders()
+
+    def third_try_get(*args, **kwargs):        
+        if 'run_analysis' in args[0] and len(requests.exceptions_to_raise) > 0:
+            raise requests.exceptions_to_raise.pop()
+
+        return requests._get(*args, **kwargs)
+
+    requests._get = requests.get
+    requests.get = third_try_get
+    requests.exceptions_to_raise = [requests.exceptions.Timeout, ConnectionError, oda_api.api.DispatcherNotAvailable]
+
+    disp = oda_api.api.DispatcherAPI(url=dispatcher_live_fixture, wait=False)
+    disp.n_max_tries = 4
+    disp.retry_sleep_s = 0.1
+
+    disp.get_product(
+        product="dummy",
+        instrument="empty-async")
+    
+    for level, message, number in [
+        ('DEBUG', '- error on the remote server', 3),
+        ('INFO', '- error on the remote server', 0),
+        ('WARNING', 'possibly temporary problem in calling server', 3),
+    ]:
+        assert len([record for record in caplog.records if record.levelname == level and message in record.message]) == number, \
+               "lacking message '{}' in: \n{}".format(message, '\n>>>> '.join([record.message for record in caplog.records if record.levelname == level]))
+    
+    disp.n_max_tries = 1
+    requests.exceptions_to_raise = [requests.exceptions.Timeout]
+    
+    with pytest.raises(oda_api.api.RemoteException):
+        disp.get_product(
+            product="dummy",
+            instrument="empty-async")
+    
