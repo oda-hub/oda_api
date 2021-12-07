@@ -129,19 +129,17 @@ def safe_run(func):
             try:
                 return func(*args, **kwargs)
             except UserError as e:
-                logger.exception("user error: %s", e)
+                logger.exception("probably an unfortunate user input: %s", e)
                 raise
-            except Unauthorized:
-                raise
-            except RequestNotUnderstood:
-                raise
-            except UnexpectedDispatcherStatusCode as e:
-                message = f'unexpected status code: {e}'
+            except (Unauthorized, RequestNotUnderstood, UnexpectedDispatcherStatusCode) as e:
+                logger.exception("something went quite wrong, and we think it's not likely to recover on its own: %s", e)
                 raise
             except (ConnectionError,
                     requests.exceptions.ConnectionError,
                     requests.exceptions.Timeout,
                     DispatcherNotAvailable) as e:
+                # TODO: these are probably all server or access errors, 
+                # TODO: and they may need to be communicated back to server (if possible)
                 message = ''
                 message += '\nunable to complete API call'
                 message += '\nin ' + str(func) + ' called with:'
