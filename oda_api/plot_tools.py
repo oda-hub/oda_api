@@ -2,28 +2,17 @@ from __future__ import absolute_import, division, print_function
 
 from builtins import (bytes, str, open, super, range,
                       zip, round, input, int, pow, object, map, zip)
+from typing import Optional, Union
 
-__author__ = "Andrea Tramacere"
+__author__ = "Carlo Ferrigno"
 
-# Standard library
-# eg copy
-# absolute import rg:from copy import deepcopy
+import json
 
-# Dependencies
-# eg numpy
-# absolute import eg: import numpy as np
-
-# Project
-# relative import eg: from .mod import f
-
-
-
-# must
 import numpy
 from matplotlib import pylab as plt
-#from ipywidgets import *
 from matplotlib.widgets import Slider, Button, RadioButtons
 from matplotlib import cm
+
 import astropy.wcs as wcs
 from astropy import table
 from astropy import units as u
@@ -32,12 +21,12 @@ from astropy.io import fits
 from astroquery.simbad import Simbad
 import copy
 
-
 import logging
 
 logger = logging.getLogger("oda_api.plot_tools")
 
 __all__ = ['OdaImage', 'OdaLightCurve']
+
 
 class OdaProduct(object):
 
@@ -47,17 +36,25 @@ class OdaProduct(object):
         self.logger = logger.getChild(self.__class__.__name__.lower())
         self.progress_logger = self.logger.getChild("progress")
 
+
 class OdaImage(OdaProduct):
 
     def show(self, data=None, meta=None, header=None, sources=None,
-             levels=numpy.linspace(1, 10, 10), cmap=cm.gist_earth,
+             levels=None, cmap=cm.gist_earth,
              unit_ID=4, det_sigma=3):
+
+        if levels is None:
+            levels = numpy.linspace(1, 10, 10) 
+
         if data is None:
             data = self.data.mosaic_image_0_mosaic.data_unit[unit_ID].data
+
         if meta is None:
             self.meta = self.data.mosaic_image_0_mosaic.meta_data
+
         if header is None:
             header = self.data.mosaic_image_0_mosaic.data_unit[unit_ID].header
+
         if sources is None:
             sources = self.data.dispatcher_catalog_1.table
 
@@ -72,45 +69,22 @@ class OdaImage(OdaProduct):
         data = numpy.transpose(data)
         data = numpy.ma.masked_equal(data, numpy.NaN)
 
-        ## CF display image crossing ra =0
         zero_crossing = False
-        # print("******************", ra.max(), ra.min())
-        # print("******************", numpy.abs(ra.max() - 360.0), numpy.abs(ra.min()))
+
         if numpy.abs(ra.max() - 360.0) < 0.1 and numpy.abs(ra.min()) < 0.1:
             zero_crossing = True
             ind_ra = ra > 180.
-            ra[ind_ra] -= 360.
-
-            # print("ra shape ", ra.shape)
+            ra[ind_ra] -= 360.            
             ind_sort = numpy.argsort(ra, axis=-1)
-
-            # print("Sorted RA", ind_sort.shape)
-            # print(ind_sort)
-
             ra = numpy.take_along_axis(ra, ind_sort, axis=-1)
-            # ra = ra[ind_sort]
-
-            # tmp = [ ra[ii] for ii in ind_sort]
-            #
-            # ra=tmp.copy()
-            # print("ordered ra shape ", ra.shape)
-            # tmp = [data[ii] for ii in ind_sort]
-            #
-            # data = tmp.copy()
             data = numpy.take_along_axis(data, ind_sort, axis=-1)
-            # print("data shape ", data.shape)
-            #
-            # print("Finished sorting")
-
-        ## CF end
-        #ax = plt.subplots(1, 1)
+                
         self.cs = plt.contourf(ra, dec, data, cmap=cmap, levels=levels,
                           extend="both", zorder=0)
         self.cs.cmap.set_under('k')
         self.cs.set_clim(numpy.min(levels), numpy.max(levels))
 
         self.cb = plt.colorbar(self.cs)
-        #plt.tight_layout()
 
         plt.xlim([ra.max(), ra.min()])
         plt.ylim([dec.min(), dec.max()])
@@ -120,15 +94,11 @@ class OdaImage(OdaProduct):
             decs = numpy.array([x for x in sources['dec']])
             names = numpy.array([x for x in sources['src_names']])
             sigmas = numpy.array([x for x in sources['significance']])
-            # Defines relevant indexes for plotting regions
 
+            # Defines relevant indexes for plotting regions
             m_new = numpy.array(['NEW' in name for name in names])
 
-            # m_offaxis = self.source_results.MEAN_VAR > 5
-            # m_noisy = self.source_results.DETSIG_CORR < 5
-
             # plot new sources as pink circles
-
             try:
                 m = m_new & (sigmas > det_sigma)
                 ra_coord = ras[m]
@@ -148,8 +118,8 @@ class OdaImage(OdaProduct):
             plt.scatter(ra_coord, dec_coord, s=100, marker="o", facecolors='none',
                         edgecolors='pink',
                         lw=3, label="NEW any", zorder=5)
+
             for i in range(len(ra_coord)):
-                # print("%f %f %s\n"%(ra_coord[i], dec_coord[i], names[i]))
                 plt.text(ra_coord[i],
                          dec_coord[i] + 0.5,
                          new_names[i], color="pink", size=15)
@@ -172,8 +142,8 @@ class OdaImage(OdaProduct):
 
             plt.scatter(ra_coord, dec_coord, s=100, marker="o", facecolors='none',
                         edgecolors='magenta', lw=3, label="known", zorder=5)
+
             for i in range(len(ra_coord)):
-                # print("%f %f %s\n"%(ra_coord[i], dec_coord[i], names[i]))
                 plt.text(ra_coord[i],
                          dec_coord[i] + 0.5,
                          cat_names[i], color="magenta", size=15)
@@ -200,37 +170,41 @@ class OdaImage(OdaProduct):
         return fig
 
     def update(self, x):
-        #print('x',x)
         if self.smin.val < self.smax.val:
             self.cs.set_clim(self.smin.val, self.smax.val)
-            #self.cb = plt.colorbar(self.cs)
 
 
     def write_fits(self, file_prefix=''):
-        self.data.mosaic_image_0_mosaic.write_fits_file('%smosaic.fits' %file_prefix,  overwrite=True)
+        self.data.mosaic_image_0_mosaic.write_fits_file(f'{file_prefix}mosaic.fits', overwrite=True)
     
     
     def extract_catalog_from_image(self, include_new_sources=False, det_sigma=5, objects_of_interest=[],
-                                          flag=1, isgri_flag=2, update_catalog=False):
-        import json
+                                   flag=1, isgri_flag=2, update_catalog=False):
         catalog_str = self.extract_catalog_string_from_image(include_new_sources, det_sigma, objects_of_interest,
                                               flag, isgri_flag, update_catalog)
         return json.loads(catalog_str)
 
-    def extract_catalog_string_from_image(self, include_new_sources=False, det_sigma=5, objects_of_interest=[],
-                                          flag=1, isgri_flag=2, update_catalog=True):
 
-        # Example: objects_of_interest=['Her X-1']
-        #         objects_of_interest=[('Her X-1', Simbad.query )]
-        #         objects_of_interest=[('Her X-1', Skycoord )]
-        #         objects_of_interest=[ Skycoord(....) ]
-        image=self.data
+    def extract_catalog_string_from_image(self, include_new_sources=False, det_sigma=5, 
+                                          objects_of_interest: Optional[List[Union[str, Tuple[str, Union[Simbad.query, SkyCoord]]]]]=None,
+                                          flag=1, isgri_flag=2, update_catalog=True) -> str:
+        """
+        Example: objects_of_interest=['Her X-1']
+                 objects_of_interest=[('Her X-1', Simbad.query )]
+                 objects_of_interest=[('Her X-1', Skycoord )]
+                 objects_of_interest=[ Skycoord(....) ]
+        """
+
+        if objects_of_interest is None:
+            objects_of_interest = []
+
+        image = self.data
         
         if image.dispatcher_catalog_1.table is None:
             self.logger.warning("No sources in the catalog")
             if objects_of_interest != []:
                 return OdaImage.add_objects_of_interest(None, objects_of_interest,
-                                                    flag, isgri_flag)
+                                                        flag, isgri_flag)
             else:
                 return 'none'
 
@@ -275,8 +249,6 @@ class OdaImage(OdaProduct):
                 ooi, t = ooi
                 if isinstance(t, SkyCoord):
                     source_coord = t
-            # elif isinstance(ooi, SkyCoord):
-            #     t = Simbad.query_region(ooi)
             elif isinstance(ooi, str):
                 t = Simbad.query_object(ooi)
             else:
@@ -325,6 +297,7 @@ class OdaImage(OdaProduct):
                 return unique_sources
             else:
                 return self.make_one_source_catalog_string(ooi, ra, dec, isgri_flag, flag)
+
 
 class OdaLightCurve(OdaProduct):
 
@@ -456,6 +429,7 @@ class OdaLightCurve(OdaProduct):
 
         return fig
 
+
     @staticmethod
     def plot_zoom(x, y, dy, i, n_before=5, n_after=15, save_plot=True, name_base='burst_at_'):
         fig = plt.figure()
@@ -467,12 +441,14 @@ class OdaLightCurve(OdaProduct):
             _ = plt.savefig(name_base+'%d.png' % i)
         return fig
     
+
     def write_fits(self, source_name, file_suffix='', output_dir='.'):
         # In LC name has no "-" nor "+" ??????
         lc = self.data
         patched_source_name = source_name.replace('-', ' ').replace('+', ' ')
         lcprod = [l for l in lc._p_list if l.meta_data['src_name'] == source_name or \
                   l.meta_data['src_name'] == patched_source_name]
+
         if (len(lcprod) < 1):
             self.logger.warning("source %s not found in light curve products" % source_name)
             return "none", 0, 0, 0
@@ -580,10 +556,11 @@ class OdaSpectrum(OdaProduct):
     
     def write_fits(self, source_name='', file_suffix='', grouping=[0, 0, 0], systematic_fraction=0,
                                   output_dir='.'):
-
-        # Grouping argument is [minimum_energy, maximum_energy, number_of_bins]
-        # number of bins > 0, linear grouping
-        # number_of_bins < 0, logarithmic binning
+        """
+        Grouping argument is [minimum_energy, maximum_energy, number_of_bins]
+        number of bins > 0, linear grouping
+        number_of_bins < 0, logarithmic binning
+        """
 
         if source_name == '':
             self.show_spectral_products()
