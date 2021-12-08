@@ -4,6 +4,8 @@ nbsphinx
 numpydoc
 
 IPython
+scipy
+
 extension-helpers
 jsonschema
 json-tricks

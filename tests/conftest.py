@@ -12,21 +12,31 @@ from cdci_data_analysis.pytest_fixtures import (
             default_token_payload,
         )
 
+pytest_options = ["slow", "dda", "live"]
+
 def pytest_addoption(parser):
-    parser.addoption(
-        "--runslow", action="store_true", default=False, help="run slow tests"
-    )
+    for option in pytest_options:
+        parser.addoption(
+            f"--run-{option}", action="store_true", default=False, help=f"run {option} tests",
+        )
+        parser.addoption(
+            f"--run-only-{option}", action="store_true", default=False, help=f"run only {option} tests",
+        )
 
 def pytest_collection_modifyitems(config, items):
-    if config.getoption("--runslow"):
-        # --runslow given in cli: do not skip slow tests
-        return
-    skip_slow = pytest.mark.skip(reason="need --runslow option to run")
-    for item in items:
-        if "dda" in item.keywords:
-            item.add_marker(skip_slow)
-        if "slow" in item.keywords:
-            item.add_marker(skip_slow)
+    for option in pytest_options:
+        if config.getoption(f"--run-{option}") or config.getoption(f"--run-only-{option}"):
+            print(f"--run-{option} given in cli: do not skip slow tests")
+        else:
+            for item in items:
+                if option in item.keywords:
+                    item.add_marker(pytest.mark.skip(reason=f"need --run-{option} option to run"))
+
+        if config.getoption(f"--run-only-{option}"):
+            for item in items:
+                if option not in item.keywords:
+                    item.add_marker(pytest.mark.skip(reason=f"--run-only-{option} prevents this test from running"))
+
 
 
 @pytest.fixture
