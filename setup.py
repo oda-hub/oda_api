@@ -44,10 +44,16 @@ setup(name='oda_api',
             "astroquery",
             "scipy"
         ],
-      tests_require=[
-            "pytest-xdist[psutil]",
-            "astroquery>=0.4.4",
-        ],      
+      extras_require={
+          'test': [
+                "pytest-xdist[psutil]",
+                "astroquery>=0.4.4",
+            ],      
+          'extra-test': [
+                "pytest-xdist[psutil]",
+                "astroquery>=0.4.4",
+            ],      
+         },
       entry_points={
           "console_scripts": [
             "oda-api = oda_api.cli:main"
