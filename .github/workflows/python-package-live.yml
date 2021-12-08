@@ -36,7 +36,7 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install flake8 pytest wheel coverage pylint mypy
         python -m pip install types-simplejson types-requests types-click oda-knowledge-base[rdf,cwl] papermill ipykernel
-        python -m ipykernel install --name python3
+        python -m ipykernel install --prefix $HOME/.local/share/jupyter/kernels --name python3
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
     - name: Test with pytest
