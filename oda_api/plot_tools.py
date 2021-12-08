@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 # pylint: skip-file
 # pylint: disable-all
 
