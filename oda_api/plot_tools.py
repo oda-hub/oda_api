@@ -1,9 +1,11 @@
+# pylint: skip-file
+# pylint: disable-all
+
 from __future__ import absolute_import, division, print_function
 
-from builtins import (bytes, str, open, super, range,
-                      zip, round, input, int, pow, object, map, zip)
+from builtins import (str, open, range,
+                      zip, round, input, int, pow, object, zip)
 
-from typing import Optional, Union, Tuple, List
 
 __author__ = "Carlo Ferrigno"
 
