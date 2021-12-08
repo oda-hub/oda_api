@@ -30,7 +30,7 @@ setup(name='oda_api',
       author_email='contact@odahub.io',
       scripts=scripts_list,
       packages=packs,
-      package_data={'oda_api':['config_dir/*']},
+      package_data={'oda_api': ['config_dir/*']},
       include_package_data=True,
       install_requires=[
             "requests",
@@ -40,12 +40,20 @@ setup(name='oda_api',
             "matplotlib",
             "numpy",
             "jsonschema",
-            "pyjwt"
+            "pyjwt",
+            "astroquery",
+            "scipy"
         ],
-      tests_require=[
-            "pytest-xdist[psutil]",
-            "astroquery>=0.4.4",
-        ],      
+      extras_require={
+          'test': [
+                "pytest-xdist[psutil]",
+                "astroquery>=0.4.4",
+            ],      
+          'extra-test': [
+                "pytest-xdist[psutil]",
+                "astroquery>=0.4.4",
+            ],      
+         },
       entry_points={
           "console_scripts": [
             "oda-api = oda_api.cli:main"

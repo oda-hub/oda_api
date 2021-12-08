@@ -1,0 +1,52 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Live API tests
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "*" ]
+    types:
+    - labeled
+    - opened
+    - synchronize
+    - reopened
+
+
+jobs:
+  build:
+    if: contains( github.event.pull_request.labels.*.name, 'test-live')
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.9]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install flake8 pytest wheel coverage pylint mypy
+        python -m pip install types-simplejson types-requests types-click
+        python -m pip install oda-knowledge-base[rdf,cwl] papermill ipykernel
+        python -m pip install -r doc/requirements.txt
+        python -m ipykernel install --prefix $HOME/.local/share/jupyter/kernels --name python3
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Test with pytest
+      run: |
+        python -m coverage run -m pytest tests --run-only-live        
+
+    - name: Codecov
+      uses: codecov/codecov-action@v1.3.1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        verbose: true
