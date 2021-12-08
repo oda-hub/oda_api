@@ -109,6 +109,14 @@ class Unauthorized(RemoteException):
 class URLRedirected(Exception):
     pass
 
+class DispatcherException(Exception):
+    def __init__(self, response_json) -> None:
+        self.response_json = response_json
+
+    def __repr__(self) -> str:
+        return f"[ {self.__class__.__name__}: {self.response_json.get('error_message', '[no error message reported]')} ]"
+        
+
 
 exception_by_message = {
     'failed: get dataserver products ': FailedToFindAnyUsefulResults
@@ -402,8 +410,14 @@ class DispatcherAPI:
                 raise RequestNotUnderstood(
                     response.json())
 
-            if response.status_code == 502:
+            if response.status_code in [502, 503, 504]:
                 raise DispatcherNotAvailable()
+
+            if response.status_code == 500:
+                try:
+                    raise DispatcherException(response.json())
+                except simplejson.errors.JSONDecodeError:
+                    raise DispatcherException({'error_message': response.text})
 
             if response.status_code != 200:
                 raise UnexpectedDispatcherStatusCode(
