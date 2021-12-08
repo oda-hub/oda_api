@@ -40,7 +40,7 @@ setup(name='oda_api',
             "matplotlib",
             "numpy",
             "jsonschema",
-            "pyjwt"
+            "pyjwt",
             "astroquery",
             "scipy"
         ],

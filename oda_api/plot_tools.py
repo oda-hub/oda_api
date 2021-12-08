@@ -2,7 +2,8 @@ from __future__ import absolute_import, division, print_function
 
 from builtins import (bytes, str, open, super, range,
                       zip, round, input, int, pow, object, map, zip)
-from typing import Optional, Union
+
+from typing import Optional, Union, Tuple, List
 
 __author__ = "Carlo Ferrigno"
 
@@ -186,7 +187,7 @@ class OdaImage(OdaProduct):
 
 
     def extract_catalog_string_from_image(self, include_new_sources=False, det_sigma=5, 
-                                          objects_of_interest: Optional[List[Union[str, Tuple[str, Union[Simbad.query, SkyCoord]]]]]=None,
+                                          objects_of_interest=None,
                                           flag=1, isgri_flag=2, update_catalog=True) -> str:
         """
         Example: objects_of_interest=['Her X-1']
