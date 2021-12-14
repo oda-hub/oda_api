@@ -16,6 +16,7 @@ import numpy
 from matplotlib import pylab as plt
 from matplotlib.widgets import Slider, Button, RadioButtons
 from matplotlib import cm
+import requests
 
 import astropy.wcs as wcs
 from astropy import table
@@ -371,6 +372,8 @@ class OdaLightCurve(OdaProduct):
         else:
             source_names = [in_source_name]
 
+        figs = []
+
         for source_name in source_names:
             x, dx, y, dy, e_min, e_max = self.get_lc(source_name, systematic_fraction)
             if x is None:
@@ -381,7 +384,7 @@ class OdaLightCurve(OdaProduct):
 
             std_dev = numpy.std(y)
 
-            fig = plt.figure()
+            figs.append(plt.figure())
             _ = plt.errorbar(x, y, xerr=dx, yerr=dy, marker='o', capsize=0, linestyle='', label='Lightcurve')
             _ = plt.axhline(meany, color='green', linewidth=3)
             _ = plt.xlabel('Time [IJD]')
@@ -431,7 +434,7 @@ class OdaLightCurve(OdaProduct):
 
                             old_time = x[j]
 
-        return fig
+        return figs
 
 
     @staticmethod

@@ -851,6 +851,31 @@ class DispatcherAPI:
         self.logger.info(
             f"{C.GREY}last request completed in {self.last_request_t_complete - self.last_request_t0} seconds{C.NC}")
 
+    def post_product_to_gallery(self, data_product):
+        # producing image to be posted to the gallery
+        # img_path = product_name + '.png'
+        # fig.savefig(img_path)
+        # # send test img
+        # img_file_obj = {'media': open(img_path, 'rb')}
+        #                         files=img_file_obj
+
+        session_id = self.session_id
+        job_id = self.job_id
+
+        params = {
+            'job_id': job_id,
+            'session_id': session_id
+        }
+
+        res = requests.post("%s/post_product_to_gallery" % self.url,
+                            params={**params}
+                            )
+
+        if res.status_code != 200:
+            self.logger.info("An issue occurred when posting on the product gallery")
+        else:
+            self.logger.info("product posted on the gallery")
+
     def get_product(self,
                     product: str,
                     instrument: str,

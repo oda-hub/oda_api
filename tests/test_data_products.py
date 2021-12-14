@@ -2,9 +2,23 @@ import pytest
 import json
 from astropy.io import fits
 import numpy as np
+import time
+import jwt
 
 from cdci_data_analysis.analysis.json import CustomJSONEncoder
 from oda_api.data_products import NumpyDataProduct
+
+secret_key = 'secretkey_test'
+default_exp_time = int(time.time()) + 5000
+default_token_payload = dict(
+    sub="mtm@mtmco.net",
+    name="mmeharga",
+    roles="general",
+    exp=default_exp_time,
+    tem=0,
+    mstout=True,
+    mssub=True
+)
 
 def encode_decode(ndp: NumpyDataProduct) -> NumpyDataProduct:
     ndp_json = json.dumps(ndp, cls=CustomJSONEncoder)
@@ -66,3 +80,26 @@ def test_variable_length_table():
     assert list(ndu_decoded.data['i2'][1]) == [111, 112]
     assert list(ndu_decoded.data['var'][0]) == [1, 2, 3]
     assert list(ndu_decoded.data['var'][1]) == [11, 12]
+
+
+@pytest.mark.test_drupal
+def test_product_gallery_post_product(dispatcher_api):
+    disp = dispatcher_api
+
+    # send simple request
+    # let's generate a valid token
+    token_payload = {
+        **default_token_payload,
+        "roles": "general, unige-hpc-full",
+    }
+    encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
+
+    products = disp.get_product(
+        product_type="Dummy",
+        instrument="empty",
+        product="numerical",
+        p=55,
+        token=encoded_token
+    )
+
+    disp.post_product_to_gallery(products)
