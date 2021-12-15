@@ -84,22 +84,37 @@ def test_variable_length_table():
 
 @pytest.mark.test_drupal
 def test_product_gallery_post_product(dispatcher_api):
-    disp = dispatcher_api
+    import oda_api.plot_tools as pt
+    import oda_api.api
 
-    # send simple request
-    # let's generate a valid token
-    token_payload = {
-        **default_token_payload,
-        "roles": "general, unige-hpc-full",
+    par_dict = {
+        "DEC": 263.0090,
+        "E1_keV": 28,
+        "E2_keV": 50,
+        "RA": 263.0090,
+        "T1": '2019-01-01T00:00:00',
+        "T2": '2019-03-31T23:59:59',
+        "radius": 8,
+        "src_name": "GX 1+4",
+        "max_pointings": 10,
+        "detection_threshold": "7.0",
+        "instrument": "isgri",
+        "integral_data_rights": "public",
+        "oda_api_version": "1.1.22",
+        "off_line": "False",
+        "osa_version": "OSA11.1",
+        "product": "isgri_image",
+        "product_type": "Dummy",
     }
-    encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
 
-    products = disp.get_product(
-        product_type="Dummy",
-        instrument="empty",
-        product="numerical",
-        p=55,
-        token=encoded_token
-    )
+    # host = "https://www.astro.unige.ch/mmoda/dispatch-data"
 
-    disp.post_product_to_gallery(products)
+    disp = dispatcher_api
+    # disp = oda_api.api.DispatcherAPI(url=host)
+
+    isgri_image = disp.get_product(**par_dict)
+
+    image_product = pt.OdaImage(isgri_image)
+    gallery_image = image_product.get_image_for_gallery()
+
+    disp.post_data_product_to_gallery(gallery_image)

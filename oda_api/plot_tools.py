@@ -16,7 +16,7 @@ import numpy
 from matplotlib import pylab as plt
 from matplotlib.widgets import Slider, Button, RadioButtons
 from matplotlib import cm
-import requests
+import time as _time
 
 import astropy.wcs as wcs
 from astropy import table
@@ -44,12 +44,31 @@ class OdaProduct(object):
 
 class OdaImage(OdaProduct):
 
+    def get_image_for_gallery(self, data=None, meta=None, header=None, sources=None,
+             levels=None, cmap=cm.gist_earth, unit_ID=4, det_sigma=3):
+        plt = self.build_fig(data=data, meta=meta, header=header, sources=sources,
+                              levels=levels, cmap=cmap, unit_ID=unit_ID, det_sigma=det_sigma)
+
+        request_time = _time.time()
+        pic_name = str(request_time) + '_image.png'
+
+        plt.savefig(pic_name)
+
+        return pic_name
+
     def show(self, data=None, meta=None, header=None, sources=None,
+             levels=None, cmap=cm.gist_earth, unit_ID=4, det_sigma=3):
+
+        plt = self.build_fig(data=data, meta=meta, header=header, sources=sources,
+                              levels=levels, cmap=cmap, unit_ID=unit_ID, det_sigma=det_sigma)
+
+        plt.show()
+
+    def build_fig(self, data=None, meta=None, header=None, sources=None,
              levels=None, cmap=cm.gist_earth,
              unit_ID=4, det_sigma=3):
-
         if levels is None:
-            levels = numpy.linspace(1, 10, 10) 
+            levels = numpy.linspace(1, 10, 10)
 
         if data is None:
             data = self.data.mosaic_image_0_mosaic.data_unit[unit_ID].data
@@ -79,13 +98,13 @@ class OdaImage(OdaProduct):
         if numpy.abs(ra.max() - 360.0) < 0.1 and numpy.abs(ra.min()) < 0.1:
             zero_crossing = True
             ind_ra = ra > 180.
-            ra[ind_ra] -= 360.            
+            ra[ind_ra] -= 360.
             ind_sort = numpy.argsort(ra, axis=-1)
             ra = numpy.take_along_axis(ra, ind_sort, axis=-1)
             data = numpy.take_along_axis(data, ind_sort, axis=-1)
-                
+
         self.cs = plt.contourf(ra, dec, data, cmap=cmap, levels=levels,
-                          extend="both", zorder=0)
+                               extend="both", zorder=0)
         self.cs.cmap.set_under('k')
         self.cs.set_clim(numpy.min(levels), numpy.max(levels))
 
@@ -158,21 +177,20 @@ class OdaImage(OdaProduct):
         plt.xlabel("RA")
         plt.ylabel("Dec")
 
-        #Nice to have : slider
+        # Nice to have : slider
         cmin = plt.axes([0.85, 0.05, 0.02, 0.4])
         cmax = plt.axes([0.85, 0.55, 0.02, 0.4])
 
         data_min = data[numpy.isfinite(data)].min()
         data_max = data[numpy.isfinite(data)].max()
 
-        self.smin = Slider(cmin, 'Min',  data_min, data_max, valinit=1., orientation='vertical')
+        self.smin = Slider(cmin, 'Min', data_min, data_max, valinit=1., orientation='vertical')
         self.smax = Slider(cmax, 'Max', data_min, data_max, valinit=10., orientation='vertical')
         self.smin.on_changed(self.update)
         self.smax.on_changed(self.update)
 
-        plt.show()
-
         return fig
+
 
     def update(self, x):
         if self.smin.val < self.smax.val:
@@ -559,7 +577,7 @@ class OdaSpectrum(OdaProduct):
         if len(xlim) == 2:
             _ = plt.xlim(xlim)
 
-        return fig
+        return [fig]
     
     def write_fits(self, source_name='', file_suffix='', grouping=[0, 0, 0], systematic_fraction=0,
                                   output_dir='.'):

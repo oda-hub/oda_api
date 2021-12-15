@@ -42,6 +42,7 @@ from jsonschema import validate as validate_json
 
 import oda_api.token
 import oda_api.misc_helpers
+import oda_api.plot_tools
 
 import logging
 
@@ -851,24 +852,21 @@ class DispatcherAPI:
         self.logger.info(
             f"{C.GREY}last request completed in {self.last_request_t_complete - self.last_request_t0} seconds{C.NC}")
 
-    def post_product_to_gallery(self, data_product):
-        # producing image to be posted to the gallery
-        # img_path = product_name + '.png'
-        # fig.savefig(img_path)
-        # # send test img
-        # img_file_obj = {'media': open(img_path, 'rb')}
-        #                         files=img_file_obj
+    def post_data_product_to_gallery(self, gallery_image_path):
+        img_file_obj = {'media': open(gallery_image_path, 'rb')}
 
         session_id = self.session_id
         job_id = self.job_id
 
         params = {
             'job_id': job_id,
-            'session_id': session_id
+            'session_id': session_id,
+            'content_type': 'data_product'
         }
 
         res = requests.post("%s/post_product_to_gallery" % self.url,
-                            params={**params}
+                            params={**params},
+                            files=img_file_obj
                             )
 
         if res.status_code != 200:
