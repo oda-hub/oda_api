@@ -17,7 +17,7 @@ def object_scw_list(object_name,
     elif len(R) == 0:
         raise RuntimeError(f'object name {object_name} can not be resolved with Simbad')
     else:
-        source_coord = SkyCoord(R['RA'][0], R['DEC'][0], unit=(u.hourangle, u.deg))
+        source_coord = SkyCoord(R['RA'][0], R['DEC'][0], unit=(u.hourangle, u.deg)) # pylint: disable=no-member
         return position_scw_list(source_coord, **kwargs)
 
 
@@ -28,9 +28,9 @@ def position_scw_list(source_coord,
                       resultmax=int(1e6)):
 
     with astroquery.heasarc.Conf.server.set_temp('https://www.isdc.unige.ch/browse/w3query.pl'):
-        R = astroquery.heasarc.Heasarc().query_region(
+        R = astroquery.heasarc.Heasarc().query_region( # pylint: disable=no-member
                         position=source_coord, 
-                        mission='integral_rev3_scw', resultmax=resultmax, radius=radius_deg*u.deg, cache=False,
+                        mission='integral_rev3_scw', resultmax=resultmax, radius=radius_deg*u.deg, cache=False, # pylint: disable=no-member
                         time=time_range,
                         fields='All',
                         good_isgri=f">{min_good_isgri}",
