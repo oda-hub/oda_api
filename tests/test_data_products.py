@@ -83,12 +83,11 @@ def test_variable_length_table():
 
 
 @pytest.mark.test_drupal
-def test_product_gallery_post_product(dispatcher_api):
+def test_image_product_gallery(dispatcher_api):
     import oda_api.plot_tools as pt
-    import oda_api.api
 
     par_dict = {
-        "DEC": 263.0090,
+        "DEC": -24.7456,
         "E1_keV": 28,
         "E2_keV": 50,
         "RA": 263.0090,
@@ -107,14 +106,86 @@ def test_product_gallery_post_product(dispatcher_api):
         "product_type": "Dummy",
     }
 
-    # host = "https://www.astro.unige.ch/mmoda/dispatch-data"
-
     disp = dispatcher_api
-    # disp = oda_api.api.DispatcherAPI(url=host)
 
     isgri_image = disp.get_product(**par_dict)
 
     image_product = pt.OdaImage(isgri_image)
     gallery_image = image_product.get_image_for_gallery()
 
-    disp.post_data_product_to_gallery(gallery_image)
+    res = disp.post_data_product_to_gallery(gallery_image)
+
+    assert res.status_code == 200
+
+
+@pytest.mark.test_drupal
+def test_light_curve_product_gallery(dispatcher_api):
+    import oda_api.plot_tools as pt
+
+    par_dict = {
+        "DEC": -24.7456,
+        "E1_keV": 28,
+        "E2_keV": 50,
+        "RA": 263.0090,
+        "T1": '2019-01-01T00:00:00',
+        "T2": '2019-03-31T23:59:59',
+        "radius": 8,
+        "src_name": "GX 1+4",
+        "max_pointings": 10,
+        "detection_threshold": "7.0",
+        "instrument": "isgri",
+        "integral_data_rights": "public",
+        "oda_api_version": "1.1.22",
+        "off_line": "False",
+        "osa_version": "OSA11.1",
+        "product": "isgri_lc",
+        "product_type": "Dummy",
+    }
+
+    disp = dispatcher_api
+
+    isgri_lc = disp.get_product(**par_dict)
+
+    light_curve_product = pt.OdaLightCurve(isgri_lc)
+    gallery_image = light_curve_product.get_image_for_gallery()
+
+    res = disp.post_data_product_to_gallery(gallery_image)
+
+    assert res.status_code == 200
+
+
+@pytest.mark.test_drupal
+def test_spectrum_product_gallery(dispatcher_api):
+    import oda_api.plot_tools as pt
+
+    source_name = "GX 1+4"
+
+    par_dict = {
+        "DEC": -24.7456,
+        "E1_keV": 28,
+        "E2_keV": 50,
+        "RA": 263.0090,
+        "T1": '2019-01-01T00:00:00',
+        "T2": '2019-03-31T23:59:59',
+        "radius": 8,
+        "src_name": source_name,
+        "max_pointings": 10,
+        "detection_threshold": "7.0",
+        "instrument": "isgri",
+        "integral_data_rights": "public",
+        "off_line": "False",
+        "osa_version": "OSA11.1",
+        "product": "isgri_spectrum",
+        "product_type": "Dummy",
+    }
+
+    disp = dispatcher_api
+
+    isgri_spec = disp.get_product(**par_dict)
+
+    light_curve_product = pt.OdaSpectrum(isgri_spec)
+    gallery_image = light_curve_product.get_image_for_gallery(in_source_name=source_name, xlim=[20, 100])
+
+    res = disp.post_data_product_to_gallery(gallery_image)
+
+    assert res.status_code == 200
