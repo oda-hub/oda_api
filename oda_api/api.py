@@ -872,7 +872,9 @@ class DispatcherAPI:
         if res.status_code != 200:
             self.logger.info("An issue occurred when posting on the product gallery")
         else:
-            self.logger.info("product posted on the gallery")
+            self.logger.info("product successfully posted on the gallery")
+
+        return res
 
     def get_product(self,
                     product: str,

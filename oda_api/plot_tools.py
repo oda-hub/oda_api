@@ -379,8 +379,27 @@ class OdaLightCurve(OdaProduct):
             self.logger.debug('Computed time bin from TIMEDEL')
 
         return x[ind], dt_lc[ind], y[ind], dy[ind], e_min, e_max
-    
-    def show(self,  in_source_name='', systematic_fraction=0, ng_sig_limit=0, find_excesses=False):
+
+    def get_image_for_gallery(self, in_source_name='', systematic_fraction=0, ng_sig_limit=0, find_excesses=False):
+        plts = self.build_fig(in_source_name=in_source_name, systematic_fraction=systematic_fraction,
+                             ng_sig_limit=ng_sig_limit, find_excesses=find_excesses)
+
+        request_time = _time.time()
+        pic_name = str(request_time) + '_image.png'
+
+        if len(plts) == 1:
+            plts[0].savefig(pic_name)
+
+        return pic_name
+
+    def show(self, in_source_name='', systematic_fraction=0, ng_sig_limit=0, find_excesses=False):
+
+        plt = self.build_fig(in_source_name=in_source_name, systematic_fraction=systematic_fraction,
+                             ng_sig_limit=ng_sig_limit, find_excesses=find_excesses)
+
+        plt.show()
+
+    def build_fig(self,  in_source_name='', systematic_fraction=0, ng_sig_limit=0, find_excesses=False):
         #if ng_sig_limit <1 does not plot range
         combined_lc = self.data
         from scipy import stats
@@ -546,7 +565,25 @@ class OdaSpectrum(OdaProduct):
 
         return specprod
 
+    def get_image_for_gallery(self, in_source_name='', systematic_fraction=0, xlim=[]):
+        plt = self.build_fig(in_source_name=in_source_name, systematic_fraction=systematic_fraction,
+                             xlim=xlim)
+
+        request_time = _time.time()
+        pic_name = str(request_time) + '_image.png'
+
+        plt.savefig(pic_name)
+
+        return pic_name
+
     def show(self, in_source_name='', systematic_fraction=0, xlim=[]):
+
+        plt = self.build_fig(in_source_name=in_source_name, systematic_fraction=systematic_fraction,
+                             xlim=xlim)
+
+        plt.show()
+
+    def build_fig(self, in_source_name='', systematic_fraction=0, xlim=[]):
 
         if in_source_name == '':
             self.show_spectral_products()
@@ -577,7 +614,7 @@ class OdaSpectrum(OdaProduct):
         if len(xlim) == 2:
             _ = plt.xlim(xlim)
 
-        return [fig]
+        return fig
     
     def write_fits(self, source_name='', file_suffix='', grouping=[0, 0, 0], systematic_fraction=0,
                                   output_dir='.'):
