@@ -1,6 +1,7 @@
 import astroquery.heasarc
 import astroquery.simbad
 from astropy import units as u
+from astropy.table import Table
 from astropy.coordinates import SkyCoord
 import logging
 
@@ -9,7 +10,7 @@ logger = logging.getLogger(__name__)
 def object_scw_list(object_name,
                     **kwargs):
 
-    R = astroquery.simbad.Simbad().query_object(object_name) # type: astropy.table.Table
+    R = astroquery.simbad.Simbad().query_object(object_name) # type: Table
 
     if len(R) > 1:
         raise RuntimeError(f'object name {object_name} resolves to multiple different coordinates: {R}')

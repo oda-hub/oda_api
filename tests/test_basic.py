@@ -407,24 +407,36 @@ def test_indexing(dispatcher_api):
     
 
 def test_local_cache_unit():
-    from oda_api.localcache import cached        
+    from oda_api.localcache import cached, call_to_fn
+    from collections import OrderedDict
 
     fn = 'cache-test.txt'
     with open(fn, 'wt') as f:
         f.write('test1')
 
     @cached
-    def testme(x, y):
-        return open(fn).read() + str(x) + str(y)
+    def testme(x, a):
+        return open(fn).read() + str(x) + str(a)
         
-    assert testme(1, {'a': 'b'}) == 'test1'
+    cache_fn = call_to_fn(testme, 1, a='b')
+
+    if os.path.exists(cache_fn):
+        os.remove(cache_fn)
+
+    assert testme(1, a='b') == "test11b"
 
     with open(fn, 'wt') as f:
         f.write('test2')
 
     # did not change since it's cached
-    assert testme(1, {'a': 'b'}) == 'test1'
+    assert testme(1, a='b') == "test11b"
 
+    os.remove(call_to_fn(testme, 1, a='b'))
+
+    assert testme(1, a='b') == "test21b"
+    assert testme(2, a='b') == "test22b"
+
+    
 
 def test_local_cache(dispatcher_api):
     pass
