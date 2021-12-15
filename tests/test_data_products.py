@@ -86,6 +86,7 @@ def test_variable_length_table():
 def test_image_product_gallery(dispatcher_api):
     import oda_api.plot_tools as pt
 
+    source_name = "GX 1+4"
     par_dict = {
         "DEC": -24.7456,
         "E1_keV": 28,
@@ -94,7 +95,7 @@ def test_image_product_gallery(dispatcher_api):
         "T1": '2019-01-01T00:00:00',
         "T2": '2019-03-31T23:59:59',
         "radius": 8,
-        "src_name": "GX 1+4",
+        "src_name": source_name,
         "max_pointings": 10,
         "detection_threshold": "7.0",
         "instrument": "isgri",
@@ -113,7 +114,7 @@ def test_image_product_gallery(dispatcher_api):
     image_product = pt.OdaImage(isgri_image)
     gallery_image = image_product.get_image_for_gallery()
 
-    res = disp.post_data_product_to_gallery(gallery_image)
+    res = disp.post_data_product_to_gallery(product_title=source_name, gallery_image_path=gallery_image)
 
     assert res.status_code == 200
 
@@ -122,6 +123,7 @@ def test_image_product_gallery(dispatcher_api):
 def test_light_curve_product_gallery(dispatcher_api):
     import oda_api.plot_tools as pt
 
+    source_name = "GX 1+4"
     par_dict = {
         "DEC": -24.7456,
         "E1_keV": 28,
@@ -130,7 +132,7 @@ def test_light_curve_product_gallery(dispatcher_api):
         "T1": '2019-01-01T00:00:00',
         "T2": '2019-03-31T23:59:59',
         "radius": 8,
-        "src_name": "GX 1+4",
+        "src_name": source_name,
         "max_pointings": 10,
         "detection_threshold": "7.0",
         "instrument": "isgri",
@@ -149,7 +151,7 @@ def test_light_curve_product_gallery(dispatcher_api):
     light_curve_product = pt.OdaLightCurve(isgri_lc)
     gallery_image = light_curve_product.get_image_for_gallery()
 
-    res = disp.post_data_product_to_gallery(gallery_image)
+    res = disp.post_data_product_to_gallery(product_title=source_name, gallery_image_path=gallery_image)
 
     assert res.status_code == 200
 
@@ -186,6 +188,6 @@ def test_spectrum_product_gallery(dispatcher_api):
     light_curve_product = pt.OdaSpectrum(isgri_spec)
     gallery_image = light_curve_product.get_image_for_gallery(in_source_name=source_name, xlim=[20, 100])
 
-    res = disp.post_data_product_to_gallery(gallery_image)
+    res = disp.post_data_product_to_gallery(product_title=source_name, gallery_image_path=gallery_image)
 
     assert res.status_code == 200

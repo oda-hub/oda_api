@@ -566,13 +566,15 @@ class OdaSpectrum(OdaProduct):
         return specprod
 
     def get_image_for_gallery(self, in_source_name='', systematic_fraction=0, xlim=[]):
+        pic_name = None
         plt = self.build_fig(in_source_name=in_source_name, systematic_fraction=systematic_fraction,
                              xlim=xlim)
 
-        request_time = _time.time()
-        pic_name = str(request_time) + '_image.png'
+        if plt is not None:
+            request_time = _time.time()
+            pic_name = str(request_time) + '_image.png'
 
-        plt.savefig(pic_name)
+            plt.savefig(pic_name)
 
         return pic_name
 
