@@ -852,7 +852,7 @@ class DispatcherAPI:
         self.logger.info(
             f"{C.GREY}last request completed in {self.last_request_t_complete - self.last_request_t0} seconds{C.NC}")
 
-    def post_data_product_to_gallery(self, product_title: str=None, gallery_image_path: str=None):
+    def post_data_product_to_gallery(self, product_title: str=None, gallery_image_path: str=None, token: str= None):
         img_file_obj = None
         if gallery_image_path is not None:
             img_file_obj = {'media': open(gallery_image_path, 'rb')}
@@ -864,7 +864,8 @@ class DispatcherAPI:
             'job_id': job_id,
             'session_id': session_id,
             'content_type': 'data_product',
-            'product_title': product_title
+            'product_title': product_title,
+            'token': token
         }
 
         res = requests.post("%s/post_product_to_gallery" % self.url,
