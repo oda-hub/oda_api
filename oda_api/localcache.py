@@ -41,7 +41,7 @@ def call_to_fn(f, *args, **kwargs):
     return keyhash_to_fn(key_to_keyhash(call_to_key(f, *args, **kwargs)))
 
 def call_to_key(f, *args, **kwargs):
-    return (f_version(f), args, OrderedDict(kwargs))
+    return (f.__name__, f_version(f), args, OrderedDict(kwargs))
 
 def f_version(f):
     version = "default"
