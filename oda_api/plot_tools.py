@@ -47,7 +47,7 @@ class OdaImage(OdaProduct):
     def get_image_for_gallery(self, data=None, meta=None, header=None, sources=None,
              levels=None, cmap=cm.gist_earth, unit_ID=4, det_sigma=3):
         plt = self.build_fig(data=data, meta=meta, header=header, sources=sources,
-                              levels=levels, cmap=cmap, unit_ID=unit_ID, det_sigma=det_sigma, include_sliders=False)
+                              levels=levels, cmap=cmap, unit_ID=unit_ID, det_sigma=det_sigma, sliders=False)
 
         request_time = _time.time()
         pic_name = str(request_time) + '_image.png'
@@ -57,7 +57,21 @@ class OdaImage(OdaProduct):
         return pic_name
 
     def show(self, data=None, meta=None, header=None, sources=None,
-             levels=None, cmap=cm.gist_earth, unit_ID=4, det_sigma=3):
+             levels=None, cmap=cm.gist_earth, unit_ID=4, det_sigma=3, sliders=True):
+      
+        """
+        OdaImage.show
+        :param data: ODA data products, takes from class initialisation by default
+        :param meta: ODA data products metadata, takes from class initialisation by default
+        :param header: ODA data product image header, takes from class initialisation by default
+        :param sources: ODA catalog table, takes from class initialisation by default
+        :param levels: levels for contour plot, default is  numpy.linspace(1, 10, 10)
+        :param cmap: colormap default is cm.gist_earth,
+        :param unit_ID: the unit to plot image default is 4
+        :param det_sigma: limit detection sigma to lot from catalog, note that
+        :param sliders: plot sliders, set to false to upload images in gallery.
+        :return: matplotlib figure instance
+        """
 
         plt = self.build_fig(data=data, meta=meta, header=header, sources=sources,
                               levels=levels, cmap=cmap, unit_ID=unit_ID, det_sigma=det_sigma)
@@ -66,7 +80,8 @@ class OdaImage(OdaProduct):
 
     def build_fig(self, data=None, meta=None, header=None, sources=None,
              levels=None, cmap=cm.gist_earth,
-             unit_ID=4, det_sigma=3, include_sliders=True):
+             unit_ID=4, det_sigma=3, sliders=True):
+
         if levels is None:
             levels = numpy.linspace(1, 10, 10)
 
@@ -177,11 +192,10 @@ class OdaImage(OdaProduct):
         plt.xlabel("RA")
         plt.ylabel("Dec")
 
-        if include_sliders:
+        if sliders:
             # Nice to have : slider
             cmin = plt.axes([0.85, 0.05, 0.02, 0.4])
             cmax = plt.axes([0.85, 0.55, 0.02, 0.4])
-
             data_min = data[numpy.isfinite(data)].min()
             data_max = data[numpy.isfinite(data)].max()
             self.smin = Slider(cmin, 'Min', data_min, data_max, valinit=1., orientation='vertical')
