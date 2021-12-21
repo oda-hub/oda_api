@@ -129,6 +129,12 @@ def test_image_product_gallery(dispatcher_api):
 def test_light_curve_product_gallery(dispatcher_api):
     import oda_api.plot_tools as pt
 
+    # let's generate a valid token
+    token_payload = {
+        **default_token_payload,
+    }
+    encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
+
     source_name = "GX 1+4"
     par_dict = {
         "DEC": -24.7456,
@@ -157,7 +163,7 @@ def test_light_curve_product_gallery(dispatcher_api):
     light_curve_product = pt.OdaLightCurve(isgri_lc)
     gallery_image = light_curve_product.get_image_for_gallery()
 
-    res = disp.post_data_product_to_gallery(product_title=source_name, gallery_image_path=gallery_image)
+    res = disp.post_data_product_to_gallery(product_title=source_name, gallery_image_path=gallery_image, token=encoded_token)
 
     assert res.status_code == 200
 
@@ -165,6 +171,12 @@ def test_light_curve_product_gallery(dispatcher_api):
 @pytest.mark.test_drupal
 def test_spectrum_product_gallery(dispatcher_api):
     import oda_api.plot_tools as pt
+
+    # let's generate a valid token
+    token_payload = {
+        **default_token_payload,
+    }
+    encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
 
     source_name = "GX 1+4"
 
@@ -194,6 +206,6 @@ def test_spectrum_product_gallery(dispatcher_api):
     light_curve_product = pt.OdaSpectrum(isgri_spec)
     gallery_image = light_curve_product.get_image_for_gallery(in_source_name=source_name, xlim=[20, 100])
 
-    res = disp.post_data_product_to_gallery(product_title=source_name, gallery_image_path=gallery_image)
+    res = disp.post_data_product_to_gallery(product_title=source_name, gallery_image_path=gallery_image, token=encoded_token)
 
     assert res.status_code == 200
