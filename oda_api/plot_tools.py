@@ -74,7 +74,7 @@ class OdaImage(OdaProduct):
         """
 
         plt = self.build_fig(data=data, meta=meta, header=header, sources=sources,
-                              levels=levels, cmap=cmap, unit_ID=unit_ID, det_sigma=det_sigma)
+                              levels=levels, cmap=cmap, unit_ID=unit_ID, det_sigma=det_sigma, sliders=sliders)
 
         plt.show()
 

@@ -120,7 +120,12 @@ def test_image_product_gallery(dispatcher_api):
     image_product = pt.OdaImage(isgri_image)
     gallery_image = image_product.get_image_for_gallery()
 
-    res = disp.post_data_product_to_gallery(product_title=source_name, gallery_image_path=gallery_image, token=encoded_token)
+    res = disp.post_data_product_to_gallery(product_title=source_name,
+                                            gallery_image_path=gallery_image,
+                                            observation_id='test observation',
+                                            token=encoded_token,
+                                            e1_kev=45, e2_kev=95
+                                            )
 
     assert res.status_code == 200
 
