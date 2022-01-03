@@ -124,7 +124,8 @@ def test_image_product_gallery(dispatcher_api):
                                             gallery_image_path=gallery_image,
                                             observation_id='test observation',
                                             token=encoded_token,
-                                            e1_kev=45, e2_kev=95
+                                            e1_kev=45, e2_kev=95,
+                                            DEC=1234, RA=654
                                             )
 
     assert res.status_code == 200
