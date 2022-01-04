@@ -41,7 +41,5 @@ one_image.fits
 vlf_table.fits
 .oda-token
 tests/.oda-token
-.mmoda-pg-token
-tests/.mmoda-pg-token
 
 .ipynb_checkpoints
