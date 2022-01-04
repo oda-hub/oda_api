@@ -139,6 +139,7 @@ def test_light_curve_product_gallery(dispatcher_api):
     # let's generate a valid token
     token_payload = {
         **default_token_payload,
+        'roles': 'general, gallery contributor'
     }
     encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
 
@@ -170,7 +171,12 @@ def test_light_curve_product_gallery(dispatcher_api):
     light_curve_product = pt.OdaLightCurve(isgri_lc)
     gallery_image = light_curve_product.get_image_for_gallery()
 
-    res = disp.post_data_product_to_gallery(product_title=source_name, gallery_image_path=gallery_image, token=encoded_token)
+    res = disp.post_data_product_to_gallery(product_title=source_name,
+                                            gallery_image_path=gallery_image,
+                                            observation_id='test observation',
+                                            token=encoded_token,
+                                            e1_kev=45, e2_kev=95,
+                                            DEC=1234, RA=654)
 
     assert res.status_code == 200
 
@@ -182,6 +188,7 @@ def test_spectrum_product_gallery(dispatcher_api):
     # let's generate a valid token
     token_payload = {
         **default_token_payload,
+        'roles': 'general, gallery contributor'
     }
     encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
 
@@ -213,6 +220,10 @@ def test_spectrum_product_gallery(dispatcher_api):
     light_curve_product = pt.OdaSpectrum(isgri_spec)
     gallery_image = light_curve_product.get_image_for_gallery(in_source_name=source_name, xlim=[20, 100])
 
-    res = disp.post_data_product_to_gallery(product_title=source_name, gallery_image_path=gallery_image, token=encoded_token)
+    res = disp.post_data_product_to_gallery(product_title=source_name,
+                                            gallery_image_path=gallery_image,
+                                            token=encoded_token,
+                                            e1_kev=31, e2_kev=51,
+                                            DEC=4, RA=4)
 
     assert res.status_code == 200
