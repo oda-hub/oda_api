@@ -89,6 +89,7 @@ def test_image_product_gallery(dispatcher_api):
     # let's generate a valid token
     token_payload = {
         **default_token_payload,
+        'roles': 'general, gallery contributor'
     }
     encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
 
@@ -120,7 +121,7 @@ def test_image_product_gallery(dispatcher_api):
     image_product = pt.OdaImage(isgri_image)
     gallery_image = image_product.get_image_for_gallery()
 
-    res = disp.post_data_product_to_gallery(product_title=source_name,
+    res = disp.post_data_product_to_gallery(src_name=source_name,
                                             gallery_image_path=gallery_image,
                                             observation_id='test observation',
                                             token=encoded_token,
