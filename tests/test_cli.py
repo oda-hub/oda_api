@@ -75,7 +75,6 @@ def test_get(dispatcher_live_fixture, caplog):
     runner = CliRunner()
     result = runner.invoke(cli.cli, ['-u', dispatcher_live_fixture, 'get', '-i', 'empty'], obj={})
     assert result.exit_code == 0
-    # TODO not sure it is supposed to be this way
     assert "'prod_dict': {'dummy': 'empty_parameters_dummy_query', 'failing': '" in caplog.text
 
     runner = CliRunner()
