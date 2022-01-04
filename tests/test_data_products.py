@@ -99,8 +99,8 @@ def test_image_product_gallery(dispatcher_api):
         "E1_keV": 28,
         "E2_keV": 50,
         "RA": 263.0090,
-        "T1": '2019-01-01T00:00:00',
-        "T2": '2019-03-31T23:59:59',
+        "T1": '1978-01-01T00:00:00',
+        "T2": '1981-05-31T23:59:59',
         "radius": 8,
         "src_name": source_name,
         "max_pointings": 10,
@@ -125,8 +125,8 @@ def test_image_product_gallery(dispatcher_api):
                                             gallery_image_path=gallery_image,
                                             observation_id='test observation',
                                             token=encoded_token,
-                                            e1_kev=45, e2_kev=95,
-                                            DEC=1234, RA=654
+                                            e1_kev=4, e2_kev=5,
+                                            DEC=14, RA=4
                                             )
 
     assert res.status_code == 200
@@ -176,7 +176,7 @@ def test_light_curve_product_gallery(dispatcher_api):
                                             observation_id='test observation',
                                             token=encoded_token,
                                             e1_kev=45, e2_kev=95,
-                                            DEC=1234, RA=654)
+                                            DEC=14, RA=654)
 
     assert res.status_code == 200
 
@@ -199,8 +199,8 @@ def test_spectrum_product_gallery(dispatcher_api):
         "E1_keV": 28,
         "E2_keV": 50,
         "RA": 263.0090,
-        "T1": '2019-01-01T00:00:00',
-        "T2": '2019-03-31T23:59:59',
+        "T1": '2012-07-03T00:00:00',
+        "T2": '2014-04-03T17:59:59',
         "radius": 8,
         "src_name": source_name,
         "max_pointings": 10,
