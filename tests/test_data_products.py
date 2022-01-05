@@ -83,7 +83,7 @@ def test_variable_length_table():
 
 
 @pytest.mark.test_drupal
-def test_image_product_gallery(dispatcher_api):
+def test_image_product_gallery(dispatcher_api_with_gallery):
     import oda_api.plot_tools as pt
 
     # let's generate a valid token
@@ -114,7 +114,7 @@ def test_image_product_gallery(dispatcher_api):
         "product_type": "Dummy",
     }
 
-    disp = dispatcher_api
+    disp = dispatcher_api_with_gallery
 
     isgri_image = disp.get_product(**par_dict)
 
@@ -133,7 +133,7 @@ def test_image_product_gallery(dispatcher_api):
 
 
 @pytest.mark.test_drupal
-def test_light_curve_product_gallery(dispatcher_api):
+def test_light_curve_product_gallery(dispatcher_api_with_gallery):
     import oda_api.plot_tools as pt
 
     # let's generate a valid token
@@ -164,7 +164,7 @@ def test_light_curve_product_gallery(dispatcher_api):
         "product_type": "Dummy",
     }
 
-    disp = dispatcher_api
+    disp = dispatcher_api_with_gallery
 
     isgri_lc = disp.get_product(**par_dict)
 
@@ -182,7 +182,7 @@ def test_light_curve_product_gallery(dispatcher_api):
 
 
 @pytest.mark.test_drupal
-def test_spectrum_product_gallery(dispatcher_api):
+def test_spectrum_product_gallery(dispatcher_api_with_gallery):
     import oda_api.plot_tools as pt
 
     # let's generate a valid token
@@ -213,7 +213,7 @@ def test_spectrum_product_gallery(dispatcher_api):
         "product_type": "Dummy",
     }
 
-    disp = dispatcher_api
+    disp = dispatcher_api_with_gallery
 
     isgri_spec = disp.get_product(**par_dict)
 
