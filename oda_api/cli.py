@@ -99,8 +99,9 @@ def inspect(obj):
 @tokencli.command()
 @click.option("--disable-email", default=False, is_flag=True)
 @click.option("--new-validity-hours", default=None, type=float)
+@click.option("--add-roles", default=None, type=str)
 @click.pass_obj
-def modify(obj, disable_email, new_validity_hours):
+def modify(obj, disable_email, new_validity_hours, add_roles):
     token = obj['token']
     decoded_token = obj['decoded_token']
 
@@ -115,7 +116,14 @@ def modify(obj, disable_email, new_validity_hours):
             # TODO: think if need this
             # new_payload['msfail'] = False
 
+        role_str_to_list = lambda roles: [role.strip() for role in roles.split(",")]
 
+        if add_roles is not None:
+            logger.info("adding roles %s", add_roles)
+            new_payload['roles'] = ", ".join(sorted(set(
+                role_str_to_list(new_payload['roles']) + role_str_to_list(add_roles))))
+            logger.info("now roles %s", new_payload['roles'])
+                
         if new_validity_hours is not None:
             new_payload['exp'] = time.time() + new_validity_hours * 3600
             logger.info("updating validity to %s h from now, until %s", new_validity_hours, time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime(new_payload['exp'])))
