@@ -881,9 +881,9 @@ class DispatcherAPI:
                             )
 
         if res.status_code != 200:
-            self.logger.info(f"An issue occurred when posting on the product gallery: {res.text}")
+            self.logger.info(f"An issue occurred while posting on the product gallery: {res.text}")
         else:
-            self.logger.info("product successfully posted on the gallery")
+            self.logger.info("Product successfully posted on the gallery")
 
         return res
 
