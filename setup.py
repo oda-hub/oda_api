@@ -53,6 +53,9 @@ setup(name='oda_api',
                 "pytest-xdist[psutil]",
                 "astroquery>=0.4.4",
             ],      
+          'gw': [
+            "gwpy",
+          ]
          },
       entry_points={
           "console_scripts": [
