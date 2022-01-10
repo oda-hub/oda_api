@@ -887,7 +887,8 @@ class DispatcherAPI:
         else:
             logger.info("Product successfully posted on the gallery")
 
-        return res
+        response_json = self._decode_res_json(res)
+        return response_json
 
     def get_product(self,
                     product: str,
