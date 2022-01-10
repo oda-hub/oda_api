@@ -94,6 +94,7 @@ def test_image_product_gallery(dispatcher_api_with_gallery):
     encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
 
     source_name = "GX 1+4"
+    product_name = "isgri_image"
     par_dict = {
         "DEC": -24.7456,
         "E1_keV": 28,
@@ -110,7 +111,7 @@ def test_image_product_gallery(dispatcher_api_with_gallery):
         "oda_api_version": "1.1.22",
         "off_line": "False",
         "osa_version": "OSA11.1",
-        "product": "isgri_image",
+        "product": product_name,
         "product_type": "Dummy",
     }
 
@@ -129,7 +130,8 @@ def test_image_product_gallery(dispatcher_api_with_gallery):
                                             DEC=14, RA=4
                                             )
 
-    assert res.status_code == 200
+    assert 'title' in res
+    assert res['title'][0]['value'] == source_name + "_" + product_name
 
 
 @pytest.mark.test_drupal
@@ -144,6 +146,7 @@ def test_light_curve_product_gallery(dispatcher_api_with_gallery):
     encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
 
     source_name = "GX 1+4"
+    product_title = source_name
     par_dict = {
         "DEC": -24.7456,
         "E1_keV": 28,
@@ -177,7 +180,8 @@ def test_light_curve_product_gallery(dispatcher_api_with_gallery):
                                             e1_kev=45, e2_kev=95,
                                             DEC=14, RA=654)
 
-    assert res.status_code == 200
+    assert 'title' in res
+    assert res['title'][0]['value'] == product_title
 
 
 @pytest.mark.test_drupal
@@ -192,7 +196,7 @@ def test_spectrum_product_gallery(dispatcher_api_with_gallery):
     encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
 
     source_name = "GX 1+4"
-
+    product_title = source_name
     par_dict = {
         "DEC": -24.7456,
         "E1_keV": 28,
@@ -225,4 +229,5 @@ def test_spectrum_product_gallery(dispatcher_api_with_gallery):
                                             e1_kev=31, e2_kev=51,
                                             DEC=4, RA=4)
 
-    assert res.status_code == 200
+    assert 'title' in res
+    assert res['title'][0]['value'] == product_title
