@@ -173,7 +173,6 @@ def test_light_curve_product_gallery(dispatcher_api_with_gallery):
 
     res = disp.post_data_product_to_gallery(product_title=source_name,
                                             gallery_image_path=gallery_image,
-                                            observation_id='test observation',
                                             token=encoded_token,
                                             e1_kev=45, e2_kev=95,
                                             DEC=14, RA=654)

@@ -875,15 +875,17 @@ class DispatcherAPI:
             **kwargs
         }
 
+        logger.info(f"Posting a product on the gallery")
+
         res = requests.post("%s/post_product_to_gallery" % self.url,
                             params={**params},
                             files=img_file_obj
                             )
 
         if res.status_code != 200:
-            self.logger.info(f"An issue occurred while posting on the product gallery: {res.text}")
+            logger.warning(f"An issue occurred while posting on the product gallery: {res.text}")
         else:
-            self.logger.info("Product successfully posted on the gallery")
+            logger.info("Product successfully posted on the gallery")
 
         return res
 
