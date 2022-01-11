@@ -122,16 +122,34 @@ def test_image_product_gallery(dispatcher_api_with_gallery):
     image_product = pt.OdaImage(isgri_image)
     gallery_image = image_product.get_image_for_gallery()
 
+    e1_kev = 45
+    e2_kev = 95
+
+    dec = 19
+    ra = 458
+
     res = disp.post_data_product_to_gallery(src_name=source_name,
                                             gallery_image_path=gallery_image,
                                             observation_id='test observation',
                                             token=encoded_token,
-                                            e1_kev=4, e2_kev=5,
-                                            DEC=14, RA=4
+                                            e1_kev=e1_kev, e2_kev=e2_kev,
+                                            DEC=dec, RA=ra
                                             )
 
     assert 'title' in res
     assert res['title'][0]['value'] == source_name + "_" + product_name
+
+    assert 'field_e1_kev' in res
+    assert res['field_e1_kev'][0]['value'] == e1_kev
+
+    assert 'field_e2_kev' in res
+    assert res['field_e2_kev'][0]['value'] == e2_kev
+
+    assert 'field_dec' in res
+    assert res['field_dec'][0]['value'] == dec
+
+    assert 'field_ra' in res
+    assert res['field_ra'][0]['value'] == ra
 
 
 @pytest.mark.test_drupal
@@ -174,14 +192,32 @@ def test_light_curve_product_gallery(dispatcher_api_with_gallery):
     light_curve_product = pt.OdaLightCurve(isgri_lc)
     gallery_image = light_curve_product.get_image_for_gallery()
 
+    e1_kev = 45
+    e2_kev = 95
+
+    dec = 19
+    ra = 458
+
     res = disp.post_data_product_to_gallery(product_title=source_name,
                                             gallery_image_path=gallery_image,
                                             token=encoded_token,
-                                            e1_kev=45, e2_kev=95,
-                                            DEC=14, RA=654)
+                                            e1_kev=e1_kev, e2_kev=e2_kev,
+                                            DEC=dec, RA=ra)
 
     assert 'title' in res
     assert res['title'][0]['value'] == product_title
+
+    assert 'field_e1_kev' in res
+    assert res['field_e1_kev'][0]['value'] == e1_kev
+
+    assert 'field_e2_kev' in res
+    assert res['field_e2_kev'][0]['value'] == e2_kev
+
+    assert 'field_dec' in res
+    assert res['field_dec'][0]['value'] == dec
+
+    assert 'field_ra' in res
+    assert res['field_ra'][0]['value'] == ra
 
 
 @pytest.mark.test_drupal
@@ -223,11 +259,29 @@ def test_spectrum_product_gallery(dispatcher_api_with_gallery):
     light_curve_product = pt.OdaSpectrum(isgri_spec)
     gallery_image = light_curve_product.get_image_for_gallery(in_source_name=source_name, xlim=[20, 100])
 
+    e1_kev = 45
+    e2_kev = 95
+
+    dec = 19
+    ra = 458
+
     res = disp.post_data_product_to_gallery(product_title=source_name,
                                             gallery_image_path=gallery_image,
                                             token=encoded_token,
-                                            e1_kev=31, e2_kev=51,
-                                            DEC=4, RA=4)
+                                            e1_kev=e1_kev, e2_kev=e2_kev,
+                                            DEC=dec, RA=ra)
 
     assert 'title' in res
     assert res['title'][0]['value'] == product_title
+
+    assert 'field_e1_kev' in res
+    assert res['field_e1_kev'][0]['value'] == e1_kev
+
+    assert 'field_e2_kev' in res
+    assert res['field_e2_kev'][0]['value'] == e2_kev
+
+    assert 'field_dec' in res
+    assert res['field_dec'][0]['value'] == dec
+
+    assert 'field_ra' in res
+    assert res['field_ra'][0]['value'] == ra
