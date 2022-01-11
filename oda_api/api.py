@@ -42,7 +42,6 @@ from jsonschema import validate as validate_json
 
 import oda_api.token
 import oda_api.misc_helpers
-import oda_api.plot_tools
 
 import logging
 
