@@ -83,7 +83,8 @@ def test_variable_length_table():
 
 
 @pytest.mark.test_drupal
-def test_image_product_gallery(dispatcher_api_with_gallery):
+@pytest.mark.parametrize("observation", ['test observation', None])
+def test_image_product_gallery(dispatcher_api_with_gallery, observation):
     import oda_api.plot_tools as pt
 
     # let's generate a valid token
@@ -130,7 +131,7 @@ def test_image_product_gallery(dispatcher_api_with_gallery):
 
     res = disp.post_data_product_to_gallery(src_name=source_name,
                                             gallery_image_path=gallery_image,
-                                            observation_id='test observation',
+                                            observation_id=observation,
                                             token=encoded_token,
                                             e1_kev=e1_kev, e2_kev=e2_kev,
                                             DEC=dec, RA=ra
@@ -153,7 +154,8 @@ def test_image_product_gallery(dispatcher_api_with_gallery):
 
 
 @pytest.mark.test_drupal
-def test_light_curve_product_gallery(dispatcher_api_with_gallery):
+@pytest.mark.parametrize("observation", ['test observation', None])
+def test_light_curve_product_gallery(dispatcher_api_with_gallery, observation):
     import oda_api.plot_tools as pt
 
     # let's generate a valid token
@@ -200,6 +202,7 @@ def test_light_curve_product_gallery(dispatcher_api_with_gallery):
 
     res = disp.post_data_product_to_gallery(product_title=source_name,
                                             gallery_image_path=gallery_image,
+                                            observation_id=observation,
                                             token=encoded_token,
                                             e1_kev=e1_kev, e2_kev=e2_kev,
                                             DEC=dec, RA=ra)
@@ -221,7 +224,8 @@ def test_light_curve_product_gallery(dispatcher_api_with_gallery):
 
 
 @pytest.mark.test_drupal
-def test_spectrum_product_gallery(dispatcher_api_with_gallery):
+@pytest.mark.parametrize("observation", ['test observation', None])
+def test_spectrum_product_gallery(dispatcher_api_with_gallery, observation):
     import oda_api.plot_tools as pt
 
     # let's generate a valid token
@@ -267,6 +271,7 @@ def test_spectrum_product_gallery(dispatcher_api_with_gallery):
 
     res = disp.post_data_product_to_gallery(product_title=source_name,
                                             gallery_image_path=gallery_image,
+                                            observation_id=observation,
                                             token=encoded_token,
                                             e1_kev=e1_kev, e2_kev=e2_kev,
                                             DEC=dec, RA=ra)
