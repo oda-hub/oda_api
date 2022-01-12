@@ -84,7 +84,8 @@ def test_variable_length_table():
 
 @pytest.mark.test_drupal
 @pytest.mark.parametrize("observation", ['test observation', None])
-def test_image_product_gallery(dispatcher_api_with_gallery, observation):
+@pytest.mark.parametrize("source_name", ['GX 1+4', None])
+def test_image_product_gallery(dispatcher_api_with_gallery, observation, source_name):
     import oda_api.plot_tools as pt
 
     # let's generate a valid token
@@ -94,7 +95,6 @@ def test_image_product_gallery(dispatcher_api_with_gallery, observation):
     }
     encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
 
-    source_name = "GX 1+4"
     product_name = "isgri_image"
     par_dict = {
         "DEC": -24.7456,
@@ -137,8 +137,12 @@ def test_image_product_gallery(dispatcher_api_with_gallery, observation):
                                             DEC=dec, RA=ra
                                             )
 
+    if source_name is None:
+        source_name = 'source'
+    prod_title = source_name + "_" + product_name
+
     assert 'title' in res
-    assert res['title'][0]['value'] == source_name + "_" + product_name
+    assert res['title'][0]['value'] == prod_title
 
     assert 'field_e1_kev' in res
     assert res['field_e1_kev'][0]['value'] == e1_kev
@@ -155,7 +159,7 @@ def test_image_product_gallery(dispatcher_api_with_gallery, observation):
 
 @pytest.mark.test_drupal
 @pytest.mark.parametrize("observation", ['test observation', None])
-def test_light_curve_product_gallery(dispatcher_api_with_gallery, observation):
+def test_light_curve_product_gallery(dispatcher_api_with_gallery, observation, source_name):
     import oda_api.plot_tools as pt
 
     # let's generate a valid token
@@ -165,8 +169,8 @@ def test_light_curve_product_gallery(dispatcher_api_with_gallery, observation):
     }
     encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
 
-    source_name = "GX 1+4"
     product_title = source_name
+    product_name = "isgri_lc"
     par_dict = {
         "DEC": -24.7456,
         "E1_keV": 28,
@@ -183,7 +187,7 @@ def test_light_curve_product_gallery(dispatcher_api_with_gallery, observation):
         "oda_api_version": "1.1.22",
         "off_line": "False",
         "osa_version": "OSA11.1",
-        "product": "isgri_lc",
+        "product": product_name,
         "product_type": "Dummy",
     }
 
@@ -225,7 +229,8 @@ def test_light_curve_product_gallery(dispatcher_api_with_gallery, observation):
 
 @pytest.mark.test_drupal
 @pytest.mark.parametrize("observation", ['test observation', None])
-def test_spectrum_product_gallery(dispatcher_api_with_gallery, observation):
+@pytest.mark.parametrize("source_name", ['GX 1+4', None])
+def test_spectrum_product_gallery(dispatcher_api_with_gallery, observation, source_name):
     import oda_api.plot_tools as pt
 
     # let's generate a valid token
