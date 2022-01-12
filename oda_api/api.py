@@ -880,13 +880,14 @@ class DispatcherAPI:
                             params={**params},
                             files=img_file_obj
                             )
+        response_json = self._decode_res_json(res)
 
         if res.status_code != 200:
             logger.warning(f"An issue occurred while posting on the product gallery: {res.text}")
         else:
-            logger.info("Product successfully posted on the gallery")
+            product_posted_link = response_json['_links']['self']['href'].split("?")[0]
+            logger.info(f"Product successfully posted on the gallery, at the link {product_posted_link}")
 
-        response_json = self._decode_res_json(res)
         return response_json
 
     def get_product(self,
