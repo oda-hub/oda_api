@@ -411,7 +411,8 @@ class OdaLightCurve(OdaProduct):
         plt = self.build_fig(in_source_name=in_source_name, systematic_fraction=systematic_fraction,
                              ng_sig_limit=ng_sig_limit, find_excesses=find_excesses)
 
-        plt.show()
+        for p in plt:
+            p.show()
 
     def build_fig(self,  in_source_name='', systematic_fraction=0, ng_sig_limit=0, find_excesses=False):
         #if ng_sig_limit <1 does not plot range
@@ -597,7 +598,8 @@ class OdaSpectrum(OdaProduct):
         plt = self.build_fig(in_source_name=in_source_name, systematic_fraction=systematic_fraction,
                              xlim=xlim)
 
-        plt.show()
+        if plt is not None:
+            plt.show()
 
     def build_fig(self, in_source_name='', systematic_fraction=0, xlim=[]):
 
