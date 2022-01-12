@@ -4,7 +4,9 @@ import jwt
 
 from cdci_data_analysis.pytest_fixtures import (
             dispatcher_live_fixture,
+            dispatcher_live_fixture_with_gallery,
             dispatcher_test_conf_fn,
+            dispatcher_test_conf_with_gallery_fn,
             dispatcher_test_conf,
             dispatcher_debug,
             dispatcher_nodebug,
@@ -47,7 +49,17 @@ def dispatcher_api(dispatcher_live_fixture):
     )
     disp.allow_token_discovery = False
     return disp
-    
+
+
+@pytest.fixture
+def dispatcher_api_with_gallery(dispatcher_live_fixture_with_gallery):
+    import oda_api
+    disp = oda_api.api.DispatcherAPI(
+        url=dispatcher_live_fixture_with_gallery
+    )
+    disp.allow_token_discovery = False
+    return disp
+
 
 @pytest.fixture
 def secret_key(dispatcher_test_conf):
