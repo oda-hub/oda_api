@@ -159,7 +159,7 @@ def test_image_product_gallery(dispatcher_api_with_gallery, observation, source_
 
 @pytest.mark.test_drupal
 @pytest.mark.parametrize("observation", ['test observation', None])
-def test_light_curve_product_gallery(dispatcher_api_with_gallery, observation, source_name):
+def test_light_curve_product_gallery(dispatcher_api_with_gallery, observation):
     import oda_api.plot_tools as pt
 
     # let's generate a valid token
@@ -169,7 +169,7 @@ def test_light_curve_product_gallery(dispatcher_api_with_gallery, observation, s
     }
     encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
 
-    product_title = source_name
+    source_name = 'OAO 1657-415'
     product_name = "isgri_lc"
     par_dict = {
         "DEC": -24.7456,
@@ -197,6 +197,7 @@ def test_light_curve_product_gallery(dispatcher_api_with_gallery, observation, s
 
     light_curve_product = pt.OdaLightCurve(isgri_lc)
     gallery_image = light_curve_product.get_image_for_gallery()
+    fits_file = light_curve_product.write_fits(source_name)[0]
 
     e1_kev = 45
     e2_kev = 95
@@ -206,13 +207,14 @@ def test_light_curve_product_gallery(dispatcher_api_with_gallery, observation, s
 
     res = disp.post_data_product_to_gallery(product_title=source_name,
                                             gallery_image_path=gallery_image,
+                                            fits_file_path=fits_file,
                                             observation_id=observation,
                                             token=encoded_token,
                                             e1_kev=e1_kev, e2_kev=e2_kev,
                                             DEC=dec, RA=ra)
 
     assert 'title' in res
-    assert res['title'][0]['value'] == product_title
+    assert res['title'][0]['value'] == source_name
 
     assert 'field_e1_kev' in res
     assert res['field_e1_kev'][0]['value'] == e1_kev
