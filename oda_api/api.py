@@ -1134,6 +1134,13 @@ class DataCollection(object):
                                     )
                         )
         
+        if 'gw_skymap_product' in res_json['products'].keys():
+            skmap = res_json['products']['gw_skymap_product']
+            for event in skmap['skymaps'].keys():
+                data.append(NumpyDataProduct.decode(skmap['skymaps'][event]))
+            data.append(skmap['contours']) #TODO: class for product
+      
+        
         d = cls(data, instrument=instrument, product=product)
         for p in d._p_list:
             if hasattr(p, 'meta_data') is False and hasattr(p, 'meta') is True:
