@@ -122,6 +122,7 @@ def test_image_product_gallery(dispatcher_api_with_gallery, observation, source_
 
     image_product = pt.OdaImage(isgri_image)
     gallery_image = image_product.get_image_for_gallery()
+    fits_file = image_product.write_fits()
 
     e1_kev = 45
     e2_kev = 95
@@ -131,6 +132,7 @@ def test_image_product_gallery(dispatcher_api_with_gallery, observation, source_
 
     res = disp.post_data_product_to_gallery(src_name=source_name,
                                             gallery_image_path=gallery_image,
+                                            fits_file_path=fits_file,
                                             observation_id=observation,
                                             token=encoded_token,
                                             e1_kev=e1_kev, e2_kev=e2_kev,
@@ -197,7 +199,9 @@ def test_light_curve_product_gallery(dispatcher_api_with_gallery, observation):
 
     light_curve_product = pt.OdaLightCurve(isgri_lc)
     gallery_image = light_curve_product.get_image_for_gallery()
-    fits_file = light_curve_product.write_fits(source_name)[0]
+    fits_file_1 = light_curve_product.write_fits(source_name)[0]
+    # just some dummy fits file, to test multiple fits file upload
+    fits_file_2 = 'data/dummy_prods/query_catalog.fits'
 
     e1_kev = 45
     e2_kev = 95
@@ -207,7 +211,7 @@ def test_light_curve_product_gallery(dispatcher_api_with_gallery, observation):
 
     res = disp.post_data_product_to_gallery(product_title=source_name,
                                             gallery_image_path=gallery_image,
-                                            fits_file_path=fits_file,
+                                            fits_file_path=[fits_file_1, fits_file_2],
                                             observation_id=observation,
                                             token=encoded_token,
                                             e1_kev=e1_kev, e2_kev=e2_kev,
