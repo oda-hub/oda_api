@@ -610,7 +610,12 @@ class ApiCatalog(object):
         if 'cat_coord_units' in cat_dict.keys():
             coord_units = cat_dict['cat_coord_units']
 
-        meta = {'FRAME': frame}
+        if 'cat_meta' in cat_dict.keys():
+            meta = cat_dict['cat_meta']
+        else:
+            meta = {}
+        
+        meta['FRAME'] = frame
         meta['COORD_UNIT'] = coord_units
         meta['LON_NAME'] = lon_name
         meta['LAT_NAME'] = lat_name

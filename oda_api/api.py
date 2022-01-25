@@ -1138,7 +1138,8 @@ class DataCollection(object):
             skmap = res_json['products']['gw_skymap_product']
             for event in skmap['skymaps'].keys():
                 data.append(NumpyDataProduct.decode(skmap['skymaps'][event]))
-            data.append(skmap['contours']) #TODO: class for product
+            if 'contours' in skmap.keys():
+                data.append(skmap['contours']) #TODO: class for product
       
         
         d = cls(data, instrument=instrument, product=product)
