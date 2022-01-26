@@ -593,7 +593,8 @@ class ApiCatalog(object):
     def __init__(self,cat_dict,name='catalog'):
         self.name=name
         _skip_list=['meta_ID']
-
+        meta = {}
+        
         lon_name = None
         if 'cat_lon_name' in cat_dict.keys():
             lon_name =  cat_dict['cat_lon_name']
@@ -611,9 +612,8 @@ class ApiCatalog(object):
             coord_units = cat_dict['cat_coord_units']
 
         if 'cat_meta' in cat_dict.keys():
-            meta = cat_dict['cat_meta']
-        else:
-            meta = {}
+            cat_meta_entry = cat_dict['cat_meta']
+            meta.update(cat_meta_entry)
         
         meta['FRAME'] = frame
         meta['COORD_UNIT'] = coord_units
