@@ -4,17 +4,21 @@ from __future__ import absolute_import, division, print_function
 from collections import OrderedDict
 from json.decoder import JSONDecodeError
 from astropy.table import Table
-from .data_products import NumpyDataProduct, BinaryData, ApiCatalog
 
-from builtins import (bytes, str, open, super, range,
-                      zip, round, input, int, pow, object, map, zip)
-
-# gw is optional for now (TODO:)
+# NOTE gw is optional for now 
 try:
+    import gwpy
     from gwpy.timeseries.timeseries import TimeSeries
     from gwpy.spectrogram import Spectrogram
 except ModuleNotFoundError:
     pass    
+
+from .data_products import NumpyDataProduct, BinaryData, ApiCatalog, GWContoursDataProduct
+
+from builtins import (bytes, str, open, super, range,
+                      zip, round, input, int, pow, object, map, zip)
+
+
 
 __author__ = "Andrea Tramacere, Volodymyr Savchenko"
 
@@ -1139,7 +1143,7 @@ class DataCollection(object):
             for event in skmap['skymaps'].keys():
                 data.append(NumpyDataProduct.decode(skmap['skymaps'][event]))
             if 'contours' in skmap.keys():
-                data.append(skmap['contours']) #TODO: class for product
+                data.append(GWContoursDataProduct(skmap['contours'])) 
       
         
         d = cls(data, instrument=instrument, product=product)

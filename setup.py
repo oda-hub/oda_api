@@ -55,6 +55,7 @@ setup(name='oda_api',
             ],      
           'gw': [
             "gwpy",
+            "ligo.skymap"
           ]
          },
       entry_points={
