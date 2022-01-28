@@ -44,13 +44,7 @@ logger = logging.getLogger('oda_api.data_products')
 __all__=['sanitize_encoded','_chekc_enc_data','BinaryData','NumpyDataUnit','NumpyDataProduct','ApiCatalog','ODAAstropyTable']
 
 import astropy.io.fits.fitsrec
-import numpy as np
-from matplotlib import pyplot as plt
-# NOTE optional for GW 
-try:
-    import ligo.skymap.plot
-except ModuleNotFoundError:
-    pass 
+
 
 # these 3 functions are remnants of misusing repr() to serialize data instead of json
 def sanitize_encoded(d):
@@ -656,69 +650,12 @@ class GWEventContours:
         self.levels = event_contour_dict['levels']
         self.contours = event_contour_dict['contours']
         
-    @staticmethod
-    def _plot_single_contour(contour_coords, ax, color='r'):
-        coords = np.array(contour_coords)
-        try:
-            ax.plot(coords[:,0], coords[:,1], '-', transform=ax.get_transform('world'), color = color)
-        except TypeError:
-            ax.plot(coords[:,0], coords[:,1], '-', transform=ax.get_transform(), color = color)
-
-    @staticmethod
-    def _plot_contour_list(contour_list, ax, color=None):
-        kwargs = {}
-        if color is not None:
-            kwargs['color'] = color
-        for contour_coords in contour_list:
-            GWEventContours._plot_single_contour(contour_coords, ax, **kwargs)
-    
-    def plot_event_contours(self, legend=True, ev_name=True, colors = [], ax = None):
-        if ax is None:
-            ax = plt.axes(projection='astro hours mollweide')
-        
-        if not colors:
-            prop_cycle = plt.rcParams['axes.prop_cycle']
-            colors = prop_cycle.by_key()['color']
-        
-        lpr = []
-        names = []
-        for i in range(len(self.levels)):
-            color = colors[i%len(colors)]
-            self._plot_contour_list(self.contours[i], ax, color)
-            lpr.append(plt.Rectangle((0, 0), 1, 1, fc = color))
-            names.append(f"{self.name+' ' if ev_name else ''}{self.levels[i]}%")
-        
-        if legend is True:
-            ax.legend(lpr, names)
-    
-
 class GWContoursDataProduct:
     def __init__(self, contours_dict: dict) -> None:
         self._cont_data = contours_dict
         self.event_list = list(self._cont_data.keys())
         self.contours = {}
         for key, val in self._cont_data.items():
-            self.contours[key] = GWEventContours(val)
+            self.contours[key] = GWEventContours(val, name = key)
             setattr(self, key, self.contours[key])
             
-    def plot_contours(self, legend=True, colors = [], ax = None):
-        if ax is None:
-            ax = plt.axes(projection='astro hours mollweide')
-        
-        if not colors:
-            prop_cycle = plt.rcParams['axes.prop_cycle']
-            colors = prop_cycle.by_key()['color']
-        
-        lpr = []
-        names = []
-        i = 0
-        for event, data in self.contours.items():
-            color = colors[i%len(colors)]
-            data.plot_event_contours(ax = ax, colors = [color], legend = False, ev_name = event)
-            i+=1
-            lpr.append(plt.Rectangle((0, 0), 1, 1, fc = color))
-            names.append(event)
-
-        if legend is True:
-            ax.legend(lpr, names, numpoints=1, bbox_to_anchor=(1.05, 1), loc='upper left')            
-        
