@@ -19,6 +19,8 @@ The following tutorial covers a large fraction of the code features. The example
 
    Show and Save Products <Show_and_Save_Products.rst>
    
+   Gravitational Wave Analysis <GravitationalWaves.rst>
+   
    Examples of workflows <https://github.com/cdcihub/oda_api_benchmark>
    
 
