@@ -212,7 +212,10 @@ class OdaImage(OdaProduct):
 
 
     def write_fits(self, file_prefix=''):
-        self.data.mosaic_image_0_mosaic.write_fits_file(f'{file_prefix}mosaic.fits', overwrite=True)
+        file_fn = f'{file_prefix}mosaic.fits'
+
+        self.data.mosaic_image_0_mosaic.write_fits_file(file_fn, overwrite=True)
+        return file_fn
     
     
     def extract_catalog_from_image(self, include_new_sources=False, det_sigma=5, objects_of_interest=[],
