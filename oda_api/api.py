@@ -861,6 +861,45 @@ class DispatcherAPI:
         self.logger.info(
             f"{C.GREY}last request completed in {self.last_request_t_complete - self.last_request_t0} seconds{C.NC}")
 
+    def post_data_product_to_gallery(self,
+                                     product_title: str = None,
+                                     observation_id: str = None,
+                                     gallery_image_path: str = None,
+                                     token: str = None,
+                                     **kwargs):
+        img_file_obj = None
+        if gallery_image_path is not None:
+            img_file_obj = {'media': open(gallery_image_path, 'rb')}
+
+        session_id = self.session_id
+        job_id = self.job_id
+
+        params = {
+            'job_id': job_id,
+            'session_id': session_id,
+            'content_type': 'data_product',
+            'product_title': product_title,
+            'observation_id': observation_id,
+            'token': token,
+            **kwargs
+        }
+
+        logger.info(f"Posting a product on the gallery")
+
+        res = requests.post("%s/post_product_to_gallery" % self.url,
+                            params={**params},
+                            files=img_file_obj
+                            )
+        response_json = self._decode_res_json(res)
+
+        if res.status_code != 200:
+            logger.warning(f"An issue occurred while posting on the product gallery: {res.text}")
+        else:
+            product_posted_link = response_json['_links']['self']['href'].split("?")[0]
+            logger.info(f"Product successfully posted on the gallery, at the link {product_posted_link}")
+
+        return response_json
+
     def get_product(self,
                     product: str,
                     instrument: str,
