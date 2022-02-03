@@ -815,4 +815,4 @@ class OdaGWContours(OdaProduct):
 
     # TODO can an implementation of this method provided?
     def write_fits(self):
-        pass
+        raise NotImplementedError
