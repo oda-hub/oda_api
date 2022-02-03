@@ -49,6 +49,7 @@ from itertools import cycle
 import numpy as np
 import traceback
 from jsonschema import validate as validate_json
+from typing import Union
 
 import oda_api.token
 import oda_api.misc_helpers
@@ -865,11 +866,19 @@ class DispatcherAPI:
                                      product_title: str = None,
                                      observation_id: str = None,
                                      gallery_image_path: str = None,
+                                     fits_file_path=None,
                                      token: str = None,
                                      **kwargs):
-        img_file_obj = None
+        # generate file obj
+        files_obj = {}
         if gallery_image_path is not None:
-            img_file_obj = {'media': open(gallery_image_path, 'rb')}
+            files_obj['img'] = open(gallery_image_path, 'rb')
+        if fits_file_path is not None:
+            if isinstance(fits_file_path, list):
+                for fits_path in fits_file_path:
+                    files_obj['fits_file_' + str(fits_file_path.index(fits_path))] = open(fits_path, 'rb')
+            elif isinstance(fits_file_path, str):
+                files_obj['fits_file'] = open(fits_file_path, 'rb')
 
         session_id = self.session_id
         job_id = self.job_id
@@ -888,7 +897,7 @@ class DispatcherAPI:
 
         res = requests.post("%s/post_product_to_gallery" % self.url,
                             params={**params},
-                            files=img_file_obj
+                            files=files_obj
                             )
         response_json = self._decode_res_json(res)
 
