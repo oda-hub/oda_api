@@ -812,3 +812,7 @@ class OdaGWContours(OdaProduct):
         else:
             self.plot_event_contours(event_name)
         return fig
+
+    # TODO can an implementation of this method provided?
+    def write_fits(self):
+        pass
