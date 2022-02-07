@@ -4,10 +4,20 @@ from __future__ import absolute_import, division, print_function
 from collections import OrderedDict
 from json.decoder import JSONDecodeError
 from astropy.table import Table
-from .data_products import NumpyDataProduct, BinaryData, ApiCatalog
+
+# NOTE gw is optional for now 
+try:
+    import gwpy
+    from gwpy.timeseries.timeseries import TimeSeries
+    from gwpy.spectrogram import Spectrogram
+except ModuleNotFoundError:
+    pass    
+
+from .data_products import NumpyDataProduct, BinaryData, ApiCatalog, GWContoursDataProduct
 
 from builtins import (bytes, str, open, super, range,
                       zip, round, input, int, pow, object, map, zip)
+
 
 
 __author__ = "Andrea Tramacere, Volodymyr Savchenko"
@@ -1158,6 +1168,32 @@ class DataCollection(object):
             data.extend([ascii.read(table_binary)
                          for table_binary in res_json['products']['astropy_table_product_binary_list']])
 
+        if 'gw_strain_product_list' in res_json['products'].keys():
+            data.extend([TimeSeries(strain_data['value'], 
+                                    name = strain_data['name'],
+                                    t0 = strain_data['t0'],
+                                    dt = strain_data['dt']) 
+                         for strain_data in res_json['products']['gw_strain_product_list']])
+        
+        if 'gw_spectrogram_product' in res_json['products'].keys():
+            sgram = res_json['products']['gw_spectrogram_product']
+            data.append(Spectrogram(sgram['value'],
+                                    name = 'Spectrogram',
+                                    unit = 's',
+                                    t0 = sgram['x0'],
+                                    dt = sgram['dx'],
+                                    frequencies = sgram['yindex']
+                                    )
+                        )
+        
+        if 'gw_skymap_product' in res_json['products'].keys():
+            skmap = res_json['products']['gw_skymap_product']
+            for event in skmap['skymaps'].keys():
+                data.append(NumpyDataProduct.decode(skmap['skymaps'][event]))
+            if 'contours' in skmap.keys():
+                data.append(GWContoursDataProduct(skmap['contours'])) 
+      
+        
         d = cls(data, instrument=instrument, product=product)
         for p in d._p_list:
             if hasattr(p, 'meta_data') is False and hasattr(p, 'meta') is True:

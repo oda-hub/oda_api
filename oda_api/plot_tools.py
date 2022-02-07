@@ -26,6 +26,12 @@ from astropy.io import fits
 from astroquery.simbad import Simbad
 import copy
 
+# NOTE GW, optional
+try:
+    import ligo.skymap.plot
+except ModuleNotFoundError:
+    pass 
+
 import logging
 
 logger = logging.getLogger("oda_api.plot_tools")
@@ -723,3 +729,93 @@ class OdaSpectrum(OdaProduct):
 
         return spec_fn, tstart, tstop, exposure
 
+class OdaGWContours(OdaProduct):
+    
+    @staticmethod
+    def _plot_single_contour(contour_coords, ax, color='r'):
+        coords = numpy.array(contour_coords)
+        try:
+            ax.plot(coords[:,0], coords[:,1], '-', transform=ax.get_transform('world'), color = color)
+        except TypeError:
+            ax.plot(coords[:,0], coords[:,1], '-', transform=ax.get_transform(), color = color)
+
+    @staticmethod
+    def _plot_contour_list(contour_list, ax, color=None):
+        kwargs = {}
+        if color is not None:
+            kwargs['color'] = color
+        for contour_coords in contour_list:
+            OdaGWContours._plot_single_contour(contour_coords, ax, **kwargs)
+    
+    def plot_event_contours(self, event, legend=True, name_in_legend=True, colors = [], ax = None):
+        if ax is None:
+            ax = plt.axes(projection='astro hours mollweide')
+        
+        if not colors:
+            prop_cycle = plt.rcParams['axes.prop_cycle']
+            colors = prop_cycle.by_key()['color']
+        
+        lpr = []
+        names = []
+        if event in self.data.contours.keys():
+            for i in range(len(self.data.contours[event].levels)):
+                color = colors[i%len(colors)]
+                OdaGWContours._plot_contour_list(self.data.contours[event].contours[i], ax, color)
+                lpr.append(plt.Rectangle((0, 0), 1, 1, fc = color))
+                names.append(f"{self.data.contours[event].name+' ' if name_in_legend else ''}{self.data.contours[event].levels[i]}%")
+        else:
+            raise ValueError(f'Wrong event name: {event}')
+        
+        if legend is True:
+            ax.legend(lpr, names)
+            
+    def plot_contours(self, legend=True, colors = [], ax = None):
+        if ax is None:
+            ax = plt.axes(projection='astro hours mollweide')
+        
+        if not colors:
+            prop_cycle = plt.rcParams['axes.prop_cycle']
+            colors = prop_cycle.by_key()['color']
+        
+        lpr = []
+        names = []
+        i = 0
+        for event, data in self.data.contours.items():
+            color = colors[i%len(colors)]
+            self.plot_event_contours(event, ax = ax, colors = [color], legend = False)
+            i+=1
+            lpr.append(plt.Rectangle((0, 0), 1, 1, fc = color))
+            names.append(event)
+
+        if legend is True:
+            ax.legend(lpr, names, numpoints=1, bbox_to_anchor=(1.05, 1), loc='upper left')            
+        
+    def show(self, event_name = None):
+        fig = self.build_fig(event_name=event_name)
+
+        if fig is not None:
+            fig.show()
+
+    def get_image_for_gallery(self, event_name=None):
+        pic_name = None
+        fig = self.build_fig(event_name=event_name)
+
+        if fig is not None:
+            request_time = _time.time()
+            pic_name = str(request_time) + '_image.png'
+
+            fig.savefig(pic_name)
+
+        return pic_name
+
+    def build_fig(self, event_name = None):
+        fig = plt.figure()
+        if event_name is None:
+            self.plot_contours()
+        else:
+            self.plot_event_contours(event_name)
+        return fig
+
+    # TODO can an implementation of this method provided?
+    def write_fits(self):
+        raise NotImplementedError
