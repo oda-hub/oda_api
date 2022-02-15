@@ -43,3 +43,4 @@ vlf_table.fits
 tests/.oda-token
 
 .ipynb_checkpoints
+.venv

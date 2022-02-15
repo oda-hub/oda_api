@@ -18,6 +18,8 @@ The following tutorial covers a large fraction of the code features. The example
    Obtaining a Science Window List with python <ScienceWindowList.rst>
 
    Show and Save Products <Show_and_Save_Products.rst>
+   
+   Gravitational Wave Analysis <GravitationalWaves.rst>
 
    Upload a product to the Product Gallery <UploadToGallery.ipynb>
 
