@@ -5,10 +5,20 @@ from collections import OrderedDict
 from json.decoder import JSONDecodeError
 from typing import Callable, Tuple
 from astropy.table import Table
-from .data_products import NumpyDataProduct, BinaryData, ApiCatalog
+
+# NOTE gw is optional for now 
+try:
+    import gwpy
+    from gwpy.timeseries.timeseries import TimeSeries
+    from gwpy.spectrogram import Spectrogram
+except ModuleNotFoundError:
+    pass    
+
+from .data_products import NumpyDataProduct, BinaryData, ApiCatalog, GWContoursDataProduct
 
 from builtins import (bytes, str, open, super, range,
                       zip, round, input, int, pow, object, map, zip)
+
 
 
 __author__ = "Andrea Tramacere, Volodymyr Savchenko"
@@ -42,6 +52,7 @@ from itertools import cycle
 import numpy as np
 import traceback
 from jsonschema import validate as validate_json
+from typing import Union
 
 import oda_api.token
 import oda_api.misc_helpers
@@ -277,6 +288,18 @@ class DispatcherAPI:
                         },
                     }
         }
+
+    def inspect_state(self, job_id=None):
+        params = dict(token=oda_api.token.discover_token())
+
+        if job_id is not None:
+            params['job_id'] = job_id
+
+        r = requests.get(self.url + "/inspect-state", params=params)
+        if r.status_code == 200:
+            return r.json()
+        else:
+            raise RuntimeError(r.text)
 
     def set_custom_progress_formatter(self, F):
         self.custom_progress_formatter = F
@@ -908,6 +931,54 @@ class DispatcherAPI:
                         warnings.warn(msg)
 
 
+    def post_data_product_to_gallery(self,
+                                     product_title: str = None,
+                                     observation_id: str = None,
+                                     gallery_image_path: str = None,
+                                     fits_file_path=None,
+                                     token: str = None,
+                                     **kwargs):
+        # generate file obj
+        files_obj = {}
+        if gallery_image_path is not None:
+            files_obj['img'] = open(gallery_image_path, 'rb')
+        if fits_file_path is not None:
+            if isinstance(fits_file_path, list):
+                for fits_path in fits_file_path:
+                    files_obj['fits_file_' + str(fits_file_path.index(fits_path))] = open(fits_path, 'rb')
+            elif isinstance(fits_file_path, str):
+                files_obj['fits_file'] = open(fits_file_path, 'rb')
+
+        session_id = self.session_id
+        job_id = self.job_id
+
+        params = {
+            'job_id': job_id,
+            'session_id': session_id,
+            'content_type': 'data_product',
+            'product_title': product_title,
+            'observation_id': observation_id,
+            'token': token,
+            **kwargs
+        }
+
+        logger.info(f"Posting a product on the gallery")
+
+        res = requests.post("%s/post_product_to_gallery" % self.url,
+                            params={**params},
+                            files=files_obj
+                            )
+        response_json = self._decode_res_json(res)
+
+        if res.status_code != 200:
+            logger.warning(f"An issue occurred while posting on the product gallery: {res.text}")
+        else:
+            product_posted_link = response_json['_links']['self']['href'].split("?")[0]
+            logger.info(f"Product successfully posted on the gallery, at the link {product_posted_link}")
+
+        return response_json
+
+
     def get_product(self,
                     product: str,
                     instrument: str,
@@ -1200,6 +1271,32 @@ class DataCollection(object):
             data.extend([ascii.read(table_binary)
                          for table_binary in res_json['products']['astropy_table_product_binary_list']])
 
+        if 'gw_strain_product_list' in res_json['products'].keys():
+            data.extend([TimeSeries(strain_data['value'], 
+                                    name = strain_data['name'],
+                                    t0 = strain_data['t0'],
+                                    dt = strain_data['dt']) 
+                         for strain_data in res_json['products']['gw_strain_product_list']])
+        
+        if 'gw_spectrogram_product' in res_json['products'].keys():
+            sgram = res_json['products']['gw_spectrogram_product']
+            data.append(Spectrogram(sgram['value'],
+                                    name = 'Spectrogram',
+                                    unit = 's',
+                                    t0 = sgram['x0'],
+                                    dt = sgram['dx'],
+                                    frequencies = sgram['yindex']
+                                    )
+                        )
+        
+        if 'gw_skymap_product' in res_json['products'].keys():
+            skmap = res_json['products']['gw_skymap_product']
+            for event in skmap['skymaps'].keys():
+                data.append(NumpyDataProduct.decode(skmap['skymaps'][event]))
+            if 'contours' in skmap.keys():
+                data.append(GWContoursDataProduct(skmap['contours'])) 
+      
+        
         d = cls(data, instrument=instrument, product=product)
         for p in d._p_list:
             if hasattr(p, 'meta_data') is False and hasattr(p, 'meta') is True:

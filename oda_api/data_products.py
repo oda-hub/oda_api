@@ -44,7 +44,6 @@ logger = logging.getLogger('oda_api.data_products')
 __all__=['sanitize_encoded','_chekc_enc_data','BinaryData','NumpyDataUnit','NumpyDataProduct','ApiCatalog','ODAAstropyTable']
 
 import astropy.io.fits.fitsrec
-import numpy as np
 
 
 # these 3 functions are remnants of misusing repr() to serialize data instead of json
@@ -635,7 +634,8 @@ class ApiCatalog:
     def __init__(self, cat_dict, name='catalog'):
         self.name=name
         _skip_list=['meta_ID']
-
+        meta = {}
+        
         lon_name = None
         if 'cat_lon_name' in cat_dict.keys():
             lon_name =  cat_dict['cat_lon_name']
@@ -652,7 +652,11 @@ class ApiCatalog:
         if 'cat_coord_units' in cat_dict.keys():
             coord_units = cat_dict['cat_coord_units']
 
-        meta = {'FRAME': frame}
+        if 'cat_meta' in cat_dict.keys():
+            cat_meta_entry = cat_dict['cat_meta']
+            meta.update(cat_meta_entry)
+        
+        meta['FRAME'] = frame
         meta['COORD_UNIT'] = coord_units
         meta['LON_NAME'] = lon_name
         meta['LAT_NAME'] = lat_name
@@ -680,3 +684,19 @@ class ApiCatalog:
                     cat_lat_name=self.lat_name,
                     cat_lon_name=self.lon_name))
 
+class GWEventContours:
+    def __init__(self, event_contour_dict, name='') -> None:
+        self._contour_dict = event_contour_dict
+        self.name = name
+        self.levels = event_contour_dict['levels']
+        self.contours = event_contour_dict['contours']
+        
+class GWContoursDataProduct:
+    def __init__(self, contours_dict: dict) -> None:
+        self._cont_data = contours_dict
+        self.event_list = list(self._cont_data.keys())
+        self.contours = {}
+        for key, val in self._cont_data.items():
+            self.contours[key] = GWEventContours(val, name = key)
+            setattr(self, key, self.contours[key])
+            
