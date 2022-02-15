@@ -16,10 +16,6 @@ except ModuleNotFoundError:
 
 from .data_products import NumpyDataProduct, BinaryData, ApiCatalog, GWContoursDataProduct
 
-from builtins import (bytes, str, open, super, range,
-                      zip, round, input, int, pow, object, map, zip)
-
-
 
 __author__ = "Andrea Tramacere, Volodymyr Savchenko"
 
