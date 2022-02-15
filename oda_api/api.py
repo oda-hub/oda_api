@@ -892,12 +892,7 @@ class DispatcherAPI:
             elif isinstance(fits_file_path, str):
                 files_obj['fits_file'] = open(fits_file_path, 'rb')
 
-        session_id = self.session_id
-        job_id = self.job_id
-
         params = {
-            'job_id': job_id,
-            'session_id': session_id,
             'content_type': 'data_product',
             'product_title': product_title,
             'observation_id': observation_id,
