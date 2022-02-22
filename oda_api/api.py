@@ -420,8 +420,8 @@ class DispatcherAPI:
 
             if response.status_code == 403:
                 try:
-                    response_json = response.json()                                    
-                except (json.decoder.JSONDecodeError, simplejson.errors.JSONDecodeError):
+                    response_json = response.json()                                                        
+                except JSONDecodeError:
                     raise Unauthorized(f"undecodable: {response.text}")
 
                 try:
