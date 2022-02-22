@@ -137,11 +137,13 @@ class OdaImage(OdaProduct):
         if len(sources) > 0:
             ras = numpy.array([x for x in sources['ra']])
             decs = numpy.array([x for x in sources['dec']])
-            names = numpy.array([x for x in sources['src_names']])
-            sigmas = numpy.array([x for x in sources['significance']])
+            if 'src_names' in sources.columns:
+                names = numpy.array([x for x in sources['src_names']])
+                # Defines relevant indexes for plotting regions
+                m_new = numpy.array(['NEW' in name for name in names])
+            if 'significance' in sources.columns:
+                sigmas = numpy.array([x for x in sources['significance']])
 
-            # Defines relevant indexes for plotting regions
-            m_new = numpy.array(['NEW' in name for name in names])
 
             # plot new sources as pink circles
             try:
@@ -192,6 +194,20 @@ class OdaImage(OdaProduct):
                 plt.text(ra_coord[i],
                          dec_coord[i] + 0.5,
                          cat_names[i], color="magenta", size=15)
+                
+            #fallback for general catalog (e.g. legacysurvey)
+            if not 'src_names' in sources.columns or not 'significance' in sources.columns:
+                ra_coord = ras
+                dec_coord = decs
+                if zero_crossing:
+                    ind_ra = ra_coord > 180.
+                    try:
+                        ra_coord[ind_ra] -= 360.
+                    except:
+                        pass
+                plt.scatter(ra_coord, dec_coord, s=30, marker="o", facecolors='none',
+                        edgecolors='magenta', lw=0.5, zorder=5)
+            
 
         plt.grid(color="grey", zorder=10)
 
