@@ -874,6 +874,29 @@ class DispatcherAPI:
         self.logger.info(
             f"{C.GREY}last request completed in {self.last_request_t_complete - self.last_request_t0} seconds{C.NC}")
 
+    def get_list_terms_gallery(self,
+                               group: str = None,
+                               token: str = None
+                               ):
+        logger.info("Getting the list of available instruments on the gallery")
+        params = {
+            'group': group,
+            'token': token
+        }
+
+        res = requests.post("%s/get_list_terms" % self.url,
+                            params={**params},
+                            )
+        response_json = self._decode_res_json(res)
+
+        if res.status_code != 200:
+            logger.warning(f"An issue occurred while getting the list of terms from the group {group}, "
+                           f"from the product gallery : {res.text}")
+        else:
+            logger.info(f"List of terms from the group {group} successfully returned")
+
+        return response_json
+
     def post_data_product_to_gallery(self,
                                      product_title: str = None,
                                      observation_id: str = None,
