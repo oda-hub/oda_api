@@ -884,7 +884,7 @@ class DispatcherAPI:
             'token': token
         }
 
-        res = requests.post("%s/get_list_terms" % self.url,
+        res = requests.get("%s/get_list_terms" % self.url,
                             params={**params},
                             )
         response_json = self._decode_res_json(res)
