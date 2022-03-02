@@ -881,6 +881,25 @@ class DispatcherAPI:
                                      fits_file_path=None,
                                      token: str = None,
                                      **kwargs):
+        """
+
+        :param product_title: title to assign to the product, in case this is not provided, then a title is automatically
+               built using the name of the source and the type of product
+        :param observation_id:  this can be indicated in two different ways
+            * by specifying the id of an already present observation (eg 'test observation')
+            * by specifying the time range, in particular the value of T1 and T2 in the following format '2003-03-15T23:27:40.0'
+        :param gallery_image_path: path of the generated image and to be uploaded over the gallery
+        :param fits_file_path: a list of fits file links used for the generation of the product to upload over the gallery
+        :param token: user token
+        :param kwargs: keyword arguments representing the main parameters values used to generate the product. Amongst them,
+               it is important to mention the following ones:
+            * instrument: name of the instrument used for the generated product (e.g. isgri, jemx1)
+            * product_type: type of product generated (e.g. isgri_lc, jemx_image)
+            * src_name: name of the source used
+            * others: other parameters used for the product. Not all the parameters are currently supported,
+              but the list of the supported ones will be extended. RA=25
+
+        """
         # generate file obj
         files_obj = {}
         if gallery_image_path is not None:
