@@ -876,17 +876,19 @@ class DispatcherAPI:
 
     def get_list_terms_gallery(self,
                                group: str = None,
+                               parent: str = None,
                                token: str = None
                                ):
         logger.info("Getting the list of available instruments on the gallery")
         params = {
             'group': group,
+            'parent': parent,
             'token': token
         }
 
         res = requests.get("%s/get_list_terms" % self.url,
-                            params={**params},
-                            )
+                           params={**params}
+                           )
         response_json = self._decode_res_json(res)
 
         if res.status_code != 200:
@@ -934,6 +936,11 @@ class DispatcherAPI:
         if res.status_code != 200:
             logger.warning(f"An issue occurred while posting on the product gallery: {res.text}")
         else:
+            # TODO use:
+            # response_json["_links"]['http://cdciweb02.internal.odahub.io/mmoda/gallery/rest/relation/node/data_product/field_instrumentused']
+            # response_json["_links"]['http://cdciweb02.internal.odahub.io/mmoda/gallery/rest/relation/node/data_product/field_data_product_type']
+
+
             product_posted_link = response_json['_links']['self']['href'].split("?")[0]
             logger.info(f"Product successfully posted on the gallery, at the link {product_posted_link}")
 
