@@ -97,6 +97,7 @@ def test_image_product_gallery(dispatcher_api_with_gallery, observation, source_
     encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
 
     product_name = "isgri_image"
+    instrument = "isgri"
     par_dict = {
         "DEC": -24.7456,
         "E1_keV": 28,
@@ -108,7 +109,7 @@ def test_image_product_gallery(dispatcher_api_with_gallery, observation, source_
         "src_name": source_name,
         "max_pointings": 10,
         "detection_threshold": "7.0",
-        "instrument": "isgri",
+        "instrument": instrument,
         "integral_data_rights": "public",
         "oda_api_version": "1.1.22",
         "off_line": "False",
@@ -137,7 +138,9 @@ def test_image_product_gallery(dispatcher_api_with_gallery, observation, source_
                                             observation_id=observation,
                                             token=encoded_token,
                                             e1_kev=e1_kev, e2_kev=e2_kev,
-                                            DEC=dec, RA=ra
+                                            DEC=dec, RA=ra,
+                                            instrument=instrument,
+                                            product_type=product_name
                                             )
 
     if source_name is None:
