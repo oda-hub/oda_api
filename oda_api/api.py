@@ -959,17 +959,18 @@ class DispatcherAPI:
                     missing_product_type = False
 
         if missing_instrument:
-            logger.info("Missing instrument")
-            self.get_list_terms_gallery(group='instruments', token=token)
+            list_instruments = self.get_list_terms_gallery(group='instruments', token=token)
+            logger.info(f'\nWe noticed no instrument has been specified,\n'
+                        f'the following instruments are available:\n'
+                        f'{list_instruments}\n')
 
         if missing_product_type:
-            logger.info("Missing product type")
             if not missing_instrument and instrument_used is not None:
                 list_instrument_data_products = self.get_list_terms_gallery(group='products', parent=instrument_used, token=token)
                 if list_instrument_data_products is not None:
-                    logger.info(f'We noticed no product type has been specified\n'
+                    logger.info(f'\nWe noticed no product type has been specified,\n'
                                 f'for the instrument {instrument_used}, the following products are available:\n'
-                                f'{list_instrument_data_products}')
+                                f'{list_instrument_data_products}\n')
 
     def get_product(self,
                     product: str,
