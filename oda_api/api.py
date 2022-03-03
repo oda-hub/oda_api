@@ -941,7 +941,9 @@ class DispatcherAPI:
             self.check_missing_parameters_data_product(response_json, token=token, **kwargs)
 
             product_posted_link = response_json['_links']['self']['href'].split("?")[0]
-            logger.info(f"Product successfully posted on the gallery, at the link {product_posted_link}")
+            logger.info(f"Product successfully posted on the gallery, at the link {product_posted_link}.\n"
+                        f"Using the above link you can modify the newly created product in the future.\n"
+                        f"For example, you will be able to change the instrument as well as the product type.\n")
 
         return response_json
 
@@ -960,9 +962,9 @@ class DispatcherAPI:
 
         if missing_instrument:
             list_instruments = self.get_list_terms_gallery(group='instruments', token=token)
-            logger.info(f'\nWe noticed no instrument has been specified,\n'
-                        f'the following instruments are available:\n'
-                        f'{list_instruments}\n')
+            logger.info(f'\nWe noticed no instrument has been specified, the following instruments are available:\n'
+                        f'{list_instruments}\n'
+                        'Please remember that this can be set at a later stage.\n')
 
         if missing_product_type:
             if not missing_instrument and instrument_used is not None:
@@ -970,7 +972,8 @@ class DispatcherAPI:
                 if list_instrument_data_products is not None:
                     logger.info(f'\nWe noticed no product type has been specified,\n'
                                 f'for the instrument {instrument_used}, the following products are available:\n'
-                                f'{list_instrument_data_products}\n')
+                                f'{list_instrument_data_products}\n'
+                                'Please remember that this can be set at a later stage.\n')
 
     def get_product(self,
                     product: str,
