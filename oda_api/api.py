@@ -880,7 +880,7 @@ class DispatcherAPI:
                                parent_id: str = None,
                                token: str = None
                                ):
-        logger.info("Getting the list of available instruments on the gallery")
+        logger.debug("Getting the list of available instruments on the gallery")
         params = {
             'group': group,
             'parent': parent,
