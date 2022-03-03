@@ -877,12 +877,14 @@ class DispatcherAPI:
     def get_list_terms_gallery(self,
                                group: str = None,
                                parent: str = None,
+                               parent_id: str = None,
                                token: str = None
                                ):
         logger.info("Getting the list of available instruments on the gallery")
         params = {
             'group': group,
             'parent': parent,
+            'parent_id': parent_id,
             'token': token
         }
 
@@ -936,15 +938,38 @@ class DispatcherAPI:
         if res.status_code != 200:
             logger.warning(f"An issue occurred while posting on the product gallery: {res.text}")
         else:
-            # TODO use:
-            # response_json["_links"]['http://cdciweb02.internal.odahub.io/mmoda/gallery/rest/relation/node/data_product/field_instrumentused']
-            # response_json["_links"]['http://cdciweb02.internal.odahub.io/mmoda/gallery/rest/relation/node/data_product/field_data_product_type']
-
+            self.check_missing_parameters_data_product(response_json, token=token, **kwargs)
 
             product_posted_link = response_json['_links']['self']['href'].split("?")[0]
             logger.info(f"Product successfully posted on the gallery, at the link {product_posted_link}")
 
         return response_json
+
+    def check_missing_parameters_data_product(self, response, token: str = None, **kwargs):
+        missing_instrument = True
+        instrument_used = None
+        missing_product_type = True
+        if '_links' in response:
+            for field_link in response['_links']:
+                field = field_link.split('/')[-1]
+                if field == 'field_instrumentused':
+                    missing_instrument = False
+                    instrument_used = kwargs.get('instrument', None)
+                elif field == 'field_data_product_type':
+                    missing_product_type = False
+
+        if missing_instrument:
+            logger.info("Missing instrument")
+            self.get_list_terms_gallery(group='instruments', token=token)
+
+        if missing_product_type:
+            logger.info("Missing product type")
+            if not missing_instrument and instrument_used is not None:
+                list_instrument_data_products = self.get_list_terms_gallery(group='products', parent=instrument_used, token=token)
+                if list_instrument_data_products is not None:
+                    logger.info(f'We noticed no product type has been specified\n'
+                                f'for the instrument {instrument_used}, the following products are available:\n'
+                                f'{list_instrument_data_products}')
 
     def get_product(self,
                     product: str,
