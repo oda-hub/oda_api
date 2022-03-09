@@ -964,7 +964,7 @@ class DispatcherAPI:
             list_instruments = self.get_list_terms_gallery(group='instruments', token=token)
             logger.info(f'\nWe noticed no instrument has been specified, the following instruments are available:\n'
                         f'{list_instruments}\n'
-                        'Please remember that this can be set at a later stage.\n')
+                        'Please remember that this can be set at a later stage by editing the newly created data product.\n')
 
         if missing_product_type:
             if not missing_instrument and instrument_used is not None:
@@ -973,7 +973,7 @@ class DispatcherAPI:
                     logger.info(f'\nWe noticed no product type has been specified,\n'
                                 f'for the instrument {instrument_used}, the following products are available:\n'
                                 f'{list_instrument_data_products}\n'
-                                'Please remember that this can be set at a later stage.\n')
+                                'Please remember that this can be set at a later stage by editing the newly created data product.\n')
 
     def get_product(self,
                     product: str,
