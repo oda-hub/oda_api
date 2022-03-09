@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import pytest
 import json
 from astropy.io import fits
@@ -5,6 +7,8 @@ import numpy as np
 import time
 import jwt
 import os
+import random
+import string
 
 from cdci_data_analysis.analysis.json import CustomJSONEncoder
 from oda_api.data_products import NumpyDataProduct
@@ -85,8 +89,9 @@ def test_variable_length_table():
 
 @pytest.mark.test_drupal
 @pytest.mark.parametrize("observation", ['test observation', None])
-@pytest.mark.parametrize("source_name", ['GX 1+4', None])
-def test_image_product_gallery(dispatcher_api_with_gallery, observation, source_name):
+@pytest.mark.parametrize("type_source", ["known", "new", None])
+@pytest.mark.parametrize("insert_new_source", [True, False])
+def test_image_product_gallery(dispatcher_api_with_gallery, observation, type_source, insert_new_source):
     import oda_api.plot_tools as pt
 
     # let's generate a valid token
@@ -96,7 +101,12 @@ def test_image_product_gallery(dispatcher_api_with_gallery, observation, source_
     }
     encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
 
-    product_name = "isgri_image"
+    source_name = None
+    if type_source == "known":
+        source_name = "Crab"
+    elif type_source == "new":
+        source_name = "new_source_" + ''.join(random.choices(string.digits + string.ascii_lowercase, k=5))
+
     par_dict = {
         "DEC": -24.7456,
         "E1_keV": 28,
@@ -108,13 +118,14 @@ def test_image_product_gallery(dispatcher_api_with_gallery, observation, source_
         "src_name": source_name,
         "max_pointings": 10,
         "detection_threshold": "7.0",
-        "instrument": "isgri",
+        "instrument": "empty",
         "integral_data_rights": "public",
         "oda_api_version": "1.1.22",
         "off_line": "False",
         "osa_version": "OSA11.1",
-        "product": product_name,
+        "product": 'numerical',
         "product_type": "Dummy",
+        'token': encoded_token
     }
 
     disp = dispatcher_api_with_gallery
@@ -122,8 +133,8 @@ def test_image_product_gallery(dispatcher_api_with_gallery, observation, source_
     isgri_image = disp.get_product(**par_dict)
 
     image_product = pt.OdaImage(isgri_image)
-    gallery_image = image_product.get_image_for_gallery()
-    fits_file = image_product.write_fits()
+    # gallery_image = image_product.get_image_for_gallery()
+    # fits_file = image_product.write_fits()
 
     e1_kev = 45
     e2_kev = 95
@@ -131,21 +142,27 @@ def test_image_product_gallery(dispatcher_api_with_gallery, observation, source_
     dec = 19
     ra = 458
 
-    res = disp.post_data_product_to_gallery(src_name=source_name,
-                                            gallery_image_path=gallery_image,
-                                            fits_file_path=fits_file,
-                                            observation_id=observation,
-                                            token=encoded_token,
-                                            e1_kev=e1_kev, e2_kev=e2_kev,
-                                            DEC=dec, RA=ra
-                                            )
+    instrument = 'isgri'
+    product_type = "isgri_image"
 
-    if source_name is None:
-        source_name = 'source'
-    prod_title = source_name + "_" + product_name
+    product_title = "_".join(
+        [instrument, product_type, datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d %H:%M:%S")])
+
+    res = disp.post_data_product_to_gallery(
+        product_title=product_title,
+        instrument=instrument,
+        src_name=source_name,
+        insert_new_source=insert_new_source,
+        # gallery_image_path=gallery_image,
+        # fits_file_path=fits_file,
+        observation_id=observation,
+        token=encoded_token,
+        e1_kev=e1_kev, e2_kev=e2_kev,
+        DEC=dec, RA=ra
+        )
 
     assert 'title' in res
-    assert res['title'][0]['value'] == prod_title
+    assert res['title'][0]['value'] == product_title
 
     assert 'field_e1_kev' in res
     assert res['field_e1_kev'][0]['value'] == e1_kev
