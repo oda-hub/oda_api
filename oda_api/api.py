@@ -941,7 +941,7 @@ class DispatcherAPI:
             self.check_missing_parameters_data_product(response_json, token=token, **kwargs)
 
             product_posted_link = response_json['_links']['self']['href'].split("?")[0]
-            logger.info(f"Product successfully posted on the gallery, at the link {product_posted_link}.\n"
+            logger.info(f"Product successfully posted on the gallery, at the link {product_posted_link}\n"
                         f"Using the above link you can modify the newly created product in the future.\n"
                         f"For example, you will be able to change the instrument as well as the product type.\n")
 
@@ -962,7 +962,7 @@ class DispatcherAPI:
 
         if missing_instrument:
             list_instruments = self.get_list_terms_gallery(group='instruments', token=token)
-            logger.info(f'\nWe noticed no instrument has been specified, the following instruments are available:\n'
+            logger.info(f'\nWe noticed no instrument has been specified, the following are available:\n'
                         f'{list_instruments}\n'
                         'Please remember that this can be set at a later stage by editing the newly created data product.\n')
 
