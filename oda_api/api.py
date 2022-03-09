@@ -880,6 +880,7 @@ class DispatcherAPI:
                                      gallery_image_path: str = None,
                                      fits_file_path=None,
                                      token: str = None,
+                                     insert_new_source: bool = False,
                                      **kwargs):
         # generate file obj
         files_obj = {}
@@ -897,6 +898,7 @@ class DispatcherAPI:
             'product_title': product_title,
             'observation_id': observation_id,
             'token': token,
+            'insert_new_source': insert_new_source,
             **kwargs
         }
 
