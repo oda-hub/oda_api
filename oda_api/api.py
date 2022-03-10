@@ -904,7 +904,10 @@ class DispatcherAPI:
             resolved_obj = self.resolve_source(src_name)
             # simbad_obj = Simbad.query_object(src_name)
             if resolved_obj is not None:
-                logger.warning(f"source {src_name} validated")
+                msg = f"source {src_name} validated"
+                if 'resolver' in resolved_obj:
+                    msg += f' using the service {resolved_obj["resolver"]}'
+                logger.info(msg)
 
                 RA = Angle(resolved_obj["RA"], unit='hourangle')
                 if 'RA' not in kwargs:
@@ -913,7 +916,7 @@ class DispatcherAPI:
                 if 'DEC' not in kwargs:
                     kwargs['DEC'] = DEC
             else:
-                logger.warning(f"{src_name} not valid according to Simbad")
+                logger.warning(f"{src_name} could not be validated")
                 if not force_insert_new_source:
                     # a source won't be added
                     logger.warning(f"the specified source will not be added")
