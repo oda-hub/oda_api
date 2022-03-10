@@ -5,6 +5,7 @@ from collections import OrderedDict
 from json.decoder import JSONDecodeError
 from astropy.table import Table
 from astroquery.simbad import Simbad
+from astropy.coordinates import SkyCoord, Angle
 
 # NOTE gw is optional for now
 try:
@@ -883,6 +884,7 @@ class DispatcherAPI:
                                      token: str = None,
                                      insert_new_source: bool = False,
                                      validate_source: bool = False,
+                                     force_insert_new_source: bool = False,
                                      **kwargs):
         # generate file obj
         files_obj = {}
@@ -901,9 +903,16 @@ class DispatcherAPI:
             simbad_obj = Simbad.query_object(src_name)
             if simbad_obj is not None:
                 logger.warning(f"source {src_name} validated")
+                # TODO force to use these coordinates?
+                RA = Angle(simbad_obj["RA"], unit='hourangle')
+                DEC = Angle(simbad_obj["DEC"], unit='degree')
             else:
-                logger.warning(f"{src_name} not valid according to Simbad")
                 # TODO raise an exception? or just go ahead adding it anyway?
+                logger.warning(f"{src_name} not valid according to Simbad")
+                if not force_insert_new_source:
+                    # a source won't be added
+                    logger.warning(f"the specified source will not be added")
+                    kwargs.pop('src_name', None)
 
         params = {
             'content_type': 'data_product',
