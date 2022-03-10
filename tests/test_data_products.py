@@ -360,3 +360,10 @@ def test_spectrum_product_gallery(dispatcher_api_with_gallery, observation, sour
 
     assert 'field_ra' in res
     assert res['field_ra'][0]['value'] == ra
+
+
+@pytest.mark.parametrize("source_name", ['GX 1+4', None])
+def test_resolve_source(dispatcher_api_with_gallery, source_name):
+    disp = dispatcher_api_with_gallery
+
+    disp.resolve_source(source_name)

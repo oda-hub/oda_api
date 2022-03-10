@@ -4,8 +4,9 @@ from __future__ import absolute_import, division, print_function
 from collections import OrderedDict
 from json.decoder import JSONDecodeError
 from astropy.table import Table
-from astroquery.simbad import Simbad
-from astropy.coordinates import SkyCoord, Angle
+# from astroquery.simbad import Simbad
+from astropy.coordinates import Angle
+import xml.etree.ElementTree as ET
 
 # NOTE gw is optional for now
 try:
@@ -900,14 +901,15 @@ class DispatcherAPI:
         # validate source
         src_name = kwargs.get('src_name', None)
         if src_name is not None and validate_source:
-            simbad_obj = Simbad.query_object(src_name)
-            if simbad_obj is not None:
+            resolved_obj = self.resolve_source(src_name)
+            # simbad_obj = Simbad.query_object(src_name)
+            if resolved_obj is not None:
                 logger.warning(f"source {src_name} validated")
 
-                RA = Angle(simbad_obj["RA"], unit='hourangle')
+                RA = Angle(resolved_obj["RA"], unit='hourangle')
                 if 'RA' not in kwargs:
                     kwargs['RA'] = RA
-                DEC = Angle(simbad_obj["DEC"], unit='degree')
+                DEC = Angle(resolved_obj["DEC"], unit='degree')
                 if 'DEC' not in kwargs:
                     kwargs['DEC'] = DEC
             else:
@@ -941,6 +943,33 @@ class DispatcherAPI:
             logger.info(f"Product successfully posted on the gallery, at the link {product_posted_link}")
 
         return response_json
+
+    def resolve_source(self,
+                       src_name: str = None):
+        resolved_obj = None
+        if src_name is not None:
+            name_resolver_url = "http://cdsweb.u-strasbg.fr/cgi-bin/nph-sesame/-oxp/NSV?"
+            res = requests.get(name_resolver_url + src_name)
+            if res.status_code == 200:
+                resolved_obj = {}
+
+            xml_resolved_obj = ET.fromstring(res.content)
+
+            for sesame in xml_resolved_obj:
+                for target in sesame:
+                    if target.tag == 'name':
+                        resolved_obj['name'] = target.text
+                    elif target.tag == 'Resolver':
+                        splitted_attrib_value = target.attrib['name'].split('=')
+                        if len(splitted_attrib_value) == 2:
+                            resolved_obj['resolver'] = splitted_attrib_value[1]
+                        for resolver in target:
+                            if resolver.tag == 'jradeg':
+                                resolved_obj['RA'] = float(resolver.text)
+                            elif resolver.tag == 'jdedeg':
+                                resolved_obj['DEC'] = float(resolver.text)
+
+        return resolved_obj
 
     def get_product(self,
                     product: str,
