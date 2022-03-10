@@ -903,11 +903,14 @@ class DispatcherAPI:
             simbad_obj = Simbad.query_object(src_name)
             if simbad_obj is not None:
                 logger.warning(f"source {src_name} validated")
-                # TODO force to use these coordinates?
+
                 RA = Angle(simbad_obj["RA"], unit='hourangle')
+                if 'RA' not in kwargs:
+                    kwargs['RA'] = RA
                 DEC = Angle(simbad_obj["DEC"], unit='degree')
+                if 'DEC' not in kwargs:
+                    kwargs['DEC'] = DEC
             else:
-                # TODO raise an exception? or just go ahead adding it anyway?
                 logger.warning(f"{src_name} not valid according to Simbad")
                 if not force_insert_new_source:
                     # a source won't be added
