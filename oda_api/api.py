@@ -4,8 +4,9 @@ from __future__ import absolute_import, division, print_function
 from collections import OrderedDict
 from json.decoder import JSONDecodeError
 from astropy.table import Table
+from astroquery.simbad import Simbad
 
-# NOTE gw is optional for now 
+# NOTE gw is optional for now
 try:
     import gwpy
     from gwpy.timeseries.timeseries import TimeSeries
@@ -881,6 +882,7 @@ class DispatcherAPI:
                                      fits_file_path=None,
                                      token: str = None,
                                      insert_new_source: bool = False,
+                                     validate_source: bool = False,
                                      **kwargs):
         # generate file obj
         files_obj = {}
@@ -892,6 +894,16 @@ class DispatcherAPI:
                     files_obj['fits_file_' + str(fits_file_path.index(fits_path))] = open(fits_path, 'rb')
             elif isinstance(fits_file_path, str):
                 files_obj['fits_file'] = open(fits_file_path, 'rb')
+
+        # validate source
+        src_name = kwargs.get('src_name', None)
+        if src_name is not None and validate_source:
+            simbad_obj = Simbad.query_object(src_name)
+            if simbad_obj is not None:
+                logger.warning(f"source {src_name} validated")
+            else:
+                logger.warning(f"{src_name} not valid according to Simbad")
+                # TODO raise an exception? or just go ahead adding it anyway?
 
         params = {
             'content_type': 'data_product',
