@@ -901,7 +901,7 @@ class DispatcherAPI:
         # validate source
         src_name = kwargs.get('src_name', None)
         if src_name is not None and validate_source:
-            resolved_obj = self.resolve_source(src_name)
+            resolved_obj = self.resolve_source(src_name=src_name, token=token)
             # simbad_obj = Simbad.query_object(src_name)
             if resolved_obj is not None:
                 msg = f"source {src_name} validated"
