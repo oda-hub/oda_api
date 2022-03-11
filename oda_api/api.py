@@ -948,29 +948,24 @@ class DispatcherAPI:
         return response_json
 
     def resolve_source(self,
-                       src_name: str = None):
+                       src_name: str = None,
+                       token: str = None):
         resolved_obj = None
         if src_name is not None:
-            name_resolver_url = "http://cdsweb.u-strasbg.fr/cgi-bin/nph-sesame/-oxp/NSV?"
-            res = requests.get(name_resolver_url + src_name)
-            if res.status_code == 200:
-                resolved_obj = {}
+            params = {
+                'src_name': src_name,
+                'token': token
+            }
 
-            xml_resolved_obj = ET.fromstring(res.content)
+            logger.info(f"Searching the object {src_name}")
 
-            for sesame in xml_resolved_obj:
-                for target in sesame:
-                    if target.tag == 'name':
-                        resolved_obj['name'] = target.text
-                    elif target.tag == 'Resolver':
-                        splitted_attrib_value = target.attrib['name'].split('=')
-                        if len(splitted_attrib_value) == 2:
-                            resolved_obj['resolver'] = splitted_attrib_value[1]
-                        for resolver in target:
-                            if resolver.tag == 'jradeg':
-                                resolved_obj['RA'] = float(resolver.text)
-                            elif resolver.tag == 'jdedeg':
-                                resolved_obj['DEC'] = float(resolver.text)
+            res = requests.get("%s/resolve_object_name" % self.url,
+                               params={**params}
+                               )
+            resolved_obj = self._decode_res_json(res)
+
+            if resolved_obj is not None and 'message' in resolved_obj:
+                logger.info(f'{resolved_obj["message"]}')
 
         return resolved_obj
 
