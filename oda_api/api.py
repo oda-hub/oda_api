@@ -908,13 +908,14 @@ class DispatcherAPI:
                 if 'resolver' in resolved_obj:
                     msg += f' using the service {resolved_obj["resolver"]}'
                 logger.info(msg)
-
-                RA = Angle(resolved_obj["RA"], unit='hourangle')
-                if 'RA' not in kwargs:
-                    kwargs['RA'] = RA
-                DEC = Angle(resolved_obj["DEC"], unit='degree')
-                if 'DEC' not in kwargs:
-                    kwargs['DEC'] = DEC
+                if 'RA' in resolved_obj:
+                    RA = Angle(resolved_obj["RA"], unit='hourangle')
+                    if 'RA' not in kwargs:
+                        kwargs['RA'] = RA
+                if 'DEC' in resolved_obj:
+                    DEC = Angle(resolved_obj["DEC"], unit='degree')
+                    if 'DEC' not in kwargs:
+                        kwargs['DEC'] = DEC
             else:
                 logger.warning(f"{src_name} could not be validated")
                 if not force_insert_new_source:
