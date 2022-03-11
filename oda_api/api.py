@@ -4,9 +4,7 @@ from __future__ import absolute_import, division, print_function
 from collections import OrderedDict
 from json.decoder import JSONDecodeError
 from astropy.table import Table
-# from astroquery.simbad import Simbad
 from astropy.coordinates import Angle
-import xml.etree.ElementTree as ET
 
 # NOTE gw is optional for now
 try:
@@ -929,7 +927,6 @@ class DispatcherAPI:
         src_name = kwargs.get('src_name', None)
         if src_name is not None and validate_source:
             resolved_obj = self.resolve_source(src_name=src_name, token=token)
-            # simbad_obj = Simbad.query_object(src_name)
             if resolved_obj is not None:
                 msg = f"source {src_name} validated"
                 if 'resolver' in resolved_obj:
@@ -943,6 +940,8 @@ class DispatcherAPI:
                     DEC = Angle(resolved_obj["DEC"], unit='degree')
                     if 'DEC' not in kwargs:
                         kwargs['DEC'] = DEC
+                if 'entity_portal_link' in resolved_obj:
+                    kwargs['entity_portal_link'] = resolved_obj['entity_portal_link']
             else:
                 logger.warning(f"{src_name} could not be validated")
                 if not force_insert_new_source:
