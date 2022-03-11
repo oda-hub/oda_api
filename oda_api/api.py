@@ -911,7 +911,11 @@ class DispatcherAPI:
                                      insert_new_source: bool = False,
                                      validate_source: bool = False,
                                      force_insert_new_source: bool = False,
+                                     apply_fields_source_resolution: bool = True,
                                      **kwargs):
+
+        additional_kwargs = {}
+
         # generate file obj
         files_obj = {}
         if gallery_image_path is not None:
@@ -935,13 +939,13 @@ class DispatcherAPI:
                 if 'RA' in resolved_obj:
                     RA = Angle(resolved_obj["RA"], unit='hourangle')
                     if 'RA' not in kwargs:
-                        kwargs['RA'] = RA
+                        additional_kwargs['RA'] = RA
                 if 'DEC' in resolved_obj:
                     DEC = Angle(resolved_obj["DEC"], unit='degree')
                     if 'DEC' not in kwargs:
-                        kwargs['DEC'] = DEC
+                        additional_kwargs['DEC'] = DEC
                 if 'entity_portal_link' in resolved_obj:
-                    kwargs['entity_portal_link'] = resolved_obj['entity_portal_link']
+                    additional_kwargs['entity_portal_link'] = resolved_obj['entity_portal_link']
             else:
                 logger.warning(f"{src_name} could not be validated")
                 if not force_insert_new_source:
@@ -949,16 +953,16 @@ class DispatcherAPI:
                     logger.warning(f"the specified source will not be added")
                     kwargs.pop('src_name', None)
 
+        logger.info(f"Posting a product on the gallery")
         params = {
             'content_type': 'data_product',
             'product_title': product_title,
             'observation_id': observation_id,
             'token': token,
             'insert_new_source': insert_new_source,
+            **additional_kwargs,
             **kwargs
         }
-
-        logger.info(f"Posting a product on the gallery")
 
         res = requests.post("%s/post_product_to_gallery" % self.url,
                             params={**params},
