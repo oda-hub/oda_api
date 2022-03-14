@@ -936,15 +936,15 @@ class DispatcherAPI:
                 if 'resolver' in resolved_obj:
                     msg += f' using the service {resolved_obj["resolver"]}'
                 logger.info(msg)
-                if 'RA' in resolved_obj:
+                if 'RA' in resolved_obj and apply_fields_source_resolution:
                     RA = Angle(resolved_obj["RA"], unit='hourangle')
                     if 'RA' not in kwargs:
                         additional_kwargs['RA'] = RA
-                if 'DEC' in resolved_obj:
+                if 'DEC' in resolved_obj and apply_fields_source_resolution:
                     DEC = Angle(resolved_obj["DEC"], unit='degree')
                     if 'DEC' not in kwargs:
                         additional_kwargs['DEC'] = DEC
-                if 'entity_portal_link' in resolved_obj:
+                if 'entity_portal_link' in resolved_obj and apply_fields_source_resolution:
                     additional_kwargs['entity_portal_link'] = resolved_obj['entity_portal_link']
             else:
                 logger.warning(f"{src_name} could not be validated")
