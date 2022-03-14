@@ -988,13 +988,13 @@ class DispatcherAPI:
         resolved_obj = None
         if src_name is not None:
             params = {
-                'src_name': src_name,
+                'name': src_name,
                 'token': token
             }
 
             logger.info(f"Searching the object {src_name}")
 
-            res = requests.get("%s/resolve_object_name" % self.url,
+            res = requests.get("%s/resolve_name" % self.url,
                                params={**params}
                                )
             resolved_obj = self._decode_res_json(res)
