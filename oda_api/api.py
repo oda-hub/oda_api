@@ -420,8 +420,8 @@ class DispatcherAPI:
 
             if response.status_code == 403:
                 try:
-                    response_json = response.json()                                    
-                except (json.decoder.JSONDecodeError, simplejson.errors.JSONDecodeError):
+                    response_json = response.json()                                                        
+                except JSONDecodeError:
                     raise Unauthorized(f"undecodable: {response.text}")
 
                 try:
@@ -874,6 +874,33 @@ class DispatcherAPI:
         self.logger.info(
             f"{C.GREY}last request completed in {self.last_request_t_complete - self.last_request_t0} seconds{C.NC}")
 
+    def get_list_terms_gallery(self,
+                               group: str = None,
+                               parent: str = None,
+                               parent_id: str = None,
+                               token: str = None
+                               ):
+        logger.debug("Getting the list of available instruments on the gallery")
+        params = {
+            'group': group,
+            'parent': parent,
+            'parent_id': parent_id,
+            'token': token
+        }
+
+        res = requests.get("%s/get_list_terms" % self.url,
+                           params={**params}
+                           )
+        response_json = self._decode_res_json(res)
+
+        if res.status_code != 200:
+            logger.warning(f"An issue occurred while getting the list of terms from the group {group}, "
+                           f"from the product gallery : {res.text}")
+        else:
+            logger.info(f"List of terms from the group {group} successfully returned")
+
+        return response_json
+
     def post_data_product_to_gallery(self,
                                      product_title: str = None,
                                      observation_id: str = None,
@@ -911,10 +938,42 @@ class DispatcherAPI:
         if res.status_code != 200:
             logger.warning(f"An issue occurred while posting on the product gallery: {res.text}")
         else:
+            self.check_missing_parameters_data_product(response_json, token=token, **kwargs)
+
             product_posted_link = response_json['_links']['self']['href'].split("?")[0]
-            logger.info(f"Product successfully posted on the gallery, at the link {product_posted_link}")
+            logger.info(f"Product successfully posted on the gallery, at the link {product_posted_link}\n"
+                        f"Using the above link you can modify the newly created product in the future.\n"
+                        f"For example, you will be able to change the instrument as well as the product type.\n")
 
         return response_json
+
+    def check_missing_parameters_data_product(self, response, token: str = None, **kwargs):
+        missing_instrument = True
+        instrument_used = None
+        missing_product_type = True
+        if '_links' in response:
+            for field_link in response['_links']:
+                field = field_link.split('/')[-1]
+                if field == 'field_instrumentused':
+                    missing_instrument = False
+                    instrument_used = kwargs.get('instrument', None)
+                elif field == 'field_data_product_type':
+                    missing_product_type = False
+
+        if missing_instrument:
+            list_instruments = self.get_list_terms_gallery(group='instruments', token=token)
+            logger.info(f'\nWe noticed no instrument has been specified, the following are available:\n'
+                        f'{list_instruments}\n'
+                        'Please remember that this can be set at a later stage by editing the newly created data product.\n')
+
+        if missing_product_type:
+            if not missing_instrument and instrument_used is not None:
+                list_instrument_data_products = self.get_list_terms_gallery(group='products', parent=instrument_used, token=token)
+                if list_instrument_data_products is not None:
+                    logger.info(f'\nWe noticed no product type has been specified,\n'
+                                f'for the instrument {instrument_used}, the following products are available:\n'
+                                f'{list_instrument_data_products}\n'
+                                'Please remember that this can be set at a later stage by editing the newly created data product.\n')
 
     def get_product(self,
                     product: str,
