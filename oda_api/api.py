@@ -934,9 +934,10 @@ class DispatcherAPI:
             copied_kwargs['src_name'] = src_name.replace('_', ' ')
             resolved_obj = self.resolve_source(src_name=src_name, token=token)
             if resolved_obj is not None:
-                msg = f"source {src_name} validated"
+                msg = f'\nSource {src_name} validated'
                 if 'resolver' in resolved_obj:
                     msg += f' using the service {resolved_obj["resolver"]}'
+                msg += '\n'
                 logger.info(msg)
                 if 'RA' in resolved_obj and apply_fields_source_resolution:
                     RA = Angle(resolved_obj["RA"], unit='degree')
@@ -990,7 +991,7 @@ class DispatcherAPI:
                 'token': token
             }
 
-            logger.info(f"Searching the object {src_name}")
+            logger.info(f"Searching the object {src_name}\n")
 
             res = requests.get("%s/resolve_name" % self.url,
                                params={**params}
@@ -1000,7 +1001,7 @@ class DispatcherAPI:
             if resolved_obj is not None and 'message' in resolved_obj:
                 logger.info(f'{resolved_obj["message"]}')
         else:
-            logger.info("Please provide the name of the source")
+            logger.info("Please provide the name of the source\n")
 
         return resolved_obj
 
