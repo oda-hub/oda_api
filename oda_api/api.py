@@ -916,10 +916,6 @@ class DispatcherAPI:
 
         copied_kwargs = kwargs.copy()
 
-        if apply_fields_source_resolution:
-            logger.info('True apply_fields_source_resolution')
-        else:
-            logger.info('False apply_fields_source_resolution')
         # generate file obj
         files_obj = {}
         if gallery_image_path is not None:
@@ -955,7 +951,6 @@ class DispatcherAPI:
                     logger.warning(f"the specified source will not be added")
                     kwargs.pop('src_name', None)
 
-        logger.info(f"Posting a product on the gallery, kwargs {copied_kwargs}, apply_fields_source_resolution {apply_fields_source_resolution}")
         params = {
             'content_type': 'data_product',
             'product_title': product_title,
