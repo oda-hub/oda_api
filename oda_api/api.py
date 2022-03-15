@@ -914,8 +914,12 @@ class DispatcherAPI:
                                      apply_fields_source_resolution: bool = True,
                                      **kwargs):
 
-        additional_kwargs = {}
+        copied_kwargs = kwargs.copy()
 
+        if apply_fields_source_resolution:
+            logger.info('True apply_fields_source_resolution')
+        else:
+            logger.info('False apply_fields_source_resolution')
         # generate file obj
         files_obj = {}
         if gallery_image_path is not None:
@@ -937,15 +941,13 @@ class DispatcherAPI:
                     msg += f' using the service {resolved_obj["resolver"]}'
                 logger.info(msg)
                 if 'RA' in resolved_obj and apply_fields_source_resolution:
-                    RA = Angle(resolved_obj["RA"], unit='hourangle')
-                    if 'RA' not in kwargs:
-                        additional_kwargs['RA'] = RA
+                    RA = Angle(resolved_obj["RA"], unit='degree')
+                    copied_kwargs['RA'] = RA.deg
                 if 'DEC' in resolved_obj and apply_fields_source_resolution:
                     DEC = Angle(resolved_obj["DEC"], unit='degree')
-                    if 'DEC' not in kwargs:
-                        additional_kwargs['DEC'] = DEC
+                    copied_kwargs['DEC'] = DEC.deg
                 if 'entity_portal_link' in resolved_obj and apply_fields_source_resolution:
-                    additional_kwargs['entity_portal_link'] = resolved_obj['entity_portal_link']
+                    copied_kwargs['entity_portal_link'] = resolved_obj['entity_portal_link']
             else:
                 logger.warning(f"{src_name} could not be validated")
                 if not force_insert_new_source:
@@ -953,15 +955,14 @@ class DispatcherAPI:
                     logger.warning(f"the specified source will not be added")
                     kwargs.pop('src_name', None)
 
-        logger.info(f"Posting a product on the gallery")
+        logger.info(f"Posting a product on the gallery, kwargs {copied_kwargs}, apply_fields_source_resolution {apply_fields_source_resolution}")
         params = {
             'content_type': 'data_product',
             'product_title': product_title,
             'observation_id': observation_id,
             'token': token,
             'insert_new_source': insert_new_source,
-            **additional_kwargs,
-            **kwargs
+            **copied_kwargs
         }
 
         res = requests.post("%s/post_product_to_gallery" % self.url,
