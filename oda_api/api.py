@@ -930,6 +930,8 @@ class DispatcherAPI:
         # validate source
         src_name = kwargs.get('src_name', None)
         if src_name is not None and validate_source:
+            # remove any underscore (following the logic of the resolver) and use the edited one
+            copied_kwargs['src_name'] = src_name.replace('_', ' ')
             resolved_obj = self.resolve_source(src_name=src_name, token=token)
             if resolved_obj is not None:
                 msg = f"source {src_name} validated"
