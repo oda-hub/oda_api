@@ -1002,6 +1002,8 @@ class DispatcherAPI:
 
             if resolved_obj is not None and 'message' in resolved_obj:
                 logger.info(f'{resolved_obj["message"]}')
+        else:
+            logger.info("Please provide the name of the source")
 
         return resolved_obj
 

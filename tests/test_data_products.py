@@ -362,8 +362,36 @@ def test_spectrum_product_gallery(dispatcher_api_with_gallery, observation, sour
     assert res['field_ra'][0]['value'] == ra
 
 
-@pytest.mark.parametrize("source_name", ['GX 1+4', None])
-def test_resolve_source(dispatcher_api_with_gallery, source_name):
+@pytest.mark.parametrize("source_name", ['Mrk 421', 'Mrk_421', 'fake object', None])
+def test_resolve_source(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery, source_name):
     disp = dispatcher_api_with_gallery
 
-    disp.resolve_source(source_name)
+    # let's generate a valid token
+    token_payload = {
+        **default_token_payload,
+        'roles': 'general, gallery contributor'
+    }
+    encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
+
+    resolved_obj = disp.resolve_source(source_name, encoded_token)
+
+    if source_name is None:
+        assert resolved_obj is None
+    elif source_name == 'fake object':
+        assert 'name' in resolved_obj
+        assert 'message' in resolved_obj
+
+        # the name resolver replaces automatically underscores with spaces in the returned name
+        assert resolved_obj['name'] == source_name
+        assert 'Nothing found' in resolved_obj['message']
+    else:
+        assert 'name' in resolved_obj
+        assert 'resolver' in resolved_obj
+        assert 'DEC' in resolved_obj
+        assert 'RA' in resolved_obj
+        assert 'entity_portal_link' in resolved_obj
+
+        assert resolved_obj['name'] == source_name.replace('_', ' ')
+        assert resolved_obj['entity_portal_link'] == dispatcher_test_conf_with_gallery["product_gallery_options"]["entities_portal_url"]\
+            .format(source_name)
+
