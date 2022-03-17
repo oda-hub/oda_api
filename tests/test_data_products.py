@@ -91,7 +91,10 @@ def test_variable_length_table():
 @pytest.mark.parametrize("observation", ['test observation', None])
 @pytest.mark.parametrize("type_source", ["known", "new", None])
 @pytest.mark.parametrize("insert_new_source", [True, False])
-def test_image_product_gallery(dispatcher_api_with_gallery, observation, type_source, insert_new_source):
+@pytest.mark.parametrize("force_insert_not_valid_new_source", [True, False])
+@pytest.mark.parametrize("validate_source", [True, False])
+@pytest.mark.parametrize("apply_fields_source_resolution", [True, False])
+def test_image_product_gallery(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery, observation, type_source, insert_new_source, force_insert_not_valid_new_source, validate_source, apply_fields_source_resolution):
     import oda_api.plot_tools as pt
 
     # let's generate a valid token
@@ -107,6 +110,9 @@ def test_image_product_gallery(dispatcher_api_with_gallery, observation, type_so
     elif type_source == "new":
         source_name = "new_source_" + ''.join(random.choices(string.digits + string.ascii_lowercase, k=5))
 
+    product_name = "isgri_image"
+    instrument = "isgri"
+
     par_dict = {
         "DEC": -24.7456,
         "E1_keV": 28,
@@ -118,12 +124,12 @@ def test_image_product_gallery(dispatcher_api_with_gallery, observation, type_so
         "src_name": source_name,
         "max_pointings": 10,
         "detection_threshold": "7.0",
-        "instrument": "empty",
+        "instrument": instrument,
         "integral_data_rights": "public",
         "oda_api_version": "1.1.22",
         "off_line": "False",
         "osa_version": "OSA11.1",
-        "product": 'numerical',
+        "product": product_name,
         "product_type": "Dummy",
         'token': encoded_token
     }
@@ -133,8 +139,8 @@ def test_image_product_gallery(dispatcher_api_with_gallery, observation, type_so
     isgri_image = disp.get_product(**par_dict)
 
     image_product = pt.OdaImage(isgri_image)
-    # gallery_image = image_product.get_image_for_gallery()
-    # fits_file = image_product.write_fits()
+    gallery_image = image_product.get_image_for_gallery()
+    fits_file = image_product.write_fits()
 
     e1_kev = 45
     e2_kev = 95
@@ -153,13 +159,20 @@ def test_image_product_gallery(dispatcher_api_with_gallery, observation, type_so
         instrument=instrument,
         src_name=source_name,
         insert_new_source=insert_new_source,
-        # gallery_image_path=gallery_image,
-        # fits_file_path=fits_file,
+        force_insert_not_valid_new_source=force_insert_not_valid_new_source,
+        apply_fields_source_resolution=apply_fields_source_resolution,
+        validate_source=validate_source,
+        gallery_image_path=gallery_image,
+        fits_file_path=fits_file,
         observation_id=observation,
         token=encoded_token,
         e1_kev=e1_kev, e2_kev=e2_kev,
         DEC=dec, RA=ra
         )
+
+    if type_source == 'known' and validate_source and apply_fields_source_resolution:
+        ra = 83.63
+        dec = 22.01
 
     assert 'title' in res
     assert res['title'][0]['value'] == product_title
@@ -171,10 +184,20 @@ def test_image_product_gallery(dispatcher_api_with_gallery, observation, type_so
     assert res['field_e2_kev'][0]['value'] == e2_kev
 
     assert 'field_dec' in res
-    assert res['field_dec'][0]['value'] == dec
+    assert round(res['field_dec'][0]['value'], 2) == dec
 
     assert 'field_ra' in res
-    assert res['field_ra'][0]['value'] == ra
+    assert round(res['field_ra'][0]['value'], 2) == ra
+
+    link_astrophysical_entity = os.path.join(
+        dispatcher_test_conf_with_gallery['product_gallery_options']['product_gallery_url'],
+        'rest/relation/node/data_product/field_describes_astro_entity')
+    if type_source == 'known' or \
+            (type_source == 'new' and ((force_insert_not_valid_new_source and insert_new_source)
+             or (not validate_source and insert_new_source))):
+        assert link_astrophysical_entity in res['_links']
+    else:
+        assert link_astrophysical_entity not in res['_links']
 
 
 @pytest.mark.test_drupal
