@@ -910,7 +910,7 @@ class DispatcherAPI:
                                      token: str = None,
                                      insert_new_source: bool = False,
                                      validate_source: bool = False,
-                                     force_insert_new_source: bool = False,
+                                     force_insert_not_valid_new_source: bool = False,
                                      apply_fields_source_resolution: bool = True,
                                      **kwargs):
 
@@ -929,6 +929,7 @@ class DispatcherAPI:
 
         # validate source
         src_name = kwargs.get('src_name', None)
+        validated_source = False
         if src_name is not None and validate_source:
             # remove any underscore (following the logic of the resolver) and use the edited one
             copied_kwargs['src_name'] = src_name.replace('_', ' ')
@@ -937,6 +938,7 @@ class DispatcherAPI:
                 msg = f'\nSource {src_name} validated'
                 if 'resolver' in resolved_obj:
                     msg += f' using the service {resolved_obj["resolver"]}'
+                    validated_source = True
                 if 'message' in resolved_obj:
                     if 'Nothing found' in resolved_obj['message']:
                         msg += ' but not found'
@@ -952,10 +954,11 @@ class DispatcherAPI:
                     copied_kwargs['entity_portal_link'] = resolved_obj['entity_portal_link']
             else:
                 logger.warning(f"{src_name} could not be validated")
-                if not force_insert_new_source:
-                    # a source won't be added
-                    logger.warning(f"the specified source will not be added")
-                    kwargs.pop('src_name', None)
+
+            if src_name is not None and not validated_source and not force_insert_not_valid_new_source:
+                # a source won't be added
+                logger.warning(f"the specified source will not be added")
+                copied_kwargs.pop('src_name', None)
 
         params = {
             'content_type': 'data_product',
