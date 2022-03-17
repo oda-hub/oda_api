@@ -4,6 +4,7 @@ from astropy.io import fits
 import numpy as np
 import time
 import jwt
+import os
 
 from cdci_data_analysis.analysis.json import CustomJSONEncoder
 from oda_api.data_products import NumpyDataProduct
@@ -96,6 +97,7 @@ def test_image_product_gallery(dispatcher_api_with_gallery, observation, source_
     encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
 
     product_name = "isgri_image"
+    instrument = "isgri"
     par_dict = {
         "DEC": -24.7456,
         "E1_keV": 28,
@@ -107,7 +109,7 @@ def test_image_product_gallery(dispatcher_api_with_gallery, observation, source_
         "src_name": source_name,
         "max_pointings": 10,
         "detection_threshold": "7.0",
-        "instrument": "isgri",
+        "instrument": instrument,
         "integral_data_rights": "public",
         "oda_api_version": "1.1.22",
         "off_line": "False",
@@ -136,7 +138,9 @@ def test_image_product_gallery(dispatcher_api_with_gallery, observation, source_
                                             observation_id=observation,
                                             token=encoded_token,
                                             e1_kev=e1_kev, e2_kev=e2_kev,
-                                            DEC=dec, RA=ra
+                                            DEC=dec, RA=ra,
+                                            instrument=instrument,
+                                            product_type=product_name
                                             )
 
     if source_name is None:
@@ -161,7 +165,11 @@ def test_image_product_gallery(dispatcher_api_with_gallery, observation, source_
 
 @pytest.mark.test_drupal
 @pytest.mark.parametrize("observation", ['test observation', None])
-def test_light_curve_product_gallery(dispatcher_api_with_gallery, observation):
+@pytest.mark.parametrize("provide_job_id", [True, False])
+@pytest.mark.parametrize("provide_session_id", [True, False])
+@pytest.mark.parametrize("provide_instrument", [True, False])
+@pytest.mark.parametrize("provide_product_type", [True, False])
+def test_light_curve_product_gallery(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery, observation, provide_job_id, provide_session_id, provide_instrument, provide_product_type):
     import oda_api.plot_tools as pt
 
     # let's generate a valid token
@@ -203,18 +211,42 @@ def test_light_curve_product_gallery(dispatcher_api_with_gallery, observation):
     # just some dummy fits file, to test multiple fits file upload
     fits_file_2 = 'data/dummy_prods/query_catalog.fits'
 
+    notebook_link = 'http://test.test/notebook.ipynb'
+
     e1_kev = 45
     e2_kev = 95
 
     dec = 19
     ra = 458
 
+    if not provide_job_id:
+        job_id = None
+    else:
+        job_id = disp.job_id
+    if not provide_session_id:
+        session_id = None
+    else:
+        session_id = disp.session_id
+    if not provide_instrument:
+        instrument = None
+    else:
+        # a difference value
+        instrument = 'jemx'
+    if not provide_product_type:
+        product_type = None
+    else:
+        product_type = 'jemx_lc'
+
     res = disp.post_data_product_to_gallery(product_title=source_name,
                                             gallery_image_path=gallery_image,
                                             fits_file_path=[fits_file_1, fits_file_2],
                                             observation_id=observation,
                                             token=encoded_token,
+                                            produced_by=notebook_link,
+                                            job_id=job_id, session_id=session_id,
                                             e1_kev=e1_kev, e2_kev=e2_kev,
+                                            instrument=instrument,
+                                            product_type=product_type,
                                             DEC=dec, RA=ra)
 
     assert 'title' in res
@@ -231,6 +263,19 @@ def test_light_curve_product_gallery(dispatcher_api_with_gallery, observation):
 
     assert 'field_ra' in res
     assert res['field_ra'][0]['value'] == ra
+
+    assert 'field_produced_by' in res
+    assert res['field_produced_by'][0]['value'] == notebook_link
+
+    if provide_instrument or (provide_job_id and provide_session_id):
+        link_field_instrumentused = os.path.join(dispatcher_test_conf_with_gallery['product_gallery_options']['product_gallery_url'],
+                                                 'rest/relation/node/data_product/field_instrumentused')
+        assert link_field_instrumentused in res['_links']
+
+    if provide_product_type or (provide_job_id and provide_session_id):
+        link_field_data_product_type = os.path.join(dispatcher_test_conf_with_gallery['product_gallery_options']['product_gallery_url'],
+                                                 'rest/relation/node/data_product/field_data_product_type')
+        assert link_field_data_product_type in res['_links']
 
 
 @pytest.mark.test_drupal
