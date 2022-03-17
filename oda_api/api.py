@@ -937,6 +937,9 @@ class DispatcherAPI:
                 msg = f'\nSource {src_name} validated'
                 if 'resolver' in resolved_obj:
                     msg += f' using the service {resolved_obj["resolver"]}'
+                if 'message' in resolved_obj:
+                    if 'Nothing found' in resolved_obj['message']:
+                        msg += ' but not found'
                 msg += '\n'
                 logger.info(msg)
                 if 'RA' in resolved_obj and apply_fields_source_resolution:
