@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import pytest
 import json
 from astropy.io import fits
@@ -5,6 +7,8 @@ import numpy as np
 import time
 import jwt
 import os
+import random
+import string
 
 from cdci_data_analysis.analysis.json import CustomJSONEncoder
 from oda_api.data_products import NumpyDataProduct
@@ -85,8 +89,12 @@ def test_variable_length_table():
 
 @pytest.mark.test_drupal
 @pytest.mark.parametrize("observation", ['test observation', None])
-@pytest.mark.parametrize("source_name", ['GX 1+4', None])
-def test_image_product_gallery(dispatcher_api_with_gallery, observation, source_name):
+@pytest.mark.parametrize("type_source", ["known", "new", None])
+@pytest.mark.parametrize("insert_new_source", [True, False])
+@pytest.mark.parametrize("force_insert_not_valid_new_source", [True, False])
+@pytest.mark.parametrize("validate_source", [True, False])
+@pytest.mark.parametrize("apply_fields_source_resolution", [True, False])
+def test_image_product_gallery(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery, observation, type_source, insert_new_source, force_insert_not_valid_new_source, validate_source, apply_fields_source_resolution):
     import oda_api.plot_tools as pt
 
     # let's generate a valid token
@@ -96,8 +104,15 @@ def test_image_product_gallery(dispatcher_api_with_gallery, observation, source_
     }
     encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
 
+    source_name = None
+    if type_source == "known":
+        source_name = "Crab"
+    elif type_source == "new":
+        source_name = "new_source_" + ''.join(random.choices(string.digits + string.ascii_lowercase, k=5))
+
     product_name = "isgri_image"
     instrument = "isgri"
+
     par_dict = {
         "DEC": -24.7456,
         "E1_keV": 28,
@@ -116,6 +131,7 @@ def test_image_product_gallery(dispatcher_api_with_gallery, observation, source_
         "osa_version": "OSA11.1",
         "product": product_name,
         "product_type": "Dummy",
+        'token': encoded_token
     }
 
     disp = dispatcher_api_with_gallery
@@ -132,23 +148,34 @@ def test_image_product_gallery(dispatcher_api_with_gallery, observation, source_
     dec = 19
     ra = 458
 
-    res = disp.post_data_product_to_gallery(src_name=source_name,
-                                            gallery_image_path=gallery_image,
-                                            fits_file_path=fits_file,
-                                            observation_id=observation,
-                                            token=encoded_token,
-                                            e1_kev=e1_kev, e2_kev=e2_kev,
-                                            DEC=dec, RA=ra,
-                                            instrument=instrument,
-                                            product_type=product_name
-                                            )
+    instrument = 'isgri'
+    product_type = "isgri_image"
 
-    if source_name is None:
-        source_name = 'source'
-    prod_title = source_name + "_" + product_name
+    product_title = "_".join(
+        [instrument, product_type, datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d %H:%M:%S")])
+
+    res = disp.post_data_product_to_gallery(
+        product_title=product_title,
+        instrument=instrument,
+        src_name=source_name,
+        insert_new_source=insert_new_source,
+        force_insert_not_valid_new_source=force_insert_not_valid_new_source,
+        apply_fields_source_resolution=apply_fields_source_resolution,
+        validate_source=validate_source,
+        gallery_image_path=gallery_image,
+        fits_file_path=fits_file,
+        observation_id=observation,
+        token=encoded_token,
+        e1_kev=e1_kev, e2_kev=e2_kev,
+        DEC=dec, RA=ra
+        )
+
+    if type_source == 'known' and validate_source and apply_fields_source_resolution:
+        ra = 83.63
+        dec = 22.01
 
     assert 'title' in res
-    assert res['title'][0]['value'] == prod_title
+    assert res['title'][0]['value'] == product_title
 
     assert 'field_e1_kev' in res
     assert res['field_e1_kev'][0]['value'] == e1_kev
@@ -157,10 +184,20 @@ def test_image_product_gallery(dispatcher_api_with_gallery, observation, source_
     assert res['field_e2_kev'][0]['value'] == e2_kev
 
     assert 'field_dec' in res
-    assert res['field_dec'][0]['value'] == dec
+    assert round(res['field_dec'][0]['value'], 2) == dec
 
     assert 'field_ra' in res
-    assert res['field_ra'][0]['value'] == ra
+    assert round(res['field_ra'][0]['value'], 2) == ra
+
+    link_astrophysical_entity = os.path.join(
+        dispatcher_test_conf_with_gallery['product_gallery_options']['product_gallery_url'],
+        'rest/relation/node/data_product/field_describes_astro_entity')
+    if type_source == 'known' or \
+            (type_source == 'new' and ((force_insert_not_valid_new_source and insert_new_source)
+             or (not validate_source and insert_new_source))):
+        assert link_astrophysical_entity in res['_links']
+    else:
+        assert link_astrophysical_entity not in res['_links']
 
 
 @pytest.mark.test_drupal
@@ -346,3 +383,38 @@ def test_spectrum_product_gallery(dispatcher_api_with_gallery, observation, sour
 
     assert 'field_ra' in res
     assert res['field_ra'][0]['value'] == ra
+
+
+@pytest.mark.parametrize("source_name", ['Mrk 421', 'Mrk_421', 'fake object', None])
+def test_resolve_source(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery, source_name):
+    disp = dispatcher_api_with_gallery
+
+    # let's generate a valid token
+    token_payload = {
+        **default_token_payload,
+        'roles': 'general, gallery contributor'
+    }
+    encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
+
+    resolved_obj = disp.resolve_source(source_name, encoded_token)
+
+    if source_name is None:
+        assert resolved_obj is None
+    elif source_name == 'fake object':
+        assert 'name' in resolved_obj
+        assert 'message' in resolved_obj
+
+        # the name resolver replaces automatically underscores with spaces in the returned name
+        assert resolved_obj['name'] == source_name
+        assert 'Nothing found' in resolved_obj['message']
+    else:
+        assert 'name' in resolved_obj
+        assert 'resolver' in resolved_obj
+        assert 'DEC' in resolved_obj
+        assert 'RA' in resolved_obj
+        assert 'entity_portal_link' in resolved_obj
+
+        assert resolved_obj['name'] == source_name.replace('_', ' ')
+        assert resolved_obj['entity_portal_link'] == dispatcher_test_conf_with_gallery["product_gallery_options"]["entities_portal_url"]\
+            .format(source_name)
+

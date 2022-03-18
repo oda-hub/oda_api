@@ -4,8 +4,9 @@ from __future__ import absolute_import, division, print_function
 from collections import OrderedDict
 from json.decoder import JSONDecodeError
 from astropy.table import Table
+from astropy.coordinates import Angle
 
-# NOTE gw is optional for now 
+# NOTE gw is optional for now
 try:
     import gwpy
     from gwpy.timeseries.timeseries import TimeSeries
@@ -907,7 +908,14 @@ class DispatcherAPI:
                                      gallery_image_path: str = None,
                                      fits_file_path=None,
                                      token: str = None,
+                                     insert_new_source: bool = False,
+                                     validate_source: bool = False,
+                                     force_insert_not_valid_new_source: bool = False,
+                                     apply_fields_source_resolution: bool = True,
                                      **kwargs):
+
+        copied_kwargs = kwargs.copy()
+
         # generate file obj
         files_obj = {}
         if gallery_image_path is not None:
@@ -919,15 +927,47 @@ class DispatcherAPI:
             elif isinstance(fits_file_path, str):
                 files_obj['fits_file'] = open(fits_file_path, 'rb')
 
+        # validate source
+        src_name = kwargs.get('src_name', None)
+        validated_source = False
+        if src_name is not None and validate_source:
+            # remove any underscore (following the logic of the resolver) and use the edited one
+            copied_kwargs['src_name'] = src_name.replace('_', ' ')
+            resolved_obj = self.resolve_source(src_name=src_name, token=token)
+            if resolved_obj is not None:
+                msg = f'\nSource {src_name} validated'
+                if 'resolver' in resolved_obj:
+                    msg += f' using the service {resolved_obj["resolver"]}'
+                    validated_source = True
+                if 'message' in resolved_obj:
+                    if 'Nothing found' in resolved_obj['message']:
+                        msg += ' but not found'
+                msg += '\n'
+                logger.info(msg)
+                if 'RA' in resolved_obj and apply_fields_source_resolution:
+                    RA = Angle(resolved_obj["RA"], unit='degree')
+                    copied_kwargs['RA'] = RA.deg
+                if 'DEC' in resolved_obj and apply_fields_source_resolution:
+                    DEC = Angle(resolved_obj["DEC"], unit='degree')
+                    copied_kwargs['DEC'] = DEC.deg
+                if 'entity_portal_link' in resolved_obj and apply_fields_source_resolution:
+                    copied_kwargs['entity_portal_link'] = resolved_obj['entity_portal_link']
+            else:
+                logger.warning(f"{src_name} could not be validated")
+
+            if src_name is not None and not validated_source and not force_insert_not_valid_new_source:
+                # a source won't be added
+                logger.warning(f"the specified source will not be added")
+                copied_kwargs.pop('src_name', None)
+
         params = {
             'content_type': 'data_product',
             'product_title': product_title,
             'observation_id': observation_id,
             'token': token,
-            **kwargs
+            'insert_new_source': insert_new_source,
+            **copied_kwargs
         }
-
-        logger.info(f"Posting a product on the gallery")
 
         res = requests.post("%s/post_product_to_gallery" % self.url,
                             params={**params},
@@ -946,6 +986,30 @@ class DispatcherAPI:
                         f"For example, you will be able to change the instrument as well as the product type.\n")
 
         return response_json
+
+    def resolve_source(self,
+                       src_name: str = None,
+                       token: str = None):
+        resolved_obj = None
+        if src_name is not None:
+            params = {
+                'name': src_name,
+                'token': token
+            }
+
+            logger.info(f"Searching the object {src_name}\n")
+
+            res = requests.get("%s/resolve_name" % self.url,
+                               params={**params}
+                               )
+            resolved_obj = self._decode_res_json(res)
+
+            if resolved_obj is not None and 'message' in resolved_obj:
+                logger.info(f'{resolved_obj["message"]}')
+        else:
+            logger.info("Please provide the name of the source\n")
+
+        return resolved_obj
 
     def check_missing_parameters_data_product(self, response, token: str = None, **kwargs):
         missing_instrument = True
