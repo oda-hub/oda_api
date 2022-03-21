@@ -87,7 +87,7 @@ def test_instruments():
         host=get_platform_dispatcher(),
         instrument="mock",
     )
-    assert disp.get_instruments_list() == ['magic', 'isgri', 'jemx', 'polar', 'antares', 'spi_acs']
+    assert disp.get_instruments_list() == ['isgri', 'jemx', 'polar', 'antares', 'spi_acs']
 
 
 def test_instrument_description_not_null():
