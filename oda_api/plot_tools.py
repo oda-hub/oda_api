@@ -11,20 +11,23 @@ from builtins import (str, open, range,
 __author__ = "Carlo Ferrigno"
 
 import json
-
 import numpy
-from matplotlib import pylab as plt
-from matplotlib.widgets import Slider, Button, RadioButtons
-from matplotlib import cm
-import time as _time
+import copy
 
-import astropy.wcs as wcs
+from matplotlib import pylab as plt
+from matplotlib.widgets import Slider
+from matplotlib import cm
+
 from astropy import table
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astroquery.simbad import Simbad
-import copy
+
+from .api import UserError
+
+import time as _time
+import astropy.wcs as wcs
 
 # NOTE GW, optional
 try:
@@ -36,19 +39,23 @@ import logging
 
 logger = logging.getLogger("oda_api.plot_tools")
 
-__all__ = ['OdaImage', 'OdaLightCurve']
+__all__ = ['OdaImage', 'OdaLightCurve', 'OdaGWContours', 'OdaSpectrum']
 
 
 class OdaProduct(object):
 
-    def __init__(self, data):
+    def __init__(self, data, name):
         self.data = data
+        self.name = name
         self.meta = None
         self.logger = logger.getChild(self.__class__.__name__.lower())
         self.progress_logger = self.logger.getChild("progress")
 
 
 class OdaImage(OdaProduct):
+
+    def __init__(self, data):
+        super().__init__(data, name='image')
 
     def get_image_for_gallery(self, data=None, meta=None, header=None, sources=None,
              levels=None, cmap=cm.gist_earth, unit_ID=4, det_sigma=3):
@@ -347,6 +354,9 @@ class OdaImage(OdaProduct):
 
 class OdaLightCurve(OdaProduct):
 
+    def __init__(self, data):
+        super().__init__(data, name='lightcurve')
+
     def get_lc(self, source_name, systematic_fraction=0):
 
         combined_lc = self.data
@@ -562,8 +572,17 @@ class OdaLightCurve(OdaProduct):
 
         return lc_fn, tstart, tstop, exposure
 
+    def check_product_for_gallery(self, **kwargs):
+        if 'src_name' not in kwargs:
+            raise UserError(f'the src_name parameter is mandatory for a light-curve product')
+
+        return True
+
 
 class OdaSpectrum(OdaProduct):
+
+    def __init__(self, data):
+        super().__init__(data, name='spectrum')
 
     def show_spectral_products(self):
 
@@ -729,7 +748,18 @@ class OdaSpectrum(OdaProduct):
 
         return spec_fn, tstart, tstop, exposure
 
+    def check_product_for_gallery(self, **kwargs):
+        if 'src_name' not in kwargs:
+            raise UserError(f'the src_name parameter is mandatory for a light-curve product')
+
+        return True
+
+
 class OdaGWContours(OdaProduct):
+
+    def __init__(self, data):
+        # TODO to clarify the name, also for the gallery
+        super().__init__(data, name='contour')
     
     @staticmethod
     def _plot_single_contour(contour_coords, ax, color='r'):
