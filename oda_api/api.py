@@ -914,6 +914,10 @@ class DispatcherAPI:
                                      apply_fields_source_resolution: bool = True,
                                      **kwargs):
 
+        # apply policy for the specific data product
+        # use the product_type, if provided, and apply the policy, if applicable
+        self.check_policy_product(**kwargs)
+
         copied_kwargs = kwargs.copy()
 
         # generate file obj
@@ -987,11 +991,20 @@ class DispatcherAPI:
 
         return response_json
 
+    def check_policy_product(self,
+                             **kwargs):
+        if 'product_type' in kwargs:
+
+            pass
+        else:
+            logger.info("Policy not verifiable")
+            return True
+
     def resolve_source(self,
                        src_name: str = None,
                        token: str = None):
         resolved_obj = None
-        if src_name is not None:
+        if src_name is not None and src_name != '':
             params = {
                 'name': src_name,
                 'token': token
@@ -1008,6 +1021,33 @@ class DispatcherAPI:
                 logger.info(f'{resolved_obj["message"]}')
         else:
             logger.info("Please provide the name of the source\n")
+
+        return resolved_obj
+
+    def check_product_type_policy(self,
+                                  product_type: str = None,
+                                  token: str = None):
+        resolved_obj = None
+        if product_type is not None and product_type != '':
+            params = {
+                'term': product_type,
+                'group': 'products',
+                'token': token
+            }
+
+            logger.info(f"Searching the family of product for the product {product_type}\n")
+
+            res = requests.get("%s/get_parents_term" % self.url,
+                               params={**params}
+                               )
+            parents_term_list = self._decode_res_json(res)[0]
+
+            if parents_term_list is not None:
+                # loop over the available ODAProduct from the plot_tools and find the correspondent one
+
+                logger.info(f'Returned product family for {product_type} is {parents_term_list}')
+        else:
+            logger.info("Please provide the name of the product_type\n")
 
         return resolved_obj
 
