@@ -418,3 +418,38 @@ def test_resolve_source(dispatcher_api_with_gallery, dispatcher_test_conf_with_g
         assert resolved_obj['entity_portal_link'] == dispatcher_test_conf_with_gallery["product_gallery_options"]["entities_portal_url"]\
             .format(source_name)
 
+
+@pytest.mark.parametrize("product_type", ['isgri_image', 'jemx_lc', 'aaaaaa', '', None])
+@pytest.mark.parametrize("provide_source", [True, False])
+def test_check_product_type_policy(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery, product_type, provide_source):
+    disp = dispatcher_api_with_gallery
+
+    # let's generate a valid token
+    token_payload = {
+        **default_token_payload,
+        'roles': 'general, gallery contributor'
+    }
+    encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
+
+    par_dict = {
+        "DEC": -24.7456,
+        "E1_keV": 28,
+        "E2_keV": 50,
+        "RA": 263.0090,
+        "T1": '2012-07-03T00:00:00',
+        "T2": '2014-04-03T17:59:59',
+        "radius": 8,
+        "product_type": product_type,
+    }
+
+    if provide_source:
+        par_dict['src_name'] = 'Crab'
+
+    check_return = disp.check_gallery_data_product_policy(encoded_token, **par_dict)
+
+    if product_type == 'jemx_lc' and provide_source:
+        assert check_return
+    elif product_type == 'jemx_lc' and not provide_source:
+        assert check_return == 'the src_name parameter is mandatory for a light-curve product'
+    else:
+        assert check_return

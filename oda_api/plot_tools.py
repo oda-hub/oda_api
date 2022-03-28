@@ -24,8 +24,6 @@ from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astroquery.simbad import Simbad
 
-from .api import UserError
-
 import time as _time
 import astropy.wcs as wcs
 
@@ -44,9 +42,8 @@ __all__ = ['OdaImage', 'OdaLightCurve', 'OdaGWContours', 'OdaSpectrum']
 
 class OdaProduct(object):
 
-    def __init__(self, data, name):
+    def __init__(self, data):
         self.data = data
-        self.name = name
         self.meta = None
         self.logger = logger.getChild(self.__class__.__name__.lower())
         self.progress_logger = self.logger.getChild("progress")
@@ -54,8 +51,7 @@ class OdaProduct(object):
 
 class OdaImage(OdaProduct):
 
-    def __init__(self, data):
-        super().__init__(data, name='image')
+    name='image'
 
     def get_image_for_gallery(self, data=None, meta=None, header=None, sources=None,
              levels=None, cmap=cm.gist_earth, unit_ID=4, det_sigma=3):
@@ -354,8 +350,7 @@ class OdaImage(OdaProduct):
 
 class OdaLightCurve(OdaProduct):
 
-    def __init__(self, data):
-        super().__init__(data, name='lightcurve')
+    name = 'lightcurve'
 
     def get_lc(self, source_name, systematic_fraction=0):
 
@@ -572,17 +567,16 @@ class OdaLightCurve(OdaProduct):
 
         return lc_fn, tstart, tstop, exposure
 
-    def check_product_for_gallery(self, **kwargs):
+    @staticmethod
+    def check_product_for_gallery(**kwargs):
         if 'src_name' not in kwargs:
-            raise UserError(f'the src_name parameter is mandatory for a light-curve product')
+            return 'the src_name parameter is mandatory for a light-curve product'
 
         return True
 
 
 class OdaSpectrum(OdaProduct):
-
-    def __init__(self, data):
-        super().__init__(data, name='spectrum')
+    name = 'spectrum'
 
     def show_spectral_products(self):
 
@@ -748,18 +742,18 @@ class OdaSpectrum(OdaProduct):
 
         return spec_fn, tstart, tstop, exposure
 
-    def check_product_for_gallery(self, **kwargs):
+    @staticmethod
+    def check_product_for_gallery(**kwargs):
         if 'src_name' not in kwargs:
-            raise UserError(f'the src_name parameter is mandatory for a light-curve product')
+            return 'the src_name parameter is mandatory for a light-curve product'
 
         return True
 
 
 class OdaGWContours(OdaProduct):
 
-    def __init__(self, data):
-        # TODO to clarify the name, also for the gallery
-        super().__init__(data, name='contour')
+    # TODO to clarify the name, also for the gallery
+    name = 'contour'
     
     @staticmethod
     def _plot_single_contour(contour_coords, ax, color='r'):
