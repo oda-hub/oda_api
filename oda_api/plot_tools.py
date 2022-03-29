@@ -588,8 +588,9 @@ class OdaLightCurve(OdaProduct):
     @staticmethod
     def check_product_for_gallery(**kwargs):
         if 'src_name' not in kwargs:
+            logger.warning('The src_name parameter is mandatory for a light-curve product\n')
             raise api.UserError('the src_name parameter is mandatory for a light-curve product')
-        logger.info("Policy for a light-curve product successfully verified")
+        logger.info('Policy for a light-curve product successfully verified\n')
         return True
 
 
@@ -763,9 +764,10 @@ class OdaSpectrum(OdaProduct):
     @staticmethod
     def check_product_for_gallery(**kwargs):
         if 'src_name' not in kwargs:
-            raise api.UserError('the src_name parameter is mandatory for a light-curve product')
+            logger.warning('The src_name parameter is mandatory for a spectrum product\n')
+            raise api.UserError('the src_name parameter is mandatory for a spectrum product')
 
-        logger.info("Policy for a spectrum product successfully verified")
+        logger.info("Policy for a spectrum product successfully verified\n")
         return True
 
 
