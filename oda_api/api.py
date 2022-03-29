@@ -915,7 +915,7 @@ class DispatcherAPI:
 
         # apply policy for the specific data product
         # use the product_type, if provided, and apply the policy, if applicable
-        self.check_policy_product(**kwargs)
+        self.check_gallery_data_product_policy(token=token, **kwargs)
 
         copied_kwargs = kwargs.copy()
 
@@ -990,15 +990,6 @@ class DispatcherAPI:
 
         return response_json
 
-    def check_policy_product(self,
-                             **kwargs):
-        if 'product_type' in kwargs:
-
-            pass
-        else:
-            logger.info("Policy not verifiable")
-            return True
-
     def resolve_source(self,
                        src_name: str = None,
                        token: str = None):
@@ -1048,9 +1039,10 @@ class DispatcherAPI:
                             and hasattr(c, 'name') and c.name is not None and c.name in parents_term_list \
                             and hasattr(c, 'check_product_for_gallery'):
                         return c.check_product_for_gallery(**kwargs)
+            logger.info(f"A policy for the product_type {product_type} could not be verified\n")
         else:
             logger.info("A product_type has not been provided for the given data product, "
-                        "therefore no policy will be applied\n")
+                        "therefore no policy will be verified\n")
 
         return True
 
