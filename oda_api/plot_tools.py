@@ -24,6 +24,8 @@ from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astroquery.simbad import Simbad
 
+import oda_api.api as api
+
 import time as _time
 import astropy.wcs as wcs
 
@@ -586,7 +588,7 @@ class OdaLightCurve(OdaProduct):
     @staticmethod
     def check_product_for_gallery(**kwargs):
         if 'src_name' not in kwargs:
-            return 'the src_name parameter is mandatory for a light-curve product'
+            raise api.UserError('the src_name parameter is mandatory for a light-curve product')
 
         return True
 
@@ -761,7 +763,7 @@ class OdaSpectrum(OdaProduct):
     @staticmethod
     def check_product_for_gallery(**kwargs):
         if 'src_name' not in kwargs:
-            return 'the src_name parameter is mandatory for a light-curve product'
+            raise api.UserError('the src_name parameter is mandatory for a light-curve product')
 
         return True
 
