@@ -11,6 +11,8 @@ import random
 import string
 
 from cdci_data_analysis.analysis.json import CustomJSONEncoder
+
+import oda_api.api
 from oda_api.data_products import NumpyDataProduct
 
 secret_key = 'secretkey_test'
@@ -447,11 +449,8 @@ def test_check_product_type_policy(dispatcher_api_with_gallery, dispatcher_test_
     if provide_source:
         par_dict['src_name'] = 'Crab'
 
-    check_return = disp.check_gallery_data_product_policy(encoded_token, **par_dict)
-
-    if product_type == 'jemx_lc' and provide_source:
-        assert check_return
-    elif product_type == 'jemx_lc' and not provide_source:
-        assert check_return == 'the src_name parameter is mandatory for a light-curve product'
+    if product_type == 'jemx_lc' and not provide_source:
+        with pytest.raises(oda_api.api.UserError):
+            disp.check_gallery_data_product_policy(encoded_token, **par_dict)
     else:
-        assert check_return
+        assert disp.check_gallery_data_product_policy(encoded_token, **par_dict)
