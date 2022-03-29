@@ -1025,7 +1025,7 @@ class DispatcherAPI:
                 'token': token
             }
 
-            logger.info(f"Searching the family of product for the product {product_type}\n")
+            logger.info(f"Applying the policy for the product {product_type}\n")
 
             res = requests.get("%s/get_parents_term" % self.url,
                                params={**params}
@@ -1039,7 +1039,7 @@ class DispatcherAPI:
                             and hasattr(c, 'name') and c.name is not None and c.name in parents_term_list \
                             and hasattr(c, 'check_product_for_gallery'):
                         return c.check_product_for_gallery(**kwargs)
-            logger.info(f"A policy for the product_type {product_type} could not be verified\n")
+            logger.info(f"A policy for the product_type {product_type} could not be applied\n")
         else:
             logger.info("A product_type has not been provided for the given data product, "
                         "therefore no policy will be verified\n")

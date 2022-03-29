@@ -53,7 +53,7 @@ class OdaProduct(object):
 
 class OdaImage(OdaProduct):
 
-    name='image'
+    name = 'image'
 
     def get_image_for_gallery(self, data=None, meta=None, header=None, sources=None,
              levels=None, cmap=cm.gist_earth, unit_ID=4, det_sigma=3):
