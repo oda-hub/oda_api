@@ -385,6 +385,7 @@ def test_spectrum_product_gallery(dispatcher_api_with_gallery, observation, sour
     assert res['field_ra'][0]['value'] == ra
 
 
+@pytest.mark.test_drupal
 @pytest.mark.parametrize("source_name", ['Mrk 421', 'Mrk_421', 'fake object', None])
 def test_resolve_source(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery, source_name):
     disp = dispatcher_api_with_gallery
@@ -419,6 +420,7 @@ def test_resolve_source(dispatcher_api_with_gallery, dispatcher_test_conf_with_g
             .format(source_name)
 
 
+@pytest.mark.test_drupal
 @pytest.mark.parametrize("product_type", ['isgri_image', 'jemx_lc', 'aaaaaa', '', None])
 @pytest.mark.parametrize("provide_source", [True, False])
 def test_check_product_type_policy(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery, product_type, provide_source):
