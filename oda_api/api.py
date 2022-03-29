@@ -1048,9 +1048,9 @@ class DispatcherAPI:
                             and hasattr(c, 'name') and c.name is not None and c.name in parents_term_list \
                             and hasattr(c, 'check_product_for_gallery'):
                         return c.check_product_for_gallery(**kwargs)
-                logger.info(f'Returned product family for {product_type} is {parents_term_list}')
         else:
-            logger.info("Please provide the name of the product_type\n")
+            logger.info("A product_type has not been provided for the given data product, "
+                        "therefore no policy will be applied\n")
 
         return True
 
