@@ -441,7 +441,7 @@ class DispatcherAPI:
             if response.status_code == 500:
                 try:
                     raise DispatcherException(response.json())
-                except simplejson.errors.JSONDecodeError:
+                except simplejson.JSONDecodeError:
                     raise DispatcherException({'error_message': response.text})
 
             if response.status_code != 200:
