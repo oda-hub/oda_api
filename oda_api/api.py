@@ -63,7 +63,7 @@ __all__ = ['Request', 'NoTraceBackWithLineNumber',
 
 
 class Request(object):
-    def __init__(self, ):
+    def __init__(self):
         pass
 
 
