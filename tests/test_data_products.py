@@ -11,6 +11,8 @@ import random
 import string
 
 from cdci_data_analysis.analysis.json import CustomJSONEncoder
+
+import oda_api.api
 from oda_api.data_products import NumpyDataProduct
 
 secret_key = 'secretkey_test'
@@ -385,6 +387,7 @@ def test_spectrum_product_gallery(dispatcher_api_with_gallery, observation, sour
     assert res['field_ra'][0]['value'] == ra
 
 
+@pytest.mark.test_drupal
 @pytest.mark.parametrize("source_name", ['Mrk 421', 'Mrk_421', 'fake object', None])
 def test_resolve_source(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery, source_name):
     disp = dispatcher_api_with_gallery
@@ -418,3 +421,36 @@ def test_resolve_source(dispatcher_api_with_gallery, dispatcher_test_conf_with_g
         assert resolved_obj['entity_portal_link'] == dispatcher_test_conf_with_gallery["product_gallery_options"]["entities_portal_url"]\
             .format(source_name)
 
+
+@pytest.mark.test_drupal
+@pytest.mark.parametrize("product_type", ['isgri_image', 'jemx_lc', 'aaaaaa', '', None])
+@pytest.mark.parametrize("provide_source", [True, False])
+def test_check_product_type_policy(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery, product_type, provide_source):
+    disp = dispatcher_api_with_gallery
+
+    # let's generate a valid token
+    token_payload = {
+        **default_token_payload,
+        'roles': 'general, gallery contributor'
+    }
+    encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
+
+    par_dict = {
+        "DEC": -24.7456,
+        "E1_keV": 28,
+        "E2_keV": 50,
+        "RA": 263.0090,
+        "T1": '2012-07-03T00:00:00',
+        "T2": '2014-04-03T17:59:59',
+        "radius": 8,
+        "product_type": product_type,
+    }
+
+    if provide_source:
+        par_dict['src_name'] = 'Crab'
+
+    if product_type == 'jemx_lc' and not provide_source:
+        with pytest.raises(oda_api.api.UserError):
+            disp.check_gallery_data_product_policy(encoded_token, **par_dict)
+    else:
+        assert disp.check_gallery_data_product_policy(encoded_token, **par_dict)

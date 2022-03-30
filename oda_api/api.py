@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, division, print_function
 
 from collections import OrderedDict
@@ -12,14 +11,12 @@ try:
     from gwpy.timeseries.timeseries import TimeSeries
     from gwpy.spectrogram import Spectrogram
 except ModuleNotFoundError:
-    pass    
+    pass
 
 from .data_products import NumpyDataProduct, BinaryData, ApiCatalog, GWContoursDataProduct
 
 from builtins import (bytes, str, open, super, range,
                       zip, round, input, int, pow, object, map, zip)
-
-
 
 __author__ = "Andrea Tramacere, Volodymyr Savchenko"
 
@@ -29,10 +26,10 @@ import ast
 import json
 
 try:
-    #compatibility in some remaining environments
-    import simplejson # type: ignore
+    # compatibility in some remaining environments
+    import simplejson  # type: ignore
 except ImportError:
-    import json as simplejson # type: ignore
+    import json as simplejson  # type: ignore
 
 import random
 import string
@@ -46,6 +43,7 @@ import pickle
 from . import __version__
 from . import custom_formatters
 from . import colors as C
+from . import plot_tools
 from itertools import cycle
 import numpy as np
 import traceback
@@ -60,13 +58,12 @@ import logging
 logger = logging.getLogger("oda_api.api")
 advice_logger = logging.getLogger("oda_api.advice")
 
-
 __all__ = ['Request', 'NoTraceBackWithLineNumber',
            'NoTraceBackWithLineNumber', 'RemoteException', 'DispatcherAPI']
 
 
 class Request(object):
-    def __init__(self,):
+    def __init__(self):
         pass
 
 
@@ -102,8 +99,10 @@ class FailedToFindAnyUsefulResults(RemoteException):
 class UnexpectedDispatcherStatusCode(RemoteException):
     pass
 
+
 class DispatcherNotAvailable(RemoteException):
     pass
+
 
 class RequestNotUnderstood(Exception):
     def __init__(self, details_json) -> None:
@@ -115,11 +114,14 @@ class RequestNotUnderstood(Exception):
     def __str__(self) -> str:
         return repr(self)
 
+
 class Unauthorized(RemoteException):
     pass
 
+
 class URLRedirected(Exception):
     pass
+
 
 class DispatcherException(Exception):
     def __init__(self, response_json) -> None:
@@ -127,7 +129,6 @@ class DispatcherException(Exception):
 
     def __repr__(self) -> str:
         return f"[ {self.__class__.__name__}: {self.response_json.get('error_message', '[no error message reported]')} ]"
-        
 
 
 exception_by_message = {
@@ -136,7 +137,6 @@ exception_by_message = {
 
 
 def safe_run(func):
-
     def func_wrapper(*args, **kwargs):
         logger = logging.getLogger("oda_api.api." + func.__name__)
 
@@ -152,7 +152,8 @@ def safe_run(func):
                 logger.exception("probably an unfortunate user input: %s", e)
                 raise
             except (Unauthorized, RequestNotUnderstood, UnexpectedDispatcherStatusCode) as e:
-                logger.exception("something went quite wrong, and we think it's not likely to recover on its own: %s", e)
+                logger.exception("something went quite wrong, and we think it's not likely to recover on its own: %s",
+                                 e)
                 raise
             except (ConnectionError,
                     requests.exceptions.ConnectionError,
@@ -165,7 +166,7 @@ def safe_run(func):
                 message += '\nin ' + str(func) + ' called with:'
                 message += '\n... ' + ", ".join([str(arg) for arg in args])
                 message += '\n... ' + \
-                    ", ".join([k+": "+str(v) for k, v in kwargs])
+                           ", ".join([k + ": " + str(v) for k, v in kwargs])
                 message += '\npossible causes:'
                 message += '\n- connection error'
                 message += '\n- error on the remote server'
@@ -177,9 +178,10 @@ def safe_run(func):
 
                 if n_tries_left > 0:
                     logger.debug("problem in API call, %i tries left:\n%s\n sleeping %i seconds until retry",
-                                   n_tries_left, message, retry_sleep_s)
-                    logger.warning("possibly temporary problem in calling server: %s in %.1f seconds, %i tries left, sleeping %i seconds until retry",
-                                   repr(e), time.time() - t0, n_tries_left, retry_sleep_s)                                   
+                                 n_tries_left, message, retry_sleep_s)
+                    logger.warning(
+                        "possibly temporary problem in calling server: %s in %.1f seconds, %i tries left, sleeping %i seconds until retry",
+                        repr(e), time.time() - t0, n_tries_left, retry_sleep_s)
                     time.sleep(retry_sleep_s)
                 else:
                     raise RemoteException(
@@ -190,8 +192,7 @@ def safe_run(func):
 
 
 class DispatcherAPI:
-
-    # allowing token discovery by default changes the user interface in some cases, 
+    # allowing token discovery by default changes the user interface in some cases,
     # but in desirable way
     token_discovery_methods = None
 
@@ -220,7 +221,7 @@ class DispatcherAPI:
             warnings.warn(msg, DeprecationWarning)
             self.url = host
 
-            #TODO: disregard this, but leave parameter for compatibility
+            # TODO: disregard this, but leave parameter for compatibility
             if host.startswith('http'):
                 self.url = host
             else:
@@ -267,21 +268,21 @@ class DispatcherAPI:
         # TODO this should really be just swagger/bravado; or at least derived from resources
         self.dispatcher_response_schema = {
             'type': 'object',
+            'properties': {
+                'exit_status': {
+                    'type': 'object',
                     'properties': {
-                        'exit_status': {
-                            'type': 'object',
-                            'properties': {
-                                    'status': {'type': 'number'},
-                            },
-                        },
-                        'query_status': {'type': 'string'},
-                        'job_monitor': {
-                            'type': 'object',
-                            'properties': {
-                                    'job_id': {'type': 'string'},
-                            },
-                        },
-                    }
+                        'status': {'type': 'number'},
+                    },
+                },
+                'query_status': {'type': 'string'},
+                'job_monitor': {
+                    'type': 'object',
+                    'properties': {
+                        'job_id': {'type': 'string'},
+                    },
+                },
+            }
         }
 
     def inspect_state(self, job_id=None):
@@ -343,7 +344,7 @@ class DispatcherAPI:
     def note_request_time(self):
         self.request_stats = getattr(self, 'request_stats', [])
         self.request_stats.append(
-            self.last_request_t_complete-self.last_request_t0)
+            self.last_request_t_complete - self.last_request_t0)
 
     @property
     def preferred_request_method(self):
@@ -406,7 +407,7 @@ class DispatcherAPI:
                     },
                     timeout=timeout,
                     allow_redirects=False
-                )                
+                )
             else:
                 NotImplementedError
 
@@ -421,7 +422,7 @@ class DispatcherAPI:
 
             if response.status_code == 403:
                 try:
-                    response_json = response.json()                                                        
+                    response_json = response.json()
                 except JSONDecodeError:
                     raise Unauthorized(f"undecodable: {response.text}")
 
@@ -429,7 +430,7 @@ class DispatcherAPI:
                     raise Unauthorized(response_json['exit_status']['message'])
                 except KeyError:
                     raise Unauthorized(response_json['error'])
-            
+
             if response.status_code == 400:
                 raise RequestNotUnderstood(
                     response.json())
@@ -440,7 +441,7 @@ class DispatcherAPI:
             if response.status_code == 500:
                 try:
                     raise DispatcherException(response.json())
-                except simplejson.errors.JSONDecodeError:
+                except simplejson.JSONDecodeError:
                     raise DispatcherException({'error_message': response.text})
 
             if response.status_code != 200:
@@ -454,7 +455,7 @@ class DispatcherAPI:
             response_json = self._decode_res_json(response)
 
             validate_json(response_json, self.dispatcher_response_schema)
-            
+
             self.returned_analysis_parameters = response_json['products'].get('analysis_parameters', None)
 
             return response_json
@@ -464,7 +465,7 @@ class DispatcherAPI:
             self.logger.error(f"{C.RED}{response.text}{C.NC}")
             raise
 
-    def returned_analysis_parameters_consistency(self):    
+    def returned_analysis_parameters_consistency(self):
         mismatching_parameters = []
         for k in self.parameters_dict.keys():
             # these do not correspond to meaning
@@ -485,7 +486,7 @@ class DispatcherAPI:
 
         if mismatching_parameters != []:
             raise RuntimeError(f"dispatcher return different parameters: {'; '.join(mismatching_parameters)}")
-    
+
     @property
     def parameters_dict(self):
         """
@@ -510,13 +511,13 @@ class DispatcherAPI:
         }
 
         if self.is_submitted:
-             return {
-                 **p,
+            return {
+                **p,
                 'job_id': self.job_id,
                 'query_status': self.query_status,
-             }
+            }
         else:
-             return p
+            return p
 
     @parameters_dict_payload.setter
     def parameters_dict_payload(self, value):
@@ -615,8 +616,9 @@ class DispatcherAPI:
         # >
         self.response_json = self.request_to_json()
         # <
-            
-        logger.info("session: %s job: %s", self.response_json['job_monitor']['session_id'], self.response_json['job_monitor']['job_id'])
+
+        logger.info("session: %s job: %s", self.response_json['job_monitor']['session_id'],
+                    self.response_json['job_monitor']['job_id'])
 
         if 'query_status' not in self.response_json:
             logger.error(json.dumps(self.response_json, indent=4))
@@ -638,13 +640,13 @@ class DispatcherAPI:
                 f"... assigned job id: {C.BROWN}{self.job_id}{C.NC}")
         else:
             if self.response_json['query_status'] != self.query_status:
-                raise RuntimeError(f"request returns query_status {self.response_json['query_status']} != recorded query_status {self.query_status}"
-                                   f"this should not happen! Server must be misbehaving, or client forgot correct query_status")
+                raise RuntimeError(
+                    f"request returns query_status {self.response_json['query_status']} != recorded query_status {self.query_status}"
+                    f"this should not happen! Server must be misbehaving, or client forgot correct query_status")
 
             if self.job_id != returned_job_id:
                 raise RuntimeError(f"request returns job_id {returned_job_id} != recorded job_id {self.job_id}"
                                    f"this should not happen! Server must be misbehaving, or client forgot correct job id")
-
 
         if self.query_status == 'done':
             self.logger.info(
@@ -799,7 +801,7 @@ class DispatcherAPI:
     def _decode_res_json(self, res):
         try:
             if hasattr(res, 'content'):
-                #_js = json.loads(res.content)
+                # _js = json.loads(res.content)
                 # fixed issue with python 3.5
                 _js = res.json()
                 res = ast.literal_eval(str(_js).replace('null', 'None'))
@@ -819,13 +821,10 @@ class DispatcherAPI:
             msg += '- error on the remote server\n'
             msg += "--------------------------------------------------------------\n"
             if hasattr(res, 'status_code'):
-
                 msg += '--- status code:-> %s\n' % res.status_code
             if hasattr(res, 'text'):
-
                 msg += '--- response text ---\n %s\n' % res.text
             if hasattr(res, 'content'):
-
                 msg += '--- res content ---\n %s\n' % res.content
             msg += "--------------------------------------------------------------"
 
@@ -861,7 +860,7 @@ class DispatcherAPI:
 
     @safe_run
     def get_instruments_list(self):
-        #print ('instr',self.instrument)
+        # print ('instr',self.instrument)
         res = requests.get("%s/api/instr-list" % self.url,
                            params=dict(instrument=self.instrument), cookies=self.cookies)
 
@@ -913,6 +912,10 @@ class DispatcherAPI:
                                      force_insert_not_valid_new_source: bool = False,
                                      apply_fields_source_resolution: bool = True,
                                      **kwargs):
+
+        # apply policy for the specific data product
+        # use the product_type, if provided, and apply the policy, if applicable
+        self.check_gallery_data_product_policy(token=token, **kwargs)
 
         copied_kwargs = kwargs.copy()
 
@@ -991,7 +994,7 @@ class DispatcherAPI:
                        src_name: str = None,
                        token: str = None):
         resolved_obj = None
-        if src_name is not None:
+        if src_name is not None and src_name != '':
             params = {
                 'name': src_name,
                 'token': token
@@ -1010,6 +1013,38 @@ class DispatcherAPI:
             logger.info("Please provide the name of the source\n")
 
         return resolved_obj
+
+    def check_gallery_data_product_policy(self,
+                                          token: str = None,
+                                          **kwargs):
+        product_type = kwargs.get('product_type', None)
+        if product_type is not None and product_type != '':
+            params = {
+                'term': product_type,
+                'group': 'products',
+                'token': token
+            }
+
+            logger.info(f"Applying the policy for the product {product_type}\n")
+
+            res = requests.get("%s/get_parents_term" % self.url,
+                               params={**params}
+                               )
+            parents_term_list = self._decode_res_json(res)
+
+            if parents_term_list is not None and isinstance(parents_term_list, list):
+                # loop over the available ODAProduct from the plot_tools and find the correspondent one
+                for name, c in inspect.getmembers(plot_tools, inspect.isclass):
+                    if issubclass(c, plot_tools.OdaProduct) \
+                            and hasattr(c, 'name') and c.name is not None and c.name in parents_term_list \
+                            and hasattr(c, 'check_product_for_gallery'):
+                        return c.check_product_for_gallery(**kwargs)
+            logger.info(f"A policy for the product_type {product_type} could not be applied\n")
+        else:
+            logger.info("A product_type has not been provided for the given data product, "
+                        "therefore no policy will be verified\n")
+
+        return True
 
     def check_missing_parameters_data_product(self, response, token: str = None, **kwargs):
         missing_instrument = True
@@ -1032,7 +1067,8 @@ class DispatcherAPI:
 
         if missing_product_type:
             if not missing_instrument and instrument_used is not None:
-                list_instrument_data_products = self.get_list_terms_gallery(group='products', parent=instrument_used, token=token)
+                list_instrument_data_products = self.get_list_terms_gallery(group='products', parent=instrument_used,
+                                                                            token=token)
                 if list_instrument_data_products is not None:
                     logger.info(f'\nWe noticed no product type has been specified,\n'
                                 f'for the instrument {instrument_used}, the following products are available:\n'
@@ -1052,10 +1088,10 @@ class DispatcherAPI:
 
         if not silent:
             advice_logger.warning('please beware that by default, in a typical setup, oda_api will not output much. '
-                                'To learn how to increase the verbosity, please refer to the documentation: '
-                                'https://oda-api.readthedocs.io/en/latest/user_guide/ScienceWindowList.html?highlight=logging#Let\'s-get-some-logging . \n'
-                                'To disable this message you can pass `.get_product(..., silent=True)`'
-                                )
+                                  'To learn how to increase the verbosity, please refer to the documentation: '
+                                  'https://oda-api.readthedocs.io/en/latest/user_guide/ScienceWindowList.html?highlight=logging#Let\'s-get-some-logging . \n'
+                                  'To disable this message you can pass `.get_product(..., silent=True)`'
+                                  )
 
         self.job_id = None
 
@@ -1113,9 +1149,9 @@ class DispatcherAPI:
             discovered_token = oda_api.token.discover_token(self.token_discovery_methods)
             if discovered_token is not None:
                 logger.info("discovered token in environment")
-                kwargs['token'] = discovered_token            
+                kwargs['token'] = discovered_token
 
-        # >
+                # >
         self.request(kwargs)
 
         if self.is_failed:
@@ -1137,7 +1173,7 @@ class DispatcherAPI:
         d = DataCollection.from_response_json(
             res_json, instrument, product)
 
-        del(res)
+        del (res)
 
         return d
 
@@ -1242,13 +1278,13 @@ class DataCollection(object):
                 if kw in prod.meta_data:
                     s = prod.meta_data[kw].replace(' ', '')
                     if s.strip() != '':
-                        name += '_'+s.strip()
+                        name += '_' + s.strip()
         return name, oda_api.misc_helpers.clean_var_name(name)
 
     def save_all_data(self, prenpend_name=None):
         for pname, prod in zip(self._n_list, self._p_list):
             if prenpend_name is not None:
-                file_name = prenpend_name+'_'+pname
+                file_name = prenpend_name + '_' + pname
             else:
                 file_name = pname
 
@@ -1299,35 +1335,33 @@ class DataCollection(object):
                          for table_binary in res_json['products']['astropy_table_product_binary_list']])
 
         if 'gw_strain_product_list' in res_json['products'].keys():
-            data.extend([TimeSeries(strain_data['value'], 
-                                    name = strain_data['name'],
-                                    t0 = strain_data['t0'],
-                                    dt = strain_data['dt']) 
+            data.extend([TimeSeries(strain_data['value'],
+                                    name=strain_data['name'],
+                                    t0=strain_data['t0'],
+                                    dt=strain_data['dt'])
                          for strain_data in res_json['products']['gw_strain_product_list']])
-        
+
         if 'gw_spectrogram_product' in res_json['products'].keys():
             sgram = res_json['products']['gw_spectrogram_product']
             data.append(Spectrogram(sgram['value'],
-                                    name = 'Spectrogram',
-                                    unit = 's',
-                                    t0 = sgram['x0'],
-                                    dt = sgram['dx'],
-                                    frequencies = sgram['yindex']
+                                    name='Spectrogram',
+                                    unit='s',
+                                    t0=sgram['x0'],
+                                    dt=sgram['dx'],
+                                    frequencies=sgram['yindex']
                                     )
                         )
-        
+
         if 'gw_skymap_product' in res_json['products'].keys():
             skmap = res_json['products']['gw_skymap_product']
             for event in skmap['skymaps'].keys():
                 data.append(NumpyDataProduct.decode(skmap['skymaps'][event]))
             if 'contours' in skmap.keys():
-                data.append(GWContoursDataProduct(skmap['contours'])) 
-      
-        
+                data.append(GWContoursDataProduct(skmap['contours']))
+
         d = cls(data, instrument=instrument, product=product)
         for p in d._p_list:
             if hasattr(p, 'meta_data') is False and hasattr(p, 'meta') is True:
                 p.meta_data = p.meta
 
         return d
-
