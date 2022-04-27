@@ -34,3 +34,4 @@ DispatcherAPI
    .. automethod:: get_product_description
    .. automethod:: request
    .. automethod:: set_instr
+   .. automethod:: post_data_product_to_gallery
