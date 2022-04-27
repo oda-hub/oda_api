@@ -20,6 +20,7 @@ DispatcherAPI
       ~DispatcherAPI.get_product_description
       ~DispatcherAPI.request
       ~DispatcherAPI.set_instr
+      ~DispatcherAPI.post_data_product_to_gallery
 
    .. rubric:: Methods Documentation
 
