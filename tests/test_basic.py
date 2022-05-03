@@ -71,15 +71,15 @@ def test_job_id_data_collection(dispatcher_api):
         p=10
     )
 
-    job_id_first = prods_first.job_id
+    job_id_first_request = prods_first.request_job_id
     f_query_output = None
-    list_scratch_dir = glob.glob( f'scratch_sid_*_jid_{job_id_first}')
+    list_scratch_dir = glob.glob( f'scratch_sid_*_jid_{job_id_first_request}')
     if len(list_scratch_dir) >= 1:
         f_query_output = open(os.path.join(list_scratch_dir[0], 'query_output.json'))
 
     assert f_query_output is not None
     jdata_output = json.load(f_query_output)
-    assert jdata_output['prod_dictionary']['job_id'] == job_id_first
+    assert jdata_output['prod_dictionary']['job_id'] == job_id_first_request
 
     prods_second = disp.get_product(
         product_type="Dummy",
@@ -88,17 +88,17 @@ def test_job_id_data_collection(dispatcher_api):
         p=9
     )
 
-    job_id_second = prods_second.job_id
+    job_id_second_request = prods_second.request_job_id
     f_query_output = None
-    list_scratch_dir = glob.glob(f'scratch_sid_*_jid_{job_id_second}')
+    list_scratch_dir = glob.glob(f'scratch_sid_*_jid_{job_id_second_request}')
     if len(list_scratch_dir) >= 1:
         f_query_output = open(os.path.join(list_scratch_dir[0], 'query_output.json'))
 
     assert f_query_output is not None
     jdata_output = json.load(f_query_output)
-    assert jdata_output['prod_dictionary']['job_id'] == job_id_second
+    assert jdata_output['prod_dictionary']['job_id'] == job_id_second_request
 
-    assert job_id_second != job_id_first
+    assert job_id_second_request != job_id_first_request
 
 
 def test_oda_api_code(dispatcher_api):
