@@ -911,6 +911,7 @@ class DispatcherAPI:
                                      validate_source: bool = False,
                                      force_insert_not_valid_new_source: bool = False,
                                      apply_fields_source_resolution: bool = True,
+                                     update_data_product:bool=False,
                                      **kwargs):
         """
 
@@ -932,6 +933,8 @@ class DispatcherAPI:
         :param apply_fields_source_resolution: a boolean value to specify if, in case a source is passed within the
                 parameters and then successfully validated, to apply the parameters values returned from the validation
                 (an example of these parameters are RA and DEC)
+        :param update_data_product: a boolean value to specify if, in case a job_id from a request is passed within the parameters,
+               this will be used to update the correspondent the data_product over the product_gallery with the job_id assigned
         :param kwargs: keyword arguments representing the main parameters values used to generate the product. Amongst them,
                it is important to mention the following ones:
             * instrument: name of the instrument used for the generated product (e.g. isgri, jemx1)
