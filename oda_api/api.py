@@ -1249,10 +1249,10 @@ data_collection = disp.get_product(**par_dict)
 
 class DataCollection(object):
 
-    def __init__(self, data_list, add_meta_to_name=['src_name', 'product'], instrument=None, product=None, job_id=None):
+    def __init__(self, data_list, add_meta_to_name=['src_name', 'product'], instrument=None, product=None, request_job_id=None):
         self._p_list = []
         self._n_list = []
-        self.job_id = job_id
+        self.request_job_id = request_job_id
         for ID, data in enumerate(data_list):
 
             name = ''
@@ -1275,14 +1275,6 @@ class DataCollection(object):
 
             self._p_list.append(data)
             self._n_list.append(var_name)
-
-    @property
-    def job_id(self):
-        return getattr(self, '_job_id', None)
-
-    @job_id.setter
-    def job_id(self, new_job_id):
-        self._job_id = new_job_id
 
     def show(self):
         for ID, prod_name in enumerate(self._n_list):
@@ -1397,7 +1389,7 @@ class DataCollection(object):
             if 'contours' in skmap.keys():
                 data.append(GWContoursDataProduct(skmap['contours']))
 
-        d = cls(data, instrument=instrument, product=product, job_id=res_json['job_monitor']['job_id'])
+        d = cls(data, instrument=instrument, product=product, request_job_id=res_json['job_monitor']['job_id'])
         for p in d._p_list:
             if hasattr(p, 'meta_data') is False and hasattr(p, 'meta') is True:
                 p.meta_data = p.meta
