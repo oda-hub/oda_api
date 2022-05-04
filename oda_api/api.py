@@ -1249,9 +1249,10 @@ data_collection = disp.get_product(**par_dict)
 
 class DataCollection(object):
 
-    def __init__(self, data_list, add_meta_to_name=['src_name', 'product'], instrument=None, product=None):
+    def __init__(self, data_list, add_meta_to_name=['src_name', 'product'], instrument=None, product=None, request_job_id=None):
         self._p_list = []
         self._n_list = []
+        self.request_job_id = request_job_id
         for ID, data in enumerate(data_list):
 
             name = ''
@@ -1388,7 +1389,7 @@ class DataCollection(object):
             if 'contours' in skmap.keys():
                 data.append(GWContoursDataProduct(skmap['contours']))
 
-        d = cls(data, instrument=instrument, product=product)
+        d = cls(data, instrument=instrument, product=product, request_job_id=res_json['job_monitor']['job_id'])
         for p in d._p_list:
             if hasattr(p, 'meta_data') is False and hasattr(p, 'meta') is True:
                 p.meta_data = p.meta
