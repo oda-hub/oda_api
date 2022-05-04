@@ -11,20 +11,23 @@ from builtins import (str, open, range,
 __author__ = "Carlo Ferrigno"
 
 import json
-
 import numpy
-from matplotlib import pylab as plt
-from matplotlib.widgets import Slider, Button, RadioButtons
-from matplotlib import cm
-import time as _time
+import copy
 
-import astropy.wcs as wcs
+from matplotlib import pylab as plt
+from matplotlib.widgets import Slider
+from matplotlib import cm
+
 from astropy import table
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astroquery.simbad import Simbad
-import copy
+
+import oda_api.api as api
+
+import time as _time
+import astropy.wcs as wcs
 
 # NOTE GW, optional
 try:
@@ -36,7 +39,7 @@ import logging
 
 logger = logging.getLogger("oda_api.plot_tools")
 
-__all__ = ['OdaImage', 'OdaLightCurve']
+__all__ = ['OdaImage', 'OdaLightCurve', 'OdaGWContours', 'OdaSpectrum']
 
 
 class OdaProduct(object):
@@ -48,6 +51,8 @@ class OdaProduct(object):
         self.progress_logger = self.logger.getChild("progress")
 
 class OdaImage(OdaProduct):
+
+    name = 'image'
 
     def get_image_for_gallery(self, data=None, meta=None, header=None, sources=None,
              levels=None, cmap=cm.gist_earth, unit_ID=4, det_sigma=3):
@@ -136,11 +141,13 @@ class OdaImage(OdaProduct):
         if len(sources) > 0:
             ras = numpy.array([x for x in sources['ra']])
             decs = numpy.array([x for x in sources['dec']])
-            names = numpy.array([x for x in sources['src_names']])
-            sigmas = numpy.array([x for x in sources['significance']])
+            if 'src_names' in sources.columns:
+                names = numpy.array([x for x in sources['src_names']])
+                # Defines relevant indexes for plotting regions
+                m_new = numpy.array(['NEW' in name for name in names])
+            if 'significance' in sources.columns:
+                sigmas = numpy.array([x for x in sources['significance']])
 
-            # Defines relevant indexes for plotting regions
-            m_new = numpy.array(['NEW' in name for name in names])
 
             # plot new sources as pink circles
             try:
@@ -191,6 +198,20 @@ class OdaImage(OdaProduct):
                 plt.text(ra_coord[i],
                          dec_coord[i] + 0.5,
                          cat_names[i], color="magenta", size=15)
+                
+            #fallback for general catalog (e.g. legacysurvey)
+            if not 'src_names' in sources.columns or not 'significance' in sources.columns:
+                ra_coord = ras
+                dec_coord = decs
+                if zero_crossing:
+                    ind_ra = ra_coord > 180.
+                    try:
+                        ra_coord[ind_ra] -= 360.
+                    except:
+                        pass
+                plt.scatter(ra_coord, dec_coord, s=30, marker="o", facecolors='none',
+                        edgecolors='magenta', lw=0.5, zorder=5)
+            
 
         plt.grid(color="grey", zorder=10)
 
@@ -350,6 +371,8 @@ class OdaImage(OdaProduct):
 
 
 class OdaLightCurve(OdaProduct):
+
+    name = 'lightcurve'
 
     def get_lc(self, source_name, systematic_fraction=0):
 
@@ -566,8 +589,17 @@ class OdaLightCurve(OdaProduct):
 
         return lc_fn, tstart, tstop, exposure
 
+    @staticmethod
+    def check_product_for_gallery(**kwargs):
+        if 'src_name' not in kwargs:
+            logger.warning('The src_name parameter is mandatory for a light-curve product\n')
+            raise api.UserError('the src_name parameter is mandatory for a light-curve product')
+        logger.info('Policy for a light-curve product successfully verified\n')
+        return True
+
 
 class OdaSpectrum(OdaProduct):
+    name = 'spectrum'
 
     def show_spectral_products(self):
 
@@ -733,7 +765,20 @@ class OdaSpectrum(OdaProduct):
 
         return spec_fn, tstart, tstop, exposure
 
+    @staticmethod
+    def check_product_for_gallery(**kwargs):
+        if 'src_name' not in kwargs:
+            logger.warning('The src_name parameter is mandatory for a spectrum product\n')
+            raise api.UserError('the src_name parameter is mandatory for a spectrum product')
+
+        logger.info("Policy for a spectrum product successfully verified\n")
+        return True
+
+
 class OdaGWContours(OdaProduct):
+
+    # TODO to clarify the name, also for the gallery
+    name = 'contour'
     
     @staticmethod
     def _plot_single_contour(contour_coords, ax, color='r'):

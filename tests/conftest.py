@@ -11,6 +11,7 @@ from cdci_data_analysis.pytest_fixtures import (
             dispatcher_debug,
             dispatcher_nodebug,
             dispatcher_long_living_fixture,
+            dispatcher_test_conf_with_gallery,
             default_token_payload,
         )
 

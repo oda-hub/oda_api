@@ -21,6 +21,8 @@ The following tutorial covers a large fraction of the code features. The example
    
    Gravitational Wave Analysis <GravitationalWaves.rst>
 
+   DESI LegacySurvey data <LegacySurvey.rst>
+
    Upload a product to the Product Gallery <UploadToGallery.ipynb>
 
    Examples of workflows <https://github.com/cdcihub/oda_api_benchmark>

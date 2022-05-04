@@ -1,3 +1,8 @@
+from datetime import datetime
+from email.policy import default
+import json
+from attr import validate
+from black import out
 import click
 import logging
 import time
@@ -127,6 +132,31 @@ def modify(obj, disable_email, new_validity_hours):
 
     logger.info("your new token payload: %s", repr(format_token(decoded_token)))
     logger.info("your new token (secret!): %s", updated_token.decode() if isinstance(updated_token, bytes) else updated_token)
+
+
+@cli.command("inspect")
+@click.option("-s", "--store", default="dispatcher-state.json")
+@click.option("-j", "--job-id", default=None)
+@click.option("-l", "--local", default=False, is_flag=True)
+# @click.option("-V", "--validate", default=None)
+@click.pass_obj
+def inspect_state(obj, store, job_id, local):
+    if local:
+        state = json.load(open(store))
+    else:
+        state = obj['dispatcher'].inspect_state(job_id=job_id)    
+        json.dump(
+                state,
+                open(store, "w"),
+                indent=4,
+                sort_keys=True,
+            )
+
+    # if validate:
+    for record in sorted(state['records'], key=lambda r:r['mtime']):
+        print("session_id", record['session_id'], "job_id", record['job_id'], datetime.fromtimestamp(record['mtime']))
+        for email in record.get('analysis_parameters', {}).get('email_history', []):
+            print("    - ", email)
 
 
 def main():
