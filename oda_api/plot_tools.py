@@ -47,7 +47,6 @@ class OdaProduct(object):
         self.logger = logger.getChild(self.__class__.__name__.lower())
         self.progress_logger = self.logger.getChild("progress")
 
-
 class OdaImage(OdaProduct):
 
     def get_image_for_gallery(self, data=None, meta=None, header=None, sources=None,
@@ -331,12 +330,17 @@ class OdaImage(OdaProduct):
                        clean_sources['JEMX_FLAG'][ind] = isgri_flag
                 else:
                     self.logger.info('Adding ' + ooi + ' to catalog')
-                    try:
+                    if ('flux' in clean_sources.colnames or 'Flux' in clean_sources.colnames or \
+                        'FLUX' in clean_sources.colnames) and 'ISGRI_FLAG' in clean_sources.colnames:
                         self.logger.debug('Flux is present')
                         clean_sources.add_row((0, ooi, 0, ra, dec, 0, isgri_flag, flag, 1e-3, 0, 0))
-                    except:
-                        self.logger.debug('Flux is NOT present')
+                    elif 'ISGRI_FLAG' in clean_sources.colnames:
+                        self.logger.debug('Flux is NOT present but ISGRI_FLAG is present')
                         clean_sources.add_row((0, ooi, 0, ra, dec, 0, isgri_flag, flag, 1e-3))
+                    else:
+                        self.logger.debug('Flux and ISGRI_FLAG are NOT present')
+                        clean_sources.add_row((0, ooi, 0, ra, dec, flag, 1e-3))
+
 
                 unique_sources = table.unique(clean_sources, keys=['src_names'])
 
@@ -627,8 +631,8 @@ class OdaSpectrum(OdaProduct):
 
         x = (ebounds.data['E_MAX'] + ebounds.data['E_MIN'])/2.
         dx = (ebounds.data['E_MAX'] - ebounds.data['E_MIN']) / 2.
-        y = spec.data['RATE']
-        dy = numpy.sqrt(spec.data['STAT_ERR']**2 + spec.data['SYS_ERR']**2 + (y*systematic_fraction)**2)
+        y = spec.data['RATE']/dx
+        dy = numpy.sqrt(spec.data['STAT_ERR']**2 + spec.data['SYS_ERR']**2 + (y*systematic_fraction)**2)/dx
 
         fig = plt.figure()
         _ = plt.errorbar(x, y, xerr=dx, yerr=dy, marker='o', capsize=0, linestyle='', label='spectrum')
@@ -636,7 +640,7 @@ class OdaSpectrum(OdaProduct):
         _ = plt.xlabel('Energy [keV]')
         _ = plt.xscale('log')
         _ = plt.yscale('log')
-        _ = plt.ylabel('Rate')
+        _ = plt.ylabel('$dN/dE$ [keV$^{-1}s$^{-1}cm$^{-2}$]')
         _ = plt.title(in_source_name)
         if len(xlim) == 2:
             _ = plt.xlim(xlim)
