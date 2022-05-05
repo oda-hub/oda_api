@@ -1389,7 +1389,9 @@ class DataCollection(object):
             if 'contours' in skmap.keys():
                 data.append(GWContoursDataProduct(skmap['contours']))
 
-        d = cls(data, instrument=instrument, product=product, request_job_id=res_json['job_monitor']['job_id'])
+        request_job_id = res_json.get('job_monitor', {}).get('job_id', None)
+
+        d = cls(data, instrument=instrument, product=product, request_job_id=request_job_id)
         for p in d._p_list:
             if hasattr(p, 'meta_data') is False and hasattr(p, 'meta') is True:
                 p.meta_data = p.meta
