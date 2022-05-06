@@ -1390,9 +1390,9 @@ class DataCollection(object):
                 data.append(GWContoursDataProduct(skmap['contours']))
 
         if 'job_id' not in res_json['job_monitor']:
-            raise RuntimeError(f"job_monitor response json does not contain job_id: {res_json['job_monitor']}")
+            logger.warning(f"job_monitor response json does not contain job_id: {res_json['job_monitor']}")
 
-        request_job_id = res_json['job_monitor']['job_id']
+        request_job_id = res_json['job_monitor'].get('job_id', None)
 
         d = cls(data, instrument=instrument, product=product, request_job_id=request_job_id)
         for p in d._p_list:
