@@ -1390,6 +1390,7 @@ class DataCollection(object):
                 data.append(GWContoursDataProduct(skmap['contours']))
 
         if 'job_id' not in res_json['job_monitor']:
+            # TODO use the incident-report endpoint from the dispatcher (https://github.com/oda-hub/dispatcher-app/issues/393)
             logger.warning(f"job_monitor response json does not contain job_id: {res_json['job_monitor']}")
 
         request_job_id = res_json['job_monitor'].get('job_id', None)
