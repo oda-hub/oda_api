@@ -1022,7 +1022,7 @@ class DispatcherAPI:
             error_message = (f"An issue occurred while {action_on_going} on the product gallery. " 
                              "The following error was returned:\n")
             if 'error_message' in res_obj:
-                error_message += '\n' + res_obj['error_message']
+                error_message += '\n' + res_obj['error_message'] + '\n'
                 if 'drupal_helper_error_message' in res_obj:
                     error_message += '\n' + res_obj['drupal_helper_error_message']
             else:
