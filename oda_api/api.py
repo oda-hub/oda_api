@@ -1011,13 +1011,19 @@ class DispatcherAPI:
                             )
         response_json = self._decode_res_json(res)
 
+        action = 'posted'
+        action_on_going = 'posting'
+        if update_data_product and 'job_id' in kwargs:
+            action = 'updated'
+            action_on_going = 'updating'
+
         if res.status_code != 200:
-            logger.warning(f"An issue occurred while posting on the product gallery: {res.text}")
+            logger.warning(f"An issue occurred while {action_on_going} on the product gallery: {res.text}")
         else:
             self.check_missing_parameters_data_product(response_json, token=token, **kwargs)
 
             product_posted_link = response_json['_links']['self']['href'].split("?")[0]
-            logger.info(f"Product successfully posted on the gallery, at the link {product_posted_link}\n"
+            logger.info(f"Product successfully {action} on the gallery, at the link {product_posted_link}\n"
                         f"Using the above link you can modify the newly created product in the future.\n"
                         f"For example, you will be able to change the instrument as well as the product type.\n")
 
