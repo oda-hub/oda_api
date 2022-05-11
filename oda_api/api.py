@@ -1389,7 +1389,13 @@ class DataCollection(object):
             if 'contours' in skmap.keys():
                 data.append(GWContoursDataProduct(skmap['contours']))
 
-        d = cls(data, instrument=instrument, product=product, request_job_id=res_json['job_monitor']['job_id'])
+        if 'job_id' not in res_json['job_monitor']:
+            # TODO use the incident-report endpoint from the dispatcher (https://github.com/oda-hub/dispatcher-app/issues/393)
+            logger.warning(f"job_monitor response json does not contain job_id: {res_json['job_monitor']}")
+
+        request_job_id = res_json['job_monitor'].get('job_id', None)
+
+        d = cls(data, instrument=instrument, product=product, request_job_id=request_job_id)
         for p in d._p_list:
             if hasattr(p, 'meta_data') is False and hasattr(p, 'meta') is True:
                 p.meta_data = p.meta
