@@ -1018,7 +1018,16 @@ class DispatcherAPI:
             action_on_going = 'updating'
 
         if res.status_code != 200:
-            logger.warning(f"An issue occurred while {action_on_going} on the product gallery: {res.text}")
+            res_obj = res.json()
+            error_message = (f"An issue occurred while {action_on_going} on the product gallery. " 
+                             "The following error was returned:\n")
+            if 'error_message' in res_obj:
+                error_message += '\n' + res_obj['error_message']
+                if 'drupal_helper_error_message' in res_obj:
+                    error_message += '\n' + res_obj['drupal_helper_error_message']
+            else:
+                error_message += res.text
+            logger.warning(error_message)
         else:
             self.check_missing_parameters_data_product(response_json, token=token, **kwargs)
 
