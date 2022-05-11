@@ -911,7 +911,7 @@ class DispatcherAPI:
                                      validate_source: bool = False,
                                      force_insert_not_valid_new_source: bool = False,
                                      apply_fields_source_resolution: bool = True,
-                                     update_data_product:bool=False,
+                                     update_data_product: bool=False,
                                      **kwargs):
         """
 
@@ -1001,6 +1001,7 @@ class DispatcherAPI:
             'observation_id': observation_id,
             'token': token,
             'insert_new_source': insert_new_source,
+            'update_data_product': update_data_product,
             **copied_kwargs
         }
 
