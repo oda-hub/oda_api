@@ -911,7 +911,6 @@ class DispatcherAPI:
                                      validate_source: bool = False,
                                      force_insert_not_valid_new_source: bool = False,
                                      apply_fields_source_resolution: bool = True,
-                                     update_data_product: bool=False,
                                      **kwargs):
         """
 
@@ -933,8 +932,6 @@ class DispatcherAPI:
         :param apply_fields_source_resolution: a boolean value to specify if, in case a source is passed within the
                 parameters and then successfully validated, to apply the parameters values returned from the validation
                 (an example of these parameters are RA and DEC)
-        :param update_data_product: a boolean value to specify if, in case a job_id from a request is passed within the parameters,
-               this will be used to update the correspondent the data_product over the product_gallery with the job_id assigned
         :param kwargs: keyword arguments representing the main parameters values used to generate the product. Amongst them,
                it is important to mention the following ones:
             * instrument: name of the instrument used for the generated product (e.g. isgri, jemx1)
@@ -1001,7 +998,6 @@ class DispatcherAPI:
             'observation_id': observation_id,
             'token': token,
             'insert_new_source': insert_new_source,
-            'update_data_product': update_data_product,
             **copied_kwargs
         }
 
@@ -1011,15 +1007,9 @@ class DispatcherAPI:
                             )
         response_json = self._decode_res_json(res)
 
-        action = 'posted'
-        action_on_going = 'posting'
-        if update_data_product and 'job_id' in kwargs:
-            action = 'updated'
-            action_on_going = 'updating'
-
         if res.status_code != 200:
             res_obj = res.json()
-            error_message = (f"An issue occurred while {action_on_going} on the product gallery, "
+            error_message = (f"An issue occurred while performing a request on the product gallery, "
                              f"the following error was returned:\n")
             if 'error_message' in res_obj:
                 error_message += '\n' + res_obj['error_message']
@@ -1029,6 +1019,10 @@ class DispatcherAPI:
                 error_message += res.text
             logger.warning(error_message)
         else:
+            action = 'posted'
+            if 'product_id' in kwargs and response_json['created'][0]['value'] != response_json['changed'][0]['value']:
+                action = 'updated'
+
             self.check_missing_parameters_data_product(response_json, token=token, **kwargs)
 
             product_posted_link = response_json['_links']['self']['href'].split("?")[0]
