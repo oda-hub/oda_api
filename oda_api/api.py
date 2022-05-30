@@ -927,9 +927,9 @@ class DispatcherAPI:
         """
 
         :param product_title: title to assign to the product, in case this is not provided, then a title is
-                automatically built using the name of the source and the type of product
-        :param product_id: unique identifier of a data product, this is assigned to a newly created data-product, and
-            in case a data product already exists on the gallery, this will be updated
+               automatically built using the name of the source and the type of product
+        :param product_id: identifier of a data product assigned by the user, this can be used during the creation of a new data-product,
+               as well as to identify an already existing one and update it with the arguments provided by the user
         :param observation_id:  this can be indicated in two different ways
             * by specifying the id of an already present observation (eg 'test observation')
             * by specifying the time range, in particular the value of T1 and T2 in the following format '2003-03-15T23:27:40.0'
