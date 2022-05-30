@@ -12,6 +12,7 @@ import string
 
 from cdci_data_analysis.analysis.json import CustomJSONEncoder
 
+import oda_api
 import oda_api.api
 from oda_api.data_products import NumpyDataProduct
 
@@ -422,7 +423,7 @@ def test_update_product_gallery(dispatcher_api_with_gallery, dispatcher_test_con
     disp = dispatcher_api_with_gallery
 
     isgri_spec = disp.get_product(**par_dict)
-    request_job_id = isgri_spec.request_job_id
+    request_product_id = oda_api.api.DispatcherAPI.calculate_param_dict_id(par_dict)
 
     light_curve_product = pt.OdaSpectrum(isgri_spec)
     gallery_image = light_curve_product.get_image_for_gallery(in_source_name=source_name, xlim=[20, 100])
@@ -432,9 +433,12 @@ def test_update_product_gallery(dispatcher_api_with_gallery, dispatcher_test_con
 
     res = disp.post_data_product_to_gallery(product_title=product_title,
                                             gallery_image_path=gallery_image,
-                                            job_id=request_job_id,
+                                            product_id=request_product_id,
                                             token=encoded_token,
                                             e1_kev=e1_kev, e2_kev=e2_kev)
+
+    assert 'nid' in res
+    nid_creation = res['nid'][0]['value']
 
     assert 'title' in res
     assert res['title'][0]['value'] == product_title
@@ -451,11 +455,14 @@ def test_update_product_gallery(dispatcher_api_with_gallery, dispatcher_test_con
     observation = 'test observation'
 
     res = disp.post_data_product_to_gallery(product_title=product_title,
-                                            job_id=request_job_id,
-                                            update_data_product=True,
+                                            product_id=request_product_id,
                                             observation_id=observation,
                                             token=encoded_token,
                                             e1_kev=e1_kev, e2_kev=e2_kev)
+
+    assert 'nid' in res
+    nid_update = res['nid'][0]['value']
+    assert nid_update == nid_creation
 
     assert 'title' in res
     assert res['title'][0]['value'] == product_title

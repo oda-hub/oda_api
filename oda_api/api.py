@@ -1012,6 +1012,7 @@ class DispatcherAPI:
             'observation_id': observation_id,
             'token': token,
             'insert_new_source': insert_new_source,
+            'product_id': product_id,
             **copied_kwargs
         }
 
