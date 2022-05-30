@@ -312,6 +312,17 @@ class DispatcherAPI:
         chars = string.ascii_uppercase + string.digits
         return ''.join(random.choice(chars) for _ in range(size))
 
+    @classmethod
+    def param_dict_id(cls,
+                      par_dict: dict):
+
+        ordered_par_dic = OrderedDict({
+            k: par_dict[k] for k in sorted(par_dict.keys())
+            if par_dict[k] is not None
+        })
+
+        return oda_api.misc_helpers.make_hash(ordered_par_dic)
+
     @property
     def session_id(self):
         if not hasattr(self, '_session_id'):
