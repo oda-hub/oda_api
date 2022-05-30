@@ -903,7 +903,7 @@ class DispatcherAPI:
 
     def post_data_product_to_gallery(self,
                                      product_title: str = None,
-                                     product_id:str = None,
+                                     product_id: str = None,
                                      observation_id: str = None,
                                      gallery_image_path: str = None,
                                      fits_file_path=None,
@@ -917,6 +917,8 @@ class DispatcherAPI:
 
         :param product_title: title to assign to the product, in case this is not provided, then a title is
                 automatically built using the name of the source and the type of product
+        :param product_id: unique identifier of a data product, this is assigned to a newly created data-product, and
+            in case a data product already exists on the gallery, this will be updated
         :param observation_id:  this can be indicated in two different ways
             * by specifying the id of an already present observation (eg 'test observation')
             * by specifying the time range, in particular the value of T1 and T2 in the following format '2003-03-15T23:27:40.0'
