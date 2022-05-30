@@ -313,7 +313,7 @@ class DispatcherAPI:
         return ''.join(random.choice(chars) for _ in range(size))
 
     @classmethod
-    def param_dict_id(cls,
+    def calculate_param_dict_id(cls,
                       par_dict: dict):
 
         ordered_par_dic = OrderedDict({
