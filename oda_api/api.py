@@ -903,6 +903,7 @@ class DispatcherAPI:
 
     def post_data_product_to_gallery(self,
                                      product_title: str = None,
+                                     product_id:str = None,
                                      observation_id: str = None,
                                      gallery_image_path: str = None,
                                      fits_file_path=None,
@@ -1001,6 +1002,13 @@ class DispatcherAPI:
             **copied_kwargs
         }
 
+        posting_msg = 'Posting a product'
+        if product_id is not None:
+            posting_msg += f' with product_id {product_id}'
+        posting_msg += ' on the gallery'
+
+        logger.info(posting_msg)
+
         res = requests.post("%s/post_product_to_gallery" % self.url,
                             params={**params},
                             files=files_obj
@@ -1020,7 +1028,7 @@ class DispatcherAPI:
             logger.warning(error_message)
         else:
             action = 'posted'
-            if 'product_id' in kwargs and response_json['created'][0]['value'] != response_json['changed'][0]['value']:
+            if product_id is not None and response_json['created'][0]['value'] != response_json['changed'][0]['value']:
                 action = 'updated'
 
             self.check_missing_parameters_data_product(response_json, token=token, **kwargs)
