@@ -33,10 +33,10 @@ def encode_decode(ndp: NumpyDataProduct) -> NumpyDataProduct:
 
     print(ndp_json)
 
-    return NumpyDataProduct.decode(ndp_json)    
-    
+    return NumpyDataProduct.decode(ndp_json)
 
-    
+
+
 def test_one_image():
     fn = "one_image.fits"
 
@@ -44,21 +44,21 @@ def test_one_image():
 
     hdu = fits.ImageHDU(data)
     hdu.writeto(fn, overwrite=True)
-    
+
     ndp = NumpyDataProduct.from_fits_file(fn)
 
-    ndu = ndp.get_data_unit(1)    
+    ndu = ndp.get_data_unit(1)
 
     assert np.all(ndu.data == data)
 
-    ndu_decoded = encode_decode(ndp).get_data_unit(1) 
+    ndu_decoded = encode_decode(ndp).get_data_unit(1)
 
     assert np.all(ndu_decoded.data == data)
 
 
 def test_variable_length_table():
     from oda_api.data_products import NumpyDataProduct
-    
+
     col1 = fits.Column(
         name='var', format='PI()',
         array=np.array([[1,2,3], [11, 12]], dtype=np.object_))
@@ -82,7 +82,7 @@ def test_variable_length_table():
     assert list(ndu.data['var'][0]) == [1, 2, 3]
     assert list(ndu.data['var'][1]) == [11, 12]
 
-    ndu_decoded = encode_decode(ndp).get_data_unit(1) 
+    ndu_decoded = encode_decode(ndp).get_data_unit(1)
 
     assert list(ndu_decoded.data['i2'][0]) == [101, 102]
     assert list(ndu_decoded.data['i2'][1]) == [111, 112]
@@ -91,7 +91,7 @@ def test_variable_length_table():
 
 
 @pytest.mark.test_drupal
-@pytest.mark.parametrize("observation", ['test observation', None])
+@pytest.mark.parametrize("observation", [None])
 @pytest.mark.parametrize("type_source", ["known", "new", None])
 @pytest.mark.parametrize("insert_new_source", [True, False])
 @pytest.mark.parametrize("force_insert_not_valid_new_source", [True, False])
@@ -196,9 +196,11 @@ def test_image_product_gallery(dispatcher_api_with_gallery, dispatcher_test_conf
         dispatcher_test_conf_with_gallery['product_gallery_options']['product_gallery_url'],
         'rest/relation/node/data_product/field_describes_astro_entity')
     if type_source == 'known' or \
-            (type_source == 'new' and ((force_insert_not_valid_new_source and insert_new_source)
-             or (not validate_source and insert_new_source))):
+            (type_source == 'new' and (
+                    insert_new_source and (force_insert_not_valid_new_source or not validate_source)
+            )):
         assert link_astrophysical_entity in res['_links']
+        assert len(res['_links'][link_astrophysical_entity]) == len(source_name.split(','))
     else:
         assert link_astrophysical_entity not in res['_links']
 
@@ -319,9 +321,11 @@ def test_light_curve_product_gallery(dispatcher_api_with_gallery, dispatcher_tes
 
 
 @pytest.mark.test_drupal
-@pytest.mark.parametrize("observation", ['test observation', None])
-@pytest.mark.parametrize("source_name", ['GX 1+4', None])
-def test_spectrum_product_gallery(dispatcher_api_with_gallery, observation, source_name):
+# @pytest.mark.parametrize("observation", ['test observation', None])
+@pytest.mark.parametrize("observation", [None])
+@pytest.mark.parametrize("force_insert_not_valid_new_sources", [True, False])
+@pytest.mark.parametrize("source_names", ['GX 1+4', 'GX 1+4, Crab, unknown_src, unknown_src_no_link', ['GX 1+4', 'Crab', 'unknown_src', 'unknown_src_no_link'], None])
+def test_spectrum_product_gallery(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery, observation, source_names, force_insert_not_valid_new_sources):
     import oda_api.plot_tools as pt
 
     # let's generate a valid token
@@ -368,6 +372,10 @@ def test_spectrum_product_gallery(dispatcher_api_with_gallery, observation, sour
     res = disp.post_data_product_to_gallery(product_title=source_name,
                                             gallery_image_path=gallery_image,
                                             observation_id=observation,
+                                            src_name=source_names,
+                                            validate_source=True,
+                                            force_insert_not_valid_new_source=force_insert_not_valid_new_sources,
+                                            insert_new_source=True,
                                             token=encoded_token,
                                             e1_kev=e1_kev, e2_kev=e2_kev,
                                             DEC=dec, RA=ra)
@@ -382,14 +390,33 @@ def test_spectrum_product_gallery(dispatcher_api_with_gallery, observation, sour
     assert res['field_e2_kev'][0]['value'] == e2_kev
 
     assert 'field_dec' in res
-    assert res['field_dec'][0]['value'] == dec
-
     assert 'field_ra' in res
-    assert res['field_ra'][0]['value'] == ra
+
+    link_astrophysical_entity = os.path.join(
+        dispatcher_test_conf_with_gallery['product_gallery_options']['product_gallery_url'],
+        'rest/relation/node/data_product/field_describes_astro_entity')
+    if source_names is not None:
+        assert link_astrophysical_entity in res['_links']
+        if isinstance(source_names, str):
+            source_names_list = source_names.split(',')
+        else:
+            source_names_list = source_names
+        if not force_insert_not_valid_new_sources:
+            valid_source_names_list = []
+            for src_name_test in source_names_list:
+                resolved_obj = disp.resolve_source(src_name_test, encoded_token)
+                if 'could not be resolved' not in resolved_obj['message']:
+                    valid_source_names_list.append(src_name_test)
+            assert len(res['_links'][link_astrophysical_entity]) == len(valid_source_names_list)
+        else:
+            assert len(res['_links'][link_astrophysical_entity]) == len(source_names_list)
+    else:
+        assert link_astrophysical_entity not in res['_links']
 
 
 @pytest.mark.test_drupal
-def test_update_product_gallery(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery):
+@pytest.mark.parametrize("request_product_id", ['Real', 'aaaaaaaaaaaaa'])
+def test_update_product_gallery(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery, request_product_id):
     import oda_api.plot_tools as pt
 
     # let's generate a valid token
@@ -423,7 +450,8 @@ def test_update_product_gallery(dispatcher_api_with_gallery, dispatcher_test_con
     disp = dispatcher_api_with_gallery
 
     isgri_spec = disp.get_product(**par_dict)
-    request_product_id = oda_api.api.DispatcherAPI.calculate_param_dict_id(par_dict)
+    if request_product_id == 'Real':
+        request_product_id = oda_api.api.DispatcherAPI.calculate_param_dict_id(par_dict)
 
     light_curve_product = pt.OdaSpectrum(isgri_spec)
     gallery_image = light_curve_product.get_image_for_gallery(in_source_name=source_name, xlim=[20, 100])
@@ -501,10 +529,9 @@ def test_resolve_source(dispatcher_api_with_gallery, dispatcher_test_conf_with_g
 
         # the name resolver replaces automatically underscores with spaces in the returned name
         assert resolved_obj['name'] == source_name
-        assert 'Nothing found' in resolved_obj['message']
+        assert 'could not be resolved' in resolved_obj['message']
     else:
         assert 'name' in resolved_obj
-        assert 'resolver' in resolved_obj
         assert 'DEC' in resolved_obj
         assert 'RA' in resolved_obj
         assert 'entity_portal_link' in resolved_obj
