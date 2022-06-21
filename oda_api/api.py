@@ -936,21 +936,22 @@ class DispatcherAPI:
         :param gallery_image_path: path of the generated image and to be uploaded over the gallery
         :param fits_file_path: a list of fits file links used for the generation of the product to upload over the gallery
         :param token: user token
-        :param insert_new_source: a boolean value to specify if, in case a source currently not available on the
-               product gallery is passed within the parameters, this will be created and then used for the newly created
-               data product
-        :param validate_source: a boolean value to specify if, in case a source is passed within the parameters,
-               this will be validated against an online service
-        :param force_insert_not_valid_new_source: a boolean value to specify if, in case a source is passed within the
-                parameters and its validation fails, this should be provided as a parameter for the data product
-        :param apply_fields_source_resolution: a boolean value to specify if, in case a source is passed within the
+        :param insert_new_source: a boolean value to specify if, in case the sources that are passed as parameters and
+               are not available on the product gallery, will be created and then used for the new data product
+        :param validate_source: a boolean value to specify if, in case the sources that are passed as parameters
+               will be validated against an online service. In case the validation fails the source won't be inserted as
+               a parameter for the data product and a warning for the user will be generated (unless this is intentionally
+               specified setting to `True` the boolean parameter **force_insert_not_valid_new_sources** described below)
+        :param force_insert_not_valid_new_source: a boolean value to specify if, in case the sources that are passed as
+               parameters and its validation fails, those should be in any case provided as a parameter for the data product
+        :param apply_fields_source_resolution: a boolean value to specify if, in case only a single source is passed within the
                 parameters and then successfully validated, to apply the parameters values returned from the validation
                 (an example of these parameters are RA and DEC)
         :param kwargs: keyword arguments representing the main parameters values used to generate the product. Amongst them,
                it is important to mention the following ones:
             * instrument: name of the instrument used for the generated product (e.g. isgri, jemx1)
             * product_type: type of product generated (e.g. isgri_lc, jemx_image)
-            * src_name: name of the source used
+            * src_name: name of a single, or a list of, known sources (eg Crab, Cyg X-1)
             * others: other parameters used for the product. Not all the parameters are currently supported,
                 but the list of the supported ones will be extended. RA=25
 
@@ -974,37 +975,76 @@ class DispatcherAPI:
                 files_obj['fits_file'] = open(fits_file_path, 'rb')
 
         # validate source
-        src_name = kwargs.get('src_name', None)
-        if src_name is not None and validate_source:
-            resolved_source = False
-            # remove any underscore (following the logic of the resolver) and use the edited one
-            copied_kwargs['src_name'] = src_name.replace('_', ' ')
-            resolved_obj = self.resolve_source(src_name=src_name, token=token)
-            if resolved_obj is not None:
-                msg = ''
-                if 'message' in resolved_obj:
-                    if 'could not be resolved' in resolved_obj['message']:
-                        msg = f'\nSource {src_name} could not be validated'
-                    elif 'successfully resolved' in resolved_obj['message']:
-                        resolved_source = True
-                        msg = f'\nSource {src_name} was successfully validated'
-                msg += '\n'
-                logger.info(msg)
-                if 'RA' in resolved_obj and apply_fields_source_resolution:
-                    RA = Angle(resolved_obj["RA"], unit='degree')
-                    copied_kwargs['RA'] = RA.deg
-                if 'DEC' in resolved_obj and apply_fields_source_resolution:
-                    DEC = Angle(resolved_obj["DEC"], unit='degree')
-                    copied_kwargs['DEC'] = DEC.deg
-                if 'entity_portal_link' in resolved_obj and apply_fields_source_resolution:
-                    copied_kwargs['entity_portal_link'] = resolved_obj['entity_portal_link']
-            else:
-                logger.warning(f"{src_name} could not be validated")
+        src_name_arg = kwargs.get('src_name', None)
+        copied_src_name_arg = None
+        entities_portal_link_list = None
+        if src_name_arg is not None and validate_source:
 
-            if src_name is not None and not resolved_source and not force_insert_not_valid_new_source:
-                # a source won't be added
-                logger.warning(f"the specified source will not be added")
-                copied_kwargs.pop('src_name', None)
+            if isinstance(src_name_arg, str):
+                src_name_list = src_name_arg.split(',')
+            else:
+                src_name_list = src_name_arg
+
+            for src_name in src_name_list:
+                resolved_source = False
+                entity_portal_link = None
+                # remove any underscore (following the logic of the resolver) and use the edited one
+                src_name_edited = src_name.replace('_', ' ')
+                resolved_obj = self.resolve_source(src_name=src_name_edited, token=token)
+                if resolved_obj is not None:
+                    msg = ''
+                    if 'message' in resolved_obj:
+                        if 'could not be resolved' in resolved_obj['message']:
+                            msg = f'\nSource {src_name} could not be validated'
+                        elif 'successfully resolved' in resolved_obj['message']:
+                            resolved_source = True
+                            msg = f'\nSource {src_name} was successfully validated'
+                    msg += '\n'
+                    logger.info(msg)
+                    if 'RA' in resolved_obj and apply_fields_source_resolution:
+                        RA = Angle(resolved_obj["RA"], unit='degree')
+                        # TODO to be discussed
+                        if len(src_name_list) == 1:
+                            copied_kwargs['RA'] = RA.deg
+                    if 'DEC' in resolved_obj and apply_fields_source_resolution:
+                        DEC = Angle(resolved_obj["DEC"], unit='degree')
+                        # TODO to be discussed
+                        if len(src_name_list) == 1:
+                            copied_kwargs['DEC'] = DEC.deg
+                    if 'entity_portal_link' in resolved_obj and apply_fields_source_resolution:
+                        entity_portal_link = resolved_obj['entity_portal_link']
+                        # copied_kwargs['entity_portal_link'] = resolved_obj['entity_portal_link']
+                else:
+                    logger.warning(f"{src_name} could not be validated")
+
+                if not resolved_source and not force_insert_not_valid_new_source:
+                    # a source won't be added
+                    logger.warning(f"the specified source will not be added")
+                else:
+                    if copied_src_name_arg is None:
+                        copied_src_name_arg = []
+                    copied_src_name_arg.append(src_name)
+                    if entities_portal_link_list is None:
+                        entities_portal_link_list = []
+                    if entity_portal_link is None:
+                        entity_portal_link = ''
+                    entities_portal_link_list.append(entity_portal_link)
+        else:
+            copied_src_name_arg = src_name_arg
+
+        if copied_src_name_arg is not None:
+            if isinstance(copied_src_name_arg, list):
+                copied_kwargs['src_name'] = ','.join(copied_src_name_arg)
+            else:
+                copied_kwargs['src_name'] = copied_src_name_arg
+        else:
+            copied_kwargs.pop('src_name', None)
+
+        if entities_portal_link_list is not None:
+            if isinstance(entities_portal_link_list, list):
+                copied_kwargs['entity_portal_link'] = ','.join(entities_portal_link_list)
+            else:
+                copied_kwargs['entity_portal_link'] = entities_portal_link_list
 
         params = {
             'content_type': 'data_product',
