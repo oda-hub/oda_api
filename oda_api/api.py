@@ -912,6 +912,35 @@ class DispatcherAPI:
                                      force_insert_not_valid_new_source: bool = False,
                                      apply_fields_source_resolution: bool = True,
                                      **kwargs):
+        """
+
+        :param product_title: title to assign to the product, in case this is not provided, then a title is
+                automatically built using the name of the source and the type of product
+        :param observation_id:  this can be indicated in two different ways
+            * by specifying the id of an already present observation (eg 'test observation')
+            * by specifying the time range, in particular the value of T1 and T2 in the following format '2003-03-15T23:27:40.0'
+        :param gallery_image_path: path of the generated image and to be uploaded over the gallery
+        :param fits_file_path: a list of fits file links used for the generation of the product to upload over the gallery
+        :param token: user token
+        :param insert_new_source: a boolean value to specify if, in case a source currently not available on the
+               product gallery is passed within the parameters, this will be created and then used for the newly created
+               data product
+        :param validate_source: a boolean value to specify if, in case a source is passed within the parameters,
+               this will be validated against an online service
+        :param force_insert_not_valid_new_source: a boolean value to specify if, in case a source is passed within the
+                parameters and its validation fails, this should be provided as a parameter for the data product
+        :param apply_fields_source_resolution: a boolean value to specify if, in case a source is passed within the
+                parameters and then successfully validated, to apply the parameters values returned from the validation
+                (an example of these parameters are RA and DEC)
+        :param kwargs: keyword arguments representing the main parameters values used to generate the product. Amongst them,
+               it is important to mention the following ones:
+            * instrument: name of the instrument used for the generated product (e.g. isgri, jemx1)
+            * product_type: type of product generated (e.g. isgri_lc, jemx_image)
+            * src_name: name of the source used
+            * others: other parameters used for the product. Not all the parameters are currently supported,
+                but the list of the supported ones will be extended. RA=25
+
+        """
 
         # apply policy for the specific data product
         # use the product_type, if provided, and apply the policy, if applicable
@@ -932,19 +961,19 @@ class DispatcherAPI:
 
         # validate source
         src_name = kwargs.get('src_name', None)
-        validated_source = False
         if src_name is not None and validate_source:
+            resolved_source = False
             # remove any underscore (following the logic of the resolver) and use the edited one
             copied_kwargs['src_name'] = src_name.replace('_', ' ')
             resolved_obj = self.resolve_source(src_name=src_name, token=token)
             if resolved_obj is not None:
-                msg = f'\nSource {src_name} validated'
-                if 'resolver' in resolved_obj:
-                    msg += f' using the service {resolved_obj["resolver"]}'
-                    validated_source = True
+                msg = ''
                 if 'message' in resolved_obj:
-                    if 'Nothing found' in resolved_obj['message']:
-                        msg += ' but not found'
+                    if 'could not be resolved' in resolved_obj['message']:
+                        msg = f'\nSource {src_name} could not be validated'
+                    elif 'successfully resolved' in resolved_obj['message']:
+                        resolved_source = True
+                        msg = f'\nSource {src_name} was successfully validated'
                 msg += '\n'
                 logger.info(msg)
                 if 'RA' in resolved_obj and apply_fields_source_resolution:
@@ -958,7 +987,7 @@ class DispatcherAPI:
             else:
                 logger.warning(f"{src_name} could not be validated")
 
-            if src_name is not None and not validated_source and not force_insert_not_valid_new_source:
+            if src_name is not None and not resolved_source and not force_insert_not_valid_new_source:
                 # a source won't be added
                 logger.warning(f"the specified source will not be added")
                 copied_kwargs.pop('src_name', None)
@@ -1220,9 +1249,10 @@ data_collection = disp.get_product(**par_dict)
 
 class DataCollection(object):
 
-    def __init__(self, data_list, add_meta_to_name=['src_name', 'product'], instrument=None, product=None):
+    def __init__(self, data_list, add_meta_to_name=['src_name', 'product'], instrument=None, product=None, request_job_id=None):
         self._p_list = []
         self._n_list = []
+        self.request_job_id = request_job_id
         for ID, data in enumerate(data_list):
 
             name = ''
@@ -1359,7 +1389,13 @@ class DataCollection(object):
             if 'contours' in skmap.keys():
                 data.append(GWContoursDataProduct(skmap['contours']))
 
-        d = cls(data, instrument=instrument, product=product)
+        if 'job_id' not in res_json['job_monitor']:
+            # TODO use the incident-report endpoint from the dispatcher (https://github.com/oda-hub/dispatcher-app/issues/393)
+            logger.warning(f"job_monitor response json does not contain job_id: {res_json['job_monitor']}")
+
+        request_job_id = res_json['job_monitor'].get('job_id', None)
+
+        d = cls(data, instrument=instrument, product=product, request_job_id=request_job_id)
         for p in d._p_list:
             if hasattr(p, 'meta_data') is False and hasattr(p, 'meta') is True:
                 p.meta_data = p.meta
