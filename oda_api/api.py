@@ -1226,8 +1226,6 @@ class DispatcherAPI:
         d = DataCollection.from_response_json(
             res_json, instrument, product)
 
-        del (res)
-
         return d
 
     @staticmethod
@@ -1308,9 +1306,7 @@ class DataCollection(object):
         self._p_list = []
         self._n_list = []
         self.request_job_id = request_job_id
-        for ID, data in enumerate(data_list):
-
-
+        
         for ID, data in enumerate(data_list):
             name = ''
             if hasattr(data, 'name'):
@@ -1507,7 +1503,8 @@ class DispatcherAPICollection:
             parameter_dict_list: List[Dict[str, Any]],
             **kwargs):
         
-        self.client_list = []    
+        self.client_list = []   
+        product_list = [] 
         
         for parameter_dict in parameter_dict_list:                        
             disp = DispatcherAPI(**self.constructor_kwargs)
@@ -1517,7 +1514,7 @@ class DispatcherAPICollection:
             disp.skip_parameter_check = True
             disp.raise_on_failure = False
 
-            disp.get_product(**kwargs, **parameter_dict)                
+            product_list.append(disp.get_product(**kwargs, **parameter_dict))
 
             self.client_list.append(disp)
         
@@ -1530,6 +1527,8 @@ class DispatcherAPICollection:
             logger.info('not waiting for poll, please do not forget to come back for your results!')
         else:
             while True:
+                product_list = []
+
                 for client in self.client_list:
                     client.poll()
                 
@@ -1538,13 +1537,17 @@ class DispatcherAPICollection:
                         len([c for c in self.client_list if c.is_complete]),
                         )
 
+                    product_list.append(client.poll())
+
                 if all([c.is_complete for c in self.client_list]):
                     logger.info('all done!')
-                    break                    
+                    break
                 else:
                     logger.info('will sleep %s s',                 
                         self.wait_between_poll_sequences_s
                         )
                     time.sleep(self.wait_between_poll_sequences_s)
+                    
+        return product_list
 
 
