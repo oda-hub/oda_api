@@ -586,10 +586,52 @@ class NumpyDataProduct(object):
 
 
 
-class ApiCatalog(object):
+class ApiCatalog:
+
+    @classmethod
+    def from_list_of_dicts(cls, list_of_dicts):
+         {
+            "cat_column_descr": [
+                ["meta_ID","<i8"],
+                ["src_names","<U20"],
+                ["significance",">f4"],
+                ["ra",">f4"],
+                ["dec",">f4"],
+                ["NEW_SOURCE",">i2"],
+                ["ISGRI_FLAG","<i8"],
+                ["FLAG","<i8"],
+                ["ERR_RAD","<f8"]
+            ],
+            "cat_column_list": [
+                [1,
+                 2],
+                ["1E 1740.7-2942",
+                 "4U 1700-377"],
+                [50.481285095214844,
+                 29.631359100341797],
+                [265.97705078125,
+                 255.96563720703125],
+                [-29.746740341186523,
+                 -37.84686279296875],
+                [-32768,
+                 -32768],
+                [2,
+                 2],
+                [0,
+                 0],
+                [0.000029999999242136255,
+                 0.0002800000074785203]
+                 ],
+                "cat_column_names":
+                ["meta_ID","src_names","significance","ra","dec","NEW_SOURCE","ISGRI_FLAG","FLAG","ERR_RAD"],
+                "cat_coord_units":"deg",
+                "cat_frame":"fk5",
+                "cat_lat_name":"dec",
+                "cat_lon_name":"ra"}
 
 
-    def __init__(self,cat_dict,name='catalog'):
+
+    def __init__(self, cat_dict, name='catalog'):
         self.name=name
         _skip_list=['meta_ID']
         meta = {}
@@ -629,13 +671,12 @@ class ApiCatalog(object):
         self.lon_name=lon_name
 
     def get_api_dictionary(self ):
-
-
         column_lists=[self.table[name].tolist() for name in self.table.colnames]
         for ID,_col in enumerate(column_lists):
             column_lists[ID] = [x if str(x)!='nan' else None for x in _col]
 
-        return json.dumps(dict(cat_frame=self.table.meta['FRAME'],
+        return json.dumps(dict(
+                    cat_frame=self.table.meta['FRAME'],
                     cat_coord_units=self.table.meta['COORD_UNIT'],
                     cat_column_list=column_lists,
                     cat_column_names=self.table.colnames,

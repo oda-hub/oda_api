@@ -377,3 +377,106 @@ def test_dispatcher_exception(dispatcher_live_fixture, caplog, exception_kind):
         raise RuntimeError()
     
     requests.get = requests._get
+
+
+def test_storing(dispatcher_api):
+    disp = dispatcher_api
+
+    token_payload = {
+        **default_token_payload,
+        "roles": ["general", "integral-private-qla"],
+    }
+    encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
+
+    dc = disp.get_product(
+        product_type="Dummy",
+        instrument="empty",
+        product="numerical",
+        token=encoded_token
+    )
+
+    disp.save_result()
+
+    assert disp.load_result().as_list() == dc.as_list()
+
+
+def test_multiple_requests(dispatcher_live_fixture):
+    import oda_api.api
+    
+    dac = oda_api.api.DispatcherAPICollection(url=dispatcher_live_fixture, 
+                                              wait_between_poll_sequences_s=None)
+
+    dac.get_product_list([
+            dict(product="dummy",            
+                 instrument="empty",
+                 RA=i,
+                 p_list=['111100110010.001'])
+            for i in [1, 2]
+        ],
+    )
+
+    
+@pytest.mark.isgri()
+def test_indexing(dispatcher_api):
+    disp = dispatcher_api
+
+    token_payload = {
+        **default_token_payload,
+        "roles": ["general", "integral-private-qla"],
+    }
+    encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
+
+    dc = disp.get_product(
+        product_type="Dummy",
+        instrument="empty",
+        product="numerical",
+        token=encoded_token
+    )
+
+    assert isinstance(dc, oda_api.api.DataCollection)
+
+    assert dc.as_list() == [{'ID': 0, 'prod_name': 'numerical_0', 'metadata': {}, 'meta_data:': {}}]
+
+    dc.product_indexer = lambda p: p['prod_name']
+
+    assert dc.as_dict() == {'numerical_0': {'ID': 0, 'prod_name': 'numerical_0', 'metadata': {}, 'meta_data:': {}}}
+
+    assert dc.keys() == ['numerical_0']
+
+    assert dc['numerical_0']
+    
+
+def test_local_cache_unit():
+    from oda_api.localcache import cached, call_to_fn
+    from collections import OrderedDict
+
+    fn = 'cache-test.txt'
+    with open(fn, 'wt') as f:
+        f.write('test1')
+
+    @cached
+    def testme(x, a):
+        return open(fn).read() + str(x) + str(a)
+        
+    cache_fn = call_to_fn(testme, 1, a='b')
+
+    if os.path.exists(cache_fn):
+        os.remove(cache_fn)
+
+    assert testme(1, a='b') == "test11b"
+
+    with open(fn, 'wt') as f:
+        f.write('test2')
+
+    # did not change since it's cached
+    assert testme(1, a='b') == "test11b"
+
+    os.remove(call_to_fn(testme, 1, a='b'))
+
+    assert testme(1, a='b') == "test21b"
+    assert testme(2, a='b') == "test22b"
+
+    
+
+def test_local_cache(dispatcher_api):
+    pass
