@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function
 
 from collections import OrderedDict
 from json.decoder import JSONDecodeError
-from typing import Callable, Tuple
+from typing import Any, Callable, List, Tuple, Dict
 from astropy.table import Table
 from astropy.coordinates import Angle
 
@@ -1504,7 +1504,7 @@ class DispatcherAPICollection:
 
     def get_product_list(
             self,
-            parameter_dict_list,
+            parameter_dict_list: List[Dict[str, Any]],
             **kwargs):
         
         self.client_list = []    
