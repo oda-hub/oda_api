@@ -4,7 +4,7 @@ import jwt
 import time
 import pytest
 import re
-
+import glob
 import requests
 import oda_api.api
 
@@ -59,6 +59,46 @@ def test_show_product(dispatcher_live_fixture, capsys):
         rate_err='ERROR'
     )
     assert products._p_list[0].meta_data == meta_data_dic
+
+
+def test_job_id_data_collection(dispatcher_api):
+    disp = dispatcher_api
+
+    prods_first = disp.get_product(
+        product_type="Dummy",
+        instrument="empty",
+        product="dummy",
+        p=10
+    )
+
+    job_id_first_request = prods_first.request_job_id
+    f_query_output = None
+    list_scratch_dir = glob.glob( f'scratch_sid_*_jid_{job_id_first_request}')
+    if len(list_scratch_dir) >= 1:
+        f_query_output = open(os.path.join(list_scratch_dir[0], 'query_output.json'))
+
+    assert f_query_output is not None
+    jdata_output = json.load(f_query_output)
+    assert jdata_output['prod_dictionary']['job_id'] == job_id_first_request
+
+    prods_second = disp.get_product(
+        product_type="Dummy",
+        instrument="empty",
+        product="dummy",
+        p=9
+    )
+
+    job_id_second_request = prods_second.request_job_id
+    f_query_output = None
+    list_scratch_dir = glob.glob(f'scratch_sid_*_jid_{job_id_second_request}')
+    if len(list_scratch_dir) >= 1:
+        f_query_output = open(os.path.join(list_scratch_dir[0], 'query_output.json'))
+
+    assert f_query_output is not None
+    jdata_output = json.load(f_query_output)
+    assert jdata_output['prod_dictionary']['job_id'] == job_id_second_request
+
+    assert job_id_second_request != job_id_first_request
 
 
 def test_oda_api_code(dispatcher_api):

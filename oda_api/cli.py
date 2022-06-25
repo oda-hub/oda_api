@@ -57,7 +57,7 @@ def get(obj, instrument, product, argument):
 
             logger.debug("request to dispatcher %s", request)
 
-            product = obj['dispatcher'].get_product(**request)
+            product = obj['dispatcher'].get_product(**request, token=discover_token())
 
             logger.info("got product: %s", product.as_list())
 
