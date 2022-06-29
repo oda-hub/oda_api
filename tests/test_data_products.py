@@ -279,17 +279,43 @@ def test_light_curve_product_gallery(dispatcher_api_with_gallery, dispatcher_tes
     else:
         product_type = 'jemx_lc'
 
+    additional_html_to_render = '''<table class="table table-responsive">
+        <thead class="table-dark">
+            <tr>
+                <th>Name</th>
+                <th>RA</th>
+                <th>Dec</th>
+                <th>Flux (cts/s)</th>
+                <th>Error (cts/s)</th>
+                <th>Significance</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Cyg X-1</td>
+                <td>299.5855</td>
+                <td>35.20497</td>
+                <td>75.069</td>
+                <td>0.086</td>
+                <td>874.6</td>
+            </tr>
+        </tbody>
+    </table>
+    '''
+
     res = disp.post_data_product_to_gallery(product_title=source_name,
                                             gallery_image_path=gallery_image,
                                             fits_file_path=[fits_file_1, fits_file_2],
                                             observation_id=observation,
                                             token=encoded_token,
                                             produced_by=notebook_link,
-                                            job_id=job_id, session_id=session_id,
+                                            job_id=job_id,
                                             e1_kev=e1_kev, e2_kev=e2_kev,
                                             instrument=instrument,
                                             product_type=product_type,
-                                            DEC=dec, RA=ra)
+                                            src_name=source_name,
+                                            DEC=dec, RA=ra,
+                                            additional_html_to_render=additional_html_to_render)
 
     assert 'title' in res
     assert res['title'][0]['value'] == source_name
@@ -508,7 +534,7 @@ def test_update_product_gallery(dispatcher_api_with_gallery, dispatcher_test_con
 
 
 @pytest.mark.test_drupal
-@pytest.mark.parametrize("source_name", ['Mrk 421', 'Mrk_421', 'fake object', None])
+@pytest.mark.parametrize("source_name", ['Mrk 421', 'Mrk_421', 'GX 1+4', 'fake object', None])
 def test_resolve_source(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery, source_name):
     disp = dispatcher_api_with_gallery
 

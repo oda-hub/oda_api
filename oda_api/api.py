@@ -24,6 +24,8 @@ import warnings
 import requests
 import ast
 import json
+import tempfile
+import shutil
 
 try:
     # compatibility in some remaining environments
@@ -923,6 +925,7 @@ class DispatcherAPI:
                                      validate_source: bool = False,
                                      force_insert_not_valid_new_source: bool = False,
                                      apply_fields_source_resolution: bool = True,
+                                     additional_html_to_render: str = None,
                                      **kwargs):
         """
 
@@ -965,6 +968,7 @@ class DispatcherAPI:
 
         # generate file obj
         files_obj = {}
+        tmp_path_html_folder_path = None
         if gallery_image_path is not None:
             files_obj['img'] = open(gallery_image_path, 'rb')
         if fits_file_path is not None:
@@ -973,6 +977,14 @@ class DispatcherAPI:
                     files_obj['fits_file_' + str(fits_file_path.index(fits_path))] = open(fits_path, 'rb')
             elif isinstance(fits_file_path, str):
                 files_obj['fits_file'] = open(fits_file_path, 'rb')
+        if additional_html_to_render is not None:
+            if tmp_path_html_folder_path is None:
+                tmp_path_html_folder_path = tempfile.mkdtemp(suffix="gallery_temp_files")
+            tmp_path_html_file_path = os.path.join(tmp_path_html_folder_path, 'additional_html_file.html')
+            with open(tmp_path_html_file_path, "w") as f_html:
+                f_html.write(additional_html_to_render)
+
+            files_obj['html_file'] = open(tmp_path_html_file_path, 'rb')
 
         # validate source
         src_name_arg = kwargs.get('src_name', None)
@@ -1091,6 +1103,13 @@ class DispatcherAPI:
             logger.info(f"Product successfully {action} on the gallery, at the link {product_posted_link}\n"
                         f"Using the above link you can modify the newly created product in the future.\n"
                         f"For example, you will be able to change the instrument as well as the product type.\n")
+
+        if tmp_path_html_folder_path is not None and os.path.exists(tmp_path_html_folder_path):
+            logger.info(f'removing tmp_path_html_folder_path={tmp_path_html_folder_path} created for temporary files')
+            try:
+                shutil.rmtree(tmp_path_html_folder_path)
+            except OSError as e:
+                logger.error(f'unable to remove temporary directory {tmp_path_html_folder_path} !')
 
         return response_json
 
