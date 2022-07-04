@@ -315,7 +315,7 @@ def test_light_curve_product_gallery(dispatcher_api_with_gallery, dispatcher_tes
                                             product_type=product_type,
                                             src_name=source_name,
                                             DEC=dec, RA=ra,
-                                            additional_html_to_render=additional_html_to_render)
+                                            html_image=additional_html_to_render)
 
     assert 'title' in res
     assert res['title'][0]['value'] == source_name
