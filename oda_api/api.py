@@ -933,7 +933,7 @@ class DispatcherAPI:
                automatically built using the name of the source and the type of product
         :param product_id: identifier of a data product assigned by the user, this can be used during the creation of a new data-product,
                as well as to identify an already existing one and update it with the arguments provided by the user
-        :param observation_id:  this can be indicated in two different ways
+        :param observation_id: this can be indicated in two different ways
             * by specifying the id of an already present observation (eg 'test observation')
             * by specifying the time range, in particular the value of T1 and T2 in the following format '2003-03-15T23:27:40.0'
         :param gallery_image_path: path of the generated image and to be uploaded over the gallery
@@ -950,6 +950,8 @@ class DispatcherAPI:
         :param apply_fields_source_resolution: a boolean value to specify if, in case only a single source is passed within the
                 parameters and then successfully validated, to apply the parameters values returned from the validation
                 (an example of these parameters are RA and DEC)
+        :param html_image: field to upload an image encapsulated within an html block generated using external
+               tools (e.g. bokeh)
         :param kwargs: keyword arguments representing the main parameters values used to generate the product. Amongst them,
                it is important to mention the following ones:
             * instrument: name of the instrument used for the generated product (e.g. isgri, jemx1)
