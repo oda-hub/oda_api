@@ -950,7 +950,7 @@ class DispatcherAPI:
         :param apply_fields_source_resolution: a boolean value to specify if, in case only a single source is passed within the
                 parameters and then successfully validated, to apply the parameters values returned from the validation
                 (an example of these parameters are RA and DEC)
-        :param html_image: field to upload an image encapsulated within an html block generated using external
+        :param html_image: field used to upload an image encapsulated within an html block generated using external
                tools (e.g. bokeh)
         :param kwargs: keyword arguments representing the main parameters values used to generate the product. Amongst them,
                it is important to mention the following ones:
