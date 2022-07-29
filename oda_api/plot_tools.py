@@ -125,7 +125,8 @@ class OdaImage(OdaProduct):
             zero_crossing = True
             ind_ra = ra > 180.
             ra[ind_ra] -= 360.
-            ind_sort = numpy.argsort(ra, axis=-1)
+            #RA is reverse ordered in sky images (To be tested)
+            ind_sort = numpy.argsort(ra, axis=-1)[::-1]
             ra = numpy.take_along_axis(ra, ind_sort, axis=-1)
             data = numpy.take_along_axis(data, ind_sort, axis=-1)
 
