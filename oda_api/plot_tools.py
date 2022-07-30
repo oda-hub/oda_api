@@ -233,6 +233,73 @@ class OdaImage(OdaProduct):
 
         return fig
 
+    @staticmethod
+    def get_js9_html(file_path, region_file=None, js9_id='myJS9',
+                     base_url='http://cdciweb02.internal.odahub.io/mmoda/gallery/sites/default/files'):
+        region = ''
+        file = 'JS9.Preload("%s/%s"' % (base_url, file_path)
+
+        if region_file is not None:
+            file += ', {scale: \'log\', colormap: \'plasma\', onload: function(im){JS9.SetZoom(1); ' + \
+                    'JS9.DisplayCoordGrid(true); JS9.LoadRegions("%s/%s");}}, {display: "%s"});' % (
+                    base_url, region_file, js9_id)
+        else:
+            file += ', {scale: \'log\', colormap: \'plasma\', onload: function(im){JS9.DisplayCoordGrid(true);}, {display: "%s"});' % (
+                js9_id)
+
+        t = '''                                                                                                                                                                             
+    <html>                                                                                                                                                                                     
+                <head>                                                                                                                                                                         
+                  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">                                                                                                          
+                  <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" >                                                                                                              
+                  <meta name="viewport" content="width=device-width, initial-scale=1">                                                                                                         
+                  <link type="image/x-icon" rel="shortcut icon" href="./favicon.ico">                                                                                                          
+                  <link type="text/css" rel="stylesheet" href="https://www.astro.unige.ch/mmoda/dispatch-data/api/v1.0/oda/js9/js9support.css">                                                                                                            
+                  <link type="text/css" rel="stylesheet" href="https://www.astro.unige.ch/mmoda/dispatch-data/api/v1.0/oda/js9/js9.css">                                                                                                                   
+                  <script type="text/javascript" src="https://www.astro.unige.ch/mmoda/dispatch-data/api/v1.0/oda/js9/js9prefs.js"></script>                                                                                                               
+                  <script type="text/javascript" src="https://www.astro.unige.ch/mmoda/dispatch-data/api/v1.0/oda/js9/js9support.min.js"></script>                                                                                                         
+                  <script type="text/javascript" src="https://www.astro.unige.ch/mmoda/dispatch-data/api/v1.0/oda/js9/js9.min.js"></script>                                                                                                                
+                  <script type="text/javascript" src="https://www.astro.unige.ch/mmoda/dispatch-data/api/v1.0/oda/js9/js9plugins.js"></script>                                                                                                             
+                    </head>                                                                                                                                                                    
+                <body>                                                                                                                                                                         
+
+
+                <center><font size="+1">                                                                                                                                                       
+                </font></center>                                                                                                                                                               
+                <table cellspacing="30">                                                                                                                                                       
+                <tr valign="top">                                                                                                                                                              
+        <td>                                                                                                                                                                              
+                </td>                                                                                                                                                                          
+        <td>                                                                                                                                                                                   
+                <tr valign="top">                                                                                                                                                              
+                <td>                                                                                                                                                                           
+                <div class="JS9Menubar"  id="%sMenubar" ></div>
+                <div class="JS9Colorbar" id="%sColorbar" ></div>
+                <div class="JS9" id="%s"></div>                                                                                                                                                        
+                </td>                                                                                                                                                                          
+                <td>                                                                                                                                                                           
+
+                <p>                                                                                                                                                                            
+                </td>                                                                                                                                                                          
+                </tr>                                                                                                                                                                          
+                </table>                                                                                                                                                                       
+                <script type="text/javascript">                                                                                                                                                
+                  function init(){                                                                                                                                                             
+                     var idx, obj;
+                     JS9.imageOpts.wcsunits = "degrees";
+                     %s                
+                  }
+                  $(document).ready(function(){                                                                                                                                                
+                    init();
+                   });                                                                                                                                                                          
+                </script>                                                                                                                                                                      
+
+            </body>                                                                                                                                                                            
+    </html>                                                                                                                                                                                    
+
+    ''' % (js9_id, js9_id, js9_id, file)
+
+        return t
 
     def update(self, x):
         if self.smin.val < self.smax.val:
