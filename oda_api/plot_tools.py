@@ -661,6 +661,25 @@ class OdaLightCurve(OdaProduct):
         logger.info('Policy for a light-curve product successfully verified\n')
         return True
 
+    def get_html_image(self, source_name, systematic_fraction):
+        import cdci_data_analysis.analysis.plot_tools
+        x, dx, y, dy, e_min, e_max = self.get_lc(source_name, systematic_fraction)
+
+        sp = cdci_data_analysis.analysis.plot_tools.ScatterPlot(w=800, h=600,
+                                                                x_label="Time [IJD]",
+                                                                y_label='Rate (%.0f - %.0f keV)' % (e_min, e_max),
+                                                                title=source_name)
+
+        sp.add_errorbar(x, y, yerr=dy, xerr=dx)
+        html_dict = sp.get_html_draw()
+
+        html_str = html_dict['div'] + '\n'
+        html_str += '<script src="https://cdn.bokeh.org/bokeh/release/bokeh-2.4.2.min.js"></script>\n' + \
+                    '<script src="https://cdn.bokeh.org/bokeh/release/bokeh-widgets-2.4.2.min.js"></script>\n'
+        html_str += html_dict['script']
+
+        return html_str
+
 
 class OdaSpectrum(OdaProduct):
     name = 'spectrum'
@@ -710,15 +729,38 @@ class OdaSpectrum(OdaProduct):
         if plt is not None:
             plt.show()
 
-    def build_fig(self, in_source_name='', systematic_fraction=0, xlim=[]):
+    def get_html_image(self, in_source_name, systematic_fraction, x_range=[1,500.]):
+        import cdci_data_analysis.analysis.plot_tools
+
+        sp = cdci_data_analysis.analysis.plot_tools.ScatterPlot(w=800, h=600,
+                                                                x_label="Energy [keV]",
+                                                                y_label='Counts/s/keV',
+                                                                x_axis_type='log',
+                                                                y_axis_type='log',
+                                                                x_range=x_range,
+                                                                title=in_source_name)
+
+        x, dx, y, dy = self.get_values(in_source_name, systematic_fraction)
+        if len(x) == 0:
+            return ''
+        sp.add_errorbar(x, y, yerr=dy, xerr=dx)
+        html_dict = sp.get_html_draw()
+
+        html_str = html_dict['div'] + '\n'
+        html_str += '<script src="https://cdn.bokeh.org/bokeh/release/bokeh-2.4.2.min.js"></script>\n' + \
+                    '<script src="https://cdn.bokeh.org/bokeh/release/bokeh-widgets-2.4.2.min.js"></script>\n'
+        html_str += html_dict['script']
+
+        return html_str
+
+    def get_values(self, in_source_name='', systematic_fraction=0):
 
         if in_source_name == '':
-            self.show_spectral_products()
-            return
-
+            return [], [], [], []
         specprod = self.get_spectrum_products(in_source_name)
+
         if specprod is None:
-            return
+            return [], [], [], []
 
         spec = specprod[0].data_unit[1].to_fits_hdu()
         for hh in specprod[2].data_unit:
@@ -729,6 +771,18 @@ class OdaSpectrum(OdaProduct):
         dx = (ebounds.data['E_MAX'] - ebounds.data['E_MIN']) / 2.
         y = spec.data['RATE']
         dy = numpy.sqrt(spec.data['STAT_ERR']**2 + spec.data['SYS_ERR']**2 + (y*systematic_fraction)**2)
+
+        return x, dx, y, dy
+
+    def build_fig(self, in_source_name='', systematic_fraction=0, xlim=[]):
+
+        if in_source_name == '':
+            self.show_spectral_products()
+            return
+
+        x , dx, y, dy = self.get_values(in_source_name, systematic_fraction)
+        if len(x) == 0:
+            return
 
         fig = plt.figure()
         _ = plt.errorbar(x, y, xerr=dx, yerr=dy, marker='o', capsize=0, linestyle='', label='spectrum')
