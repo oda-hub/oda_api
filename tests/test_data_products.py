@@ -3,6 +3,7 @@ from datetime import datetime
 import pytest
 import json
 from astropy.io import fits
+from dateutil import parser
 import numpy as np
 import time
 import jwt
@@ -11,6 +12,7 @@ import random
 import string
 
 from cdci_data_analysis.analysis.json import CustomJSONEncoder
+from cdci_data_analysis.analysis.drupal_helper import get_observations_for_time_range, get_user_id, generate_gallery_jwt_token
 
 import oda_api
 import oda_api.api
@@ -449,6 +451,11 @@ def test_time_ijd_format_product_gallery(dispatcher_api_with_gallery, dispatcher
     }
     encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
 
+    user_id_product_creator = get_user_id(product_gallery_url=dispatcher_test_conf_with_gallery['product_gallery_options']['product_gallery_url'],
+                                          user_email=token_payload['sub'])
+    gallery_jwt_token = generate_gallery_jwt_token(dispatcher_test_conf_with_gallery['product_gallery_options']['product_gallery_secret_key'],
+                                                   user_id=user_id_product_creator)
+
     disp = dispatcher_api_with_gallery
 
     t1_ijd = 7698.15686454216 # 2021-01-28T03:44:43.912
@@ -466,6 +473,16 @@ def test_time_ijd_format_product_gallery(dispatcher_api_with_gallery, dispatcher
         dispatcher_test_conf_with_gallery['product_gallery_options']['product_gallery_url'],
         'rest/relation/node/data_product/field_derived_from_observation')
     assert link_field_derived_from_observation in res['_links']
+
+    # additional check for the time range REST call
+    observations_range = get_observations_for_time_range(
+        dispatcher_test_conf_with_gallery['product_gallery_options']['product_gallery_url'],
+        gallery_jwt_token, t1='2021-01-28T03:44:43.912', t2='2021-01-29T03:44:43.912')
+    times = observations_range[0]['field_timerange'].split('--')
+    t_start = parser.parse(times[0]).strftime('%Y-%m-%dT%H:%M:%S')
+    t_end = parser.parse(times[1]).strftime('%Y-%m-%dT%H:%M:%S')
+    assert t_start == '2021-01-28T03:44:43'
+    assert t_end == '2021-01-29T03:44:43'
 
 
 @pytest.mark.test_drupal
