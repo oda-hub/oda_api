@@ -1000,7 +1000,7 @@ class DispatcherAPI:
                 t2_utc = self.convert_ijd_to_utc(kwargs['T2'])
                 logger.info("The value of T2 has been provided in a difference format from UTC, "
                             "this will be converted as such before being uploaded over the gallery")
-                copied_kwargs['T1'] = t2_utc
+                copied_kwargs['T2'] = t2_utc
 
         # validate source
         src_name_arg = kwargs.get('src_name', None)
