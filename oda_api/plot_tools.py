@@ -661,7 +661,7 @@ class OdaLightCurve(OdaProduct):
         logger.info('Policy for a light-curve product successfully verified\n')
         return True
 
-    def get_html_image(self, source_name, systematic_fraction):
+    def get_html_image(self, source_name, systematic_fraction, color='blue'):
         import cdci_data_analysis.analysis.plot_tools
         x, dx, y, dy, e_min, e_max = self.get_lc(source_name, systematic_fraction)
         mask = numpy.logical_not(numpy.isnan(y))
@@ -676,7 +676,7 @@ class OdaLightCurve(OdaProduct):
                                                                 y_label='Rate (%.0f - %.0f keV)' % (e_min, e_max),
                                                                 title=source_name)
 
-        sp.add_errorbar(x, y, yerr=dy, xerr=dx)
+        sp.add_errorbar(x, y, yerr=dy, xerr=dx, color=color)
         html_dict = sp.get_html_draw()
 
         html_str = html_dict['div'] + '\n'
@@ -735,7 +735,7 @@ class OdaSpectrum(OdaProduct):
         if plt is not None:
             plt.show()
 
-    def get_html_image(self, in_source_name, systematic_fraction, x_range=None, y_range=None):
+    def get_html_image(self, in_source_name, systematic_fraction, x_range=None, y_range=None, color='blue'):
         import cdci_data_analysis.analysis.plot_tools
 
         x, dx, y, dy = self.get_values(in_source_name, systematic_fraction)
@@ -755,7 +755,7 @@ class OdaSpectrum(OdaProduct):
                                                                 title=in_source_name)
         if len(x) == 0:
             return ''
-        sp.add_errorbar(x, y, yerr=dy, xerr=dx)
+        sp.add_errorbar(x, y, yerr=dy, xerr=dx, color=color)
         html_dict = sp.get_html_draw()
 
         html_str = html_dict['div'] + '\n'
