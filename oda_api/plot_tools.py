@@ -235,7 +235,7 @@ class OdaImage(OdaProduct):
 
     @staticmethod
     def get_js9_html(file_path, region_file=None, js9_id='myJS9',
-                     base_url='http://cdciweb02.internal.odahub.io/mmoda/gallery/sites/default/files'):
+                     base_url='/mmoda/gallery/sites/default/files'):
         region = ''
         file = 'JS9.Preload("%s/%s"' % (base_url, file_path)
 
