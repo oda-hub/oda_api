@@ -458,16 +458,16 @@ def test_time_ijd_format_product_gallery(dispatcher_api_with_gallery, dispatcher
 
     disp = dispatcher_api_with_gallery
 
-    t1_ijd = 7698.15686454216 # 2021-01-28T03:44:43.912
-    t2_ijd = 7699.15686454216 # 2021-01-29T03:44:43.912
+    t1_mjd = 59242.156853982 # 2021-01-28T03:44:43
+    t2_mjd = 59243.156853982 # 2021-01-29T03:44:43
 
-    res = disp.post_data_product_to_gallery(token=encoded_token, T1=t1_ijd, T2=t2_ijd)
+    res = disp.post_data_product_to_gallery(token=encoded_token, T1=t1_mjd, T2=t2_mjd)
 
-    t1_utc = disp.convert_ijd_to_utc(t1_ijd)
-    t2_utc = disp.convert_ijd_to_utc(t2_ijd)
+    t1_utc = disp.convert_ijd_to_utc(t1_mjd - 51544)
+    t2_utc = disp.convert_ijd_to_utc(t2_mjd - 51544)
 
-    assert t1_utc == '2021-01-28T03:44:43.912'
-    assert t2_utc == '2021-01-29T03:44:43.912'
+    assert parser.parse(t1_utc).strftime('%Y-%m-%dT%H:%M:%S') == '2021-01-28T03:44:43'
+    assert parser.parse(t2_utc).strftime('%Y-%m-%dT%H:%M:%S') == '2021-01-29T03:44:43'
 
     link_field_derived_from_observation = os.path.join(
         dispatcher_test_conf_with_gallery['product_gallery_options']['product_gallery_url'],
@@ -477,7 +477,7 @@ def test_time_ijd_format_product_gallery(dispatcher_api_with_gallery, dispatcher
     # additional check for the time range REST call
     observations_range = get_observations_for_time_range(
         dispatcher_test_conf_with_gallery['product_gallery_options']['product_gallery_url'],
-        gallery_jwt_token, t1='2021-01-28T03:44:43.912', t2='2021-01-29T03:44:43.912')
+        gallery_jwt_token, t1='2021-01-28T03:44:43', t2='2021-01-29T03:44:43')
     times = observations_range[0]['field_timerange'].split('--')
     t_start = parser.parse(times[0]).strftime('%Y-%m-%dT%H:%M:%S')
     t_end = parser.parse(times[1]).strftime('%Y-%m-%dT%H:%M:%S')
