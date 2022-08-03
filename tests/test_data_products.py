@@ -441,6 +441,34 @@ def test_spectrum_product_gallery(dispatcher_api_with_gallery, dispatcher_test_c
 
 
 @pytest.mark.test_drupal
+def test_time_ijd_format_product_gallery(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery):
+    # let's generate a valid token
+    token_payload = {
+        **default_token_payload,
+        'roles': 'general, gallery contributor'
+    }
+    encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
+
+    disp = dispatcher_api_with_gallery
+
+    t1_ijd = 7698.15686454216 # 2021-01-28T03:44:43.912
+    t2_ijd = 7699.15686454216 # 2021-01-29T03:44:43.912
+
+    res = disp.post_data_product_to_gallery(token=encoded_token, T1=t1_ijd, T2=t2_ijd)
+
+    t1_utc = disp.convert_ijd_to_utc(t1_ijd)
+    t2_utc = disp.convert_ijd_to_utc(t2_ijd)
+
+    assert t1_utc == '2021-01-28T03:44:43.912'
+    assert t2_utc == '2021-01-29T03:44:43.912'
+
+    link_field_derived_from_observation = os.path.join(
+        dispatcher_test_conf_with_gallery['product_gallery_options']['product_gallery_url'],
+        'rest/relation/node/data_product/field_derived_from_observation')
+    assert link_field_derived_from_observation in res['_links']
+
+
+@pytest.mark.test_drupal
 @pytest.mark.parametrize("request_product_id", ['Real', 'aaaaaaaaaaaaa'])
 def test_update_product_gallery(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery, request_product_id):
     import oda_api.plot_tools as pt
