@@ -114,7 +114,7 @@ class OdaImage(OdaProduct):
         w = wcs.WCS(header)
         ra, dec = w.wcs_pix2world(numpy.column_stack([i.flatten(), j.flatten()]), 0).transpose()
         zero_crossing = False
-        if numpy.abs(ra.max() - 360.0) < 0.1 and numpy.abs(ra.min()) < 0.1:
+        if numpy.abs(ra.max() - 360.0) < 0.1 and numpy.abs(ra.min()) < 0.01:
             zero_crossing = True
             ind_ra = ra > 180.
             ra[ind_ra] -= 360.
