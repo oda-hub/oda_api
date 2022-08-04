@@ -55,9 +55,9 @@ class OdaImage(OdaProduct):
 
     name = 'image'
 
-    def get_image_for_gallery(self, data=None, meta=None, header=None, sources=None,
+    def get_image_for_gallery(self, ext_sig=None, meta=None, header=None, sources=None,
              levels=None, cmap=cm.gist_earth, unit_ID=4, det_sigma=3):
-        plt = self.build_fig(data=data, meta=meta, header=header, sources=sources,
+        plt = self.build_fig(ext_sig=ext_sig, meta=meta, header=header, sources=sources,
                               levels=levels, cmap=cmap, unit_ID=unit_ID, det_sigma=det_sigma, sliders=False)
 
         request_time = _time.time()
@@ -67,12 +67,12 @@ class OdaImage(OdaProduct):
 
         return pic_name
 
-    def show(self, data=None, meta=None, header=None, sources=None,
+    def show(self, ext_sig=None, meta=None, header=None, sources=None,
              levels=None, cmap=cm.gist_earth, unit_ID=4, det_sigma=3, sliders=True):
       
         """
         OdaImage.show
-        :param data: ODA data products, takes from class initialisation by default
+        :param ext_sig: ODA data products extension, takes from class initialisation by default
         :param meta: ODA data products metadata, takes from class initialisation by default
         :param header: ODA data product image header, takes from class initialisation by default
         :param sources: ODA catalog table, takes from class initialisation by default
@@ -84,20 +84,20 @@ class OdaImage(OdaProduct):
         :return: matplotlib figure instance
         """
 
-        plt = self.build_fig(data=data, meta=meta, header=header, sources=sources,
+        plt = self.build_fig(ext_sig=ext_sig, meta=meta, header=header, sources=sources,
                               levels=levels, cmap=cmap, unit_ID=unit_ID, det_sigma=det_sigma, sliders=sliders)
 
         plt.show()
 
-    def build_fig(self, data=None, meta=None, header=None, sources=None,
+    def build_fig(self, ext_sig=None, meta=None, header=None, sources=None,
              levels=None, cmap=cm.gist_earth,
              unit_ID=4, det_sigma=3, sliders=True):
 
         if levels is None:
             levels = numpy.linspace(1, 10, 10)
 
-        if data is None:
-            data = self.data.mosaic_image_0_mosaic.data_unit[unit_ID].data
+        if ext_sig is None:
+            ext_sig = self.data.mosaic_image_0_mosaic.data_unit[unit_ID]
 
         if meta is None:
             self.meta = self.data.mosaic_image_0_mosaic.meta_data
@@ -110,25 +110,28 @@ class OdaImage(OdaProduct):
 
         fig = plt.figure(figsize=(8, 6))
 
-        j, i = plt.meshgrid(range(data.shape[0]), range(data.shape[1]))
+        j, i = plt.meshgrid(range(ext_sig.data.shape[0]), range(ext_sig.data.shape[1]))
         w = wcs.WCS(header)
         ra, dec = w.wcs_pix2world(numpy.column_stack([i.flatten(), j.flatten()]), 0).transpose()
         ra = ra.reshape(i.shape)
         dec = dec.reshape(j.shape)
 
-        data = numpy.transpose(data)
+        data = numpy.transpose(ext_sig.data)
         data = numpy.ma.masked_equal(data, numpy.NaN)
 
         zero_crossing = False
 
-        if numpy.abs(ra.max() - 360.0) < 0.1 and numpy.abs(ra.min()) < 0.1:
+        if numpy.abs(ra.max() - 360.0) < 0.01 and numpy.abs(ra.min()) < 0.01:
             zero_crossing = True
+            # plt.hist(ra)
+            # return
             ind_ra = ra > 180.
             ra[ind_ra] -= 360.
             #RA is reverse ordered in sky images (To be tested)
             ind_sort = numpy.argsort(ra, axis=-1)[::-1]
             ra = numpy.take_along_axis(ra, ind_sort, axis=-1)
             data = numpy.take_along_axis(data, ind_sort, axis=-1)
+
 
         self.cs = plt.contourf(ra, dec, data, cmap=cmap, levels=levels,
                                extend="both", zorder=0)
@@ -177,6 +180,19 @@ class OdaImage(OdaProduct):
                          dec_coord[i] + 0.5,
                          new_names[i], color="pink", size=15)
 
+            # fallback for general catalog (e.g. legacysurvey)
+            if not 'src_names' in sources.columns or not 'significance' in sources.columns:
+                ra_coord = ras
+                dec_coord = decs
+                if zero_crossing:
+                    ind_ra = ra_coord > 180.
+                    try:
+                        ra_coord[ind_ra] -= 360.
+                    except:
+                        pass
+                plt.scatter(ra_coord, dec_coord, s=30, marker="o", facecolors='none',
+                            edgecolors='magenta', lw=0.5, zorder=5)
+
             try:
                 m = ~m_new & (sigmas > det_sigma - 1)
                 ra_coord = ras[m]
@@ -200,20 +216,6 @@ class OdaImage(OdaProduct):
                 plt.text(ra_coord[i],
                          dec_coord[i] + 0.5,
                          cat_names[i], color="magenta", size=15)
-                
-            #fallback for general catalog (e.g. legacysurvey)
-            if not 'src_names' in sources.columns or not 'significance' in sources.columns:
-                ra_coord = ras
-                dec_coord = decs
-                if zero_crossing:
-                    ind_ra = ra_coord > 180.
-                    try:
-                        ra_coord[ind_ra] -= 360.
-                    except:
-                        pass
-                plt.scatter(ra_coord, dec_coord, s=30, marker="o", facecolors='none',
-                        edgecolors='magenta', lw=0.5, zorder=5)
-            
 
         plt.grid(color="grey", zorder=10)
 
