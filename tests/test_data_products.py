@@ -443,8 +443,10 @@ def test_spectrum_product_gallery(dispatcher_api_with_gallery, dispatcher_test_c
 
 
 @pytest.mark.test_drupal
-@pytest.mark.parametrize("tmjd_values", [[59242.156853982, 59243.156853982], ['59242.156853982', '59243.156853982']])
-def test_time_mjd_format_product_gallery(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery, tmjd_values):
+@pytest.mark.parametrize("t_values", [[59242.156853982, 59243.156853982],
+                                      ['59242.156853982', '59243.156853982'],
+                                      [ '2021-01-28T03:44:43', '2021-01-29T03:44:43']])
+def test_time_mjd_format_product_gallery(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery, t_values):
     # let's generate a valid token
     token_payload = {
         **default_token_payload,
@@ -459,16 +461,23 @@ def test_time_mjd_format_product_gallery(dispatcher_api_with_gallery, dispatcher
 
     disp = dispatcher_api_with_gallery
 
-    t1_mjd = tmjd_values[0] # 2021-01-29T03:44:43
-    t2_mjd = tmjd_values[1] # 2021-01-28T03:44:43
+    utc_format = False
+    try:
+        float(t_values[0])
+    except ValueError:
+        utc_format = True
+
+    t1_mjd = t_values[0] # 2021-01-28T03:44:43
+    t2_mjd = t_values[1] # 2021-01-29T03:44:43
 
     res = disp.post_data_product_to_gallery(token=encoded_token, T1=t1_mjd, T2=t2_mjd)
 
-    t1_utc = disp.convert_mjd_to_utc(float(t1_mjd))
-    t2_utc = disp.convert_mjd_to_utc(float(t2_mjd))
+    if not utc_format:
+        t1_utc = disp.convert_mjd_to_utc(float(t1_mjd))
+        t2_utc = disp.convert_mjd_to_utc(float(t2_mjd))
 
-    assert parser.parse(t1_utc).strftime('%Y-%m-%dT%H:%M:%S') == '2021-01-28T03:44:43'
-    assert parser.parse(t2_utc).strftime('%Y-%m-%dT%H:%M:%S') == '2021-01-29T03:44:43'
+        assert parser.parse(t1_utc).strftime('%Y-%m-%dT%H:%M:%S') == '2021-01-28T03:44:43'
+        assert parser.parse(t2_utc).strftime('%Y-%m-%dT%H:%M:%S') == '2021-01-29T03:44:43'
 
     link_field_derived_from_observation = os.path.join(
         dispatcher_test_conf_with_gallery['product_gallery_options']['product_gallery_url'],
