@@ -990,14 +990,25 @@ class DispatcherAPI:
 
         # validate/parse t1 and t2
         if 'T1' in kwargs:
-            if type(kwargs['T1']) == int or type(kwargs['T1']) == float:
-                t1_utc = self.convert_mjd_to_utc(kwargs['T1'])
+            t1_mjd = None
+            try:
+                t1_mjd = float(kwargs['T1'])
+            except ValueError:
+                pass
+            if t1_mjd is not None:
+                t1_utc = self.convert_mjd_to_utc(t1_mjd)
                 logger.info("The value of T1 has been provided in a difference format from UTC, "
                             "this will be attempted to be converted to UTC before being uploaded over the gallery")
                 copied_kwargs['T1'] = t1_utc
+
         if 'T2' in kwargs:
-            if type(kwargs['T2']) == int or type(kwargs['T2']) == float:
-                t2_utc = self.convert_mjd_to_utc(kwargs['T2'])
+            t2_mjd = None
+            try:
+                t2_mjd = float(kwargs['T2'])
+            except ValueError:
+                pass
+            if t2_mjd is not None:
+                t2_utc = self.convert_mjd_to_utc(t2_mjd)
                 logger.info("The value of T2 has been provided in a difference format from UTC, "
                             "this will be attempted to be converted to UTC before being uploaded over the gallery")
                 copied_kwargs['T2'] = t2_utc
