@@ -113,25 +113,17 @@ class OdaImage(OdaProduct):
         j, i = plt.meshgrid(range(ext_sig.data.shape[0]), range(ext_sig.data.shape[1]))
         w = wcs.WCS(header)
         ra, dec = w.wcs_pix2world(numpy.column_stack([i.flatten(), j.flatten()]), 0).transpose()
+        zero_crossing = False
+        if numpy.abs(ra.max() - 360.0) < 0.1 and numpy.abs(ra.min()) < 0.1:
+            zero_crossing = True
+            ind_ra = ra > 180.
+            ra[ind_ra] -= 360.
+
         ra = ra.reshape(i.shape)
         dec = dec.reshape(j.shape)
 
         data = numpy.transpose(ext_sig.data)
         data = numpy.ma.masked_equal(data, numpy.NaN)
-
-        zero_crossing = False
-
-        if numpy.abs(ra.max() - 360.0) < 0.01 and numpy.abs(ra.min()) < 0.01:
-            zero_crossing = True
-            # plt.hist(ra)
-            # return
-            ind_ra = ra > 180.
-            ra[ind_ra] -= 360.
-            #RA is reverse ordered in sky images (To be tested)
-            ind_sort = numpy.argsort(ra, axis=-1)[::-1]
-            ra = numpy.take_along_axis(ra, ind_sort, axis=-1)
-            data = numpy.take_along_axis(data, ind_sort, axis=-1)
-
 
         self.cs = plt.contourf(ra, dec, data, cmap=cmap, levels=levels,
                                extend="both", zorder=0)
