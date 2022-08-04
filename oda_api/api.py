@@ -991,13 +991,13 @@ class DispatcherAPI:
         # validate/parse t1 and t2
         if 'T1' in kwargs:
             if type(kwargs['T1']) == int or type(kwargs['T1']) == float:
-                t1_utc = self.convert_mijd_to_utc(kwargs['T1'])
+                t1_utc = self.convert_mjd_to_utc(kwargs['T1'])
                 logger.info("The value of T1 has been provided in a difference format from UTC, "
                             "this will be attempted to be converted to UTC before being uploaded over the gallery")
                 copied_kwargs['T1'] = t1_utc
         if 'T2' in kwargs:
             if type(kwargs['T2']) == int or type(kwargs['T2']) == float:
-                t2_utc = self.convert_mijd_to_utc(kwargs['T2'])
+                t2_utc = self.convert_mjd_to_utc(kwargs['T2'])
                 logger.info("The value of T2 has been provided in a difference format from UTC, "
                             "this will be attempted to be converted to UTC before being uploaded over the gallery")
                 copied_kwargs['T2'] = t2_utc
@@ -1159,9 +1159,9 @@ class DispatcherAPI:
         t_utc = res.text
         return t_utc
 
-    def convert_mijd_to_utc(self, t_mijd):
+    def convert_mjd_to_utc(self, t_mjd):
         # TODO to reply on a dedicated service in the dispatcher
-        t_utc = self.convert_ijd_to_utc(t_mijd - 51544)
+        t_utc = self.convert_ijd_to_utc(t_mjd - 51544)
         return t_utc
 
     def check_gallery_data_product_policy(self,

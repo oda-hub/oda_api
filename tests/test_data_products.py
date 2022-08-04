@@ -463,8 +463,8 @@ def test_time_ijd_format_product_gallery(dispatcher_api_with_gallery, dispatcher
 
     res = disp.post_data_product_to_gallery(token=encoded_token, T1=t1_mjd, T2=t2_mjd)
 
-    t1_utc = disp.convert_mijd_to_utc(t1_mjd)
-    t2_utc = disp.convert_mijd_to_utc(t2_mjd)
+    t1_utc = disp.convert_mjd_to_utc(t1_mjd)
+    t2_utc = disp.convert_mjd_to_utc(t2_mjd)
 
     assert parser.parse(t1_utc).strftime('%Y-%m-%dT%H:%M:%S') == '2021-01-28T03:44:43'
     assert parser.parse(t2_utc).strftime('%Y-%m-%dT%H:%M:%S') == '2021-01-29T03:44:43'
