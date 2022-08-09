@@ -316,7 +316,7 @@ class NumpyDataUnit(object):
 
 
     def encode(self,use_pickle=False,use_gzip=False,to_json=False):
-
+        # FIXME: does not preserve units_dict
         _data = []
         _meata_d=[]
         _kw_d = []
@@ -419,6 +419,27 @@ class NumpyDataUnit(object):
 
         return cls(data=_data, data_header=encoded_header, meta_data=encoded_meta_data,name=_name,hdu_type=_hdu_type)
 
+    @classmethod
+    def from_pandas(cls, 
+                    pandas_dataframe, 
+                    name = 'table', 
+                    column_names=[], 
+                    units_dict={}, 
+                    meta_data = {},
+                    data_header = {}):
+        if column_names and type(column_names) == list:
+            pandas_dataframe = pandas_dataframe.loc[:, column_names]
+        elif column_names and type(column_names) == dict:
+            pandas_dataframe = pandas_dataframe.loc[:, column_names.keys()]
+            pandas_dataframe.rename(columns=column_names, inplace=True)
+        rec_array = pandas_dataframe.to_records(index=False)
+        return cls(data = rec_array, 
+                   name=name, 
+                   units_dict = units_dict, 
+                   meta_data = meta_data,
+                   data_header = data_header,
+                   hdu_type = 'bintable')
+        
 
 
 class NumpyDataProduct(object):
@@ -659,3 +680,6 @@ class GWContoursDataProduct:
             self.contours[key] = GWEventContours(val, name = key)
             setattr(self, key, self.contours[key])
             
+class LightCurveDataProduct(NumpyDataProduct):
+    pass
+    
