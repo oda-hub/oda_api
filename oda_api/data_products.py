@@ -28,6 +28,7 @@ from astropy.table import Table
 from astropy.coordinates import Angle
 
 import  numpy
+import numpy as np
 import  base64
 import  pickle
 import gzip
@@ -681,5 +682,73 @@ class GWContoursDataProduct:
             setattr(self, key, self.contours[key])
             
 class LightCurveDataProduct(NumpyDataProduct):
-    pass
     
+    @classmethod
+    def from_arrays(cls,
+                    times, 
+                    fluxes = None,
+                    magnitudes = None,
+                    rates = None,
+                    counts = None,
+                    errors = None,
+                    units_spec = {}, # TODO: not used yet
+                    time_format = None,
+                    name = 'lightcurve'):
+        
+        data_header = {}
+        meta_data = {} # meta data could be attached to both NumpyDataUnit and NumpyDataProduct. Decide on this
+        
+        if (fluxes is not None) + (magnitudes is not None) + (rates is not None) + (counts is not None) != 1:
+            raise ValueError('Only one type of values should be set')
+        elif fluxes is not None:
+            col_name = 'FLUX'
+            values = fluxes
+        elif magnitudes is not None:
+            col_name = 'MAG' 
+            values = magnitudes
+        elif rates is not None:
+            col_name = 'RATE'
+            values = rates
+        elif counts is not None:
+            col_name = 'COUNTS'
+            values = counts
+        
+        if len(values) != len(times):
+            raise ValueError('Value column length do not coincide with time column length')
+        if errors is not None and len(errors) != len(times):
+            raise ValueError('Error column length do not coincide with time column length')
+        
+        # TODO: possibility for other time units
+        # TODO: add time-related keywords to header (see OGIP)
+        units_dict = {'TIME': 'd'}
+        if [isinstance(x, astropy.time.Time) for x in times]:
+            times = astropy.time.Time(times)
+                        
+        if isinstance(times, astropy.time.Time):
+            mjd = times.mjd
+        elif time_format is not None:
+            atimes = astropy.time.Time(times, format=time_format) # NOTE: do we assume paticular scale?
+            mjd = atimes.mjd 
+        else:
+            raise ValueError('Time format not specified')
+        
+        if [isinstance(x, astropy.units.Quantity) for x in values]:
+            values = astropy.units.Quantity(values)
+        if isinstance(values, astropy.units.Quantity):
+            units_dict[col_name] = values.unit.to_string(format='OGIP')
+            values = values.value
+            
+        if errors is not None and [isinstance(x, astropy.units.Quantity) for x in errors]:
+            errors = astropy.units.Quantity(errors)
+        if errors is not None and isinstance(errors, astropy.units.Quantity):
+            units_dict['ERROR'] = errors.unit.to_string(format='OGIP')
+            errors = errors.value
+            
+        rec_array = np.core.records.fromarrays([mjd, values, errors], names=('TIME', col_name, 'ERROR'))
+        
+        return cls(NumpyDataUnit(data = rec_array,
+                                 units_dict = units_dict,
+                                 meta_data = meta_data,
+                                 data_header = data_header,
+                                 hdu_type = 'bintable'),
+                   name = name)            
