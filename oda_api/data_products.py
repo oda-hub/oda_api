@@ -719,7 +719,7 @@ class LightCurveDataProduct(NumpyDataProduct):
             raise ValueError('Error column length do not coincide with time column length')
         
         # TODO: possibility for other time units
-        # TODO: add time-related keywords to header (see OGIP)
+        # TODO: add time-related keywords to header (OGIP)
         units_dict = {'TIME': 'd'}
         if [isinstance(x, astropy.time.Time) for x in times]:
             times = astropy.time.Time(times)
@@ -746,9 +746,11 @@ class LightCurveDataProduct(NumpyDataProduct):
             
         rec_array = np.core.records.fromarrays([mjd, values, errors], names=('TIME', col_name, 'ERROR'))
         
-        return cls(NumpyDataUnit(data = rec_array,
+        return cls([NumpyDataUnit(data=np.array([]), name = 'PRIMARY', hdu_type = 'primary'),
+                    NumpyDataUnit(data = rec_array,
                                  units_dict = units_dict,
                                  meta_data = meta_data,
                                  data_header = data_header,
-                                 hdu_type = 'bintable'),
+                                 hdu_type = 'bintable',
+                                 name = 'LIGHTCURVE')],
                    name = name)            
