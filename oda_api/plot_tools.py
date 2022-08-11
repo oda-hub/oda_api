@@ -108,7 +108,7 @@ class OdaImage(OdaProduct):
         if sources is None:
             sources = self.data.dispatcher_catalog_1.table
 
-        fig = plt.figure(figsize=(8, 6))
+        fig = plt.figure(figsize=(8, 8./1.62))
 
         j, i = plt.meshgrid(range(ext_sig.data.shape[0]), range(ext_sig.data.shape[1]))
         w = wcs.WCS(header)
@@ -530,7 +530,7 @@ class OdaLightCurve(OdaProduct):
 
             std_dev = numpy.std(y)
 
-            figs.append(plt.figure())
+            figs.append(plt.figure(figsize=(8, 8./1.62)))
             _ = plt.errorbar(x, y, xerr=dx, yerr=dy, marker='o', capsize=0, linestyle='', label='Lightcurve')
             _ = plt.axhline(meany, color='green', linewidth=3)
             _ = plt.xlabel('Time [IJD]')
@@ -585,7 +585,7 @@ class OdaLightCurve(OdaProduct):
 
     @staticmethod
     def plot_zoom(x, y, dy, i, n_before=5, n_after=15, save_plot=True, name_base='burst_at_'):
-        fig = plt.figure()
+        fig = plt.figure(figsize=(8, 8./1.62))
         _ = plt.errorbar(x[i-n_before:i+n_after], y[i-n_before:i+n_after], yerr=dy[i-n_before:i+n_after],
                          marker='o', capsize=0, linestyle='', label='Lightcurve')
         _ = plt.xlabel('Time [IJD]')
@@ -796,7 +796,7 @@ class OdaSpectrum(OdaProduct):
         if len(x) == 0:
             return
 
-        fig = plt.figure()
+        fig = plt.figure(figsize=(8, 8./1.62))
         _ = plt.errorbar(x, y, xerr=dx, yerr=dy, marker='o', capsize=0, linestyle='', label='spectrum')
 
         _ = plt.xlabel('Energy [keV]')
@@ -987,8 +987,8 @@ class OdaGWContours(OdaProduct):
 
         return pic_name
 
-    def build_fig(self, event_name = None):
-        fig = plt.figure()
+    def build_fig(self, event_name=None):
+        fig = plt.figure(figsize=(8, 8./1.62))
         if event_name is None:
             self.plot_contours()
         else:
