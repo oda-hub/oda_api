@@ -346,6 +346,8 @@ class NumpyDataUnit(object):
                         pickled_data
                     )
 
+                _binarys = _binarys.decode()
+
             else:
                 _d= json.dumps(self.data, cls=JsonCustomEncoder)
 
