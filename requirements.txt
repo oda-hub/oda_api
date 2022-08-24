@@ -3,9 +3,11 @@ future
 astropy<5.0.0
 json_tricks
 matplotlib
-numpy
+numpy<1.23.0 # astropy issue: module 'numpy' has no attribute 'asscalar' 
 jsonschema
 astroquery
 # temporary
 -e git+https://github.com/oda-hub/dispatcher-app.git@master#egg=cdci_data_analysis[test]
 simplejson
+sentry_sdk
+werkzeug==2.1.2

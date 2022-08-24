@@ -48,6 +48,7 @@ setup(name='oda_api',
           'test': [
                 "pytest-xdist[psutil]",
                 "astroquery>=0.4.4",
+                "sentry_sdk"
             ],      
           'extra-test': [
                 "pytest-xdist[psutil]",
