@@ -1,9 +1,5 @@
 name: Prose Linting
-on: [push]
-
-jobs:
-name: reviewdog
-on: [pull_request]
+on: [push, pull_request]
 
 jobs:
   prose:
