@@ -56,7 +56,7 @@ def get(obj, instrument, product, argument, _discover_token):
                             l.split("=", 1)[0]:l.split("=", 1)[1]
                             for l in argument
                         }
-                      }            
+                      }
 
             logger.debug("request to dispatcher %s", request)
 
