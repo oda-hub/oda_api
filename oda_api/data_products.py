@@ -716,7 +716,7 @@ class LightCurveDataProduct(NumpyDataProduct):
             values = counts
         
         if len(values) != len(times):
-            raise ValueError('Value column length do not coincide with time column length')
+            raise ValueError(f'Value column length {len(values)} do not coincide with time {len(times)} column length')
         if errors is not None and len(errors) != len(times):
             raise ValueError('Error column length do not coincide with time column length')
         
