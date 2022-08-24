@@ -17,18 +17,18 @@ jobs:
           # https://docs.github.com/en/actions/security-guides/automatic-token-authentication#about-the-github_token-secret
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
-      with:
-        # Optional
-        version: 2.17.0
-        
-        # Optional
-        styles: |
-          https://github.com/errata-ai/Microsoft/releases/latest/download/Microsoft.zip
-          https://github.com/errata-ai/write-good/releases/latest/download/write-good.zip
+        with:
+          # Optional
+          version: 2.17.0
+          
+          # Optional
+          styles: |
+            https://github.com/errata-ai/Microsoft/releases/latest/download/Microsoft.zip
+            https://github.com/errata-ai/write-good/releases/latest/download/write-good.zip
 
-        # Optional
-        # config: https://raw.githubusercontent.com/errata-ai/vale/master/.vale.ini
+          # Optional
+          # config: https://raw.githubusercontent.com/errata-ai/vale/master/.vale.ini
 
-        # Optional
-        files: README.md
- 
+          # Optional
+          files: README.md
+  
