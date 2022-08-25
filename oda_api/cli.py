@@ -39,8 +39,9 @@ def cli(obj, debug=False, dispatcher_url=None, test_connection=False, wait=True)
 @click.option("-i", "--instrument", default=None)
 @click.option("-p", "--product", default=None)
 @click.option("-a", "--argument", default=None, multiple=True)
+@click.option("-T", "--discover-token", "_discover_token", is_flag=True)
 @click.pass_obj
-def get(obj, instrument, product, argument):
+def get(obj, instrument, product, argument, _discover_token):
     if instrument is None:
         logger.info("found instruments: %s", obj['dispatcher'].get_instruments_list())
     else:
@@ -59,6 +60,9 @@ def get(obj, instrument, product, argument):
 
             logger.debug("request to dispatcher %s", request)
 
+            if _discover_token:
+                request['token'] = discover_token()
+                
             product = obj['dispatcher'].get_product(**request)
 
             logger.info("got product: %s", product.as_list())
