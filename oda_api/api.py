@@ -247,7 +247,6 @@ class DispatcherAPI:
                     url = self.known_sites_dict[url]
                 else:
                     logger.debug(f'url %s does not match http(s) schema and is not one of the aliases (%s)', url, list(self.known_sites_dict))                    
-                    url = None
 
 
         if host is not None:
