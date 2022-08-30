@@ -42,7 +42,8 @@ setup(name='oda_api',
             "jsonschema",
             "pyjwt",
             "astroquery",
-            "scipy"
+            "scipy",
+            "rdflib"
         ],
       extras_require={
           'test': [
