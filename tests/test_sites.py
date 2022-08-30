@@ -15,6 +15,3 @@ def test_site_discovery():
     for alias in ["unige-staging", "staging"]:
         disp = DispatcherAPI(url=alias)
         assert disp.url == "https://dispatcher-staging.obsuks1.unige.ch"
-
-    with pytest.raises(RuntimeError):
-        disp = DispatcherAPI(url="unige-unknown")

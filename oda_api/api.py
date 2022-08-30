@@ -246,8 +246,8 @@ class DispatcherAPI:
                     self.logger.info('url %s interpretted an alias for %s', url, self.known_sites_dict[url])
                     url = self.known_sites_dict[url]
                 else:
-                    raise RuntimeError(f'url {url} does not match http(s) schema and is not one of the aliases ({list(self.known_sites_dict)})')
-                    
+                    logger.debug(f'url %s does not match http(s) schema and is not one of the aliases (%s)', url, list(self.known_sites_dict))                    
+                    url = None
 
 
         if host is not None:
