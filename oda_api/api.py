@@ -2,6 +2,8 @@ from __future__ import absolute_import, division, print_function
 
 from collections import OrderedDict
 from json.decoder import JSONDecodeError
+
+import rdflib
 from astropy.table import Table
 from astropy.coordinates import Angle
 
@@ -198,6 +200,27 @@ class DispatcherAPI:
     # but in desirable way
     token_discovery_methods = None
 
+    _known_sites_dict = None
+
+    @property
+    def known_sites_dict(self):
+        if self._known_sites_dict is None:
+            self._known_sites_dict = {}
+
+            G = rdflib.Graph()
+            G.parse("https://odahub.io/oda-sites.ttl")
+            for site, url in G.subject_objects(rdflib.URIRef("http://odahub.io/ontology#APIURL")):             
+                self._known_sites_dict[site.split("#")[1]] = str(url)
+
+                for alias in G.objects(site, rdflib.URIRef("http://www.w3.org/2000/01/rdf-schema#label")):
+                    self._known_sites_dict[str(alias)] = str(url)
+        
+        return self._known_sites_dict
+
+    def setup_loggers(self):
+        self.logger = logger.getChild(self.__class__.__name__.lower())
+        self.progress_logger = self.logger.getChild("progress")
+
     def __init__(self,
                  instrument='mock',
                  url=None,
@@ -211,8 +234,22 @@ class DispatcherAPI:
                  session_id=None,
                  ):
 
+        self.setup_loggers()
+
         if url is None:
-            url = "https://www.astro.unige.ch/mmoda/dispatch-data"
+            if 'unige-production' not in self.known_sites_dict:
+                url = "https://www.astro.unige.ch/mmoda/dispatch-data"
+            else:
+                url = self.known_sites_dict['unige-production']
+        else:
+            if not url.startswith("http://") and not url.startswith("https://"):
+                self.logger.info('url %s is not of http(s) schema, trying to interpretting url as an alias', url)
+                if url in self.known_sites_dict:                                        
+                    self.logger.info('url %s interpretted an alias for %s', url, self.known_sites_dict[url])
+                    url = self.known_sites_dict[url]
+                else:
+                    logger.debug(f'url %s does not match http(s) schema and is not one of the aliases (%s)', url, list(self.known_sites_dict))                    
+
 
         if host is not None:
             msg = '\n'
@@ -243,10 +280,7 @@ class DispatcherAPI:
 
         if session_id is not None:
             self._session_id = session_id
-
-        self.logger = logger.getChild(self.__class__.__name__.lower())
-        self.progress_logger = self.logger.getChild("progress")
-
+        
         self._carriage_return_progress = False
 
         self.run_analysis_handle = run_analysis_handle
