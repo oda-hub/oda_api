@@ -43,7 +43,8 @@ setup(name='oda_api',
             "pyjwt",
             "astroquery",
             "scipy",
-            "rdflib"
+            "rdflib",
+            "black"
         ],
       extras_require={
           'test': [
