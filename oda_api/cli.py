@@ -8,6 +8,7 @@ import logging
 import time
 
 import oda_api.api as api
+from oda_api import plot_tools
 from oda_api.token import discover_token, decode_oda_token, format_token, update_token
 
 logger = logging.getLogger('oda_api')
@@ -71,6 +72,16 @@ def get(obj, instrument, product, argument, _discover_token):
                 logger.info("> %s", p)
                 for du in p.data_unit:
                     logger.info(">> %s", du.data)
+
+            for k, v in plot_tools.__dict__.items():
+                if k.startswith('Oda'):
+                    try:
+                        O = v(product)
+                        logger.info('%s can be parsed as %s => %s', product, v, O)
+                        fn = O.get_image_for_gallery()
+                        logger.info("plotted as %s", fn)
+                    except Exception as e:
+                        logger.info('failed to parse %s as %s (%s), %s', product, k, v, repr(e))
 
 
 @cli.group("token")
