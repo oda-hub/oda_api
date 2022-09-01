@@ -74,14 +74,14 @@ def get(obj, instrument, product, argument, _discover_token):
                     logger.info(">> %s", du.data)
 
             for k, v in plot_tools.__dict__.items():
-                if not k.startswith('Oda'): continue
-                try:
-                    O = v(product)
-                    logger.info('%s can be parsed as %s => %s', product, v, O)
-                    fn = O.get_image_for_gallery()
-                    logger.info("plotted as %s", fn)
-                except Exception as e:
-                    logger.info('failed to parse %s as %s (%s), %s', product, k, v, repr(e))
+                if k.startswith('Oda'):
+                    try:
+                        O = v(product)
+                        logger.info('%s can be parsed as %s => %s', product, v, O)
+                        fn = O.get_image_for_gallery()
+                        logger.info("plotted as %s", fn)
+                    except Exception as e:
+                        logger.info('failed to parse %s as %s (%s), %s', product, k, v, repr(e))
 
 
 @cli.group("token")
