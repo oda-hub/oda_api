@@ -948,12 +948,88 @@ class DispatcherAPI:
 
         return response_json
 
+    def post_observation_to_gallery(self,
+                                    observation_title: str = None,
+                                    yaml_file_path=None,
+                                    token: str = None,
+                                    **kwargs):
+        copied_kwargs = kwargs.copy()
+
+        # generate file obj
+        files_obj = {}
+        if yaml_file_path is not None:
+            if isinstance(yaml_file_path, list):
+                for yaml_path in yaml_file_path:
+                    files_obj['yaml_file_' + str(yaml_file_path.index(yaml_path))] = open(yaml_path, 'rb')
+            elif isinstance(yaml_file_path, str):
+                files_obj['yaml_file'] = open(yaml_file_path, 'rb')
+
+                # validate/parse t1 and t2
+        if 'T1' in kwargs:
+            t1_mjd = None
+            try:
+                t1_mjd = float(kwargs['T1'])
+            except ValueError:
+                pass
+            if t1_mjd is not None:
+                t1_utc = self.convert_mjd_to_utc(t1_mjd)
+                logger.info("The value of T1 has been provided in a difference format from UTC, "
+                            "this will be attempted to be converted to UTC before being uploaded over the gallery")
+                copied_kwargs['T1'] = t1_utc
+
+        if 'T2' in kwargs:
+            t2_mjd = None
+            try:
+                t2_mjd = float(kwargs['T2'])
+            except ValueError:
+                pass
+            if t2_mjd is not None:
+                t2_utc = self.convert_mjd_to_utc(t2_mjd)
+                logger.info("The value of T2 has been provided in a difference format from UTC, "
+                            "this will be attempted to be converted to UTC before being uploaded over the gallery")
+                copied_kwargs['T2'] = t2_utc
+
+        params = {
+            'title': observation_title,
+            'token': token,
+            **copied_kwargs
+        }
+
+        posting_msg = f'Posting an observation with title {observation_title} on the gallery'
+
+        logger.info(posting_msg)
+
+        res = requests.post(os.path.join(self.url, "post_observation_to_gallery"),
+                            params={**params},
+                            files=files_obj
+                            )
+        response_json = self._decode_res_json(res)
+
+        if res.status_code != 200:
+            res_obj = res.json()
+            error_message = (f"An issue occurred while performing a request on the product gallery, "
+                             f"the following error was returned:\n")
+            if 'error_message' in res_obj:
+                error_message += '\n' + res_obj['error_message']
+                if 'drupal_helper_error_message' in res_obj:
+                    error_message += '-' + res_obj['drupal_helper_error_message']
+            else:
+                error_message += res.text
+            logger.warning(error_message)
+        else:
+            product_posted_link = response_json['_links']['self']['href'].split("?")[0]
+            logger.info(f"Observation successfully posted on the gallery, at the link {product_posted_link}\n"
+                        f"Using the above link you can modify the newly created observation in the future.\n")
+
+        return response_json
+
     def post_data_product_to_gallery(self,
                                      product_title: str = None,
                                      product_id: str = None,
                                      observation_id: str = None,
                                      gallery_image_path: str = None,
                                      fits_file_path=None,
+                                     yaml_file_path=None,
                                      token: str = None,
                                      insert_new_source: bool = False,
                                      validate_source: bool = False,
@@ -972,6 +1048,7 @@ class DispatcherAPI:
             * by specifying the time range, in particular the value of T1 and T2 in the following format '2003-03-15T23:27:40.0'
         :param gallery_image_path: path of the generated image and to be uploaded over the gallery
         :param fits_file_path: a list of fits file links used for the generation of the product to upload over the gallery
+        :param yaml_file_path: a list of yaml file links to be attached to the observation of the product to upload over the gallery
         :param token: user token
         :param insert_new_source: a boolean value to specify if, in case the sources that are passed as parameters and
                are not available on the product gallery, will be created and then used for the new data product
@@ -1013,6 +1090,12 @@ class DispatcherAPI:
                     files_obj['fits_file_' + str(fits_file_path.index(fits_path))] = open(fits_path, 'rb')
             elif isinstance(fits_file_path, str):
                 files_obj['fits_file'] = open(fits_file_path, 'rb')
+        if yaml_file_path is not None:
+            if isinstance(yaml_file_path, list):
+                for yaml_path in yaml_file_path:
+                    files_obj['yaml_file_' + str(yaml_file_path.index(yaml_path))] = open(yaml_path, 'rb')
+            elif isinstance(yaml_file_path, str):
+                files_obj['yaml_file'] = open(yaml_file_path, 'rb')
         if html_image is not None:
             if tmp_path_html_folder_path is None:
                 tmp_path_html_folder_path = tempfile.mkdtemp(suffix="gallery_temp_files")
