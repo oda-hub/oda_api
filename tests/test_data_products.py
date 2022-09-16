@@ -469,7 +469,9 @@ def test_post_new_observation_product_gallery(dispatcher_api_with_gallery, dispa
     elif yaml_files == "list":
         yaml_file_path = ["observation_yaml_dummy_files/obs_rev_1.yaml", "observation_yaml_dummy_files/obs_rev_2.yaml"]
 
-    res = disp.post_observation_to_gallery(observation_title="test posting observation from oda_api",
+    observation_title = "test posting observation from oda_api"
+
+    res = disp.post_observation_to_gallery(observation_title=observation_title,
                                            T1=t_values[0], T2=t_values[1],
                                            yaml_file_path=yaml_file_path,
                                            obsid=obsid,
@@ -477,7 +479,7 @@ def test_post_new_observation_product_gallery(dispatcher_api_with_gallery, dispa
                                            )
 
     assert 'title' in res
-    # assert res['title'][0]['value'] == "test posting observation from oda_api"
+    assert res['title'][0]['value'] == observation_title
 
     assert 'field_rev1' in res
     assert 'field_rev2' in res
