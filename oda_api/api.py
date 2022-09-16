@@ -1017,8 +1017,9 @@ class DispatcherAPI:
                 error_message += res.text
             logger.warning(error_message)
         else:
-            product_posted_link = response_json['_links']['self']['href'].split("?")[0]
-            logger.info(f"Observation successfully posted on the gallery, at the link {product_posted_link}\n"
+            observation_link = response_json['_links']['self']['href'].split("?")[0]
+            observation_title = response_json['title'][0]['value']
+            logger.info(f"Observation with title {observation_title} successfully posted on the gallery, at the link {observation_link}\n"
                         f"Using the above link you can modify the newly created observation in the future.\n")
 
         return response_json

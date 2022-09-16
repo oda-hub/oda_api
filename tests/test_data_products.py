@@ -443,9 +443,70 @@ def test_spectrum_product_gallery(dispatcher_api_with_gallery, dispatcher_test_c
 
 
 @pytest.mark.test_drupal
+@pytest.mark.parametrize("obsid", [1960001, ["1960001", "1960002", "1960003"]])
+@pytest.mark.parametrize("yaml_files", [None, "single", "list"])
 @pytest.mark.parametrize("t_values", [[59242.156853982, 59243.156853982],
                                       ['59242.156853982', '59243.156853982'],
-                                      [ '2021-01-28T03:44:43', '2021-01-29T03:44:43']])
+                                      ['2021-01-28T03:44:43', '2021-01-29T03:44:43']])
+def test_post_new_observation_product_gallery(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery, t_values, obsid, yaml_files):
+    # let's generate a valid token
+    token_payload = {
+        **default_token_payload,
+        'roles': 'general, gallery contributor'
+    }
+    encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
+
+    user_id_product_creator = get_user_id(product_gallery_url=dispatcher_test_conf_with_gallery['product_gallery_options']['product_gallery_url'],
+                                          user_email=token_payload['sub'])
+    gallery_jwt_token = generate_gallery_jwt_token(dispatcher_test_conf_with_gallery['product_gallery_options']['product_gallery_secret_key'],
+                                                   user_id=user_id_product_creator)
+
+    disp = dispatcher_api_with_gallery
+
+    yaml_file_path = None
+    if yaml_files == "single":
+        yaml_file_path = "observation_yaml_dummy_files/obs_rev_1.yaml"
+    elif yaml_files == "list":
+        yaml_file_path = ["observation_yaml_dummy_files/obs_rev_1.yaml", "observation_yaml_dummy_files/obs_rev_2.yaml"]
+
+    res = disp.post_observation_to_gallery(observation_title="test posting observation from oda_api",
+                                           T1=t_values[0], T2=t_values[1],
+                                           yaml_file_path=yaml_file_path,
+                                           obsid=obsid,
+                                           token=encoded_token,
+                                           )
+
+    assert 'title' in res
+    # assert res['title'][0]['value'] == "test posting observation from oda_api"
+
+    assert 'field_rev1' in res
+    assert 'field_rev2' in res
+
+    # additional check for the time range REST call
+    observations_range = get_observations_for_time_range(
+        dispatcher_test_conf_with_gallery['product_gallery_options']['product_gallery_url'],
+        gallery_jwt_token, t1='2021-01-28T03:44:43', t2='2021-01-29T03:44:43')
+    times = observations_range[0]['field_timerange'].split('--')
+    t_start = parser.parse(times[0]).strftime('%Y-%m-%dT%H:%M:%S')
+    t_end = parser.parse(times[1]).strftime('%Y-%m-%dT%H:%M:%S')
+    assert t_start == '2021-01-28T03:44:43'
+    assert t_end == '2021-01-29T03:44:43'
+
+    if yaml_files is not None:
+        link_field_field_attachments = os.path.join(
+            dispatcher_test_conf_with_gallery['product_gallery_options']['product_gallery_url'],
+            'rest/relation/node/observation/field_attachments')
+        assert link_field_field_attachments in res['_links']
+        if yaml_files == "list":
+            assert len(res['_links'][link_field_field_attachments]) == len(yaml_file_path)
+        else:
+            assert len(res['_links'][link_field_field_attachments]) == 1
+
+
+@pytest.mark.test_drupal
+@pytest.mark.parametrize("t_values", [[59242.156853982, 59243.156853982],
+                                      ['59242.156853982', '59243.156853982'],
+                                      ['2021-01-28T03:44:43', '2021-01-29T03:44:43']])
 def test_time_mjd_format_product_gallery(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery, t_values):
     # let's generate a valid token
     token_payload = {
