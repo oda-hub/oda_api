@@ -1045,7 +1045,9 @@ class DispatcherAPI:
                as well as to identify an already existing one and update it with the arguments provided by the user
         :param observation_id: this can be indicated in two different ways
             * by specifying the id of an already present observation (eg 'test observation')
-            * by specifying the time range, in particular the value of T1 and T2 in the following format '2003-03-15T23:27:40.0'
+            * by specifying the time range, in particular the value of T1 and T2 in the ISOT format (e.g. '2003-03-15T23:27:40.0'),
+              which is the default one, also the MJD format is supported
+        :param observation_time_format: format of the time values for an observation, default to ISOT
         :param gallery_image_path: path of the generated image and to be uploaded over the gallery
         :param fits_file_path: a list of fits file links used for the generation of the product to upload over the gallery
         :param yaml_file_path: a list of yaml file links to be attached to the observation of the product to upload over the gallery
