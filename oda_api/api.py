@@ -49,6 +49,7 @@ from . import custom_formatters
 from . import colors as C
 from . import plot_tools
 from itertools import cycle
+from datetime import datetime
 import numpy as np
 import traceback
 from jsonschema import validate as validate_json
@@ -951,17 +952,48 @@ class DispatcherAPI:
     def parse_observation_time_arg_product_gallery(self,
                                                    t1=None,
                                                    t2=None,
-                                                   observation_time_format: str = None
+                                                   observation_time_format: str = 'ISOT'
                                                    ):
-        if t1 is not None and observation_time_format == 'mjd':
-            t1 = self.convert_mjd_to_utc(t1)
-            logger.info("The value of T1 has been provided in a difference format from UTC, "
-                        "this will be attempted to be converted to UTC before being uploaded over the gallery")
 
-        if t2 is not None and observation_time_format == 'mjd':
-            t2 = self.convert_mjd_to_utc(t2)
-            logger.info("The value of T2 has been provided in a difference format from UTC, "
-                        "this will be attempted to be converted to UTC before being uploaded over the gallery")
+        if t1 is not None:
+            if observation_time_format is not None and observation_time_format.upper() == 'MJD':
+                try:
+                    logger.info("The value of T1 has been provided in a difference format from UTC, "
+                                "this will be attempted to be converted to UTC before being uploaded over the gallery")
+                    t1 = self.convert_mjd_to_utc(float(t1))
+                except Exception as e:
+                    logger.warning(f'Error during the time conversion: {e}\n'
+                                   'please check the time arguments you provided and the relative format')
+                    raise UserError('Error during the time conversion, '
+                                    'please check the time arguments you provided and the relative format')
+            elif observation_time_format is None or observation_time_format.upper() == 'ISOT':
+                try:
+                    datetime.strptime(t1, '%Y-%m-%dT%H:%M:%S')
+                except Exception as e:
+                    logger.warning(f'Error during the time conversion: {e}\n'
+                                   'please check the time arguments you provided and the relative format')
+                    raise UserError(f'Error during the time conversion: {e}\n'
+                                    'please check the time arguments you provided and the relative format')
+
+        if t2 is not None:
+            if observation_time_format is not None and observation_time_format.upper() == 'MJD':
+                try:
+                    logger.info("The value of T2 has been provided in a difference format from UTC, "
+                                "this will be attempted to be converted to UTC before being uploaded over the gallery")
+                    t2 = self.convert_mjd_to_utc(float(t2))
+                except Exception as e:
+                    logger.warning(f'Error during the time conversion: {e}\n'
+                                   'please check the time arguments you provided and the relative format')
+                    raise UserError('Error during the time conversion, '
+                                    'please check the time arguments you provided and the relative format')
+            elif observation_time_format is None or observation_time_format.upper() == 'ISOT':
+                try:
+                    datetime.strptime(t2, '%Y-%m-%dT%H:%M:%S')
+                except Exception as e:
+                    logger.warning(f'Error during the time conversion: {e}\n'
+                                   'please check the time arguments you provided and the relative format')
+                    raise UserError(f'Error during the time conversion: {e}\n'
+                                    'please check the time arguments you provided and the relative format')
 
         return t1, t2
 
@@ -986,6 +1018,15 @@ class DispatcherAPI:
             t1=kwargs.get('T1', None), t2=kwargs.get('T2', None),
             observation_time_format=observation_time_format
         )
+
+        obsid_arg = kwargs.get('obsid', None)
+        if obsid_arg is not None:
+            if isinstance(obsid_arg, list):
+                obsid_list = ','.join(obsid_arg)
+            else:
+                obsid_list = obsid_arg
+
+            copied_kwargs['obsid'] = obsid_list
 
         params = {
             'title': observation_title,
@@ -1045,9 +1086,9 @@ class DispatcherAPI:
                as well as to identify an already existing one and update it with the arguments provided by the user
         :param observation_id: this can be indicated in two different ways
             * by specifying the id of an already present observation (eg 'test observation')
-            * by specifying the time range, in particular the value of T1 and T2 in the ISOT format (e.g. '2003-03-15T23:27:40.0'),
-              which is the default one, also the MJD format is supported
-        :param observation_time_format: format of the time values for an observation, default to ISOT
+            * by specifying the time range, in particular the value of T1 and T2
+        :param observation_time_format: format of the time values for an observation (i.e. T1 and T2), default to ISOT,
+               (e.g. '2003-03-15T23:27:40.0'), also the MJD format is supported
         :param gallery_image_path: path of the generated image and to be uploaded over the gallery
         :param fits_file_path: a list of fits file links used for the generation of the product to upload over the gallery
         :param yaml_file_path: a list of yaml file links to be attached to the observation of the product to upload over the gallery
@@ -1266,8 +1307,11 @@ class DispatcherAPI:
     def convert_ijd_to_utc(self, t_ijd):
         # TODO to reply on a dedicated service in the dispatcher
         res = requests.get(f"https://www.astro.unige.ch/mmoda/dispatch-data/gw/timesystem/api/v1.0/converttime/IJD/{t_ijd}/UTC")
-        t_utc = res.text
-        return t_utc
+        if res.status_code == 200:
+            t_utc = res.text
+            return t_utc
+        else:
+            raise
 
     def convert_mjd_to_utc(self, t_mjd):
         # TODO to reply on a dedicated service in the dispatcher
