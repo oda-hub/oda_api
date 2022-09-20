@@ -1022,7 +1022,7 @@ class DispatcherAPI:
         obsid_arg = kwargs.get('obsid', None)
         if obsid_arg is not None:
             if isinstance(obsid_arg, list):
-                obsid_list = ','.join(obsid_arg)
+                obsid_list = ','.join(map(str, obsid_arg))
             else:
                 obsid_list = obsid_arg
 

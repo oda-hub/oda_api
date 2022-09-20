@@ -443,7 +443,7 @@ def test_spectrum_product_gallery(dispatcher_api_with_gallery, dispatcher_test_c
 
 
 @pytest.mark.test_drupal
-@pytest.mark.parametrize("obsid", [1960001, ["1960001", "1960002", "1960003"]])
+@pytest.mark.parametrize("obsid", [1960001, ["1960001", "1960002", "1960003"], [1960001, 1960002, 1960003]])
 @pytest.mark.parametrize("yaml_files", [None, "single", "list"])
 @pytest.mark.parametrize("observation_time_format", [None, "ISOT", "MJD", "no_value"])
 @pytest.mark.parametrize("t_values_format", ["mjd", "ISOT"])
@@ -504,7 +504,7 @@ def test_post_new_observation_product_gallery(dispatcher_api_with_gallery, dispa
         assert 'field_obsid' in res
         if isinstance(obsid, list):
             for single_obsid in obsid:
-                assert res['field_obsid'][obsid.index(single_obsid)]['value'] == single_obsid
+                assert res['field_obsid'][obsid.index(single_obsid)]['value'] == str(single_obsid)
         else:
             assert res['field_obsid'][0]['value'] == str(obsid)
 
