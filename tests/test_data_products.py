@@ -399,7 +399,9 @@ def test_spectrum_product_gallery(dispatcher_api_with_gallery, dispatcher_test_c
 
     res = disp.post_data_product_to_gallery(product_title=source_name,
                                             gallery_image_path=gallery_image,
-                                            observation_id=observation,
+                                            obsid='19200050089',
+                                            T1='2022-09-19T12:01:55',
+                                            T2='2022-09-19T21:36:40',
                                             src_name=source_names,
                                             validate_source=True,
                                             force_insert_not_valid_new_source=force_insert_not_valid_new_sources,
@@ -440,6 +442,93 @@ def test_spectrum_product_gallery(dispatcher_api_with_gallery, dispatcher_test_c
             assert len(res['_links'][link_astrophysical_entity]) == len(source_names_list)
     else:
         assert link_astrophysical_entity not in res['_links']
+
+
+@pytest.mark.test_drupal
+@pytest.mark.parametrize("obsid", [1960001, ["1960001", "1960002", "1960003"], [1960001, 1960002, 1960003]])
+@pytest.mark.parametrize("yaml_files", [None, "single", "list"])
+@pytest.mark.parametrize("observation_time_format", [None, "ISOT", "MJD", "no_value"])
+@pytest.mark.parametrize("t_values_format", ["mjd", "ISOT"])
+def test_update_observation_product_gallery(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery, t_values_format, obsid, yaml_files, observation_time_format):
+    # let's generate a valid token
+    token_payload = {
+        **default_token_payload,
+        'roles': 'general, gallery contributor'
+    }
+    encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
+
+    user_id_product_creator = get_user_id(product_gallery_url=dispatcher_test_conf_with_gallery['product_gallery_options']['product_gallery_url'],
+                                          user_email=token_payload['sub'])
+    gallery_jwt_token = generate_gallery_jwt_token(dispatcher_test_conf_with_gallery['product_gallery_options']['product_gallery_secret_key'],
+                                                   user_id=user_id_product_creator)
+
+    disp = dispatcher_api_with_gallery
+
+    if t_values_format == "mjd":
+        t_values = [59242.156853982, 59243.156853982]
+    else:
+        t_values = ['2021-01-28T03:44:43', '2021-01-29T03:44:43']
+
+    yaml_file_path = None
+    if yaml_files == "single":
+        yaml_file_path = "observation_yaml_dummy_files/obs_rev_1.yaml"
+    elif yaml_files == "list":
+        yaml_file_path = ["observation_yaml_dummy_files/obs_rev_1.yaml", "observation_yaml_dummy_files/obs_rev_2.yaml"]
+
+    observation_title = "test observation"
+
+    params = dict(
+        observation_title=observation_title,
+        T1=t_values[0], T2=t_values[1],
+        observation_time_format=observation_time_format,
+        yaml_file_path=yaml_file_path,
+        obsid=obsid,
+        token=encoded_token
+    )
+
+    if observation_time_format == "no_value":
+        params.pop("observation_time_format")
+
+    if ((t_values_format == "mjd") and
+        (observation_time_format == "ISOT" or observation_time_format is None or observation_time_format == "no_value")) or \
+        ((t_values_format == "ISOT") and observation_time_format == "MJD"):
+        with pytest.raises(oda_api.api.UserError):
+            disp.update_observation_with_title(**params)
+    else:
+        res = disp.update_observation_with_title(**params)
+
+        assert 'title' in res
+        assert res['title'][0]['value'] == observation_title
+
+        assert 'field_rev1' in res
+        assert 'field_rev2' in res
+
+        assert 'field_obsid' in res
+        if isinstance(obsid, list):
+            for single_obsid in obsid:
+                assert res['field_obsid'][obsid.index(single_obsid)]['value'] == str(single_obsid)
+        else:
+            assert res['field_obsid'][0]['value'] == str(obsid)
+
+        # additional check for the time range REST call
+        observations_range = get_observations_for_time_range(
+            dispatcher_test_conf_with_gallery['product_gallery_options']['product_gallery_url'],
+            gallery_jwt_token, t1='2021-01-28T03:44:43', t2='2021-01-29T03:44:43')
+        times = observations_range[0]['field_timerange'].split('--')
+        t_start = parser.parse(times[0]).strftime('%Y-%m-%dT%H:%M:%S')
+        t_end = parser.parse(times[1]).strftime('%Y-%m-%dT%H:%M:%S')
+        assert t_start == '2021-01-28T03:44:43'
+        assert t_end == '2021-01-29T03:44:43'
+
+        if yaml_files is not None:
+            link_field_field_attachments = os.path.join(
+                dispatcher_test_conf_with_gallery['product_gallery_options']['product_gallery_url'],
+                'rest/relation/node/observation/field_attachments')
+            assert link_field_field_attachments in res['_links']
+            if yaml_files == "list":
+                assert len(res['_links'][link_field_field_attachments]) == len(yaml_file_path)
+            else:
+                assert len(res['_links'][link_field_field_attachments]) == 1
 
 
 @pytest.mark.test_drupal

@@ -997,6 +997,74 @@ class DispatcherAPI:
 
         return t1, t2
 
+    def update_observation_with_title(self,
+                                      observation_title: str = None,
+                                      yaml_file_path=None,
+                                      token: str = None,
+                                      observation_time_format: str = 'ISOT',
+                                      **kwargs):
+        copied_kwargs = kwargs.copy()
+
+        # generate file obj
+        files_obj = {}
+        if yaml_file_path is not None:
+            if isinstance(yaml_file_path, list):
+                for yaml_path in yaml_file_path:
+                    files_obj['yaml_file_' + str(yaml_file_path.index(yaml_path))] = open(yaml_path, 'rb')
+            elif isinstance(yaml_file_path, str):
+                files_obj['yaml_file'] = open(yaml_file_path, 'rb')
+
+        copied_kwargs['T1'], copied_kwargs['T2'] = self.parse_observation_time_arg_product_gallery(
+            t1=kwargs.get('T1', None), t2=kwargs.get('T2', None),
+            observation_time_format=observation_time_format
+        )
+
+        obsid_arg = kwargs.get('obsid', None)
+        if obsid_arg is not None:
+            if isinstance(obsid_arg, list):
+                obsid_list = ','.join(map(str, obsid_arg))
+            else:
+                obsid_list = obsid_arg
+
+            copied_kwargs['obsid'] = obsid_list
+
+        params = {
+            'title': observation_title,
+            'token': token,
+            'update_observation': True,
+            **copied_kwargs
+        }
+
+        posting_msg = f'Posting an observation with title {observation_title} on the gallery'
+
+        logger.info(posting_msg)
+
+        res = requests.post(os.path.join(self.url, "post_observation_to_gallery"),
+                            params={**params},
+                            files=files_obj
+                            )
+        response_json = self._decode_res_json(res)
+
+        if res.status_code != 200:
+            res_obj = res.json()
+            error_message = (f"An issue occurred while performing a request on the product gallery, "
+                             f"the following error was returned:\n")
+            if 'error_message' in res_obj:
+                error_message += '\n' + res_obj['error_message']
+                if 'drupal_helper_error_message' in res_obj:
+                    error_message += '-' + res_obj['drupal_helper_error_message']
+            else:
+                error_message += res.text
+            logger.warning(error_message)
+        else:
+            observation_link = response_json['_links']['self']['href'].split("?")[0]
+            observation_title = response_json['title'][0]['value']
+            logger.info(
+                f"Observation with title {observation_title} successfully posted on the gallery, at the link {observation_link}\n"
+                f"Using the above link you can modify the newly created observation in the future.\n")
+
+        return response_json
+
     def post_observation_to_gallery(self,
                                     observation_title: str = None,
                                     yaml_file_path=None,
