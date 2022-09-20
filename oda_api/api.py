@@ -948,10 +948,28 @@ class DispatcherAPI:
 
         return response_json
 
+    def parse_observation_time_arg_product_gallery(self,
+                                                   t1=None,
+                                                   t2=None,
+                                                   observation_time_format: str = None
+                                                   ):
+        if t1 is not None and observation_time_format == 'mjd':
+            t1 = self.convert_mjd_to_utc(t1)
+            logger.info("The value of T1 has been provided in a difference format from UTC, "
+                        "this will be attempted to be converted to UTC before being uploaded over the gallery")
+
+        if t2 is not None and observation_time_format == 'mjd':
+            t2 = self.convert_mjd_to_utc(t2)
+            logger.info("The value of T2 has been provided in a difference format from UTC, "
+                        "this will be attempted to be converted to UTC before being uploaded over the gallery")
+
+        return t1, t2
+
     def post_observation_to_gallery(self,
                                     observation_title: str = None,
                                     yaml_file_path=None,
                                     token: str = None,
+                                    observation_time_format: str = 'ISOT',
                                     **kwargs):
         copied_kwargs = kwargs.copy()
 
@@ -964,30 +982,10 @@ class DispatcherAPI:
             elif isinstance(yaml_file_path, str):
                 files_obj['yaml_file'] = open(yaml_file_path, 'rb')
 
-                # validate/parse t1 and t2
-        if 'T1' in kwargs:
-            t1_mjd = None
-            try:
-                t1_mjd = float(kwargs['T1'])
-            except ValueError:
-                pass
-            if t1_mjd is not None:
-                t1_utc = self.convert_mjd_to_utc(t1_mjd)
-                logger.info("The value of T1 has been provided in a difference format from UTC, "
-                            "this will be attempted to be converted to UTC before being uploaded over the gallery")
-                copied_kwargs['T1'] = t1_utc
-
-        if 'T2' in kwargs:
-            t2_mjd = None
-            try:
-                t2_mjd = float(kwargs['T2'])
-            except ValueError:
-                pass
-            if t2_mjd is not None:
-                t2_utc = self.convert_mjd_to_utc(t2_mjd)
-                logger.info("The value of T2 has been provided in a difference format from UTC, "
-                            "this will be attempted to be converted to UTC before being uploaded over the gallery")
-                copied_kwargs['T2'] = t2_utc
+        copied_kwargs['T1'], copied_kwargs['T2'] = self.parse_observation_time_arg_product_gallery(
+            t1=kwargs.get('T1', None), t2=kwargs.get('T2', None),
+            observation_time_format=observation_time_format
+        )
 
         params = {
             'title': observation_title,
@@ -1037,6 +1035,7 @@ class DispatcherAPI:
                                      force_insert_not_valid_new_source: bool = False,
                                      apply_fields_source_resolution: bool = True,
                                      html_image: str = None,
+                                     observation_time_format: str = 'ISOT',
                                      **kwargs):
         """
 
@@ -1106,30 +1105,10 @@ class DispatcherAPI:
 
             files_obj['html_file'] = open(tmp_path_html_file_path, 'rb')
 
-        # validate/parse t1 and t2
-        if 'T1' in kwargs:
-            t1_mjd = None
-            try:
-                t1_mjd = float(kwargs['T1'])
-            except ValueError:
-                pass
-            if t1_mjd is not None:
-                t1_utc = self.convert_mjd_to_utc(t1_mjd)
-                logger.info("The value of T1 has been provided in a difference format from UTC, "
-                            "this will be attempted to be converted to UTC before being uploaded over the gallery")
-                copied_kwargs['T1'] = t1_utc
-
-        if 'T2' in kwargs:
-            t2_mjd = None
-            try:
-                t2_mjd = float(kwargs['T2'])
-            except ValueError:
-                pass
-            if t2_mjd is not None:
-                t2_utc = self.convert_mjd_to_utc(t2_mjd)
-                logger.info("The value of T2 has been provided in a difference format from UTC, "
-                            "this will be attempted to be converted to UTC before being uploaded over the gallery")
-                copied_kwargs['T2'] = t2_utc
+        copied_kwargs['T1'], copied_kwargs['T2'] = self.parse_observation_time_arg_product_gallery(
+            t1=kwargs.get('T1', None), t2=kwargs.get('T2', None),
+            observation_time_format=observation_time_format
+        )
 
         # validate source
         src_name_arg = kwargs.get('src_name', None)
