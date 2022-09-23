@@ -449,7 +449,8 @@ def test_spectrum_product_gallery(dispatcher_api_with_gallery, dispatcher_test_c
 @pytest.mark.parametrize("yaml_files", [None, "single", "list"])
 @pytest.mark.parametrize("observation_time_format", [None, "ISOT", "MJD", "no_value"])
 @pytest.mark.parametrize("t_values_format", ["mjd", "ISOT"])
-def test_update_observation_product_gallery(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery, t_values_format, obsid, yaml_files, observation_time_format):
+@pytest.mark.parametrize("force_creation_new", [True, False])
+def test_update_observation_product_gallery(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery, t_values_format, obsid, yaml_files, observation_time_format, force_creation_new):
     # let's generate a valid token
     token_payload = {
         **default_token_payload,
@@ -483,6 +484,7 @@ def test_update_observation_product_gallery(dispatcher_api_with_gallery, dispatc
         observation_time_format=observation_time_format,
         yaml_file_path=yaml_file_path,
         obsid=obsid,
+        force_creation_new=force_creation_new,
         token=encoded_token
     )
 

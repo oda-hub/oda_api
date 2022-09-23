@@ -1002,6 +1002,7 @@ class DispatcherAPI:
                                       yaml_file_path=None,
                                       token: str = None,
                                       observation_time_format: str = 'ISOT',
+                                      create_new=False,
                                       **kwargs):
         copied_kwargs = kwargs.copy()
 
@@ -1032,6 +1033,7 @@ class DispatcherAPI:
             'title': observation_title,
             'token': token,
             'update_observation': True,
+            'create_new': create_new,
             **copied_kwargs
         }
 
