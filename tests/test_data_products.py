@@ -484,7 +484,7 @@ def test_update_observation_product_gallery(dispatcher_api_with_gallery, dispatc
         observation_time_format=observation_time_format,
         yaml_file_path=yaml_file_path,
         obsid=obsid,
-        force_creation_new=force_creation_new,
+        create_new=force_creation_new,
         token=encoded_token
     )
 
