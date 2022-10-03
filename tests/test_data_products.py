@@ -10,6 +10,7 @@ import jwt
 import os
 import random
 import string
+import urllib.parse
 
 from cdci_data_analysis.analysis.json import CustomJSONEncoder
 from cdci_data_analysis.analysis.drupal_helper import get_observations_for_time_range, get_user_id, generate_gallery_jwt_token
@@ -445,6 +446,40 @@ def test_spectrum_product_gallery(dispatcher_api_with_gallery, dispatcher_test_c
 
 
 @pytest.mark.test_drupal
+def test_get_attachments_observation_product_gallery(dispatcher_api_with_gallery):
+    # let's generate a valid token
+    token_payload = {
+        **default_token_payload,
+        'roles': 'general, gallery contributor'
+    }
+    encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
+
+    disp = dispatcher_api_with_gallery
+
+    observation_title = "test with attachments"
+    yaml_file_path = ["observation_yaml_dummy_files/obs_rev_2.yaml"]
+    params = dict(
+        observation_title=observation_title,
+        T1=59242.156853982, T2=59243.156853982,
+        observation_time_format="MJD",
+        yaml_file_path=yaml_file_path,
+        create_new=True,
+        token=encoded_token
+    )
+    disp.update_observation_with_title(**params)
+
+    output_get = disp.get_yaml_files_observation_with_title(observation_title=observation_title,
+                                                            token=encoded_token)
+    assert 'file_path' in output_get
+    assert 'file_content' in output_get
+
+    with open('observation_yaml_dummy_files/obs_rev_1.yaml', 'r') as f_yaml_file:
+        yaml_file_content = f_yaml_file.read()
+
+    assert yaml_file_content.strip() in output_get['file_content']
+
+
+@pytest.mark.test_drupal
 @pytest.mark.parametrize("obsid", [1960001, ["1960001", "1960002", "1960003"], [1960001, 1960002, 1960003]])
 @pytest.mark.parametrize("yaml_files", [None, "single", "list"])
 @pytest.mark.parametrize("observation_time_format", [None, "ISOT", "MJD", "no_value"])
@@ -794,10 +829,16 @@ def test_resolve_source(dispatcher_api_with_gallery, dispatcher_test_conf_with_g
         assert 'DEC' in resolved_obj
         assert 'RA' in resolved_obj
         assert 'entity_portal_link' in resolved_obj
+        assert 'object_type' in resolved_obj
+        assert 'object_ids' in resolved_obj
+        assert 'RA' in resolved_obj
+        assert 'DEC' in resolved_obj
+
+        quoted_source_name = urllib.parse.quote(source_name.strip())
 
         assert resolved_obj['name'] == source_name.replace('_', ' ')
         assert resolved_obj['entity_portal_link'] == dispatcher_test_conf_with_gallery["product_gallery_options"]["entities_portal_url"]\
-            .format(source_name)
+            .format(quoted_source_name)
 
 
 @pytest.mark.test_drupal
