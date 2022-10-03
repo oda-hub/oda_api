@@ -997,6 +997,36 @@ class DispatcherAPI:
 
         return t1, t2
 
+    def get_yaml_files_observation_with_title(self,
+                                              observation_title: str = None,
+                                              token: str = None):
+        params = {
+            'title': observation_title,
+            'token': token
+        }
+
+        res = requests.get(os.path.join(self.url, "get_observation_attachments"),
+                           params={**params},
+                           )
+        # response_json = self._decode_res_json(res)
+
+        if res.status_code != 200:
+            response_json = res.json()
+            error_message = (f"An issue occurred while performing a request on the product gallery, "
+                             f"the following error was returned:\n")
+            if 'error_message' in response_json:
+                error_message += '\n' + response_json['error_message']
+                if 'drupal_helper_error_message' in response_json:
+                    error_message += '-' + response_json['drupal_helper_error_message']
+            else:
+                error_message += res.text
+            logger.warning(error_message)
+        else:
+            response_json = res.json()
+            logger.info(f"Observation with title {observation_title} contains {len(response_json)} files\n")
+
+        return response_json
+
     def update_observation_with_title(self,
                                       observation_title: str = None,
                                       yaml_file_path=None,
@@ -1144,7 +1174,7 @@ class DispatcherAPI:
                                      insert_new_source: bool = False,
                                      validate_source: bool = False,
                                      force_insert_not_valid_new_source: bool = False,
-                                     apply_fields_source_resolution: bool = True,
+                                     apply_fields_source_resolution: bool = False,
                                      html_image: str = None,
                                      observation_time_format: str = 'ISOT',
                                      **kwargs):
@@ -1173,7 +1203,7 @@ class DispatcherAPI:
                parameters and its validation fails, those should be in any case provided as a parameter for the data product
         :param apply_fields_source_resolution: a boolean value to specify if, in case only a single source is passed within the
                 parameters and then successfully validated, to apply the parameters values returned from the validation
-                (an example of these parameters are RA and DEC)
+                (an example of these parameters are RA and DEC), default to False
         :param html_image: field used to upload an image encapsulated within an html block generated using external
                tools (e.g. bokeh)
         :param kwargs: keyword arguments representing the main parameters values used to generate the product. Amongst them,
@@ -1227,6 +1257,8 @@ class DispatcherAPI:
         src_name_arg = kwargs.get('src_name', None)
         copied_src_name_arg = None
         entities_portal_link_list = None
+        object_ids_list = None
+        source_coord_list = None
         if src_name_arg is not None and validate_source:
 
             if isinstance(src_name_arg, str):
@@ -1237,6 +1269,8 @@ class DispatcherAPI:
             for src_name in src_name_list:
                 resolved_source = False
                 entity_portal_link = None
+                object_ids = None
+                source_coord = {}
                 # remove any underscore (following the logic of the resolver) and use the edited one
                 src_name_edited = src_name.replace('_', ' ')
                 resolved_obj = self.resolve_source(src_name=src_name_edited, token=token)
@@ -1250,19 +1284,25 @@ class DispatcherAPI:
                             msg = f'\nSource {src_name} was successfully validated'
                     msg += '\n'
                     logger.info(msg)
-                    if 'RA' in resolved_obj and apply_fields_source_resolution:
+                    if 'RA' in resolved_obj:
                         RA = Angle(resolved_obj["RA"], unit='degree')
-                        # TODO to be discussed
-                        if len(src_name_list) == 1:
-                            copied_kwargs['RA'] = RA.deg
-                    if 'DEC' in resolved_obj and apply_fields_source_resolution:
+                        source_coord['source_ra'] = RA.deg
+                        if apply_fields_source_resolution:
+                            # TODO to be discussed
+                            if len(src_name_list) == 1:
+                                copied_kwargs['RA'] = RA.deg
+                    if 'DEC' in resolved_obj:
                         DEC = Angle(resolved_obj["DEC"], unit='degree')
-                        # TODO to be discussed
-                        if len(src_name_list) == 1:
-                            copied_kwargs['DEC'] = DEC.deg
+                        source_coord['source_dec'] = DEC.deg
+                        if apply_fields_source_resolution:
+                            # TODO to be discussed
+                            if len(src_name_list) == 1:
+                                copied_kwargs['DEC'] = DEC.deg
                     if 'entity_portal_link' in resolved_obj and apply_fields_source_resolution:
                         entity_portal_link = resolved_obj['entity_portal_link']
                         # copied_kwargs['entity_portal_link'] = resolved_obj['entity_portal_link']
+                    if 'object_ids' in resolved_obj and apply_fields_source_resolution:
+                        object_ids = resolved_obj['object_ids']
                 else:
                     logger.warning(f"{src_name} could not be validated")
 
@@ -1273,11 +1313,23 @@ class DispatcherAPI:
                     if copied_src_name_arg is None:
                         copied_src_name_arg = []
                     copied_src_name_arg.append(src_name)
+
                     if entities_portal_link_list is None:
                         entities_portal_link_list = []
                     if entity_portal_link is None:
                         entity_portal_link = ''
                     entities_portal_link_list.append(entity_portal_link)
+
+                    if object_ids_list is None:
+                        object_ids_list = []
+                    if object_ids is None:
+                        object_ids = []
+                    object_ids_list.append(object_ids)
+
+                    if source_coord_list is None:
+                        source_coord_list = []
+                    source_coord_list.append(source_coord)
+
         else:
             copied_src_name_arg = src_name_arg
 
@@ -1291,9 +1343,15 @@ class DispatcherAPI:
 
         if entities_portal_link_list is not None:
             if isinstance(entities_portal_link_list, list):
-                copied_kwargs['entity_portal_link'] = ','.join(entities_portal_link_list)
+                copied_kwargs['entity_portal_link_list'] = ','.join(entities_portal_link_list)
             else:
-                copied_kwargs['entity_portal_link'] = entities_portal_link_list
+                copied_kwargs['entity_portal_link_list'] = entities_portal_link_list
+
+        if source_coord_list is not None:
+            copied_kwargs['source_coord_list'] = json.dumps(source_coord_list)
+
+        if object_ids_list is not None:
+            copied_kwargs['object_ids_list'] = json.dumps(object_ids_list)
 
         params = {
             'content_type': 'data_product',
