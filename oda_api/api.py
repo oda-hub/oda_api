@@ -1176,6 +1176,7 @@ class DispatcherAPI:
                                      force_insert_not_valid_new_source: bool = False,
                                      apply_fields_source_resolution: bool = False,
                                      html_image: str = None,
+                                     in_evidence: bool = False,
                                      observation_time_format: str = 'ISOT',
                                      **kwargs):
         """
@@ -1352,6 +1353,8 @@ class DispatcherAPI:
 
         if object_ids_list is not None:
             copied_kwargs['object_ids_list'] = json.dumps(object_ids_list)
+
+        copied_kwargs['in_evidence'] = 0 if not in_evidence else 1
 
         params = {
             'content_type': 'data_product',
