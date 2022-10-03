@@ -771,6 +771,9 @@ def test_update_product_gallery(dispatcher_api_with_gallery, dispatcher_test_con
     assert 'field_e2_kev' in res
     assert res['field_e2_kev'][0]['value'] == e2_kev
 
+    assert 'field_in_evidence' in res
+    assert res['field_in_evidence'][0]['value'] is False
+
     e1_kev += 10
     e2_kev += 95
     product_title += '_updated'
@@ -780,6 +783,7 @@ def test_update_product_gallery(dispatcher_api_with_gallery, dispatcher_test_con
                                             product_id=request_product_id,
                                             observation_id=observation,
                                             token=encoded_token,
+                                            in_evidence=True,
                                             e1_kev=e1_kev, e2_kev=e2_kev)
 
     assert 'nid' in res
@@ -794,6 +798,9 @@ def test_update_product_gallery(dispatcher_api_with_gallery, dispatcher_test_con
 
     assert 'field_e2_kev' in res
     assert res['field_e2_kev'][0]['value'] == e2_kev
+
+    assert 'field_in_evidence' in res
+    assert res['field_in_evidence'][0]['value'] is True
 
     link_field_derived_from_observation = os.path.join(
         dispatcher_test_conf_with_gallery['product_gallery_options']['product_gallery_url'],
