@@ -1027,6 +1027,51 @@ class DispatcherAPI:
 
         return response_json
 
+    def update_source_with_title(self,
+                                 source_title: str = None,
+                                 token: str = None,
+                                 create_new=False,
+                                 **kwargs):
+        copied_kwargs = kwargs.copy()
+
+        copied_kwargs['src_name'] = source_title
+
+        params = {
+            'token': token,
+            'update_astro_entity': True,
+            'create_new': create_new,
+            **copied_kwargs
+        }
+
+        posting_msg = f'Posting an astro entity with title {source_title} on the gallery'
+
+        logger.info(posting_msg)
+
+        res = requests.post(os.path.join(self.url, "post_astro_entity_to_gallery"),
+                            params={**params},
+                            )
+        response_json = self._decode_res_json(res)
+
+        if res.status_code != 200:
+            res_obj = res.json()
+            error_message = (f"An issue occurred while performing a request on the product gallery, "
+                             f"the following error was returned:\n")
+            if 'error_message' in res_obj:
+                error_message += '\n' + res_obj['error_message']
+                if 'drupal_helper_error_message' in res_obj:
+                    error_message += '-' + res_obj['drupal_helper_error_message']
+            else:
+                error_message += res.text
+            logger.warning(error_message)
+        else:
+            source_link = response_json['_links']['self']['href'].split("?")[0]
+            source_title = response_json['title'][0]['value']
+            logger.info(
+                f"Source with title {source_title} successfully posted on the gallery, at the link {source_link}\n"
+                f"Using the above link you can modify the newly created source in the future.\n")
+
+        return response_json
+
     def update_observation_with_title(self,
                                       observation_title: str = None,
                                       yaml_file_path=None,
@@ -1259,6 +1304,7 @@ class DispatcherAPI:
         copied_src_name_arg = None
         entities_portal_link_list = None
         object_ids_list = None
+        object_type_list = None
         source_coord_list = None
         if src_name_arg is not None and validate_source:
 
@@ -1271,6 +1317,7 @@ class DispatcherAPI:
                 resolved_source = False
                 entity_portal_link = None
                 object_ids = None
+                object_type = None
                 source_coord = {}
                 # remove any underscore (following the logic of the resolver) and use the edited one
                 src_name_edited = src_name.replace('_', ' ')
@@ -1299,10 +1346,12 @@ class DispatcherAPI:
                             # TODO to be discussed
                             if len(src_name_list) == 1:
                                 copied_kwargs['DEC'] = DEC.deg
-                    if 'entity_portal_link' in resolved_obj and apply_fields_source_resolution:
+                    if 'entity_portal_link' in resolved_obj:
                         entity_portal_link = resolved_obj['entity_portal_link']
                         # copied_kwargs['entity_portal_link'] = resolved_obj['entity_portal_link']
-                    if 'object_ids' in resolved_obj and apply_fields_source_resolution:
+                    if 'object_type' in resolved_obj:
+                        object_type = resolved_obj['object_type']
+                    if 'object_ids' in resolved_obj:
                         object_ids = resolved_obj['object_ids']
                 else:
                     logger.warning(f"{src_name} could not be validated")
@@ -1326,6 +1375,12 @@ class DispatcherAPI:
                     if object_ids is None:
                         object_ids = []
                     object_ids_list.append(object_ids)
+
+                    if object_type_list is None:
+                        object_type_list = []
+                    if object_type is None:
+                        object_type = ''
+                    object_type_list.append(object_type)
 
                     if source_coord_list is None:
                         source_coord_list = []
@@ -1353,6 +1408,9 @@ class DispatcherAPI:
 
         if object_ids_list is not None:
             copied_kwargs['object_ids_list'] = json.dumps(object_ids_list)
+
+        if object_type_list is not None:
+            copied_kwargs['object_type_list'] = json.dumps(object_type_list)
 
         copied_kwargs['in_evidence'] = 0 if not in_evidence else 1
 

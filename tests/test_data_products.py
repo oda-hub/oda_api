@@ -2,6 +2,8 @@ from datetime import datetime
 
 import pytest
 import json
+
+import yaml
 from astropy.io import fits
 from dateutil import parser
 import numpy as np
@@ -473,10 +475,15 @@ def test_get_attachments_observation_product_gallery(dispatcher_api_with_gallery
     assert 'file_path' in output_get
     assert 'file_content' in output_get
 
-    with open('observation_yaml_dummy_files/obs_rev_1.yaml', 'r') as f_yaml_file:
+    with open('observation_yaml_dummy_files/obs_rev_2.yaml', 'r') as f_yaml_file:
         yaml_file_content = f_yaml_file.read()
 
     assert yaml_file_content.strip() in output_get['file_content']
+
+    yaml_parsed = yaml.load(output_get['file_content'], Loader=yaml.FullLoader)
+    yaml_file_content_parsed = yaml.load(yaml_file_content, Loader=yaml.FullLoader)
+
+    # assert yaml_parsed[0] == yaml_file_content_parsed
 
 
 @pytest.mark.test_drupal
