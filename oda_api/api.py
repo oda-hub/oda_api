@@ -1501,7 +1501,7 @@ class DispatcherAPI:
             t_utc = res.text
             return t_utc
         else:
-            raise
+            return None
 
     def convert_mjd_to_utc(self, t_mjd):
         # TODO to reply on a dedicated service in the dispatcher
