@@ -480,10 +480,45 @@ def test_get_attachments_observation_product_gallery(dispatcher_api_with_gallery
 
     assert yaml_file_content.strip() in output_get['file_content']
 
-    yaml_parsed = yaml.load(output_get['file_content'], Loader=yaml.FullLoader)
-    yaml_file_content_parsed = yaml.load(yaml_file_content, Loader=yaml.FullLoader)
+    # yaml_parsed = yaml.load(output_get['file_content'], Loader=yaml.FullLoader)
+    # yaml_file_content_parsed = yaml.load(yaml_file_content, Loader=yaml.FullLoader)
 
     # assert yaml_parsed[0] == yaml_file_content_parsed
+
+
+@pytest.mark.test_drupal
+@pytest.mark.parametrize("auto_update", [True, False])
+def test_update_update_source_with_title(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery, auto_update):
+    # let's generate a valid token
+    token_payload = {
+        **default_token_payload,
+        'roles': 'general, gallery contributor'
+    }
+    encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
+
+    user_id_product_creator = get_user_id(
+        product_gallery_url=dispatcher_test_conf_with_gallery['product_gallery_options']['product_gallery_url'],
+        user_email=token_payload['sub'])
+
+    disp = dispatcher_api_with_gallery
+
+    params = {
+        'source_name': 'GX 1+4',
+        'token': encoded_token,
+        'auto_update': auto_update,
+        'source_dec': -24.9,
+    }
+    res = disp.update_source_with_name(**params)
+
+    if auto_update:
+        assert 'field_source_name' in res
+        assert res['field_source_dec'][0]['value'] != params['source_dec']
+        assert 'field_source_ra' in res
+        assert 'field_alternative_names_long_str' in res
+        assert 'field_link' in res
+        assert 'field_object_type' in res
+    else:
+        assert res['field_source_dec'][0]['value'] == params['source_dec']
 
 
 @pytest.mark.test_drupal
