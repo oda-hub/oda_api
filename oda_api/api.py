@@ -1008,7 +1008,6 @@ class DispatcherAPI:
         res = requests.get(os.path.join(self.url, "get_observation_attachments"),
                            params={**params},
                            )
-        # response_json = self._decode_res_json(res)
 
         if res.status_code != 200:
             response_json = res.json()
@@ -1027,23 +1026,23 @@ class DispatcherAPI:
 
         return response_json
 
-    def update_source_with_title(self,
-                                 source_title: str = None,
+    def update_source_with_name(self,
+                                 source_name: str = None,
+                                 auto_update: bool = False,
                                  token: str = None,
-                                 create_new=False,
                                  **kwargs):
         copied_kwargs = kwargs.copy()
 
-        copied_kwargs['src_name'] = source_title
+        copied_kwargs['src_name'] = source_name
 
         params = {
             'token': token,
             'update_astro_entity': True,
-            'create_new': create_new,
+            'auto_update': auto_update,
             **copied_kwargs
         }
 
-        posting_msg = f'Posting an astro entity with title {source_title} on the gallery'
+        posting_msg = f'Updating an astro entity with title {source_name} on the gallery'
 
         logger.info(posting_msg)
 
@@ -1059,15 +1058,15 @@ class DispatcherAPI:
             if 'error_message' in res_obj:
                 error_message += '\n' + res_obj['error_message']
                 if 'drupal_helper_error_message' in res_obj:
-                    error_message += '-' + res_obj['drupal_helper_error_message']
+                    error_message += ' - ' + res_obj['drupal_helper_error_message']
             else:
                 error_message += res.text
             logger.warning(error_message)
         else:
             source_link = response_json['_links']['self']['href'].split("?")[0]
-            source_title = response_json['title'][0]['value']
+            returned_source_name = response_json['title'][0]['value']
             logger.info(
-                f"Source with title {source_title} successfully posted on the gallery, at the link {source_link}\n"
+                f"Source with title {returned_source_name} successfully posted on the gallery, at the link {source_link}\n"
                 f"Using the above link you can modify the newly created source in the future.\n")
 
         return response_json
@@ -1235,11 +1234,13 @@ class DispatcherAPI:
             * by specifying the time range, in particular the value of T1 and T2
         :param observation_time_format: format of the time values for an observation (i.e. T1 and T2), default to ISOT,
                (e.g. '2003-03-15T23:27:40.0'), also the MJD format is supported
+        :param in_evidence: a boolean value specifying if the product will be in evidence over thew page of the correspondent
+            source
         :param gallery_image_path: path of the generated image and to be uploaded over the gallery
         :param fits_file_path: a list of fits file links used for the generation of the product to upload over the gallery
         :param yaml_file_path: a list of yaml file links to be attached to the observation of the product to upload over the gallery
         :param token: user token
-        :param insert_new_source: a boolean value to specify if, in case the sources that are passed as parameters and
+        :param insert_new_source: a boolean value specifying if, in case the sources that are passed as parameters and
                are not available on the product gallery, will be created and then used for the new data product
         :param validate_source: a boolean value to specify if, in case the sources that are passed as parameters
                will be validated against an online service. In case the validation fails the source won't be inserted as
