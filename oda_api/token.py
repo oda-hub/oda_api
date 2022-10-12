@@ -14,7 +14,6 @@ default_algorithm = 'HS256'
 
 logger = logging.getLogger("oda_api.token")
 
-    
 try:
     import jwt
 except ImportError:
@@ -66,6 +65,29 @@ def decode_oauth2_token(token: str):
     # usually comes in cookies['_oauth2_proxy']
     return json.loads(base64.b64decode(token.split(".")[0]+"=").decode())
 
+
+def rewrite_token(new_token,
+                  token_discovery_methods=(
+                          "environment variable ODA_TOKEN",
+                          "file in current directory",
+                          "file in home")):
+
+    current_token, discovery_method_used = discover_token(token_discovery_methods=token_discovery_methods)
+
+    logger.info("found token in %s your token payload: %s", discovery_method_used, format_token(current_token))
+
+    if discovery_method_used == "environment variable ODA_TOKEN":
+        environ['ODA_TOKEN'] = new_token
+    elif discovery_method_used == "file in current directory":
+        with open(path.join(getcwd(), ".oda-token"), 'w') as ft:
+            ft.write(new_token)
+    elif discovery_method_used == "file in home":
+        with open(path.join(environ["HOME"], ".oda-token"), 'w') as ft:
+            ft.write(new_token)
+
+    return discovery_method_used
+
+
 #TODO: move to dynaconf
 def discover_token(
         allow_invalid=False,
@@ -74,7 +96,8 @@ def discover_token(
             "file in current directory",
             "file in home")):
     failed_methods = []
-    token = None    
+    token = None
+    discovery_method_used = None
 
     for n, m in [
         ("environment variable ODA_TOKEN", lambda: environ['ODA_TOKEN'].strip()),
@@ -89,6 +112,7 @@ def discover_token(
             try:
                 logger.debug("searching for token in %s", n)
                 token = m()
+                discovery_method_used = n
                 decoded_token = decode_oda_token(token, allow_invalid=allow_invalid)            
 
                 expires_in_s = decoded_token['exp'] - time.time()
@@ -113,7 +137,7 @@ def discover_token(
     else:
         logger.debug("discovered token method %s", n)        
 
-    return token
+    return token, discovery_method_used
 
 ## updating
 

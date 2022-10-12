@@ -331,6 +331,22 @@ class DispatcherAPI:
         else:
             raise RuntimeError(r.text)
 
+    def refresh_token(self, store_token=False):
+        token = oda_api.token.discover_token()
+        params = dict(token=token)
+
+        r = requests.get(os.path.join(self.url, 'refresh_token'),
+                         params=params)
+
+        if r.status_code == 200:
+            refreshed_token = r.json()
+            if store_token:
+                oda_api.token.rewrite_token(refreshed_token)
+
+            return refreshed_token
+        else:
+            raise RuntimeError(r.text)
+
     def set_custom_progress_formatter(self, F):
         self.custom_progress_formatter = F
 
