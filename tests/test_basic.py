@@ -381,7 +381,8 @@ def test_dispatcher_exception(dispatcher_live_fixture, caplog, exception_kind):
 
 
 @pytest.mark.parametrize('token_placement', ['env', 'homedotfile', 'cwddotfile'])
-def test_token_refresh(dispatcher_live_fixture, token_placement, monkeypatch, caplog, tmpdir):
+@pytest.mark.parametrize('store_token', [True, False])
+def test_token_refresh(dispatcher_live_fixture, token_placement, monkeypatch, store_token, tmpdir):
     disp = oda_api.api.DispatcherAPI(url=dispatcher_live_fixture, wait=False)
 
     # let's generate a valid token
@@ -420,7 +421,11 @@ def test_token_refresh(dispatcher_live_fixture, token_placement, monkeypatch, ca
             f.write(encoded_token)
         discovery_method_arg = 'file in home'
 
-    refreshed_token = disp.refresh_token(store_token=True)
+    refreshed_token = disp.refresh_token(store_token=store_token)
     discovered_token, discovery_method = oda_api.token.discover_token()
-    assert refreshed_token == discovered_token
+
     assert discovery_method == discovery_method_arg
+    if store_token:
+        assert refreshed_token == discovered_token
+    else:
+        assert refreshed_token != discovered_token
