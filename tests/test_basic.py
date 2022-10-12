@@ -7,6 +7,7 @@ import re
 import glob
 import requests
 import oda_api.api
+import oda_api.token
 
 from cdci_data_analysis.pytest_fixtures import DispatcherJobState, make_hash, ask
 
@@ -377,3 +378,49 @@ def test_dispatcher_exception(dispatcher_live_fixture, caplog, exception_kind):
         raise RuntimeError()
     
     requests.get = requests._get
+
+
+@pytest.mark.parametrize('token_placement', ['env', 'homedotfile', 'cwddotfile'])
+def test_token_refresh(dispatcher_live_fixture, token_placement, monkeypatch, caplog, tmpdir):
+    disp = oda_api.api.DispatcherAPI(url=dispatcher_live_fixture, wait=False)
+
+    # let's generate a valid token
+    token_payload = {
+        **default_token_payload,
+        "roles": ["general", "refresh-tokens"]
+    }
+    encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
+
+    # reset any existing token locations
+    os.makedirs(tmpdir, exist_ok=True)
+    monkeypatch.setenv('HOME', tmpdir)
+
+    oda_token_home_fn = os.path.join(tmpdir, ".oda-token")
+    if os.path.exists(oda_token_home_fn):
+        os.remove(oda_token_home_fn)
+
+    oda_token_cwd_fn = ".oda-token"
+    if os.path.exists(oda_token_cwd_fn):
+        os.remove(oda_token_cwd_fn)
+
+    monkeypatch.setenv('ODA_TOKEN', '')
+    discovery_method_arg = None
+
+    if token_placement == 'env':
+        monkeypatch.setenv('ODA_TOKEN', encoded_token)
+        discovery_method_arg = 'environment variable ODA_TOKEN'
+
+    elif token_placement == 'cwddotfile':
+        with open(oda_token_cwd_fn, "w") as f:
+            f.write(encoded_token)
+        discovery_method_arg = 'file in current directory'
+
+    elif token_placement == 'homedotfile':
+        with open(oda_token_home_fn, "w") as f:
+            f.write(encoded_token)
+        discovery_method_arg = 'file in home'
+
+    refreshed_token = disp.refresh_token(store_token=True)
+    discovered_token, discovery_method = oda_api.token.discover_token()
+    assert refreshed_token == discovered_token
+    assert discovery_method == discovery_method_arg
