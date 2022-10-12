@@ -333,13 +333,14 @@ class DispatcherAPI:
 
     def refresh_token(self, store_token=False):
         token = oda_api.token.discover_token()
-        params = dict(token=token)
+        params = dict(token=token,
+                      query_status='new')
 
         r = requests.get(os.path.join(self.url, 'refresh_token'),
                          params=params)
 
         if r.status_code == 200:
-            refreshed_token = r.json()
+            refreshed_token = r.text
             if store_token:
                 oda_api.token.rewrite_token(refreshed_token)
 
