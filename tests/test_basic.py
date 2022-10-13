@@ -380,7 +380,7 @@ def test_dispatcher_exception(dispatcher_live_fixture, caplog, exception_kind):
     requests.get = requests._get
 
 
-@pytest.mark.parametrize('token_placement', ['env', 'homedotfile', 'cwddotfile'])
+@pytest.mark.parametrize('token_placement', ['env', 'homedotfile', 'cwddotfile', 'no'])
 @pytest.mark.parametrize('store_token', [True, False])
 def test_token_refresh(dispatcher_live_fixture, token_placement, monkeypatch, store_token, tmpdir):
     disp = oda_api.api.DispatcherAPI(url=dispatcher_live_fixture, wait=False)
@@ -421,11 +421,14 @@ def test_token_refresh(dispatcher_live_fixture, token_placement, monkeypatch, st
             f.write(encoded_token)
         discovery_method_arg = 'file in home'
 
-    refreshed_token = disp.refresh_token(store_token=store_token)
-    discovered_token, discovery_method = oda_api.token.discover_token()
-
-    assert discovery_method == discovery_method_arg
-    if store_token:
-        assert refreshed_token == discovered_token
+    if token_placement == 'no':
+        with pytest.raises(RuntimeError, match="failed to discover token with any known method"):
+            disp.refresh_token(store_token=store_token)
     else:
-        assert refreshed_token != discovered_token
+        refreshed_token = disp.refresh_token(store_token=store_token)
+        discovered_token = oda_api.token.discover_token()
+
+        if store_token:
+            assert refreshed_token == discovered_token
+        else:
+            assert refreshed_token != discovered_token
