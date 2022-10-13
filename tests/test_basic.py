@@ -405,21 +405,17 @@ def test_token_refresh(dispatcher_live_fixture, token_placement, monkeypatch, st
         os.remove(oda_token_cwd_fn)
 
     monkeypatch.setenv('ODA_TOKEN', '')
-    discovery_method_arg = None
 
     if token_placement == 'env':
         monkeypatch.setenv('ODA_TOKEN', encoded_token)
-        discovery_method_arg = 'environment variable ODA_TOKEN'
 
     elif token_placement == 'cwddotfile':
         with open(oda_token_cwd_fn, "w") as f:
             f.write(encoded_token)
-        discovery_method_arg = 'file in current directory'
 
     elif token_placement == 'homedotfile':
         with open(oda_token_home_fn, "w") as f:
             f.write(encoded_token)
-        discovery_method_arg = 'file in home'
 
     if token_placement == 'no':
         with pytest.raises(RuntimeError, match="failed to discover token with any known method"):
