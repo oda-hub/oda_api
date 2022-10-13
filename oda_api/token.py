@@ -78,17 +78,19 @@ def rewrite_token(new_token,
         "file in home",
     ]:
         if n in token_discovery_methods:
-            if n == "environment variable ODA_TOKEN":
-                environ['ODA_TOKEN'] = new_token
-                break
-            elif n == "file in current directory":
-                with open(path.join(getcwd(), ".oda-token"), 'w') as ft:
-                    ft.write(new_token)
-                break
-            elif n == "file in home":
-                with open(path.join(environ["HOME"], ".oda-token"), 'w') as ft:
-                    ft.write(new_token)
-                break
+            current_token = discover_token(token_discovery_methods=n)
+            if current_token is not None and current_token != '':
+                if n == "environment variable ODA_TOKEN":
+                    environ['ODA_TOKEN'] = new_token
+                    break
+                elif n == "file in current directory":
+                    with open(path.join(getcwd(), ".oda-token"), 'w') as ft:
+                        ft.write(new_token)
+                    break
+                elif n == "file in home":
+                    with open(path.join(environ["HOME"], ".oda-token"), 'w') as ft:
+                        ft.write(new_token)
+                    break
 
 
 #TODO: move to dynaconf
