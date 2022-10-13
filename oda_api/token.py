@@ -72,20 +72,23 @@ def rewrite_token(new_token,
                           "file in current directory",
                           "file in home")):
 
-    current_token, discovery_method_used = discover_token(token_discovery_methods=token_discovery_methods)
-
-    logger.info("found token in %s your token payload: %s", discovery_method_used, format_token(current_token))
-
-    if discovery_method_used == "environment variable ODA_TOKEN":
-        environ['ODA_TOKEN'] = new_token
-    elif discovery_method_used == "file in current directory":
-        with open(path.join(getcwd(), ".oda-token"), 'w') as ft:
-            ft.write(new_token)
-    elif discovery_method_used == "file in home":
-        with open(path.join(environ["HOME"], ".oda-token"), 'w') as ft:
-            ft.write(new_token)
-
-    return discovery_method_used
+    for n in [
+        "environment variable ODA_TOKEN",
+        "file in current directory",
+        "file in home",
+    ]:
+        if n in token_discovery_methods:
+            if n == "environment variable ODA_TOKEN":
+                environ['ODA_TOKEN'] = new_token
+                break
+            elif n == "file in current directory":
+                with open(path.join(getcwd(), ".oda-token"), 'w') as ft:
+                    ft.write(new_token)
+                break
+            elif n == "file in home":
+                with open(path.join(environ["HOME"], ".oda-token"), 'w') as ft:
+                    ft.write(new_token)
+                break
 
 
 #TODO: move to dynaconf
@@ -97,7 +100,6 @@ def discover_token(
             "file in home")):
     failed_methods = []
     token = None
-    discovery_method_used = None
 
     for n, m in [
         ("environment variable ODA_TOKEN", lambda: environ['ODA_TOKEN'].strip()),
@@ -112,8 +114,7 @@ def discover_token(
             try:
                 logger.debug("searching for token in %s", n)
                 token = m()
-                discovery_method_used = n
-                decoded_token = decode_oda_token(token, allow_invalid=allow_invalid)            
+                decoded_token = decode_oda_token(token, allow_invalid=allow_invalid)
 
                 expires_in_s = decoded_token['exp'] - time.time()
 
@@ -137,7 +138,7 @@ def discover_token(
     else:
         logger.debug("discovered token method %s", n)        
 
-    return token, discovery_method_used
+    return token
 
 ## updating
 

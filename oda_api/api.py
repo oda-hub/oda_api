@@ -333,20 +333,23 @@ class DispatcherAPI:
 
     def refresh_token(self, store_token=False):
         token = oda_api.token.discover_token()
-        params = dict(token=token,
-                      query_status='new')
+        if token is not None and token != '':
+            params = dict(token=token,
+                          query_status='new')
 
-        r = requests.get(os.path.join(self.url, 'refresh_token'),
-                         params=params)
+            r = requests.get(os.path.join(self.url, 'refresh_token'),
+                             params=params)
 
-        if r.status_code == 200:
-            refreshed_token = r.text
-            if store_token:
-                oda_api.token.rewrite_token(refreshed_token)
+            if r.status_code == 200:
+                refreshed_token = r.text
+                if store_token:
+                    oda_api.token.rewrite_token(refreshed_token)
 
-            return refreshed_token
+                return refreshed_token
+            else:
+                raise RuntimeError(r.text)
         else:
-            raise RuntimeError(r.text)
+            raise RuntimeError("failed to discover token with any known method")
 
     def set_custom_progress_formatter(self, F):
         self.custom_progress_formatter = F
