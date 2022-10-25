@@ -13,7 +13,9 @@ import string
 from cdci_data_analysis.analysis.json import CustomJSONEncoder
 
 import oda_api.api
-from oda_api.data_products import NumpyDataProduct
+from oda_api.data_products import LightCurveDataProduct, NumpyDataProduct
+from astropy import time as atime
+from astropy import units as u
 
 secret_key = 'secretkey_test'
 default_exp_time = int(time.time()) + 5000
@@ -454,3 +456,33 @@ def test_check_product_type_policy(dispatcher_api_with_gallery, dispatcher_test_
             disp.check_gallery_data_product_policy(encoded_token, **par_dict)
     else:
         assert disp.check_gallery_data_product_policy(encoded_token, **par_dict)
+
+
+@pytest.mark.parametrize('times,values,time_format,expected_units_dict',
+                         [(atime.Time(['2022-02-20T13:45:34', '2022-02-20T14:45:34', '2022-02-20T15:45:34']), 
+                           [2/u.cm**2/u.s] * 3, 
+                           None,
+                           {'TIME': 'd', 'FLUX': '1 / (cm**2 s)', 'ERROR': '1 / (cm**2 s)'}),
+                                                  
+                          (['2022-02-20T13:45:34', '2022-02-20T14:45:34', '2022-02-20T15:45:34'],
+                           [2] * 3,
+                           None,
+                           {'TIME': 'd'}),
+                          
+                          ([59630.3, 59630.5, 59630.7],
+                           [2] * 3,
+                           'mjd',
+                           {'TIME': 'd'}),
+                          
+                          (list(map(datetime.fromisoformat, ['2022-02-20T13:45:34', '2022-02-20T14:45:34', '2022-02-20T15:45:34'])),
+                           [2/u.cm**2/u.s] * 3, 
+                           None,
+                           {'TIME': 'd', 'FLUX': '1 / (cm**2 s)', 'ERROR': '1 / (cm**2 s)'}),
+                          ]
+                         )
+def test_lightcurve_product_from_arrays(times, values, time_format, expected_units_dict):
+    errors = [0.05 * x for x in values]
+    lc = LightCurveDataProduct.from_arrays(times = times, fluxes = values, errors = errors, time_format=time_format)
+    assert lc.data_unit[1].units_dict == expected_units_dict
+    assert all(lc.data_unit[1].data['TIME'].astype('int') == 59630)
+    
