@@ -49,6 +49,11 @@ class OdaProduct(object):
         self.meta = None
         self.logger = logger.getChild(self.__class__.__name__.lower())
         self.progress_logger = self.logger.getChild("progress")
+        try:
+            self.instrument = data._p_list[0].data_unit[1].header['INSTRUME']
+        except:
+            self.logger.warning('No instrument in data collection')
+            self.instrument = 'none'
 
 
 class OdaImage(OdaProduct):
@@ -431,6 +436,7 @@ class OdaImage(OdaProduct):
 class OdaLightCurve(OdaProduct):
 
     name = 'lightcurve'
+    used_source_name = ''
 
     def get_lc(self, source_name, systematic_fraction=0):
 
@@ -441,9 +447,11 @@ class OdaLightCurve(OdaProduct):
         hdu = None
         for j, dd in enumerate(combined_lc._p_list):
             self.logger.debug(dd.meta_data['src_name'])
-            if dd.meta_data['src_name'] == source_name or dd.meta_data['src_name'] == patched_source_name:
+            if dd.meta_data['src_name'] == source_name or dd.meta_data['src_name'] == patched_source_name or \
+                    dd.meta_data['src_name'] == 'query':
+                self.used_source_name = dd.meta_data['src_name']
                 for ii, du in enumerate(dd.data_unit):
-                    if 'LC' in du.name:
+                    if 'LC' in du.name or 'RATE' in du.name:
                         hdu = du.to_fits_hdu()
 
         if hdu is None:
@@ -463,15 +471,27 @@ class OdaLightCurve(OdaProduct):
         ind = numpy.logical_and(ind, dy > 0)
         self.logger.debug("Final length of light curve %d " % numpy.sum(ind))
 
-        try:
+        if 'E_MIN' in hdu.header:
             e_min = hdu.header['E_MIN']
-        except:
-            e_min = 0
+        else:
+            if self.instrument == 'SPI-ACS':
+                self.logger.debug('e_min set to 75 keV as the instrument is SPI-ACS')
+                e_min = 75
+            else:
+                e_min = 0
 
-        try:
+        if 'E_MAX' in hdu.header:
             e_max = hdu.header['E_MAX']
-        except:
-            e_max = 0
+        else:
+            if self.instrument == 'SPI-ACS':
+                self.logger.debug('e_max set to 2000 keV as the instrument is SPI-ACS')
+                e_max = 2000
+            else:
+                e_max = 0
+        if self.instrument == 'SPI-ACS':
+            self.timezero = hdu.header['TIMEZERO'] / 86400. + hdu.header['MJDREF']
+            from astropy.time import Time
+            self.timezero_utc = Time(self.timezero, format='mjd').iso
 
         #This could only be valid for ISGRI
         try:
@@ -479,7 +499,10 @@ class OdaLightCurve(OdaProduct):
             self.logger.debug('Get time bin directly from light curve')
         except:
             timedel = hdu.header['TIMEDEL']
-            timepix = hdu.header['TIMEPIXR']
+            if 'TIMEPIXR' in hdu.header:
+                timepix = hdu.header['TIMEPIXR']
+            else:
+                timepix = 0.5
             t_lc = hdu.data['TIME'] + (0.5 - timepix) * timedel
             dt_lc = t_lc.copy() * 0.0 + timedel / 2
             for i in range(len(t_lc) - 1):
@@ -533,7 +556,10 @@ class OdaLightCurve(OdaProduct):
             figs.append(plt.figure(figsize=(8, 8./1.62)))
             _ = plt.errorbar(x, y, xerr=dx, yerr=dy, marker='o', capsize=0, linestyle='', label='Lightcurve')
             _ = plt.axhline(meany, color='green', linewidth=3)
-            _ = plt.xlabel('Time [IJD]')
+            if self.instrument == 'SPI-ACS':
+                _ = plt.xlabel('seconds since %s UTC' % self.timezero_utc)
+            else:
+                _ = plt.xlabel('Time [IJD]')
             if e_min == 0 or e_max ==0:
                 _ = plt.ylabel('Rate')
             else:
@@ -588,7 +614,7 @@ class OdaLightCurve(OdaProduct):
         fig = plt.figure(figsize=(8, 8./1.62))
         _ = plt.errorbar(x[i-n_before:i+n_after], y[i-n_before:i+n_after], yerr=dy[i-n_before:i+n_after],
                          marker='o', capsize=0, linestyle='', label='Lightcurve')
-        _ = plt.xlabel('Time [IJD]')
+        _ = plt.xlabel('Time')
         _ = plt.ylabel('Rate')
         if save_plot:
             _ = plt.savefig(name_base+'%d.png' % i)
@@ -664,9 +690,13 @@ class OdaLightCurve(OdaProduct):
         dx = dx[mask]
         y = y[mask]
         dy = dy[mask]
+        if self.instrument == 'SPI-ACS':
+            xlabel = 'seconds since %s UTC' % self.timezero_utc
+        else:
+            xlabel = 'Time [IJD]'
 
         sp = cdci_data_analysis.analysis.plot_tools.ScatterPlot(w=800, h=600,
-                                                                x_label="Time [IJD]",
+                                                                x_label=xlabel,
                                                                 y_label='Rate (%.0f - %.0f keV)' % (e_min, e_max),
                                                                 title=source_name)
 
