@@ -929,10 +929,10 @@ class DispatcherAPI:
             f"{C.GREY}last request completed in {self.last_request_t_complete - self.last_request_t0} seconds{C.NC}")
 
     def get_list_terms_gallery(self,
-                               group: str = None,
-                               parent: str = None,
-                               parent_id: str = None,
-                               token: str = None
+                               group: str,
+                               parent: str,
+                               parent_id: str,
+                               token: str
                                ):
         logger.debug("Getting the list of available instruments on the gallery")
         params = {
