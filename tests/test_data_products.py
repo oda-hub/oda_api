@@ -10,6 +10,7 @@ import numpy as np
 import time
 import jwt
 import os
+import requests
 import random
 import string
 import urllib.parse
@@ -851,7 +852,38 @@ def test_update_product_gallery(dispatcher_api_with_gallery, dispatcher_test_con
 
 
 @pytest.mark.test_drupal
-@pytest.mark.parametrize("source_name", ['Mrk 421', 'Mrk_421', 'GX 1+4', 'fake object', None])
+@pytest.mark.parametrize("source_name", ['Mrk 421', 'Mrk421', 'Mrk_421'])
+def test_product_gallery_get_astro_entity(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery, source_name):
+
+    # let's generate a valid token
+    token_payload = {
+        **default_token_payload,
+        "roles": "general, gallery contributor",
+    }
+    encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
+
+    disp = dispatcher_api_with_gallery
+    disp.post_data_product_to_gallery(product_title='test same source different name',
+                                      token=encoded_token,
+                                      insert_new_source=True,
+                                      src_name=source_name)
+
+    c = requests.get(os.path.join(disp.url, "get_all_astro_entities"),
+                     params={'token': encoded_token}
+                     )
+
+    assert c.status_code == 200
+    drupal_res_obj = c.json()
+
+    assert isinstance(drupal_res_obj, list)
+    if source_name == 'Mrk 421':
+        assert source_name in drupal_res_obj
+    else:
+        assert source_name not in drupal_res_obj
+
+
+@pytest.mark.test_drupal
+@pytest.mark.parametrize("source_name", ['Mrk 421', 'Mrk421', 'Mrk_421', 'GX 1+4', 'fake object', None])
 def test_resolve_source(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery, source_name):
     disp = dispatcher_api_with_gallery
 
