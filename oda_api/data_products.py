@@ -723,7 +723,7 @@ class LightCurveDataProduct(NumpyDataProduct):
         # TODO: possibility for other time units
         # TODO: add time-related keywords to header (OGIP)
         units_dict = {'TIME': 'd'}
-        if [isinstance(x, astropy.time.Time) for x in times]:
+        if any(isinstance(x, astropy.time.Time) for x in times):
             times = astropy.time.Time(times)
                         
         if isinstance(times, astropy.time.Time):
@@ -732,15 +732,16 @@ class LightCurveDataProduct(NumpyDataProduct):
             atimes = astropy.time.Time(times, format=time_format) # NOTE: do we assume paticular scale?
             mjd = atimes.mjd 
         else:
-            raise ValueError('Time format not specified')
+            atimes = astropy.time.Time(times)
+            mjd = atimes.mjd 
         
-        if [isinstance(x, astropy.units.Quantity) for x in values]:
+        if any(isinstance(x, astropy.units.Quantity) for x in values):
             values = astropy.units.Quantity(values)
         if isinstance(values, astropy.units.Quantity):
             units_dict[col_name] = values.unit.to_string(format='OGIP')
             values = values.value
             
-        if errors is not None and [isinstance(x, astropy.units.Quantity) for x in errors]:
+        if errors is not None and any(isinstance(x, astropy.units.Quantity) for x in errors):
             errors = astropy.units.Quantity(errors)
         if errors is not None and isinstance(errors, astropy.units.Quantity):
             units_dict['ERROR'] = errors.unit.to_string(format='OGIP')
