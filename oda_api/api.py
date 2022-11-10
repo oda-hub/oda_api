@@ -1246,8 +1246,8 @@ class DispatcherAPI:
                will be validated against an online service. In case the validation fails the source won't be inserted as
                a parameter for the data product and a warning for the user will be generated (unless this is intentionally
                specified setting to `True` the boolean parameter **force_insert_not_valid_new_sources** described below)
-        :param force_insert_not_valid_new_source: a boolean value to specify if, in case the sources that are passed as
-               parameters and its validation fails, those should be in any case provided as a parameter for the data product
+        :param force_insert_not_valid_new_source: a boolean value to specify if, in case the validation of the sources passed as
+               parameters fails, those should be in any case provided as a parameter for the data product
         :param apply_fields_source_resolution: a boolean value to specify if, in case only a single source is passed within the
                 parameters and then successfully validated, to apply the parameters values returned from the validation
                 (an example of these parameters are RA and DEC), default to False
