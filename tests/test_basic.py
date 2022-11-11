@@ -9,7 +9,7 @@ import requests
 import oda_api.api
 import oda_api.token
 
-from cdci_data_analysis.pytest_fixtures import DispatcherJobState, make_hash, ask
+from cdci_data_analysis.pytest_fixtures import DispatcherJobState
 
 secret_key = 'secretkey_test'
 default_exp_time = int(time.time()) + 5000
