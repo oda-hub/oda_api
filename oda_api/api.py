@@ -956,11 +956,11 @@ class DispatcherAPI:
         return response_json
 
     def post_data_product_to_gallery(self,
-                                     product_title: str = None,
-                                     observation_id: str = None,
-                                     gallery_image_path: str = None,
+                                     product_title: typing.Optional[str] = None,
+                                     observation_id: typing.Optional[str] = None,
+                                     gallery_image_path: typing.Optional[str] = None,
                                      fits_file_path=None,
-                                     token: str = None,
+                                     token: typing.Optional[str] = None,
                                      insert_new_source: bool = False,
                                      validate_source: bool = False,
                                      force_insert_not_valid_new_source: bool = False,
