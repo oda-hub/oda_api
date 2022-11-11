@@ -4,7 +4,7 @@ from collections import OrderedDict
 from json.decoder import JSONDecodeError
 
 import rdflib
-from astropy.table import Table
+import typing
 from astropy.coordinates import Angle
 
 # NOTE gw is optional for now
@@ -929,10 +929,10 @@ class DispatcherAPI:
             f"{C.GREY}last request completed in {self.last_request_t_complete - self.last_request_t0} seconds{C.NC}")
 
     def get_list_terms_gallery(self,
-                               group: str = None,
-                               parent: str = None,
-                               parent_id: str = None,
-                               token: str = None
+                               group: typing.Optional[str] = None,
+                               parent: typing.Optional[str] = None,
+                               parent_id: typing.Optional[str] = None,
+                               token: typing.Optional[str] = None
                                ):
         logger.debug("Getting the list of available instruments on the gallery")
         params = {
