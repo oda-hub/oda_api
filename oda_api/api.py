@@ -1074,8 +1074,8 @@ class DispatcherAPI:
         return response_json
 
     def resolve_source(self,
-                       src_name: str = None,
-                       token: str = None):
+                       src_name: typing.Optional[str] = None,
+                       token: typing.Optional[str] = None):
         resolved_obj = None
         if src_name is not None and src_name != '':
             params = {
@@ -1098,7 +1098,7 @@ class DispatcherAPI:
         return resolved_obj
 
     def check_gallery_data_product_policy(self,
-                                          token: str = None,
+                                          token: typing.Optional[str] = None,
                                           **kwargs):
         product_type = kwargs.get('product_type', None)
         if product_type is not None and product_type != '':
@@ -1129,7 +1129,7 @@ class DispatcherAPI:
 
         return True
 
-    def check_missing_parameters_data_product(self, response, token: str = None, **kwargs):
+    def check_missing_parameters_data_product(self, response, token: typing.Optional[str] = None, **kwargs):
         missing_instrument = True
         instrument_used = None
         missing_product_type = True
