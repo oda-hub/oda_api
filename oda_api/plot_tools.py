@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+import os.path
 from builtins import (str, open, range,
                       zip, round, input, int, pow, object, zip)
 
@@ -61,16 +62,20 @@ class OdaImage(OdaProduct):
     name = 'image'
 
     def get_image_for_gallery(self, ext_sig=None, meta=None, header=None, sources=None,
-             levels=None, cmap=cm.gist_earth, unit_ID=4, det_sigma=3):
+             levels=None, cmap=cm.gist_earth, unit_ID=4, det_sigma=3, output_folder=None):
         plt = self.build_fig(ext_sig=ext_sig, meta=meta, header=header, sources=sources,
                               levels=levels, cmap=cmap, unit_ID=unit_ID, det_sigma=det_sigma, sliders=False)
 
         request_time = _time.time()
         pic_name = str(request_time) + '_image.png'
 
-        plt.savefig(pic_name)
+        pic_fn = pic_name
+        if output_folder is not None:
+            pic_fn = os.path.join(output_folder, pic_name)
 
-        return pic_name
+        plt.savefig(pic_fn)
+
+        return pic_fn
 
     def show(self, ext_sig=None, meta=None, header=None, sources=None,
              levels=None, cmap=cm.gist_earth, unit_ID=4, det_sigma=3, sliders=True):
@@ -511,17 +516,21 @@ class OdaLightCurve(OdaProduct):
 
         return x[ind], dt_lc[ind], y[ind], dy[ind], e_min, e_max
 
-    def get_image_for_gallery(self, in_source_name='', systematic_fraction=0, ng_sig_limit=0, find_excesses=False):
+    def get_image_for_gallery(self, in_source_name='', systematic_fraction=0, ng_sig_limit=0, find_excesses=False, output_folder=None):
         plts = self.build_fig(in_source_name=in_source_name, systematic_fraction=systematic_fraction,
                              ng_sig_limit=ng_sig_limit, find_excesses=find_excesses)
 
         request_time = _time.time()
         pic_name = str(request_time) + '_image.png'
 
-        if len(plts) == 1:
-            plts[0].savefig(pic_name)
+        pic_fn = pic_name
+        if output_folder is not None:
+            pic_fn = os.path.join(output_folder, pic_name)
 
-        return pic_name
+        if len(plts) == 1:
+            plts[0].savefig(pic_fn)
+
+        return pic_fn
 
     def show(self, in_source_name='', systematic_fraction=0, ng_sig_limit=0, find_excesses=False):
 
@@ -732,24 +741,29 @@ class OdaSpectrum(OdaProduct):
 
         specprod = [l for l in self.data._p_list if l.meta_data['src_name'] == in_source_name]
 
-        if (len(specprod) < 1):
+        if len(specprod) < 1:
             self.logger.warning("source %s not found in spectral products" % in_source_name)
             return None
 
         return specprod
 
-    def get_image_for_gallery(self, in_source_name='', systematic_fraction=0, xlim=[]):
-        pic_name = None
+    def get_image_for_gallery(self, in_source_name='', systematic_fraction=0, xlim=None, output_folder=None):
+        if xlim is None:
+            xlim = []
+        pic_fn = None
         plt = self.build_fig(in_source_name=in_source_name, systematic_fraction=systematic_fraction,
                              xlim=xlim)
 
         if plt is not None:
             request_time = _time.time()
             pic_name = str(request_time) + '_image.png'
+            pic_fn = pic_name
+            if output_folder is not None:
+                pic_fn = os.path.join(output_folder, pic_name)
 
-            plt.savefig(pic_name)
+            plt.savefig(pic_fn)
 
-        return pic_name
+        return pic_fn
 
     def show(self, in_source_name='', systematic_fraction=0, xlim=[]):
 
@@ -1005,17 +1019,21 @@ class OdaGWContours(OdaProduct):
         if fig is not None:
             fig.show()
 
-    def get_image_for_gallery(self, event_name=None):
-        pic_name = None
+    def get_image_for_gallery(self, event_name=None, output_folder=None):
+        pic_fn = None
         fig = self.build_fig(event_name=event_name)
 
         if fig is not None:
             request_time = _time.time()
             pic_name = str(request_time) + '_image.png'
 
-            fig.savefig(pic_name)
+            pic_fn = pic_name
+            if output_folder is not None:
+                pic_fn = os.path.join(output_folder, pic_name)
 
-        return pic_name
+            fig.savefig(pic_fn)
+
+        return pic_fn
 
     def build_fig(self, event_name=None):
         fig = plt.figure(figsize=(8, 8./1.62))
