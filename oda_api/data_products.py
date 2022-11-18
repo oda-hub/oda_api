@@ -26,6 +26,7 @@ from astropy.utils.misc import JsonCustomEncoder
 
 from astropy.table import Table
 from astropy.coordinates import Angle
+from astropy.wcs import WCS
 
 import  numpy
 import numpy as np
@@ -36,9 +37,12 @@ import  hashlib
 from numpy import nan,inf
 from sys import path_importer_cache, version_info
 
-from io import StringIO
-
+from io import StringIO, BytesIO
+import imghdr
+import os
 import logging
+from matplotlib import image as mpimg
+from matplotlib import pyplot as plt
 
 logger = logging.getLogger('oda_api.data_products')
 
@@ -757,3 +761,82 @@ class LightCurveDataProduct(NumpyDataProduct):
                                  hdu_type = 'bintable',
                                  name = 'LIGHTCURVE')],
                    name = name)            
+
+class BinaryImageProduct:
+    def __init__(self, binary_data, metadata={}, file_path=None, write_on_creation = False):
+        self.binary_data = binary_data
+        self.metadata = metadata
+        if file_path is not None and os.path.isfile(file_path):
+            self.file_path = file_path 
+            logger.info(f'Image file {file_path} already exist. No automatical rewriting.')
+        elif write_on_creation:
+            self.write_file(file_path)
+        else:
+            self.file_path = None                        
+        byte_stream = BytesIO(binary_data)
+        tp = imghdr.what(byte_stream)
+        if tp is None:
+            raise ValueError('Provided data is not an image')
+        self.img_type = tp
+    
+    @classmethod
+    def from_file(cls, file_path):
+        with open(file_path, 'rb') as fd:
+            binary_data = fd.read()
+        return cls(binary_data, file_path=file_path)
+            
+    def write_file(self, file_path):
+        logger.info(f'Creating image file {file_path}.')
+        with open(file_path, 'wb') as fd:
+            fd.write(self.binary_data)
+        self.file_path = file_path
+    
+    def encode(self):
+        b64data = base64.urlsafe_b64encode(self.binary_data)
+        output_dict = {}
+        output_dict['img_type'] = self.img_type
+        output_dict['b64data'] = b64data.decode()
+        output_dict['metadata'] = self.metadata
+        if self.file_path:
+            output_dict['filename'] = os.path.basename(self.file_path)
+        return output_dict
+    
+    @classmethod
+    def decode(cls, encoded_data, write_on_creation = False):
+        binary_data = base64.urlsafe_b64decode(encoded_data['b64data'].encode('ascii', 'ignore'))
+        return cls(binary_data, 
+                   metadata = encoded_data['metadata'],
+                   file_path = encoded_data.get('filename'),
+                   write_on_creation = write_on_creation)
+    
+    def show(self):
+        byte_stream = BytesIO(self.binary_data)
+        image = mpimg.imread(byte_stream)
+        plt.imshow(image)
+        plt.axis('off')
+        plt.show()
+        
+class ImageDataProduct(NumpyDataProduct):
+    @classmethod
+    def from_fits_file(cls,filename,ext=None,hdu_name=None,meta_data={},name=''):
+        npdp = super().from_fits_file(filename,ext=None,hdu_name=None,meta_data={},name='')
+
+        contains_image = cls.check_is_image(npdp)
+        if contains_image:
+            return npdp
+        else:
+            raise ValueError(f'FITS file {filename} doesn\'t contain image data.')
+        
+    @staticmethod
+    def check_is_image(numpy_data_prod):
+        for hdu in numpy_data_prod.data_unit:
+            if hdu.hdu_type == 'image':
+                return True
+            elif hdu.hdu_type == 'primary':
+                try:
+                    wcs = WCS(hdu)
+                    return True
+                except:
+                    pass
+        return False
+        
