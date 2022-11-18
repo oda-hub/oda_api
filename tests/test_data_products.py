@@ -10,7 +10,7 @@ import os
 import random
 import string
 
-from cdci_data_analysis.analysis.json import CustomJSONEncoder
+from oda_api.json import CustomJSONEncoder
 
 import oda_api.api
 from oda_api.data_products import LightCurveDataProduct, NumpyDataProduct
@@ -29,6 +29,7 @@ default_token_payload = dict(
     mssub=True
 )
 
+# TODO: adapt to new product types and implement corresponding tests
 def encode_decode(ndp: NumpyDataProduct) -> NumpyDataProduct:
     ndp_json = json.dumps(ndp, cls=CustomJSONEncoder)
 
