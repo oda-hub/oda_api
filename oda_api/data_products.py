@@ -321,7 +321,6 @@ class NumpyDataUnit(object):
 
 
     def encode(self,use_pickle=False,use_gzip=False,to_json=False):
-        # FIXME: does not preserve units_dict
         _data = []
         _meata_d=[]
         _kw_d = []
@@ -362,7 +361,8 @@ class NumpyDataUnit(object):
                    'header': self.header,
                    'binarys': _binarys,
                    'meta_data': self.meta_data,
-                   'hdu_type': self.hdu_type}
+                   'hdu_type': self.hdu_type,
+                   'units_dict': self.units_dict}
 
         if to_json:
             _o_dict_json = json.dumps(_o_dict)
@@ -390,6 +390,7 @@ class NumpyDataUnit(object):
         _name=encoded_obj['name']
         _hdu_type=encoded_obj['hdu_type']
         _binarys=encoded_obj['binarys']
+        _units_dict = encoded_obj.get('units_dict')
 
         if _binarys is not None:
             #print('dec ->', type(_binarys))
@@ -424,7 +425,7 @@ class NumpyDataUnit(object):
 
 
 
-        return cls(data=_data, data_header=encoded_header, meta_data=encoded_meta_data,name=_name,hdu_type=_hdu_type)
+        return cls(data=_data, data_header=encoded_header, meta_data=encoded_meta_data,name=_name,hdu_type=_hdu_type, units_dict=_units_dict)
 
     @classmethod
     def from_pandas(cls, 
@@ -821,18 +822,16 @@ class ImageDataProduct(NumpyDataProduct):
     def from_fits_file(cls,filename,ext=None,hdu_name=None,meta_data={},name=''):
         npdp = super().from_fits_file(filename,ext=None,hdu_name=None,meta_data={},name='')
 
-        contains_image = cls.check_is_image(npdp)
+        contains_image = cls.check_contains_image(npdp)
         if contains_image:
             return npdp
         else:
             raise ValueError(f'FITS file {filename} doesn\'t contain image data.')
-        
+            
     @staticmethod
-    def check_is_image(numpy_data_prod):
+    def check_contains_image(numpy_data_prod):
         for hdu in numpy_data_prod.data_unit:
-            if hdu.hdu_type == 'image':
-                return True
-            elif hdu.hdu_type == 'primary':
+            if hdu.hdu_type in ['primary', 'image']:
                 try:
                     wcs = WCS(hdu)
                     return True
