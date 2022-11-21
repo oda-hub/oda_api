@@ -807,10 +807,14 @@ class BinaryImageProduct:
     
     @classmethod
     def decode(cls, encoded_data, write_on_creation = False):
-        binary_data = base64.urlsafe_b64decode(encoded_data['b64data'].encode('ascii', 'ignore'))
+        if isinstance(encoded_data, dict):
+            _encoded_data = encoded_data
+        else:
+            _encoded_data = json.loads(literal_to_json(encoded_data))
+        binary_data = base64.urlsafe_b64decode(_encoded_data['b64data'].encode('ascii', 'ignore'))
         return cls(binary_data, 
-                   metadata = encoded_data['metadata'],
-                   file_path = encoded_data.get('filename'),
+                   metadata = _encoded_data['metadata'],
+                   file_path = _encoded_data.get('filename'),
                    write_on_creation = write_on_creation)
     
     def show(self):

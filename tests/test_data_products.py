@@ -18,6 +18,8 @@ from oda_api.data_products import LightCurveDataProduct, NumpyDataProduct, ODAAs
 from astropy import time as atime
 from astropy import units as u
 from astropy.table import Table
+from matplotlib import pyplot as plt
+from io import BytesIO
 
 secret_key = 'secretkey_test'
 default_exp_time = int(time.time()) + 5000
@@ -113,7 +115,6 @@ def test_astropy_table():
 
     tabp = ODAAstropyTable(atable)
 
-    # TODO: howto compare?
     assert (tabp.table.as_array().tolist() == data).all()
     assert tabp.table.colnames == ['a', 'b']
 
@@ -123,8 +124,21 @@ def test_astropy_table():
     assert tabp_decoded.table.colnames == ['a', 'b']
     
 def test_bin_image():
-    # TODO:
-    pass
+    data = np.zeros((10, 2))
+    data[:,0] = range(len(data))
+    data[:,1] = np.random.rand(len(data))
+    plt.plot(data[:,0], data[:,1])
+    plt.savefig('tmp.png')
+    with open('tmp.png', 'rb') as fd:
+        figdata = fd.read()
+
+    bin_image = BinaryImageProduct.from_file('tmp.png')
+    
+    assert bin_image.binary_data == figdata
+    
+    bin_image_decoded = encode_decode(bin_image)
+    
+    assert bin_image_decoded.binary_data == figdata
 
 @pytest.mark.test_drupal
 @pytest.mark.parametrize("observation", ['test observation', None])
