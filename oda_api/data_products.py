@@ -146,8 +146,11 @@ class ODAAstropyTable(object):
         return   _o_dict
 
     @classmethod
-    def decode(cls,_o_dict,use_binary=False):
-
+    def decode(cls,o_dict,use_binary=False):
+        if isinstance(o_dict, dict):
+            _o_dict = o_dict
+        elif isinstance(o_dict, str):
+            _o_dict = json.loads(literal_to_json(o_dict))
         encoded_name = _o_dict['name']
         encoded_meta_data = _o_dict['meta_data']
         if use_binary is True:

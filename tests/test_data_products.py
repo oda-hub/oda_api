@@ -9,13 +9,15 @@ import jwt
 import os
 import random
 import string
+import typing
 
 from oda_api.json import CustomJSONEncoder
 
 import oda_api.api
-from oda_api.data_products import LightCurveDataProduct, NumpyDataProduct
+from oda_api.data_products import LightCurveDataProduct, NumpyDataProduct, ODAAstropyTable, BinaryImageProduct
 from astropy import time as atime
 from astropy import units as u
+from astropy.table import Table
 
 secret_key = 'secretkey_test'
 default_exp_time = int(time.time()) + 5000
@@ -30,12 +32,24 @@ default_token_payload = dict(
 )
 
 # TODO: adapt to new product types and implement corresponding tests
-def encode_decode(ndp: NumpyDataProduct) -> NumpyDataProduct:
+def encode_decode(ndp: typing.Union[NumpyDataProduct, 
+                                    ODAAstropyTable, 
+                                    BinaryImageProduct]) -> typing.Union[NumpyDataProduct, 
+                                                                         ODAAstropyTable, 
+                                                                         BinaryImageProduct]:
     ndp_json = json.dumps(ndp, cls=CustomJSONEncoder)
 
     print(ndp_json)
 
-    return NumpyDataProduct.decode(ndp_json)    
+    if isinstance(ndp, NumpyDataProduct):
+        return NumpyDataProduct.decode(ndp_json)    
+    
+    if isinstance(ndp, ODAAstropyTable):
+        return ODAAstropyTable.decode(ndp_json)
+    
+    if isinstance(ndp, BinaryImageProduct):
+        return BinaryImageProduct.decode(ndp_json)
+    
     
 
     
@@ -91,6 +105,26 @@ def test_variable_length_table():
     assert list(ndu_decoded.data['var'][0]) == [1, 2, 3]
     assert list(ndu_decoded.data['var'][1]) == [11, 12]
 
+def test_astropy_table():
+    data = np.zeros((10, 2))
+    data[:,0] = range(len(data))
+    data[:,1] = range(len(data), 0, -1)
+    atable = Table(data, names=['a', 'b'])
+
+    tabp = ODAAstropyTable(atable)
+
+    # TODO: howto compare?
+    assert (tabp.table.as_array().tolist() == data).all()
+    assert tabp.table.colnames == ['a', 'b']
+
+    tabp_decoded = encode_decode(tabp)
+
+    assert (tabp_decoded.table.as_array().tolist() == data).all()
+    assert tabp_decoded.table.colnames == ['a', 'b']
+    
+def test_bin_image():
+    # TODO:
+    pass
 
 @pytest.mark.test_drupal
 @pytest.mark.parametrize("observation", ['test observation', None])
