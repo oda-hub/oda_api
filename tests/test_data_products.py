@@ -19,7 +19,6 @@ from astropy import time as atime
 from astropy import units as u
 from astropy.table import Table
 from matplotlib import pyplot as plt
-from io import BytesIO
 
 secret_key = 'secretkey_test'
 default_exp_time = int(time.time()) + 5000
@@ -128,7 +127,9 @@ def test_bin_image():
     data[:,0] = range(len(data))
     data[:,1] = np.random.rand(len(data))
     plt.plot(data[:,0], data[:,1])
-    plt.savefig('tmp.png')
+    if os.path.isfile('tmp.png'):
+        os.remove('tmp.png')
+    plt.savefig('tmp.png', )
     with open('tmp.png', 'rb') as fd:
         figdata = fd.read()
 
