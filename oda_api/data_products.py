@@ -766,7 +766,7 @@ class LightCurveDataProduct(NumpyDataProduct):
                                  name = 'LIGHTCURVE')],
                    name = name)            
 
-class BinaryImageProduct:
+class PictureProduct:
     def __init__(self, binary_data, metadata={}, file_path=None, write_on_creation = False):
         self.binary_data = binary_data
         self.metadata = metadata
@@ -824,7 +824,7 @@ class BinaryImageProduct:
         plt.axis('off')
         plt.show()
         
-class ImageDataProduct(NumpyDataProduct):
+class ImageDataProduct(NumpyDataProduct):  
     @classmethod
     def from_fits_file(cls,filename,ext=None,hdu_name=None,meta_data={},name=''):
         npdp = super().from_fits_file(filename,ext=None,hdu_name=None,meta_data={},name='')

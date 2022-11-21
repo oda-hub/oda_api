@@ -14,7 +14,7 @@ import typing
 from oda_api.json import CustomJSONEncoder
 
 import oda_api.api
-from oda_api.data_products import LightCurveDataProduct, NumpyDataProduct, ODAAstropyTable, BinaryImageProduct
+from oda_api.data_products import LightCurveDataProduct, NumpyDataProduct, ODAAstropyTable, PictureProduct
 from astropy import time as atime
 from astropy import units as u
 from astropy.table import Table
@@ -35,9 +35,9 @@ default_token_payload = dict(
 # TODO: adapt to new product types and implement corresponding tests
 def encode_decode(ndp: typing.Union[NumpyDataProduct, 
                                     ODAAstropyTable, 
-                                    BinaryImageProduct]) -> typing.Union[NumpyDataProduct, 
+                                    PictureProduct]) -> typing.Union[NumpyDataProduct, 
                                                                          ODAAstropyTable, 
-                                                                         BinaryImageProduct]:
+                                                                         PictureProduct]:
     ndp_json = json.dumps(ndp, cls=CustomJSONEncoder)
 
     print(ndp_json)
@@ -48,8 +48,8 @@ def encode_decode(ndp: typing.Union[NumpyDataProduct,
     if isinstance(ndp, ODAAstropyTable):
         return ODAAstropyTable.decode(ndp_json)
     
-    if isinstance(ndp, BinaryImageProduct):
-        return BinaryImageProduct.decode(ndp_json)
+    if isinstance(ndp, PictureProduct):
+        return PictureProduct.decode(ndp_json)
     
     
 
@@ -133,7 +133,7 @@ def test_bin_image():
     with open('tmp.png', 'rb') as fd:
         figdata = fd.read()
 
-    bin_image = BinaryImageProduct.from_file('tmp.png')
+    bin_image = PictureProduct.from_file('tmp.png')
     
     assert bin_image.binary_data == figdata
     
