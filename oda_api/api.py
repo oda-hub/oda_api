@@ -15,7 +15,7 @@ try:
 except ModuleNotFoundError:
     pass
 
-from .data_products import NumpyDataProduct, BinaryData, ApiCatalog, GWContoursDataProduct
+from .data_products import NumpyDataProduct, BinaryData, ApiCatalog, GWContoursDataProduct, PictureProduct
 
 from builtins import (bytes, str, open, super, range,
                       zip, round, input, int, pow, object, map, zip)
@@ -1405,7 +1405,7 @@ class DataCollection(object):
         if 'binary_data_product_list' in res_json['products'].keys():
             data.extend([BinaryData().decode(d)
                          for d in res_json['products']['binary_data_product_list']])
-
+        
         if 'catalog' in res_json['products'].keys():
             data.append(ApiCatalog(
                 res_json['products']['catalog'], name='dispatcher_catalog'))
@@ -1418,6 +1418,14 @@ class DataCollection(object):
             data.extend([ascii.read(table_binary)
                          for table_binary in res_json['products']['astropy_table_product_binary_list']])
 
+        if 'binary_image_product_list' in res_json['products'].keys():
+            data.extend([PictureProduct.decode(bin_image_data)
+                         for bin_image_data in res_json['products']['binary_image_product_list']])
+        
+        if 'text_product_list' in res_json['products'].keys():
+            data.extend([text_data
+                         for text_data in res_json['products']['text_product_list']])
+            
         if 'gw_strain_product_list' in res_json['products'].keys():
             data.extend([TimeSeries(strain_data['value'],
                                     name=strain_data['name'],

@@ -9,13 +9,16 @@ import jwt
 import os
 import random
 import string
+import typing
 
-from cdci_data_analysis.analysis.json import CustomJSONEncoder
+from oda_api.json import CustomJSONEncoder
 
 import oda_api.api
-from oda_api.data_products import LightCurveDataProduct, NumpyDataProduct
+from oda_api.data_products import LightCurveDataProduct, NumpyDataProduct, ODAAstropyTable, PictureProduct
 from astropy import time as atime
 from astropy import units as u
+from astropy.table import Table
+from matplotlib import pyplot as plt
 
 secret_key = 'secretkey_test'
 default_exp_time = int(time.time()) + 5000
@@ -29,12 +32,25 @@ default_token_payload = dict(
     mssub=True
 )
 
-def encode_decode(ndp: NumpyDataProduct) -> NumpyDataProduct:
+# TODO: adapt to new product types and implement corresponding tests
+def encode_decode(ndp: typing.Union[NumpyDataProduct, 
+                                    ODAAstropyTable, 
+                                    PictureProduct]) -> typing.Union[NumpyDataProduct, 
+                                                                         ODAAstropyTable, 
+                                                                         PictureProduct]:
     ndp_json = json.dumps(ndp, cls=CustomJSONEncoder)
 
     print(ndp_json)
 
-    return NumpyDataProduct.decode(ndp_json)    
+    if isinstance(ndp, NumpyDataProduct):
+        return NumpyDataProduct.decode(ndp_json)    
+    
+    if isinstance(ndp, ODAAstropyTable):
+        return ODAAstropyTable.decode(ndp_json)
+    
+    if isinstance(ndp, PictureProduct):
+        return PictureProduct.decode(ndp_json)
+    
     
 
     
@@ -90,6 +106,40 @@ def test_variable_length_table():
     assert list(ndu_decoded.data['var'][0]) == [1, 2, 3]
     assert list(ndu_decoded.data['var'][1]) == [11, 12]
 
+def test_astropy_table():
+    data = np.zeros((10, 2))
+    data[:,0] = range(len(data))
+    data[:,1] = range(len(data), 0, -1)
+    atable = Table(data, names=['a', 'b'])
+
+    tabp = ODAAstropyTable(atable)
+
+    assert (tabp.table.as_array().tolist() == data).all()
+    assert tabp.table.colnames == ['a', 'b']
+
+    tabp_decoded = encode_decode(tabp)
+
+    assert (tabp_decoded.table.as_array().tolist() == data).all()
+    assert tabp_decoded.table.colnames == ['a', 'b']
+    
+def test_bin_image():
+    data = np.zeros((10, 2))
+    data[:,0] = range(len(data))
+    data[:,1] = np.random.rand(len(data))
+    plt.plot(data[:,0], data[:,1])
+    if os.path.isfile('tmp.png'):
+        os.remove('tmp.png')
+    plt.savefig('tmp.png', )
+    with open('tmp.png', 'rb') as fd:
+        figdata = fd.read()
+
+    bin_image = PictureProduct.from_file('tmp.png')
+    
+    assert bin_image.binary_data == figdata
+    
+    bin_image_decoded = encode_decode(bin_image)
+    
+    assert bin_image_decoded.binary_data == figdata
 
 @pytest.mark.test_drupal
 @pytest.mark.parametrize("observation", ['test observation', None])
