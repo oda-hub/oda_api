@@ -99,9 +99,11 @@ def rewrite_token(new_token,
 #TODO: move to dynaconf
 def discover_token(
         allow_invalid=False,
-        token_discovery_methods=(*(n.value for n in TokenDiscoveryMethods),)):
+        token_discovery_methods=None):
     failed_methods = []
     token = None
+    if token_discovery_methods is None:
+        token_discovery_methods = *(n.value for n in TokenDiscoveryMethods),
 
     for n in TokenDiscoveryMethods:
         if n.value in token_discovery_methods:
