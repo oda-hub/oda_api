@@ -3,7 +3,7 @@ import json
 import base64
 import logging
 from os import environ, getcwd, path
-from posixpath import join
+from enum import Enum
 from types import FunctionType
 import time
 import traceback
@@ -13,6 +13,12 @@ from jwt.exceptions import ExpiredSignatureError # type: ignore
 default_algorithm = 'HS256'
 
 logger = logging.getLogger("oda_api.token")
+
+
+class TokenDiscoveryMethods(Enum):
+    ODA_ENV_VAR = "environment variable ODA_TOKEN"
+    FILE_CUR_DIR = "file in current directory"
+    FILE_HOME = "file in home"
 
 try:
     import jwt
@@ -61,6 +67,7 @@ def decode_oda_token(token: str, secret_key=None, allow_invalid=False) -> dict:
 
     raise RuntimeError()
 
+
 def decode_oauth2_token(token: str):
     # usually comes in cookies['_oauth2_proxy']
     return json.loads(base64.b64decode(token.split(".")[0]+"=").decode())
@@ -72,22 +79,18 @@ def rewrite_token(new_token,
                           "file in current directory",
                           "file in home")):
 
-    for n in [
-        "environment variable ODA_TOKEN",
-        "file in current directory",
-        "file in home",
-    ]:
-        if n in token_discovery_methods:
-            current_token = discover_token(token_discovery_methods=n)
+    for n in TokenDiscoveryMethods:
+        if n.value in token_discovery_methods:
+            current_token = discover_token(token_discovery_methods=n.value)
             if current_token is not None and current_token != '':
-                if n == "environment variable ODA_TOKEN":
+                if n == TokenDiscoveryMethods.ODA_ENV_VAR:
                     environ['ODA_TOKEN'] = new_token
                     break
-                elif n == "file in current directory":
+                elif n == TokenDiscoveryMethods.FILE_CUR_DIR:
                     with open(path.join(getcwd(), ".oda-token"), 'w') as ft:
                         ft.write(new_token)
                     break
-                elif n == "file in home":
+                elif n == TokenDiscoveryMethods.FILE_HOME:
                     with open(path.join(environ["HOME"], ".oda-token"), 'w') as ft:
                         ft.write(new_token)
                     break
@@ -96,26 +99,23 @@ def rewrite_token(new_token,
 #TODO: move to dynaconf
 def discover_token(
         allow_invalid=False,
-        token_discovery_methods=(
-            "environment variable ODA_TOKEN",
-            "file in current directory",
-            "file in home")):
+        token_discovery_methods=(*(n.value for n in TokenDiscoveryMethods),)):
     failed_methods = []
     token = None
 
-    for n, m in [
-        ("environment variable ODA_TOKEN", lambda: environ['ODA_TOKEN'].strip()),
-        ("file in current directory", lambda: open(
-                path.join(getcwd(), ".oda-token")
-            ).read().strip()),
-        ("file in home", lambda: open(
-                path.join(environ["HOME"], ".oda-token")
-            ).read().strip()),
-    ]:
-        if n in token_discovery_methods:
+    for n in TokenDiscoveryMethods:
+        if n.value in token_discovery_methods:
             try:
+                if n == TokenDiscoveryMethods.ODA_ENV_VAR:
+                    token = environ['ODA_TOKEN'].strip()
+                elif n == TokenDiscoveryMethods.FILE_CUR_DIR:
+                    with open(path.join(getcwd(), ".oda-token")) as ft:
+                        token = ft.read().strip()
+                elif n == TokenDiscoveryMethods.FILE_HOME:
+                    with open(path.join(environ["HOME"], ".oda-token")) as ft:
+                        token = ft.read().strip()
+
                 logger.debug("searching for token in %s", n)
-                token = m()
                 decoded_token = decode_oda_token(token, allow_invalid=allow_invalid)
 
                 expires_in_s = decoded_token['exp'] - time.time()
