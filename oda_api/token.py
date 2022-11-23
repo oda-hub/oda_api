@@ -1,3 +1,5 @@
+import os.path
+
 import oda_api
 import json
 import base64
@@ -88,7 +90,7 @@ def get_token_roles(decoded_token):
 def rewrite_token(new_token,
                   token_write_method: TokenAccessMethods = None
                   ):
-    current_token = discover_token(allow_invalid=True)
+    current_token, discover_method = discover_token_and_method(allow_invalid=True)
     current_decoded_token = decode_oda_token(current_token, allow_invalid=True)
     new_decoded_token = decode_oda_token(new_token, allow_invalid=True)
 
@@ -106,6 +108,18 @@ def rewrite_token(new_token,
                     f"roles new token: {new_decoded_token_roles}")
 
     if token_write_method is not None:
+        with open("old-oda-token_" + str(time.time()), 'w') as ft:
+            ft.write(current_token)
+        if discover_method is not None:
+            if discover_method == TokenAccessMethods.ODA_ENV_VAR:
+                environ.pop('ODA_TOKEN', None)
+            elif discover_method == TokenAccessMethods.FILE_CUR_DIR:
+                if os.path.exists(path.join(getcwd(), ".oda-token")):
+                    os.remove(path.join(getcwd(), ".oda-token"))
+            elif discover_method == TokenAccessMethods.FILE_HOME:
+                if os.path.exists(path.join(environ["HOME"], ".oda-token")):
+                    os.remove(path.join(environ["HOME"], ".oda-token"))
+
         if token_write_method == TokenAccessMethods.ODA_ENV_VAR:
             environ['ODA_TOKEN'] = new_token
         elif token_write_method == TokenAccessMethods.FILE_CUR_DIR:
@@ -115,8 +129,7 @@ def rewrite_token(new_token,
             with open(path.join(environ["HOME"], ".oda-token"), 'w') as ft:
                 ft.write(new_token)
 
-#TODO: move to dynaconf
-def discover_token(
+def discover_token_and_method(
         allow_invalid=False,
         token_discovery_methods=None):
     failed_methods = []
@@ -144,14 +157,14 @@ def discover_token(
                 expires_in_s = decoded_token['exp'] - time.time()
 
                 if expires_in_s < 0:
-                    logger.debug("token expired %.1f h ago!", -expires_in_s/3600)    
+                    logger.debug("token expired %.1f h ago!", -expires_in_s / 3600)
                     if allow_invalid:
                         break
                     else:
                         token = None
                 else:
                     logger.info("found token in %s your token payload: %s", n, format_token(decoded_token))
-                    logger.info("token expires in %.1f h", expires_in_s/3600)                
+                    logger.info("token expires in %.1f h", expires_in_s / 3600)
                     break
             except Exception as e:
                 failed_methods.append(f"{n}: {e}")
@@ -159,10 +172,21 @@ def discover_token(
                 token = None
 
     if token is None:
-        logger.debug("failed to discover token with any known method")        
+        logger.debug("failed to discover token with any known method")
     else:
-        logger.debug("discovered token method %s", n)        
+        logger.debug("discovered token method %s", n)
 
+    return token, n
+
+
+#TODO: move to dynaconf
+def discover_token(
+        allow_invalid=False,
+        token_discovery_methods=None):
+    token, discovery_method = discover_token_and_method(
+        allow_invalid=allow_invalid,
+        token_discovery_methods=token_discovery_methods
+    )
     return token
 
 ## updating
