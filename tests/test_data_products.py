@@ -129,7 +129,7 @@ def test_bin_image():
     plt.plot(data[:,0], data[:,1])
     if os.path.isfile('tmp.png'):
         os.remove('tmp.png')
-    plt.savefig('tmp.png', )
+    plt.savefig('tmp.png')
     with open('tmp.png', 'rb') as fd:
         figdata = fd.read()
 
