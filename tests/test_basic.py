@@ -380,9 +380,10 @@ def test_dispatcher_exception(dispatcher_live_fixture, caplog, exception_kind):
     requests.get = requests._get
 
 
-@pytest.mark.parametrize('token_placement', ['env', 'homedotfile', 'cwddotfile', 'no'])
+@pytest.mark.parametrize('token_placement', ['oda_env_var', 'file_home', 'file_cur_dir', 'no'])
+@pytest.mark.parametrize('write_token_method', ['oda_env_var', 'file_home', 'file_cur_dir', 'no'])
 @pytest.mark.parametrize('write_token', [True, False])
-def test_token_refresh(dispatcher_live_fixture, token_placement, monkeypatch, write_token, tmpdir):
+def test_token_refresh(dispatcher_live_fixture, token_placement, monkeypatch, write_token, write_token_method, tmpdir):
     disp = oda_api.api.DispatcherAPI(url=dispatcher_live_fixture, wait=False)
 
     # let's generate a valid token
@@ -406,25 +407,32 @@ def test_token_refresh(dispatcher_live_fixture, token_placement, monkeypatch, wr
 
     monkeypatch.setenv('ODA_TOKEN', '')
 
-    if token_placement == 'env':
+    if token_placement == 'oda_env_var':
         monkeypatch.setenv('ODA_TOKEN', encoded_token)
 
-    elif token_placement == 'cwddotfile':
+    elif token_placement == 'file_cur_dir':
         with open(oda_token_cwd_fn, "w") as f:
             f.write(encoded_token)
 
-    elif token_placement == 'homedotfile':
+    elif token_placement == 'file_home':
         with open(oda_token_home_fn, "w") as f:
             f.write(encoded_token)
 
     if token_placement == 'no':
         with pytest.raises(RuntimeError, match="failed to discover token with any known method"):
-            disp.refresh_token(write_token=write_token)
+            if write_token_method != 'no':
+                disp.refresh_token(write_token=write_token, token_write_method=write_token_method)
+            else:
+                disp.refresh_token(write_token=write_token)
     else:
-        refreshed_token = disp.refresh_token(write_token=write_token)
-        discovered_token = oda_api.token.discover_token()
-
-        if write_token:
-            assert refreshed_token == discovered_token
+        if write_token_method != 'no':
+            refreshed_token = disp.refresh_token(write_token=write_token, token_write_method=write_token_method)
         else:
-            assert refreshed_token != discovered_token
+            refreshed_token = disp.refresh_token(write_token=write_token)
+        if write_token_method == token_placement:
+            discovered_token = oda_api.token.discover_token()
+            if write_token:
+                assert refreshed_token == discovered_token
+            else:
+                assert refreshed_token != discovered_token
+
