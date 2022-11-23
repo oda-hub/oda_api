@@ -15,7 +15,7 @@ default_algorithm = 'HS256'
 logger = logging.getLogger("oda_api.token")
 
 
-class TokenDiscoveryMethods(Enum):
+class TokenAccessMethods(Enum):
     ODA_ENV_VAR = "environment variable ODA_TOKEN"
     FILE_CUR_DIR = "file in current directory"
     FILE_HOME = "file in home"
@@ -73,28 +73,48 @@ def decode_oauth2_token(token: str):
     return json.loads(base64.b64decode(token.split(".")[0]+"=").decode())
 
 
+def get_token_roles(decoded_token):
+    # extract role(s)
+    roles = None
+    if isinstance(decoded_token['roles'], str):
+        roles = decoded_token['roles'].split(',') if 'roles' in decoded_token else []
+        roles[:] = [r.strip() for r in roles]
+    elif isinstance(decoded_token['roles'], list):
+        roles = decoded_token['roles'] if 'roles' in decoded_token else []
+        roles[:] = [r.strip() for r in roles]
+    return roles
+
+
 def rewrite_token(new_token,
-                  token_discovery_methods=(
-                          "environment variable ODA_TOKEN",
-                          "file in current directory",
-                          "file in home")):
+                  token_write_method=None
+                  ):
+    current_token = discover_token(allow_invalid=True)
+    current_decoded_token = decode_oda_token(current_token, allow_invalid=True)
+    new_decoded_token = decode_oda_token(new_token, allow_invalid=True)
 
-    for n in TokenDiscoveryMethods:
-        if n.value in token_discovery_methods:
-            current_token = discover_token(token_discovery_methods=n.value)
-            if current_token is not None and current_token != '':
-                if n == TokenDiscoveryMethods.ODA_ENV_VAR:
-                    environ['ODA_TOKEN'] = new_token
-                    break
-                elif n == TokenDiscoveryMethods.FILE_CUR_DIR:
-                    with open(path.join(getcwd(), ".oda-token"), 'w') as ft:
-                        ft.write(new_token)
-                    break
-                elif n == TokenDiscoveryMethods.FILE_HOME:
-                    with open(path.join(environ["HOME"], ".oda-token"), 'w') as ft:
-                        ft.write(new_token)
-                    break
+    current_decoded_token_expires_in_s = current_decoded_token['exp'] - time.time()
+    new_decoded_token_expires_in_s = new_decoded_token['exp'] - time.time()
 
+    if new_decoded_token_expires_in_s < current_decoded_token_expires_in_s:
+        logger.info("the new token has will expire before the current one")
+
+    current_decoded_token_roles = get_token_roles(current_decoded_token)
+    new_decoded_token_roles = get_token_roles(new_decoded_token)
+    if set(current_decoded_token_roles) - set(new_decoded_token_roles) != set():
+        logger.info("The new token has a different set of roles than the current one:\n"
+                    f"roles current token: {current_decoded_token_roles}\n"
+                    f"roles new token: {new_decoded_token_roles}")
+
+    if token_write_method is not None:
+        token_write_method_enum = TokenAccessMethods[str.upper(token_write_method)]
+        if token_write_method_enum == TokenAccessMethods.ODA_ENV_VAR:
+            environ['ODA_TOKEN'] = new_token
+        elif token_write_method_enum == TokenAccessMethods.FILE_CUR_DIR:
+            with open(path.join(getcwd(), ".oda-token"), 'w') as ft:
+                ft.write(new_token)
+        elif token_write_method_enum == TokenAccessMethods.FILE_HOME:
+            with open(path.join(environ["HOME"], ".oda-token"), 'w') as ft:
+                ft.write(new_token)
 
 #TODO: move to dynaconf
 def discover_token(
@@ -103,17 +123,17 @@ def discover_token(
     failed_methods = []
     token = None
     if token_discovery_methods is None:
-        token_discovery_methods = *(n.value for n in TokenDiscoveryMethods),
+        token_discovery_methods = *(n.value for n in TokenAccessMethods),
 
-    for n in TokenDiscoveryMethods:
+    for n in TokenAccessMethods:
         if n.value in token_discovery_methods:
             try:
-                if n == TokenDiscoveryMethods.ODA_ENV_VAR:
+                if n == TokenAccessMethods.ODA_ENV_VAR:
                     token = environ['ODA_TOKEN'].strip()
-                elif n == TokenDiscoveryMethods.FILE_CUR_DIR:
+                elif n == TokenAccessMethods.FILE_CUR_DIR:
                     with open(path.join(getcwd(), ".oda-token")) as ft:
                         token = ft.read().strip()
-                elif n == TokenDiscoveryMethods.FILE_HOME:
+                elif n == TokenAccessMethods.FILE_HOME:
                     with open(path.join(environ["HOME"], ".oda-token")) as ft:
                         token = ft.read().strip()
 

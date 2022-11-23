@@ -331,7 +331,10 @@ class DispatcherAPI:
         else:
             raise RuntimeError(r.text)
 
-    def refresh_token(self, store_token=False):
+    def refresh_token(self,
+                      write_token=False,
+                      # TODO does this make sense as a default one?
+                      token_write_method=oda_api.token.TokenAccessMethods.FILE_HOME):
         token = oda_api.token.discover_token()
         if token is not None and token != '':
             params = dict(token=token,
@@ -342,8 +345,8 @@ class DispatcherAPI:
 
             if r.status_code == 200:
                 refreshed_token = r.text
-                if store_token:
-                    oda_api.token.rewrite_token(refreshed_token)
+                if write_token:
+                    oda_api.token.rewrite_token(refreshed_token, token_write_method=token_write_method)
 
                 return refreshed_token
             else:
