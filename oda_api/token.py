@@ -108,6 +108,7 @@ def rewrite_token(new_token,
                     f"roles new token: {new_decoded_token_roles}")
 
     if token_write_method is not None:
+        # TODO perhaps use a more appropriate location
         with open("old-oda-token_" + str(time.time()), 'w') as ft:
             ft.write(current_token)
         if discover_method is not None:

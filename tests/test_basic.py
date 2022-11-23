@@ -8,6 +8,7 @@ import glob
 import requests
 import oda_api.api
 import oda_api.token
+import shutil
 
 from cdci_data_analysis.pytest_fixtures import DispatcherJobState
 
@@ -384,6 +385,10 @@ def test_dispatcher_exception(dispatcher_live_fixture, caplog, exception_kind):
 @pytest.mark.parametrize('write_token_method', ['oda_env_var', 'file_home', 'file_cur_dir', 'no'])
 @pytest.mark.parametrize('write_token', [True, False])
 def test_token_refresh(dispatcher_live_fixture, token_placement, monkeypatch, write_token, write_token_method, tmpdir):
+    # remove old stored token
+    list_old_token_files = glob.glob('old-oda-token_*')
+    [os.remove(t) for t in list_old_token_files]
+
     disp = oda_api.api.DispatcherAPI(url=dispatcher_live_fixture, wait=False)
 
     # let's generate a valid token
@@ -432,6 +437,8 @@ def test_token_refresh(dispatcher_live_fixture, token_placement, monkeypatch, wr
         discovered_token = oda_api.token.discover_token(allow_invalid=True)
         if write_token:
             assert refreshed_token == discovered_token
+            list_old_token_files = glob.glob('old-oda-token_*')
+            assert len(list_old_token_files) == 1
+            assert open(list_old_token_files[0]).read() == encoded_token
         else:
             assert refreshed_token != discovered_token
-
