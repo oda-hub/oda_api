@@ -810,7 +810,7 @@ class PictureProduct:
         if isinstance(encoded_data, dict):
             _encoded_data = encoded_data
         else:
-            _encoded_data = json.loads(literal_to_json(encoded_data))
+            _encoded_data = json.loads(encoded_data)
         binary_data = base64.urlsafe_b64decode(_encoded_data['b64data'].encode('ascii', 'ignore'))
         return cls(binary_data, 
                    metadata = _encoded_data['metadata'],
