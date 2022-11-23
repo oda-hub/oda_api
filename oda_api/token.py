@@ -123,6 +123,8 @@ def discover_token(
     token = None
     if token_discovery_methods is None:
         token_discovery_methods = *(n.value for n in TokenAccessMethods),
+    else:
+        token_discovery_methods = oda_api.token.TokenAccessMethods[str.upper(token_discovery_methods)].value,
 
     for n in TokenAccessMethods:
         if n.value in token_discovery_methods:
