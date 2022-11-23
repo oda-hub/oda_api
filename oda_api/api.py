@@ -334,7 +334,7 @@ class DispatcherAPI:
     def refresh_token(self,
                       write_token=False,
                       # TODO does this make sense as a default one?
-                      token_write_method=oda_api.token.TokenAccessMethods.FILE_HOME):
+                      token_write_method: oda_api.token.TokenAccessMethods=oda_api.token.TokenAccessMethods.FILE_HOME):
         token = oda_api.token.discover_token()
         if token is not None and token != '':
             params = dict(token=token,

@@ -86,7 +86,7 @@ def get_token_roles(decoded_token):
 
 
 def rewrite_token(new_token,
-                  token_write_method=None
+                  token_write_method: TokenAccessMethods = None
                   ):
     current_token = discover_token(allow_invalid=True)
     current_decoded_token = decode_oda_token(current_token, allow_invalid=True)
@@ -106,13 +106,12 @@ def rewrite_token(new_token,
                     f"roles new token: {new_decoded_token_roles}")
 
     if token_write_method is not None:
-        token_write_method_enum = TokenAccessMethods[str.upper(token_write_method)]
-        if token_write_method_enum == TokenAccessMethods.ODA_ENV_VAR:
+        if token_write_method == TokenAccessMethods.ODA_ENV_VAR:
             environ['ODA_TOKEN'] = new_token
-        elif token_write_method_enum == TokenAccessMethods.FILE_CUR_DIR:
+        elif token_write_method == TokenAccessMethods.FILE_CUR_DIR:
             with open(path.join(getcwd(), ".oda-token"), 'w') as ft:
                 ft.write(new_token)
-        elif token_write_method_enum == TokenAccessMethods.FILE_HOME:
+        elif token_write_method == TokenAccessMethods.FILE_HOME:
             with open(path.join(environ["HOME"], ".oda-token"), 'w') as ft:
                 ft.write(new_token)
 
