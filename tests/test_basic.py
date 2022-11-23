@@ -425,17 +425,17 @@ def test_token_refresh(dispatcher_live_fixture, token_placement, monkeypatch, wr
 
     token_write_method_enum = None
     if token_write_method != 'no':
-        token_write_method_enum = oda_api.token.TokenAccessMethods[str.upper(token_write_method)]
+        token_write_method_enum = oda_api.token.TokenLocation[str.upper(token_write_method)]
 
     if token_placement == 'no':
         with pytest.raises(RuntimeError, match="failed to discover token with any known method"):
             if token_write_method != 'no':
-                disp.refresh_token(write_token=write_token, token_write_method=token_write_method_enum)
+                disp.refresh_token(write_token=write_token, token_write_methods=token_write_method_enum)
             else:
                 disp.refresh_token(write_token=write_token)
     else:
         if token_write_method != 'no':
-            refreshed_token = disp.refresh_token(write_token=write_token, token_write_method=token_write_method_enum)
+            refreshed_token = disp.refresh_token(write_token=write_token, token_write_methods=token_write_method_enum)
         else:
             refreshed_token = disp.refresh_token(write_token=write_token)
         discovered_token = oda_api.token.discover_token(allow_invalid=True)
