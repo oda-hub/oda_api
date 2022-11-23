@@ -51,7 +51,7 @@ from itertools import cycle
 import numpy as np
 import traceback
 from jsonschema import validate as validate_json
-from typing import Union
+from typing import Union, Tuple
 
 import oda_api.token
 import oda_api.misc_helpers
@@ -335,7 +335,7 @@ class DispatcherAPI:
     def refresh_token(self,
                       write_token=False,
                       # TODO does this make sense as a default one?
-                      token_write_method=TokenLocation.FILE_HOME):
+                      token_write_methods: Union[Tuple[TokenLocation], TokenLocation] = TokenLocation.FILE_HOME):
         token = oda_api.token.discover_token()
         if token is not None and token != '':
             params = dict(token=token,
@@ -347,7 +347,7 @@ class DispatcherAPI:
             if r.status_code == 200:
                 refreshed_token = r.text
                 if write_token:
-                    oda_api.token.rewrite_token(refreshed_token, token_write_method=token_write_method)
+                    oda_api.token.rewrite_token(refreshed_token, token_write_methods=token_write_methods)
 
                 return refreshed_token
             else:

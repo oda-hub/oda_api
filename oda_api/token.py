@@ -1,9 +1,9 @@
 import os.path
 
-import oda_api
 import json
 import base64
 import logging
+from typing import Union, Tuple
 from os import environ, getcwd, path
 from enum import Enum
 from types import FunctionType
@@ -88,7 +88,7 @@ def get_token_roles(decoded_token):
 
 
 def rewrite_token(new_token,
-                  token_write_method: TokenLocation = None,
+                  token_write_methods: Union[Tuple[TokenLocation], TokenLocation] = None,
                   force_rewrite=False
                   ):
     current_token, discover_method = discover_token_and_method(allow_invalid=True)
@@ -126,10 +126,13 @@ def rewrite_token(new_token,
             logger.warning(warning_msg)
             raise RuntimeError("The roles of the new token are less than those of the current one")
 
-    if token_write_method is not None:
-        # TODO perhaps use a more appropriate location
+    if token_write_methods is not None:
         with open("old-oda-token_" + str(time.time()), 'w') as ft:
             ft.write(current_token)
+
+        if isinstance(token_write_methods, TokenLocation):
+            token_write_methods = token_write_methods,
+
         if discover_method is not None:
             if discover_method == TokenLocation.ODA_ENV_VAR:
                 environ.pop('ODA_TOKEN', None)
@@ -140,14 +143,17 @@ def rewrite_token(new_token,
                 if os.path.exists(path.join(environ["HOME"], ".oda-token")):
                     os.remove(path.join(environ["HOME"], ".oda-token"))
 
-        if token_write_method == TokenLocation.ODA_ENV_VAR:
-            environ['ODA_TOKEN'] = new_token
-        elif token_write_method == TokenLocation.FILE_CUR_DIR:
-            with open(path.join(getcwd(), ".oda-token"), 'w') as ft:
-                ft.write(new_token)
-        elif token_write_method == TokenLocation.FILE_HOME:
-            with open(path.join(environ["HOME"], ".oda-token"), 'w') as ft:
-                ft.write(new_token)
+        for token_write_method in token_write_methods:
+            if token_write_method == TokenLocation.ODA_ENV_VAR:
+                environ['ODA_TOKEN'] = new_token
+            elif token_write_method == TokenLocation.FILE_CUR_DIR:
+                with open(path.join(getcwd(), ".oda-token"), 'w') as ft:
+                    ft.write(new_token)
+            elif token_write_method == TokenLocation.FILE_HOME:
+                with open(path.join(environ["HOME"], ".oda-token"), 'w') as ft:
+                    ft.write(new_token)
+
+
 
 def discover_token_and_method(
         allow_invalid=False,
