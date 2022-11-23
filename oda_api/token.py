@@ -1,10 +1,9 @@
-import os.path
-
 import json
 import base64
 import logging
+import os
 from typing import Union, Tuple
-from os import environ, getcwd, path
+from os import environ, getcwd, path, remove, chmod
 from enum import Enum
 from types import FunctionType
 import time
@@ -137,11 +136,11 @@ def rewrite_token(new_token,
             if discover_method == TokenLocation.ODA_ENV_VAR:
                 environ.pop('ODA_TOKEN', None)
             elif discover_method == TokenLocation.FILE_CUR_DIR:
-                if os.path.exists(path.join(getcwd(), ".oda-token")):
-                    os.remove(path.join(getcwd(), ".oda-token"))
+                if path.exists(path.join(getcwd(), ".oda-token")):
+                    remove(path.join(getcwd(), ".oda-token"))
             elif discover_method == TokenLocation.FILE_HOME:
-                if os.path.exists(path.join(environ["HOME"], ".oda-token")):
-                    os.remove(path.join(environ["HOME"], ".oda-token"))
+                if path.exists(path.join(environ["HOME"], ".oda-token")):
+                    remove(path.join(environ["HOME"], ".oda-token"))
 
         for token_write_method in token_write_methods:
             if token_write_method == TokenLocation.ODA_ENV_VAR:
@@ -149,9 +148,11 @@ def rewrite_token(new_token,
             elif token_write_method == TokenLocation.FILE_CUR_DIR:
                 with open(path.join(getcwd(), ".oda-token"), 'w') as ft:
                     ft.write(new_token)
+                chmod(path.join(getcwd(), ".oda-token"), 0o400)
             elif token_write_method == TokenLocation.FILE_HOME:
                 with open(path.join(environ["HOME"], ".oda-token"), 'w') as ft:
                     ft.write(new_token)
+                chmod(path.join(environ["HOME"], ".oda-token"), 0o400)
 
 
 
