@@ -16,6 +16,7 @@ except ModuleNotFoundError:
     pass
 
 from .data_products import NumpyDataProduct, BinaryData, ApiCatalog, GWContoursDataProduct, PictureProduct
+from oda_api.token import TokenLocation
 
 from builtins import (bytes, str, open, super, range,
                       zip, round, input, int, pow, object, map, zip)
@@ -334,7 +335,7 @@ class DispatcherAPI:
     def refresh_token(self,
                       write_token=False,
                       # TODO does this make sense as a default one?
-                      token_write_method="file_home"):
+                      token_write_method=TokenLocation.FILE_HOME):
         token = oda_api.token.discover_token()
         if token is not None and token != '':
             params = dict(token=token,
@@ -346,10 +347,7 @@ class DispatcherAPI:
             if r.status_code == 200:
                 refreshed_token = r.text
                 if write_token:
-                    token_write_method_enum = None
-                    if token_write_method is not None:
-                        token_write_method_enum = oda_api.token.TokenAccessMethods[str.upper(token_write_method)]
-                    oda_api.token.rewrite_token(refreshed_token, token_write_method=token_write_method_enum)
+                    oda_api.token.rewrite_token(refreshed_token, token_write_method=token_write_method)
 
                 return refreshed_token
             else:

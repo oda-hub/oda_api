@@ -17,7 +17,7 @@ default_algorithm = 'HS256'
 logger = logging.getLogger("oda_api.token")
 
 
-class TokenAccessMethods(Enum):
+class TokenLocation(Enum):
     ODA_ENV_VAR = "environment variable ODA_TOKEN"
     FILE_CUR_DIR = "file in current directory"
     FILE_HOME = "file in home"
@@ -88,7 +88,7 @@ def get_token_roles(decoded_token):
 
 
 def rewrite_token(new_token,
-                  token_write_method: TokenAccessMethods = None
+                  token_write_method: TokenLocation = None
                   ):
     current_token, discover_method = discover_token_and_method(allow_invalid=True)
     current_decoded_token = decode_oda_token(current_token, allow_invalid=True)
@@ -112,21 +112,21 @@ def rewrite_token(new_token,
         with open("old-oda-token_" + str(time.time()), 'w') as ft:
             ft.write(current_token)
         if discover_method is not None:
-            if discover_method == TokenAccessMethods.ODA_ENV_VAR:
+            if discover_method == TokenLocation.ODA_ENV_VAR:
                 environ.pop('ODA_TOKEN', None)
-            elif discover_method == TokenAccessMethods.FILE_CUR_DIR:
+            elif discover_method == TokenLocation.FILE_CUR_DIR:
                 if os.path.exists(path.join(getcwd(), ".oda-token")):
                     os.remove(path.join(getcwd(), ".oda-token"))
-            elif discover_method == TokenAccessMethods.FILE_HOME:
+            elif discover_method == TokenLocation.FILE_HOME:
                 if os.path.exists(path.join(environ["HOME"], ".oda-token")):
                     os.remove(path.join(environ["HOME"], ".oda-token"))
 
-        if token_write_method == TokenAccessMethods.ODA_ENV_VAR:
+        if token_write_method == TokenLocation.ODA_ENV_VAR:
             environ['ODA_TOKEN'] = new_token
-        elif token_write_method == TokenAccessMethods.FILE_CUR_DIR:
+        elif token_write_method == TokenLocation.FILE_CUR_DIR:
             with open(path.join(getcwd(), ".oda-token"), 'w') as ft:
                 ft.write(new_token)
-        elif token_write_method == TokenAccessMethods.FILE_HOME:
+        elif token_write_method == TokenLocation.FILE_HOME:
             with open(path.join(environ["HOME"], ".oda-token"), 'w') as ft:
                 ft.write(new_token)
 
@@ -136,19 +136,19 @@ def discover_token_and_method(
     failed_methods = []
     token = None
     if token_discovery_methods is None:
-        token_discovery_methods = *(n.value for n in TokenAccessMethods),
+        token_discovery_methods = *(n.value for n in TokenLocation),
     else:
-        token_discovery_methods = oda_api.token.TokenAccessMethods[str.upper(token_discovery_methods)].value,
+        token_discovery_methods = TokenLocation[str.upper(token_discovery_methods)].value,
 
-    for n in TokenAccessMethods:
+    for n in TokenLocation:
         if n.value in token_discovery_methods:
             try:
-                if n == TokenAccessMethods.ODA_ENV_VAR:
+                if n == TokenLocation.ODA_ENV_VAR:
                     token = environ['ODA_TOKEN'].strip()
-                elif n == TokenAccessMethods.FILE_CUR_DIR:
+                elif n == TokenLocation.FILE_CUR_DIR:
                     with open(path.join(getcwd(), ".oda-token")) as ft:
                         token = ft.read().strip()
-                elif n == TokenAccessMethods.FILE_HOME:
+                elif n == TokenLocation.FILE_HOME:
                     with open(path.join(environ["HOME"], ".oda-token")) as ft:
                         token = ft.read().strip()
 
