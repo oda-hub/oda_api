@@ -88,7 +88,8 @@ def get_token_roles(decoded_token):
 
 
 def rewrite_token(new_token,
-                  token_write_method: TokenLocation = None
+                  token_write_method: TokenLocation = None,
+                  force_rewrite=False
                   ):
     current_token, discover_method = discover_token_and_method(allow_invalid=True)
     current_decoded_token = decode_oda_token(current_token, allow_invalid=True)
@@ -98,14 +99,32 @@ def rewrite_token(new_token,
     new_decoded_token_expires_in_s = new_decoded_token['exp'] - time.time()
 
     if new_decoded_token_expires_in_s < current_decoded_token_expires_in_s:
-        logger.info("the new token has will expire before the current one")
+        warning_msg = "The new token will expire before the current one"
+        if force_rewrite:
+            warning_msg += ", but it will be used"
+            logger.warning(warning_msg)
+        else:
+            raise RuntimeError("Expiration time of the refreshed token is lower than "
+                               "the currently available one")
 
     current_decoded_token_roles = get_token_roles(current_decoded_token)
     new_decoded_token_roles = get_token_roles(new_decoded_token)
-    if set(current_decoded_token_roles) - set(new_decoded_token_roles) != set():
-        logger.info("The new token has a different set of roles than the current one:\n"
-                    f"roles current token: {current_decoded_token_roles}\n"
-                    f"roles new token: {new_decoded_token_roles}")
+    new_roles_difference = set(new_decoded_token_roles) - set(current_decoded_token_roles)
+    current_roles_difference = set(current_decoded_token_roles) - set(new_decoded_token_roles)
+    if new_roles_difference != set() and current_roles_difference == set():
+        logger.warning("The new token has more roles than the current one:\n"
+                       f"roles current token: {current_decoded_token_roles}\n"
+                       f"roles new token: {new_decoded_token_roles}")
+    elif len(new_decoded_token_roles) < len(current_decoded_token_roles):
+        warning_msg = "The new token has less roles than the current one:\n" \
+                      f"roles current token: {current_decoded_token_roles}\n" \
+                      f"roles new token: {new_decoded_token_roles}\n"
+        if force_rewrite:
+            warning_msg += ", but it will be used.\n"
+            logger.warning(warning_msg)
+        else:
+            logger.warning(warning_msg)
+            raise RuntimeError("The roles of the new token are less than those of the current one")
 
     if token_write_method is not None:
         # TODO perhaps use a more appropriate location
