@@ -428,7 +428,7 @@ def test_token_refresh(dispatcher_live_fixture, token_placement, monkeypatch, wr
         token_write_method_enum = oda_api.token.TokenLocation[str.upper(token_write_method)]
 
     if token_placement == 'no':
-        with pytest.raises(RuntimeError, match="failed to discover token with any known method"):
+        with pytest.raises(RuntimeError, match="unable to refresh the token with any known method"):
             if token_write_method != 'no':
                 disp.refresh_token(write_token=write_token, token_write_methods=token_write_method_enum)
             else:
