@@ -87,6 +87,13 @@ def get_token_roles(decoded_token):
 
 
 def compare_token(decoded_token1, decoded_token2):
+    """
+    returns a list, where each element is the result of the comparison of a group of settings of the tokens:
+    - expiration_time:
+    - roles: 1 if token1 has all the roles of token2, plus some more, 0 of both tokens have the same roles,
+    -1 if token1 has fewer roles than token 2
+    - email settings:
+    """
     result = []
 
     current_time = time.time()
@@ -109,7 +116,10 @@ def compare_token(decoded_token1, decoded_token2):
 
     if token1_roles_difference != set() and token2_roles_difference == set():
         roles_result_code = 1
-    elif len(token1_roles_difference) < len(token2_roles_difference):
+    elif len(token1_roles_difference) < len(token2_roles_difference) or \
+        (len(token1_roles_difference) > len(token2_roles_difference) and
+        # TODO to check
+         (token1_roles_difference != set() and token2_roles_difference == set())):
         roles_result_code = -1
     elif len(token1_roles_difference) == len(token2_roles_difference) and \
             (token1_roles_difference == set() and token2_roles_difference == set()):
