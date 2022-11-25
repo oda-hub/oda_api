@@ -86,6 +86,39 @@ def get_token_roles(decoded_token):
     return roles
 
 
+def compare_token(decoded_token1, decoded_token2):
+    result = []
+
+    current_time = time.time()
+    decoded_token1_expires_in_s = decoded_token1['exp'] - current_time
+    decoded_token2_expires_in_s = decoded_token2['exp'] - current_time
+
+    if decoded_token1_expires_in_s > decoded_token2_expires_in_s:
+        time_result_code = 1
+    elif decoded_token1_expires_in_s < decoded_token2_expires_in_s:
+        time_result_code = -1
+    else:
+        time_result_code = 0
+    result.append(time_result_code)
+
+    decoded_token1_roles = get_token_roles(decoded_token1)
+    decoded_token2_roles = get_token_roles(decoded_token2)
+
+    token1_roles_difference = set(decoded_token1_roles) - set(decoded_token2_roles)
+    token2_roles_difference = set(decoded_token2_roles) - set(decoded_token1_roles)
+
+    if token1_roles_difference != set() and token2_roles_difference == set():
+        roles_result_code = 1
+    elif len(token1_roles_difference) < len(token2_roles_difference):
+        roles_result_code = -1
+    elif len(token1_roles_difference) == len(token2_roles_difference) and \
+            (token1_roles_difference == set() and token2_roles_difference == set()):
+        roles_result_code = 0
+    result.append(roles_result_code)
+
+    return result
+
+
 def rewrite_token(new_token,
                   token_write_methods: Union[Tuple[TokenLocation], TokenLocation] = None,
                   force_rewrite=False
