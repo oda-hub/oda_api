@@ -77,12 +77,12 @@ def decode_oauth2_token(token: str):
 def get_token_roles(decoded_token):
     # extract role(s)
     roles = None
-    if isinstance(decoded_token['roles'], str):
-        roles = decoded_token['roles'].split(',') if 'roles' in decoded_token else []
-        roles[:] = [r.strip() for r in roles]
-    elif isinstance(decoded_token['roles'], list):
-        roles = decoded_token['roles'] if 'roles' in decoded_token else []
-        roles[:] = [r.strip() for r in roles]
+    if 'roles' in decoded_token:
+        if isinstance(decoded_token['roles'], str):
+            roles = decoded_token['roles'].split(',')
+        elif isinstance(decoded_token['roles'], list):
+            roles = decoded_token['roles']
+        roles = [r.strip() for r in roles]
     return roles
 
 
@@ -105,7 +105,7 @@ def rewrite_token(new_token,
                 logger.warning(warning_msg)
             else:
                 raise RuntimeError("Expiration time of the refreshed token is lower than "
-                                   "the currently available one")
+                                   "the currently available one, please pass force=True to overwrite")
 
         current_decoded_token_roles = get_token_roles(current_decoded_token)
         new_decoded_token_roles = get_token_roles(new_decoded_token)
@@ -124,7 +124,8 @@ def rewrite_token(new_token,
                 logger.warning(warning_msg)
             else:
                 logger.warning(warning_msg)
-                raise RuntimeError("The roles of the new token are less than those of the current one")
+                raise RuntimeError("The roles of the new token are less than those of the current one,"
+                                   " please pass force=True to overwrite")
 
     if token_write_methods is not None:
         if current_token is not None:
@@ -138,11 +139,9 @@ def rewrite_token(new_token,
             if discover_method == TokenLocation.ODA_ENV_VAR:
                 environ.pop('ODA_TOKEN', None)
             elif discover_method == TokenLocation.FILE_CUR_DIR:
-                if path.exists(path.join(getcwd(), ".oda-token")):
-                    remove(path.join(getcwd(), ".oda-token"))
+                remove(path.join(getcwd(), ".oda-token"))
             elif discover_method == TokenLocation.FILE_HOME:
-                if path.exists(path.join(environ["HOME"], ".oda-token")):
-                    remove(path.join(environ["HOME"], ".oda-token"))
+                remove(path.join(environ["HOME"], ".oda-token"))
 
         for token_write_method in token_write_methods:
             if token_write_method == TokenLocation.ODA_ENV_VAR:
@@ -155,7 +154,11 @@ def rewrite_token(new_token,
                 with open(path.join(environ["HOME"], ".oda-token"), 'w') as ft:
                     ft.write(new_token)
                 chmod(path.join(environ["HOME"], ".oda-token"), 0o400)
-
+        # sanity check on the newly written token
+        newly_discovered_token = discover_token()
+        if newly_discovered_token != new_token:
+            raise RuntimeError("Something went wrong when writing the newly created token, "
+                               "and this was not properly written")
 
 
 def discover_token_and_method(

@@ -334,7 +334,6 @@ class DispatcherAPI:
 
     def refresh_token(self,
                       write_token=False,
-                      # TODO does this make sense as a default one?
                       token_write_methods: Union[Tuple[TokenLocation], TokenLocation] = TokenLocation.FILE_HOME):
         token = oda_api.token.discover_token()
         if token is not None and token != '':
@@ -353,7 +352,7 @@ class DispatcherAPI:
             else:
                 raise RuntimeError(r.text)
         else:
-            raise RuntimeError("failed to discover token with any known method")
+            raise RuntimeError("unable to refresh the token with any known method")
 
     def set_custom_progress_formatter(self, F):
         self.custom_progress_formatter = F
