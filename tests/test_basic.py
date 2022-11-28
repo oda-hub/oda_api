@@ -449,6 +449,14 @@ def test_token_refresh(dispatcher_live_fixture, token_placement, monkeypatch, wr
             assert refreshed_token != discovered_token
 
 
+@pytest.mark.parametrize('matching_keys', [True, False])
+@pytest.mark.parametrize('tokens_subs', [['sub1', 'sub1'],
+                                         ['sub1', 'sub2'],
+                                         ['sub2', 'sub1']])
+@pytest.mark.parametrize('tokens_emails', [['email1', 'email1'],
+                                           ['email1', 'email2'],
+                                           ['email2', 'email1']
+                                           ])
 @pytest.mark.parametrize('tokens_roles', [[[], ['role1', 'role2']],
                                           [['role1', 'role2'], []],
                                           [['role1', 'role2'], ['role1', 'role2']],
@@ -461,19 +469,32 @@ def test_token_refresh(dispatcher_live_fixture, token_placement, monkeypatch, wr
                                          [100, 150],
                                          [150, 100]
                                          ])
-def test_compare_token(tokens_roles, tokens_exps):
+def test_compare_token(matching_keys, tokens_subs, tokens_emails, tokens_roles, tokens_exps):
 
     token1_payload = {
+        "sub": tokens_subs[0],
+        "email": tokens_emails[0],
         "exp": tokens_exps[0],
         "roles": tokens_roles[0]
     }
 
     token2_payload = {
-        "exp": tokens_exps[1],
-        "roles": tokens_roles[1]
+        'sub': tokens_subs[1],
+        'email': tokens_emails[1],
+        'exp': tokens_exps[1],
+        'roles': tokens_roles[1]
     }
 
+    if not matching_keys:
+        token1_payload.pop('sub')
+
     comparison_result = oda_api.token.compare_token(token1_payload, token2_payload)
+
+    assert 'missing_keys' in comparison_result
+    if not matching_keys:
+        assert comparison_result['missing_keys'] == ['sub']
+    else:
+        assert comparison_result['missing_keys'] == []
 
     assert 'exp' in comparison_result
 
@@ -495,3 +516,18 @@ def test_compare_token(tokens_roles, tokens_exps):
     elif len(token1_roles_difference) == len(token2_roles_difference) and \
             token1_roles_difference == set() and token2_roles_difference == set():
         assert comparison_result["roles"] == 0
+
+    if matching_keys:
+        assert 'sub' in comparison_result
+        if tokens_subs[0] == tokens_subs[1]:
+            assert comparison_result['sub']
+        else:
+            assert not comparison_result['sub']
+    else:
+        assert 'sub' not in comparison_result
+
+    assert 'email' in comparison_result
+    if tokens_emails[0] == tokens_emails[1]:
+        assert comparison_result['email']
+    else:
+        assert not comparison_result['email']
