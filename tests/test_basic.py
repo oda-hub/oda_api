@@ -8,7 +8,6 @@ import glob
 import requests
 import oda_api.api
 import oda_api.token
-import shutil
 
 from cdci_data_analysis.pytest_fixtures import DispatcherJobState
 
@@ -446,3 +445,51 @@ def test_token_refresh(dispatcher_live_fixture, token_placement, monkeypatch, wr
             assert open(list_old_token_files[0]).read() == encoded_token
         else:
             assert refreshed_token != discovered_token
+
+
+@pytest.mark.parametrize('tokens_roles', [[[], ['role1', 'role2']],
+                                          [['role1', 'role2'], []],
+                                          [['role1', 'role2'], ['role1', 'role2']],
+                                          [['role1', 'role2'], ['role1', 'role3', 'role4']],
+                                          [['role1', 'role2'], ['role1', 'role2', 'role3']],
+                                          [['role1', 'role2', 'role3'], ['role1', 'role2']],
+                                          [[], []]
+                                          ])
+@pytest.mark.parametrize('tokens_exps', [[100, 100],
+                                         [100, 150],
+                                         [150, 100]
+                                          ])
+def test_compare_token(tokens_roles, tokens_exps):
+
+    token1_payload = {
+        "exp": tokens_exps[0],
+        "roles": tokens_roles[0]
+    }
+
+    token2_payload = {
+        "exp": tokens_exps[1],
+        "roles": tokens_roles[1]
+    }
+
+    comparison_result = oda_api.token.compare_token(token1_payload, token2_payload)
+
+    assert 'exp' in comparison_result
+
+    if tokens_exps[0] > tokens_exps[1]:
+        assert comparison_result['exp'] == 1
+    elif tokens_exps[0] < tokens_exps[1]:
+        assert comparison_result['exp'] == -1
+    elif tokens_exps[0] == tokens_exps[1]:
+        assert comparison_result['exp'] == 0
+
+    assert 'roles' in comparison_result
+    token1_roles_difference = set(token1_payload["roles"]) - set(token2_payload["roles"])
+    token2_roles_difference = set(token2_payload["roles"]) - set(token1_payload["roles"])
+    if token1_roles_difference != set() and token2_roles_difference == set():
+        assert comparison_result["roles"] == 1
+    elif len(token1_roles_difference) < len(token2_roles_difference) or \
+            (len(token1_roles_difference) >= len(token2_roles_difference) and token2_roles_difference != set()):
+        assert comparison_result["roles"] == -1
+    elif len(token1_roles_difference) == len(token2_roles_difference) and \
+            token1_roles_difference == set() and token2_roles_difference == set():
+        assert comparison_result["roles"] == 0
