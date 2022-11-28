@@ -91,8 +91,7 @@ def compare_token(decoded_token1, decoded_token2):
     """
     performs a comparison of some entries of token1, with token2
     returns a dict, where each entry is the result of the comparison of a group of settings of the tokens:
-    - keys boolean value indicating whether all the keys are matching
-    - missing_keys: list of keys from token2 missing within token1
+    - missing_keys: list of token1 missing keys (keys from token2 not found within token1)
     - exp (expiration_time): 1 if token1 expires later than token2, -1 if token1 expires earlier than token2,
     0 if they have the same expiration time
     - roles: 1 if token1 contains at least all the roles of token2, 0 if both tokens have the same roles,
