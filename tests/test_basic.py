@@ -458,7 +458,7 @@ def test_token_refresh(dispatcher_live_fixture, token_placement, monkeypatch, wr
 @pytest.mark.parametrize('tokens_exps', [[100, 100],
                                          [100, 150],
                                          [150, 100]
-                                          ])
+                                         ])
 def test_compare_token(tokens_roles, tokens_exps):
 
     token1_payload = {
