@@ -133,6 +133,7 @@ def compare_token(decoded_token1, decoded_token2):
 
 def rewrite_token(new_token,
                   token_write_methods: Union[Tuple[TokenLocation], TokenLocation] = None,
+                  discard_discovered_token=False,
                   force_rewrite=False
                   ):
     current_token, discover_method = discover_token_and_method(allow_invalid=True)
@@ -178,7 +179,7 @@ def rewrite_token(new_token,
         if isinstance(token_write_methods, TokenLocation):
             token_write_methods = token_write_methods,
 
-        if discover_method is not None:
+        if discover_method is not None and discard_discovered_token:
             if discover_method == TokenLocation.ODA_ENV_VAR:
                 environ.pop('ODA_TOKEN', None)
             elif discover_method == TokenLocation.FILE_CUR_DIR:
@@ -198,7 +199,7 @@ def rewrite_token(new_token,
                     ft.write(new_token)
                 chmod(path.join(environ["HOME"], ".oda-token"), 0o400)
         # sanity check on the newly written token
-        newly_discovered_token = discover_token()
+        newly_discovered_token = discover_token(token_discovery_methods=token_write_method)
         if newly_discovered_token != new_token:
             raise RuntimeError("Something went wrong when writing the newly created token, "
                                "and this was not properly written")
@@ -210,12 +211,12 @@ def discover_token_and_method(
     failed_methods = []
     token = None
     if token_discovery_methods is None:
-        token_discovery_methods = *(n.value for n in TokenLocation),
+        token_discovery_methods = *(n for n in TokenLocation),
     else:
-        token_discovery_methods = TokenLocation[str.upper(token_discovery_methods)].value,
+        token_discovery_methods = token_discovery_methods,
 
     for n in TokenLocation:
-        if n.value in token_discovery_methods:
+        if n in token_discovery_methods:
             try:
                 if n == TokenLocation.ODA_ENV_VAR:
                     token = environ['ODA_TOKEN'].strip()
