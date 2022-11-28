@@ -86,15 +86,17 @@ def get_token_roles(decoded_token):
     return roles
 
 
+# TODO expand this including checks for the email settings
 def compare_token(decoded_token1, decoded_token2):
     """
-    returns a list, where each element is the result of the comparison of a group of settings of the tokens:
-    - expiration_time:
-    - roles: 1 if token1 has all the roles of token2, plus some more, 0 of both tokens have the same roles,
-    -1 if token1 has fewer roles than token 2
-    - email settings:
+    performs a comparison of some entries of token1, with token2
+    returns a dict, where each entry is the result of the comparison of a group of settings of the tokens:
+    - exp (expiration_time): 1 if token1 expires later than token2, -1 if token1 expires earlier than token2,
+    0 if they have the same expiration time
+    - roles: 1 if token1 contains at least all the roles of token2, 0 if both tokens have the same roles,
+    -1 if token1 misses some roles contained within token2
     """
-    result = []
+    result = {}
 
     current_time = time.time()
     decoded_token1_expires_in_s = decoded_token1['exp'] - current_time
@@ -106,7 +108,7 @@ def compare_token(decoded_token1, decoded_token2):
         time_result_code = -1
     else:
         time_result_code = 0
-    result.append(time_result_code)
+    result['exp'] = time_result_code
 
     decoded_token1_roles = get_token_roles(decoded_token1)
     decoded_token2_roles = get_token_roles(decoded_token2)
@@ -114,17 +116,17 @@ def compare_token(decoded_token1, decoded_token2):
     token1_roles_difference = set(decoded_token1_roles) - set(decoded_token2_roles)
     token2_roles_difference = set(decoded_token2_roles) - set(decoded_token1_roles)
 
+    roles_result_code = None
     if token1_roles_difference != set() and token2_roles_difference == set():
         roles_result_code = 1
     elif len(token1_roles_difference) < len(token2_roles_difference) or \
-        (len(token1_roles_difference) > len(token2_roles_difference) and
-        # TODO to check
-         (token1_roles_difference != set() and token2_roles_difference == set())):
+            (len(token1_roles_difference) >= len(token2_roles_difference) and token2_roles_difference != set()):
         roles_result_code = -1
     elif len(token1_roles_difference) == len(token2_roles_difference) and \
-            (token1_roles_difference == set() and token2_roles_difference == set()):
+            token1_roles_difference == set() and token2_roles_difference == set():
         roles_result_code = 0
-    result.append(roles_result_code)
+
+    result['roles'] = roles_result_code
 
     return result
 
@@ -135,13 +137,15 @@ def rewrite_token(new_token,
                   ):
     current_token, discover_method = discover_token_and_method(allow_invalid=True)
     if current_token is not None:
+
         current_decoded_token = decode_oda_token(current_token, allow_invalid=True)
-        current_decoded_token_expires_in_s = current_decoded_token['exp'] - time.time()
+        current_decoded_token_roles = get_token_roles(current_decoded_token)
 
         new_decoded_token = decode_oda_token(new_token, allow_invalid=True)
-        new_decoded_token_expires_in_s = new_decoded_token['exp'] - time.time()
+        new_decoded_token_roles = get_token_roles(new_decoded_token)
 
-        if new_decoded_token_expires_in_s < current_decoded_token_expires_in_s:
+        comparison_result = compare_token(new_decoded_token, current_decoded_token)
+        if comparison_result['exp'] == -1:
             warning_msg = "The new token will expire before the current one"
             if force_rewrite:
                 warning_msg += ", but it will be used"
@@ -150,15 +154,11 @@ def rewrite_token(new_token,
                 raise RuntimeError("Expiration time of the refreshed token is lower than "
                                    "the currently available one, please pass force=True to overwrite")
 
-        current_decoded_token_roles = get_token_roles(current_decoded_token)
-        new_decoded_token_roles = get_token_roles(new_decoded_token)
-        new_roles_difference = set(new_decoded_token_roles) - set(current_decoded_token_roles)
-        current_roles_difference = set(current_decoded_token_roles) - set(new_decoded_token_roles)
-        if new_roles_difference != set() and current_roles_difference == set():
+        if comparison_result['roles'] == 1:
             logger.warning("The new token has more roles than the current one:\n"
                            f"roles current token: {current_decoded_token_roles}\n"
                            f"roles new token: {new_decoded_token_roles}")
-        elif len(new_decoded_token_roles) < len(current_decoded_token_roles):
+        elif comparison_result['roles'] == -1:
             warning_msg = "The new token has less roles than the current one:\n" \
                           f"roles current token: {current_decoded_token_roles}\n" \
                           f"roles new token: {new_decoded_token_roles}\n"
