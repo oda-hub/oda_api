@@ -438,7 +438,8 @@ def test_token_refresh(dispatcher_live_fixture, token_placement, monkeypatch, wr
             discovered_token = oda_api.token.discover_token(allow_invalid=True, token_discovery_methods=token_write_method_enum)
         else:
             refreshed_token = disp.refresh_token(write_token=write_token)
-            discovered_token = oda_api.token.discover_token(allow_invalid=True)
+            discovered_token = oda_api.token.discover_token(allow_invalid=True,
+                                                            token_discovery_methods=oda_api.token.TokenLocation.FILE_HOME)
         if write_token:
             assert refreshed_token == discovered_token
             list_old_token_files = glob.glob('old-oda-token_*')
