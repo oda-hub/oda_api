@@ -185,7 +185,7 @@ def compare_token(decoded_token1, decoded_token2):
 
 
 def rewrite_token(new_token,
-                  token_write_methods: Union[Tuple[TokenLocation], TokenLocation] = None,
+                  token_write_methods: Union[Tuple[TokenLocation, ...], TokenLocation] = None,
                   discard_discovered_token=False,
                   force_rewrite=False
                   ):
