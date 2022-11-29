@@ -459,7 +459,8 @@ def test_token_refresh(dispatcher_live_fixture, token_placement, monkeypatch, wr
 @pytest.mark.parametrize('tokens_mssubs', [True, False])
 @pytest.mark.parametrize('tokens_msdones', [True, False])
 @pytest.mark.parametrize('tokens_fails', [True, False])
-@pytest.mark.parametrize('matching_keys', [True, False])
+@pytest.mark.parametrize('missing_keys', [True, False])
+@pytest.mark.parametrize('extra_keys', [True, False])
 @pytest.mark.parametrize('tokens_subs', [['sub1', 'sub1'],
                                          ['sub1', 'sub2'],
                                          ['sub2', 'sub1']])
@@ -480,7 +481,7 @@ def test_token_refresh(dispatcher_live_fixture, token_placement, monkeypatch, wr
                                          [150, 100]
                                          ])
 def test_compare_token(tokens_tems, tokens_intsubs, tokens_mstouts, tokens_mssubs, tokens_msdones, tokens_fails,
-                       matching_keys, tokens_subs, tokens_emails, tokens_roles, tokens_exps):
+                       missing_keys, extra_keys, tokens_subs, tokens_emails, tokens_roles, tokens_exps):
     from oda_api.token import token_email_options_numeric, token_email_options_flags
 
     token1_payload = {
@@ -511,19 +512,27 @@ def test_compare_token(tokens_tems, tokens_intsubs, tokens_mstouts, tokens_mssub
         "msfail": tokens_fails
     }
 
-    if not matching_keys:
+    if missing_keys:
         token1_payload.pop('sub')
+
+    if extra_keys:
+        token1_payload['extra_key'] = 'test'
 
     comparison_result = oda_api.token.compare_token(token1_payload, token2_payload)
 
     assert 'missing_keys' in comparison_result
-    if not matching_keys:
+    if missing_keys:
         assert comparison_result['missing_keys'] == ['sub']
     else:
         assert comparison_result['missing_keys'] == []
 
-    assert 'exp' in comparison_result
+    assert 'extra_keys' in comparison_result
+    if extra_keys:
+        assert comparison_result['extra_keys'] == ['extra_key']
+    else:
+        assert comparison_result['extra_keys'] == []
 
+    assert 'exp' in comparison_result
     if tokens_exps[0] > tokens_exps[1]:
         assert comparison_result['exp'] == 1
     elif tokens_exps[0] < tokens_exps[1]:
@@ -543,7 +552,7 @@ def test_compare_token(tokens_tems, tokens_intsubs, tokens_mstouts, tokens_mssub
             token1_roles_difference == set() and token2_roles_difference == set():
         assert comparison_result["roles"] == 0
 
-    if matching_keys:
+    if not missing_keys:
         assert 'sub' in comparison_result
         if tokens_subs[0] == tokens_subs[1]:
             assert comparison_result['sub']
