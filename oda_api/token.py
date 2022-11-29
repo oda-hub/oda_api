@@ -293,9 +293,9 @@ def rewrite_token(new_token,
         # sanity check on the newly written token
         newly_discovered_token = discover_token()
         if newly_discovered_token != new_token:
-            # just a warning
-            raise RuntimeError("Something went wrong when writing the newly created token, "
-                               "and this was not properly written")
+            logger.warning("The discovered token does not match with the newly generated token, "
+                           "this is an expected behavior. In case you wish to discard any old token, "
+                           "please repeat the same request setting the argument discard_discovered_token to True")
 
 
 def discover_token_and_method(
