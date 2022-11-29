@@ -13,6 +13,9 @@ from jwt.exceptions import ExpiredSignatureError # type: ignore
 
 default_algorithm = 'HS256'
 
+token_email_options_numeric = ['tem', 'intsub']
+token_email_options_flags = ['mssub', 'msdone', 'mstout', 'msfail']
+
 logger = logging.getLogger("oda_api.token")
 
 
@@ -86,7 +89,7 @@ def get_token_roles(decoded_token):
     return roles
 
 
-# TODO expand this including checks for the email settings
+# TODO expand this with unchecked fields
 def compare_token(decoded_token1, decoded_token2):
     """
     performs a comparison of some entries of token1, with token2
@@ -113,6 +116,29 @@ def compare_token(decoded_token1, decoded_token2):
             result['email'] = True
         else:
             result['email'] = False
+
+    if 'name' in decoded_token1 and 'name' in decoded_token2:
+        if decoded_token1['name'] == decoded_token2['name']:
+            result['name'] = True
+        else:
+            result['name'] = False
+
+    # check email options
+    for opt in token_email_options_numeric:
+        if opt in decoded_token1 and opt in decoded_token2:
+            if decoded_token1[opt] > decoded_token2[opt]:
+                result[opt] = 1
+            elif decoded_token1[opt] < decoded_token2[opt]:
+                result[opt] = -1
+            else:
+                result[opt] = 0
+
+    for opt in token_email_options_flags:
+        if opt in decoded_token1 and opt in decoded_token2:
+            if decoded_token1[opt] == decoded_token2[opt]:
+                result[opt] = True
+            else:
+                result[opt] = False
 
     current_time = time.time()
     decoded_token1_expires_in_s = decoded_token1['exp'] - current_time
