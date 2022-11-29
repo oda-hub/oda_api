@@ -92,18 +92,21 @@ def get_token_roles(decoded_token):
 # TODO expand this with unchecked fields
 def compare_token(decoded_token1, decoded_token2):
     """
-    performs a comparison of some entries of token1, with token2
+    performs a comparison of the payloads entries of token1, with token2
     returns a dict, where each entry is the result of the comparison of a group of settings of the tokens:
     - missing_keys: list of token1 missing keys (keys from token2 not found within token1)
+    - extra_keys: list of token1 extra keys (keys from token1 not found within token2)
     - exp (expiration_time): 1 if token1 expires later than token2, -1 if token1 expires earlier than token2,
     0 if they have the same expiration time
     - roles: 1 if token1 contains at least all the roles of token2, 0 if both tokens have the same roles,
     -1 if token1 misses some roles contained within token2
     """
-    result = {'missing_keys': []}
+    result = {'missing_keys': [],
+              'extra_keys': []}
 
     if decoded_token1.keys() != decoded_token2.keys():
         result['missing_keys'] = list(set(decoded_token2.keys()) - set(decoded_token1.keys()))
+        result['extra_keys'] = list(set(decoded_token1.keys()) - set(decoded_token2.keys()))
 
     if 'sub' in decoded_token1 and 'sub' in decoded_token2:
         if decoded_token1['sub'] == decoded_token2['sub']:
@@ -140,33 +143,37 @@ def compare_token(decoded_token1, decoded_token2):
             else:
                 result[opt] = False
 
-    current_time = time.time()
-    decoded_token1_expires_in_s = decoded_token1['exp'] - current_time
-    decoded_token2_expires_in_s = decoded_token2['exp'] - current_time
+    time_result_code = None
+    if 'exp' in decoded_token1 and 'exp' in decoded_token2:
+        current_time = time.time()
+        decoded_token1_expires_in_s = decoded_token1['exp'] - current_time
+        decoded_token2_expires_in_s = decoded_token2['exp'] - current_time
 
-    if decoded_token1_expires_in_s > decoded_token2_expires_in_s:
-        time_result_code = 1
-    elif decoded_token1_expires_in_s < decoded_token2_expires_in_s:
-        time_result_code = -1
-    else:
-        time_result_code = 0
+        if decoded_token1_expires_in_s > decoded_token2_expires_in_s:
+            time_result_code = 1
+        elif decoded_token1_expires_in_s < decoded_token2_expires_in_s:
+            time_result_code = -1
+        else:
+            time_result_code = 0
     result['exp'] = time_result_code
 
     decoded_token1_roles = get_token_roles(decoded_token1)
     decoded_token2_roles = get_token_roles(decoded_token2)
-
-    token1_roles_difference = set(decoded_token1_roles) - set(decoded_token2_roles)
-    token2_roles_difference = set(decoded_token2_roles) - set(decoded_token1_roles)
-
     roles_result_code = None
-    if token1_roles_difference != set() and token2_roles_difference == set():
-        roles_result_code = 1
-    elif len(token1_roles_difference) < len(token2_roles_difference) or \
-            (len(token1_roles_difference) >= len(token2_roles_difference) and token2_roles_difference != set()):
-        roles_result_code = -1
-    elif len(token1_roles_difference) == len(token2_roles_difference) and \
-            token1_roles_difference == set() and token2_roles_difference == set():
-        roles_result_code = 0
+
+    if decoded_token1_roles is not None and decoded_token2_roles is not None:
+
+        token1_roles_difference = set(decoded_token1_roles) - set(decoded_token2_roles)
+        token2_roles_difference = set(decoded_token2_roles) - set(decoded_token1_roles)
+
+        if token1_roles_difference != set() and token2_roles_difference == set():
+            roles_result_code = 1
+        elif len(token1_roles_difference) < len(token2_roles_difference) or \
+                (len(token1_roles_difference) >= len(token2_roles_difference) and token2_roles_difference != set()):
+            roles_result_code = -1
+        elif len(token1_roles_difference) == len(token2_roles_difference) and \
+                token1_roles_difference == set() and token2_roles_difference == set():
+            roles_result_code = 0
 
     result['roles'] = roles_result_code
 
@@ -188,6 +195,16 @@ def rewrite_token(new_token,
         new_decoded_token_roles = get_token_roles(new_decoded_token)
 
         comparison_result = compare_token(new_decoded_token, current_decoded_token)
+
+        new_token_missing_keys = comparison_result.get('missing_keys')
+        if len(new_token_missing_keys) > 0:
+            logger.warning(f"The following keys are missing within the new token: {new_token_missing_keys}")
+            raise RuntimeError("The new token is missing some of the keys present instead on the discovered token")
+
+        new_token_extra_keys = comparison_result.get('extra_keys')
+        if len(new_token_extra_keys) > 0:
+            logger.warning(f"The following keys are not present within the old token: {new_token_extra_keys}")
+
         if comparison_result['exp'] == -1:
             warning_msg = "The new token will expire before the current one"
             if force_rewrite:
