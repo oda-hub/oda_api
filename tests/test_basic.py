@@ -449,6 +449,16 @@ def test_token_refresh(dispatcher_live_fixture, token_placement, monkeypatch, wr
             assert refreshed_token != discovered_token
 
 
+@pytest.mark.parametrize('tokens_tems', [[100, 100],
+                                         [100, 150],
+                                         [150, 100]])
+@pytest.mark.parametrize('tokens_intsubs', [[100, 100],
+                                            [100, 150],
+                                            [150, 100]])
+@pytest.mark.parametrize('tokens_mstouts', [True, False])
+@pytest.mark.parametrize('tokens_mssubs', [True, False])
+@pytest.mark.parametrize('tokens_msdones', [True, False])
+@pytest.mark.parametrize('tokens_fails', [True, False])
 @pytest.mark.parametrize('matching_keys', [True, False])
 @pytest.mark.parametrize('tokens_subs', [['sub1', 'sub1'],
                                          ['sub1', 'sub2'],
@@ -469,20 +479,37 @@ def test_token_refresh(dispatcher_live_fixture, token_placement, monkeypatch, wr
                                          [100, 150],
                                          [150, 100]
                                          ])
-def test_compare_token(matching_keys, tokens_subs, tokens_emails, tokens_roles, tokens_exps):
+def test_compare_token(tokens_tems, tokens_intsubs, tokens_mstouts, tokens_mssubs, tokens_msdones, tokens_fails,
+                       matching_keys, tokens_subs, tokens_emails, tokens_roles, tokens_exps):
+    # token_email_options_numeric = ['tem', 'intsub']
+    # token_email_options_flags = ['mssub', 'msdone', 'mstout', 'msfail']
 
     token1_payload = {
         "sub": tokens_subs[0],
         "email": tokens_emails[0],
         "exp": tokens_exps[0],
-        "roles": tokens_roles[0]
+        "roles": tokens_roles[0],
+        # email options
+        "tem": tokens_tems[0],
+        "intsub": tokens_intsubs[0],
+        "mssub": tokens_mssubs,
+        "msdone": tokens_msdones,
+        "mstout": tokens_mstouts,
+        "msfail": tokens_fails
     }
 
     token2_payload = {
         'sub': tokens_subs[1],
         'email': tokens_emails[1],
         'exp': tokens_exps[1],
-        'roles': tokens_roles[1]
+        'roles': tokens_roles[1],
+        # email options
+        "tem": tokens_tems[1],
+        "intsub": tokens_intsubs[1],
+        "mssub": tokens_mssubs,
+        "msdone": tokens_msdones,
+        "mstout": tokens_mstouts,
+        "msfail": tokens_fails
     }
 
     if not matching_keys:
