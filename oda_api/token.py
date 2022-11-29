@@ -198,17 +198,28 @@ def rewrite_token(new_token,
 
         new_token_missing_keys = comparison_result.get('missing_keys')
         if len(new_token_missing_keys) > 0:
-            logger.warning(f"The following keys are missing within the new token: {new_token_missing_keys}")
-            raise RuntimeError("The new token is missing some of the keys present instead on the discovered token")
+            missing_keys_warning_msg = f"The following keys are missing within the new token: {new_token_missing_keys}"
+            if force_rewrite:
+                missing_keys_warning_msg += ", but it will be written"
+                logger.warning(missing_keys_warning_msg)
+            else:
+                logger.warning(missing_keys_warning_msg)
+                raise RuntimeError("The new token is missing some of the keys present instead on the discovered token")
 
         new_token_extra_keys = comparison_result.get('extra_keys')
         if len(new_token_extra_keys) > 0:
-            logger.warning(f"The following keys are not present within the old token: {new_token_extra_keys}")
+            extra_keys_warning_msg = f"The following keys are not contained within the discovered token: {new_token_extra_keys}"
+            if force_rewrite:
+                extra_keys_warning_msg += ", but it will be written"
+                logger.warning(extra_keys_warning_msg)
+            else:
+                logger.warning(extra_keys_warning_msg)
+                raise RuntimeError("The new token is missing some of the keys present instead on the discovered token")
 
         if comparison_result['exp'] == -1:
             warning_msg = "The new token will expire before the current one"
             if force_rewrite:
-                warning_msg += ", but it will be used"
+                warning_msg += ", but it will be written"
                 logger.warning(warning_msg)
             else:
                 raise RuntimeError("Expiration time of the refreshed token is lower than "
@@ -223,12 +234,30 @@ def rewrite_token(new_token,
                           f"roles current token: {current_decoded_token_roles}\n" \
                           f"roles new token: {new_decoded_token_roles}\n"
             if force_rewrite:
-                warning_msg += ", but it will be used.\n"
+                warning_msg += ", but it will be written"
                 logger.warning(warning_msg)
             else:
                 logger.warning(warning_msg)
                 raise RuntimeError("The roles of the new token are less than those of the current one,"
                                    " please pass force=True to overwrite")
+
+        # check email options
+        email_options_warning_msg = "The new token has a different value for the following email option-related options:\n"
+        unmatching_email_options = []
+        for opt in token_email_options_numeric:
+            if opt in comparison_result and comparison_result[opt] != 0:
+                unmatching_email_options.append(opt)
+        for opt in token_email_options_flags:
+            if opt in comparison_result and not comparison_result[opt]:
+                unmatching_email_options.append(opt)
+        if len(unmatching_email_options) > 0:
+            email_options_warning_msg += f"{unmatching_email_options}\n"
+            if force_rewrite:
+                email_options_warning_msg += "but it will be used.\n"
+                logger.warning(email_options_warning_msg)
+            else:
+                logger.warning(email_options_warning_msg)
+                raise RuntimeError(email_options_warning_msg)
 
     if token_write_methods is not None:
         if current_token is not None:
