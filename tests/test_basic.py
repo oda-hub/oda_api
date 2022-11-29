@@ -10,6 +10,7 @@ import oda_api.api
 import oda_api.token
 
 from cdci_data_analysis.pytest_fixtures import DispatcherJobState
+from conftest import remove_old_token_files, remove_scratch_folders
 
 secret_key = 'secretkey_test'
 default_exp_time = int(time.time()) + 5000
@@ -384,9 +385,8 @@ def test_dispatcher_exception(dispatcher_live_fixture, caplog, exception_kind):
 @pytest.mark.parametrize('token_write_method', ['oda_env_var', 'file_home', 'file_cur_dir', 'no'])
 @pytest.mark.parametrize('write_token', [True, False])
 def test_token_refresh(dispatcher_live_fixture, token_placement, monkeypatch, write_token, token_write_method, tmpdir):
-    # remove old stored token
-    list_old_token_files = glob.glob('old-oda-token_*')
-    [os.remove(t) for t in list_old_token_files]
+    remove_old_token_files()
+    remove_scratch_folders()
 
     disp = oda_api.api.DispatcherAPI(url=dispatcher_live_fixture, wait=False)
 
