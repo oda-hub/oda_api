@@ -334,8 +334,8 @@ class DispatcherAPI:
 
     def refresh_token(self,
                       write_token=False,
-                      token_write_methods: Union[Tuple[TokenLocation], TokenLocation] = (TokenLocation.ODA_ENV_VAR,
-                                                                                         TokenLocation.FILE_CUR_DIR)):
+                      token_write_methods: Union[Tuple[TokenLocation], TokenLocation] = tuple((TokenLocation.ODA_ENV_VAR,
+                                                                                         TokenLocation.FILE_CUR_DIR))):
         token = oda_api.token.discover_token()
         if token is not None and token != '':
             params = dict(token=token,
