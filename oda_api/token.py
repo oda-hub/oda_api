@@ -283,10 +283,14 @@ def rewrite_token(new_token,
             if token_write_method == TokenLocation.ODA_ENV_VAR:
                 environ['ODA_TOKEN'] = new_token
             elif token_write_method == TokenLocation.FILE_CUR_DIR:
+                if path.exists(path.join(getcwd(), ".oda-token")):
+                    chmod(path.join(getcwd(), ".oda-token"), 0o600)
                 with open(path.join(getcwd(), ".oda-token"), 'w') as ft:
                     ft.write(new_token)
                 chmod(path.join(getcwd(), ".oda-token"), 0o400)
             elif token_write_method == TokenLocation.FILE_HOME:
+                if path.exists(path.join(environ["HOME"], ".oda-token")):
+                    chmod(path.join(environ["HOME"], ".oda-token"), 0o600)
                 with open(path.join(environ["HOME"], ".oda-token"), 'w') as ft:
                     ft.write(new_token)
                 chmod(path.join(environ["HOME"], ".oda-token"), 0o400)
