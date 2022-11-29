@@ -93,13 +93,17 @@ def get_token_roles(decoded_token):
 def compare_token(decoded_token1, decoded_token2):
     """
     performs a comparison of the payloads entries of token1, with token2
-    returns a dict, where each entry is the result of the comparison of a group of settings of the tokens:
+    returns a dict, which also contains, for each entry, the result of the relative comparison:
     - missing_keys: list of token1 missing keys (keys from token2 not found within token1)
     - extra_keys: list of token1 extra keys (keys from token1 not found within token2)
     - exp (expiration_time): 1 if token1 expires later than token2, -1 if token1 expires earlier than token2,
     0 if they have the same expiration time
     - roles: 1 if token1 contains at least all the roles of token2, 0 if both tokens have the same roles,
     -1 if token1 misses some roles contained within token2
+    - email-related options: contains one entry per email option, depending on the type of option (can be a numeric or a not numeric value),
+    a different type of result will be  assigned:
+      - True/False: if the values are matching or not (e.g. mssub options)
+      - 1/0/-1: if the the numeric value from token1 is higher/the same/lower respectively, than the corresponding one in token2
     """
     result = {'missing_keys': [],
               'extra_keys': []}
@@ -287,8 +291,9 @@ def rewrite_token(new_token,
                     ft.write(new_token)
                 chmod(path.join(environ["HOME"], ".oda-token"), 0o400)
         # sanity check on the newly written token
-        newly_discovered_token = discover_token(token_discovery_methods=token_write_method)
+        newly_discovered_token = discover_token()
         if newly_discovered_token != new_token:
+            # just a warning
             raise RuntimeError("Something went wrong when writing the newly created token, "
                                "and this was not properly written")
 
