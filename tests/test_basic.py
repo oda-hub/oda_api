@@ -481,8 +481,7 @@ def test_token_refresh(dispatcher_live_fixture, token_placement, monkeypatch, wr
                                          ])
 def test_compare_token(tokens_tems, tokens_intsubs, tokens_mstouts, tokens_mssubs, tokens_msdones, tokens_fails,
                        matching_keys, tokens_subs, tokens_emails, tokens_roles, tokens_exps):
-    # token_email_options_numeric = ['tem', 'intsub']
-    # token_email_options_flags = ['mssub', 'msdone', 'mstout', 'msfail']
+    from oda_api.token import token_email_options_numeric, token_email_options_flags
 
     token1_payload = {
         "sub": tokens_subs[0],
@@ -558,3 +557,20 @@ def test_compare_token(tokens_tems, tokens_intsubs, tokens_mstouts, tokens_mssub
         assert comparison_result['email']
     else:
         assert not comparison_result['email']
+
+    # check email options
+    for opt in token_email_options_numeric:
+        assert opt in comparison_result
+        if token1_payload[opt] > token2_payload[opt]:
+            assert comparison_result[opt] == 1
+        elif token1_payload[opt] < token2_payload[opt]:
+            assert comparison_result[opt] == -1
+        else:
+            assert comparison_result[opt] == 0
+
+    for opt in token_email_options_flags:
+        assert opt in comparison_result
+        if token1_payload[opt] == token2_payload[opt]:
+            assert comparison_result[opt]
+        else:
+            assert not comparison_result[opt]
