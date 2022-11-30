@@ -185,14 +185,17 @@ def compare_token(decoded_token1, decoded_token2):
 
 
 def rewrite_token(new_token,
+                  old_token=None,
                   token_write_methods: Union[Tuple[TokenLocation, ...], TokenLocation] = None,
                   discard_discovered_token=False,
                   force_rewrite=False
                   ):
-    current_token, discover_method = discover_token_and_method(allow_invalid=True)
-    if current_token is not None:
+    discover_method = None
+    if old_token is None:
+        old_token, discover_method = discover_token_and_method(allow_invalid=True)
+    if old_token is not None:
 
-        current_decoded_token = decode_oda_token(current_token, allow_invalid=True)
+        current_decoded_token = decode_oda_token(old_token, allow_invalid=True)
         current_decoded_token_roles = get_token_roles(current_decoded_token)
 
         new_decoded_token = decode_oda_token(new_token, allow_invalid=True)
@@ -264,9 +267,9 @@ def rewrite_token(new_token,
                 raise RuntimeError(email_options_warning_msg)
 
     if token_write_methods is not None:
-        if current_token is not None:
+        if old_token is not None:
             with open("old-oda-token_" + str(time.time()), 'w') as ft:
-                ft.write(current_token)
+                ft.write(old_token)
 
         if isinstance(token_write_methods, TokenLocation):
             token_write_methods = token_write_methods,
