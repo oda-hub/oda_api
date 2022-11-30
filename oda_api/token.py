@@ -273,15 +273,19 @@ def rewrite_token(new_token,
 
         if discover_method is not None and discard_discovered_token:
             if discover_method == TokenLocation.ODA_ENV_VAR:
-                environ.pop('ODA_TOKEN', None)
+                environ.pop("ODA_TOKEN", None)
             elif discover_method == TokenLocation.FILE_CUR_DIR:
+                if not path.exists(path.join(getcwd(), ".oda-token")):
+                    raise RuntimeError("oda-token file not found within the current directory after was discovered")
                 remove(path.join(getcwd(), ".oda-token"))
             elif discover_method == TokenLocation.FILE_HOME:
+                if not path.exists(path.join(environ["HOME"], ".oda-token")):
+                    raise RuntimeError("oda-token file not found within the HOME directory after was discovered")
                 remove(path.join(environ["HOME"], ".oda-token"))
 
         for token_write_method in token_write_methods:
             if token_write_method == TokenLocation.ODA_ENV_VAR:
-                environ['ODA_TOKEN'] = new_token
+                environ["ODA_TOKEN"] = new_token
             elif token_write_method == TokenLocation.FILE_CUR_DIR:
                 if path.exists(path.join(getcwd(), ".oda-token")):
                     chmod(path.join(getcwd(), ".oda-token"), 0o600)
