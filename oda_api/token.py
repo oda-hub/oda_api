@@ -285,6 +285,7 @@ def rewrite_token(new_token,
                 if not path.exists(path.join(environ["HOME"], ".oda-token")):
                     raise RuntimeError("oda-token file not found within the HOME directory after was discovered")
                 remove(path.join(environ["HOME"], ".oda-token"))
+            logger.info(f"Discovered token has been discarded. It was stored with the method: {discover_method.value}")
 
         for token_write_method in token_write_methods:
             if token_write_method == TokenLocation.ODA_ENV_VAR:
@@ -301,6 +302,7 @@ def rewrite_token(new_token,
                 with open(path.join(environ["HOME"], ".oda-token"), 'w') as ft:
                     ft.write(new_token)
                 chmod(path.join(environ["HOME"], ".oda-token"), 0o400)
+            logger.info(f"Refreshed token has been re-written with the method: {token_write_method.value}")
         # sanity check on the newly written token
         newly_discovered_token = discover_token()
         if newly_discovered_token != new_token:
