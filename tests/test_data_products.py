@@ -14,13 +14,18 @@ import requests
 import random
 import string
 import urllib.parse
-
-from cdci_data_analysis.analysis.json import CustomJSONEncoder
+import typing
 from cdci_data_analysis.analysis.drupal_helper import get_observations_for_time_range, get_user_id, generate_gallery_jwt_token
+from oda_api.json import CustomJSONEncoder
+
 
 import oda_api
 import oda_api.api
-from oda_api.data_products import NumpyDataProduct
+from oda_api.data_products import LightCurveDataProduct, NumpyDataProduct, ODAAstropyTable, PictureProduct
+from astropy import time as atime
+from astropy import units as u
+from astropy.table import Table
+from matplotlib import pyplot as plt
 
 secret_key = 'secretkey_test'
 default_exp_time = int(time.time()) + 5000
@@ -34,13 +39,24 @@ default_token_payload = dict(
     mssub=True
 )
 
-def encode_decode(ndp: NumpyDataProduct) -> NumpyDataProduct:
+# TODO: adapt to new product types and implement corresponding tests
+def encode_decode(ndp: typing.Union[NumpyDataProduct, 
+                                    ODAAstropyTable, 
+                                    PictureProduct]) -> typing.Union[NumpyDataProduct, 
+                                                                         ODAAstropyTable, 
+                                                                         PictureProduct]:
     ndp_json = json.dumps(ndp, cls=CustomJSONEncoder)
 
     print(ndp_json)
 
-    return NumpyDataProduct.decode(ndp_json)
-
+    if isinstance(ndp, NumpyDataProduct):
+        return NumpyDataProduct.decode(ndp_json)    
+    
+    if isinstance(ndp, ODAAstropyTable):
+        return ODAAstropyTable.decode(ndp_json)
+    
+    if isinstance(ndp, PictureProduct):
+        return PictureProduct.decode(ndp_json)
 
 
 def test_one_image():
@@ -95,6 +111,40 @@ def test_variable_length_table():
     assert list(ndu_decoded.data['var'][0]) == [1, 2, 3]
     assert list(ndu_decoded.data['var'][1]) == [11, 12]
 
+def test_astropy_table():
+    data = np.zeros((10, 2))
+    data[:,0] = range(len(data))
+    data[:,1] = range(len(data), 0, -1)
+    atable = Table(data, names=['a', 'b'])
+
+    tabp = ODAAstropyTable(atable)
+
+    assert (tabp.table.as_array().tolist() == data).all()
+    assert tabp.table.colnames == ['a', 'b']
+
+    tabp_decoded = encode_decode(tabp)
+
+    assert (tabp_decoded.table.as_array().tolist() == data).all()
+    assert tabp_decoded.table.colnames == ['a', 'b']
+    
+def test_bin_image():
+    data = np.zeros((10, 2))
+    data[:,0] = range(len(data))
+    data[:,1] = np.random.rand(len(data))
+    plt.plot(data[:,0], data[:,1])
+    if os.path.isfile('tmp.png'):
+        os.remove('tmp.png')
+    plt.savefig('tmp.png')
+    with open('tmp.png', 'rb') as fd:
+        figdata = fd.read()
+
+    bin_image = PictureProduct.from_file('tmp.png')
+    
+    assert bin_image.binary_data == figdata
+    
+    bin_image_decoded = encode_decode(bin_image)
+    
+    assert bin_image_decoded.binary_data == figdata
 
 @pytest.mark.test_drupal
 @pytest.mark.parametrize("observation", [None])
@@ -954,3 +1004,33 @@ def test_check_product_type_policy(dispatcher_api_with_gallery, dispatcher_test_
             disp.check_gallery_data_product_policy(encoded_token, **par_dict)
     else:
         assert disp.check_gallery_data_product_policy(encoded_token, **par_dict)
+
+
+@pytest.mark.parametrize('times,values,time_format,expected_units_dict',
+                         [(atime.Time(['2022-02-20T13:45:34', '2022-02-20T14:45:34', '2022-02-20T15:45:34']), 
+                           [2/u.cm**2/u.s] * 3, 
+                           None,
+                           {'TIME': 'd', 'FLUX': '1 / (cm**2 s)', 'ERROR': '1 / (cm**2 s)'}),
+                                                  
+                          (['2022-02-20T13:45:34', '2022-02-20T14:45:34', '2022-02-20T15:45:34'],
+                           [2] * 3,
+                           None,
+                           {'TIME': 'd'}),
+                          
+                          ([59630.3, 59630.5, 59630.7],
+                           [2] * 3,
+                           'mjd',
+                           {'TIME': 'd'}),
+                          
+                          (list(map(datetime.fromisoformat, ['2022-02-20T13:45:34', '2022-02-20T14:45:34', '2022-02-20T15:45:34'])),
+                           [2/u.cm**2/u.s] * 3, 
+                           None,
+                           {'TIME': 'd', 'FLUX': '1 / (cm**2 s)', 'ERROR': '1 / (cm**2 s)'}),
+                          ]
+                         )
+def test_lightcurve_product_from_arrays(times, values, time_format, expected_units_dict):
+    errors = [0.05 * x for x in values]
+    lc = LightCurveDataProduct.from_arrays(times = times, fluxes = values, errors = errors, time_format=time_format)
+    assert lc.data_unit[1].units_dict == expected_units_dict
+    assert all(lc.data_unit[1].data['TIME'].astype('int') == 59630)
+    

@@ -4,7 +4,7 @@ from collections import OrderedDict
 from json.decoder import JSONDecodeError
 
 import rdflib
-from astropy.table import Table
+import typing
 from astropy.coordinates import Angle
 
 # NOTE gw is optional for now
@@ -15,7 +15,8 @@ try:
 except ModuleNotFoundError:
     pass
 
-from .data_products import NumpyDataProduct, BinaryData, ApiCatalog, GWContoursDataProduct
+from .data_products import NumpyDataProduct, BinaryData, ApiCatalog, GWContoursDataProduct, PictureProduct
+from oda_api.token import TokenLocation
 
 from builtins import (bytes, str, open, super, range,
                       zip, round, input, int, pow, object, map, zip)
@@ -53,7 +54,7 @@ from datetime import datetime
 import numpy as np
 import traceback
 from jsonschema import validate as validate_json
-from typing import Union
+from typing import Union, Tuple
 
 import oda_api.token
 import oda_api.misc_helpers
@@ -333,6 +334,35 @@ class DispatcherAPI:
             return r.json()
         else:
             raise RuntimeError(r.text)
+
+    def refresh_token(self,
+                      token_to_refresh=None,
+                      write_token=False,
+                      token_write_methods: Union[Tuple[TokenLocation, ...], TokenLocation] = (TokenLocation.ODA_ENV_VAR,
+                                                                                         TokenLocation.FILE_CUR_DIR),
+                      discard_discovered_token=False):
+        if token_to_refresh is None:
+            token_to_refresh = oda_api.token.discover_token()
+        if token_to_refresh is not None and token_to_refresh != '':
+            params = dict(token=token_to_refresh,
+                          query_status='new')
+
+            r = requests.get(os.path.join(self.url, 'refresh_token'),
+                             params=params)
+
+            if r.status_code == 200:
+                refreshed_token = r.text
+                if write_token:
+                    oda_api.token.rewrite_token(refreshed_token,
+                                                old_token=token_to_refresh,
+                                                token_write_methods=token_write_methods,
+                                                discard_discovered_token=discard_discovered_token)
+
+                return refreshed_token
+            else:
+                raise RuntimeError(r.text)
+        else:
+            raise RuntimeError("unable to refresh the token with any known method")
 
     def set_custom_progress_formatter(self, F):
         self.custom_progress_formatter = F
@@ -923,10 +953,10 @@ class DispatcherAPI:
             f"{C.GREY}last request completed in {self.last_request_t_complete - self.last_request_t0} seconds{C.NC}")
 
     def get_list_terms_gallery(self,
-                               group: str = None,
-                               parent: str = None,
-                               parent_id: str = None,
-                               token: str = None
+                               group: typing.Optional[str] = None,
+                               parent: typing.Optional[str] = None,
+                               parent_id: typing.Optional[str] = None,
+                               token: typing.Optional[str] = None
                                ):
         logger.debug("Getting the list of available instruments on the gallery")
         params = {
@@ -1208,13 +1238,13 @@ class DispatcherAPI:
         return response_json
 
     def post_data_product_to_gallery(self,
-                                     product_title: str = None,
+                                     product_title: typing.Optional[str] = None,
                                      product_id: str = None,
-                                     observation_id: str = None,
-                                     gallery_image_path: str = None,
+                                     observation_id: typing.Optional[str] = None,
+                                     gallery_image_path: typing.Optional[str] = None,
                                      fits_file_path=None,
                                      yaml_file_path=None,
-                                     token: str = None,
+                                     token: typing.Optional[str] = None,
                                      insert_new_source: bool = False,
                                      validate_source: bool = False,
                                      force_insert_not_valid_new_source: bool = False,
@@ -1471,8 +1501,8 @@ class DispatcherAPI:
         return response_json
 
     def resolve_source(self,
-                       src_name: str = None,
-                       token: str = None):
+                       src_name: typing.Optional[str] = None,
+                       token: typing.Optional[str] = None):
         resolved_obj = None
         if src_name is not None and src_name != '':
             params = {
@@ -1509,7 +1539,7 @@ class DispatcherAPI:
         return t_utc
 
     def check_gallery_data_product_policy(self,
-                                          token: str = None,
+                                          token: typing.Optional[str] = None,
                                           **kwargs):
         product_type = kwargs.get('product_type', None)
         if product_type is not None and product_type != '':
@@ -1540,7 +1570,7 @@ class DispatcherAPI:
 
         return True
 
-    def check_missing_parameters_data_product(self, response, token: str = None, **kwargs):
+    def check_missing_parameters_data_product(self, response, token: typing.Optional[str] = None, **kwargs):
         missing_instrument = True
         instrument_used = None
         missing_product_type = True
@@ -1816,7 +1846,7 @@ class DataCollection(object):
         if 'binary_data_product_list' in res_json['products'].keys():
             data.extend([BinaryData().decode(d)
                          for d in res_json['products']['binary_data_product_list']])
-
+        
         if 'catalog' in res_json['products'].keys():
             data.append(ApiCatalog(
                 res_json['products']['catalog'], name='dispatcher_catalog'))
@@ -1829,6 +1859,14 @@ class DataCollection(object):
             data.extend([ascii.read(table_binary)
                          for table_binary in res_json['products']['astropy_table_product_binary_list']])
 
+        if 'binary_image_product_list' in res_json['products'].keys():
+            data.extend([PictureProduct.decode(bin_image_data)
+                         for bin_image_data in res_json['products']['binary_image_product_list']])
+        
+        if 'text_product_list' in res_json['products'].keys():
+            data.extend([text_data
+                         for text_data in res_json['products']['text_product_list']])
+            
         if 'gw_strain_product_list' in res_json['products'].keys():
             data.extend([TimeSeries(strain_data['value'],
                                     name=strain_data['name'],

@@ -26,6 +26,7 @@ from astropy.utils.misc import JsonCustomEncoder
 
 from astropy.table import Table
 from astropy.coordinates import Angle
+from astropy.wcs import WCS
 
 import  numpy
 import numpy as np
@@ -36,9 +37,12 @@ import  hashlib
 from numpy import nan,inf
 from sys import path_importer_cache, version_info
 
-from io import StringIO
-
+from io import StringIO, BytesIO
+import imghdr
+import os
 import logging
+from matplotlib import image as mpimg
+from matplotlib import pyplot as plt
 
 logger = logging.getLogger('oda_api.data_products')
 
@@ -142,8 +146,11 @@ class ODAAstropyTable(object):
         return   _o_dict
 
     @classmethod
-    def decode(cls,_o_dict,use_binary=False):
-
+    def decode(cls,o_dict,use_binary=False):
+        if isinstance(o_dict, dict):
+            _o_dict = o_dict
+        elif isinstance(o_dict, str):
+            _o_dict = json.loads(literal_to_json(o_dict))
         encoded_name = _o_dict['name']
         encoded_meta_data = _o_dict['meta_data']
         if use_binary is True:
@@ -317,7 +324,6 @@ class NumpyDataUnit(object):
 
 
     def encode(self,use_pickle=False,use_gzip=False,to_json=False):
-        # FIXME: does not preserve units_dict
         _data = []
         _meata_d=[]
         _kw_d = []
@@ -358,7 +364,8 @@ class NumpyDataUnit(object):
                    'header': self.header,
                    'binarys': _binarys,
                    'meta_data': self.meta_data,
-                   'hdu_type': self.hdu_type}
+                   'hdu_type': self.hdu_type,
+                   'units_dict': self.units_dict}
 
         if to_json:
             _o_dict_json = json.dumps(_o_dict)
@@ -386,6 +393,7 @@ class NumpyDataUnit(object):
         _name=encoded_obj['name']
         _hdu_type=encoded_obj['hdu_type']
         _binarys=encoded_obj['binarys']
+        _units_dict = encoded_obj.get('units_dict')
 
         if _binarys is not None:
             #print('dec ->', type(_binarys))
@@ -420,7 +428,7 @@ class NumpyDataUnit(object):
 
 
 
-        return cls(data=_data, data_header=encoded_header, meta_data=encoded_meta_data,name=_name,hdu_type=_hdu_type)
+        return cls(data=_data, data_header=encoded_header, meta_data=encoded_meta_data,name=_name,hdu_type=_hdu_type, units_dict=_units_dict)
 
     @classmethod
     def from_pandas(cls, 
@@ -723,7 +731,7 @@ class LightCurveDataProduct(NumpyDataProduct):
         # TODO: possibility for other time units
         # TODO: add time-related keywords to header (OGIP)
         units_dict = {'TIME': 'd'}
-        if [isinstance(x, astropy.time.Time) for x in times]:
+        if any(isinstance(x, astropy.time.Time) for x in times):
             times = astropy.time.Time(times)
                         
         if isinstance(times, astropy.time.Time):
@@ -732,15 +740,16 @@ class LightCurveDataProduct(NumpyDataProduct):
             atimes = astropy.time.Time(times, format=time_format) # NOTE: do we assume paticular scale?
             mjd = atimes.mjd 
         else:
-            raise ValueError('Time format not specified')
+            atimes = astropy.time.Time(times)
+            mjd = atimes.mjd 
         
-        if [isinstance(x, astropy.units.Quantity) for x in values]:
+        if any(isinstance(x, astropy.units.Quantity) for x in values):
             values = astropy.units.Quantity(values)
         if isinstance(values, astropy.units.Quantity):
             units_dict[col_name] = values.unit.to_string(format='OGIP')
             values = values.value
             
-        if errors is not None and [isinstance(x, astropy.units.Quantity) for x in errors]:
+        if errors is not None and any(isinstance(x, astropy.units.Quantity) for x in errors):
             errors = astropy.units.Quantity(errors)
         if errors is not None and isinstance(errors, astropy.units.Quantity):
             units_dict['ERROR'] = errors.unit.to_string(format='OGIP')
@@ -754,5 +763,86 @@ class LightCurveDataProduct(NumpyDataProduct):
                                  meta_data = meta_data,
                                  data_header = data_header,
                                  hdu_type = 'bintable',
-                                 name = 'LIGHTCURVE')],
+                                 name = 'LC')],
                    name = name)            
+
+class PictureProduct:
+    def __init__(self, binary_data, metadata={}, file_path=None, write_on_creation = False):
+        self.binary_data = binary_data
+        self.metadata = metadata
+        if file_path is not None and os.path.isfile(file_path):
+            self.file_path = file_path 
+            logger.info(f'Image file {file_path} already exist. No automatical rewriting.')
+        elif write_on_creation:
+            self.write_file(file_path)
+        else:
+            self.file_path = None                        
+        byte_stream = BytesIO(binary_data)
+        tp = imghdr.what(byte_stream)
+        if tp is None:
+            raise ValueError('Provided data is not an image')
+        self.img_type = tp
+    
+    @classmethod
+    def from_file(cls, file_path):
+        with open(file_path, 'rb') as fd:
+            binary_data = fd.read()
+        return cls(binary_data, file_path=file_path)
+            
+    def write_file(self, file_path):
+        logger.info(f'Creating image file {file_path}.')
+        with open(file_path, 'wb') as fd:
+            fd.write(self.binary_data)
+        self.file_path = file_path
+    
+    def encode(self):
+        b64data = base64.urlsafe_b64encode(self.binary_data)
+        output_dict = {}
+        output_dict['img_type'] = self.img_type
+        output_dict['b64data'] = b64data.decode()
+        output_dict['metadata'] = self.metadata
+        if self.file_path:
+            output_dict['filename'] = os.path.basename(self.file_path)
+        return output_dict
+    
+    @classmethod
+    def decode(cls, encoded_data, write_on_creation = False):
+        if isinstance(encoded_data, dict):
+            _encoded_data = encoded_data
+        else:
+            _encoded_data = json.loads(encoded_data)
+        binary_data = base64.urlsafe_b64decode(_encoded_data['b64data'].encode('ascii', 'ignore'))
+        return cls(binary_data, 
+                   metadata = _encoded_data['metadata'],
+                   file_path = _encoded_data.get('filename'),
+                   write_on_creation = write_on_creation)
+    
+    def show(self):
+        byte_stream = BytesIO(self.binary_data)
+        image = mpimg.imread(byte_stream)
+        plt.imshow(image)
+        plt.axis('off')
+        plt.show()
+        
+class ImageDataProduct(NumpyDataProduct):  
+    @classmethod
+    def from_fits_file(cls,filename,ext=None,hdu_name=None,meta_data={},name=''):
+        npdp = super().from_fits_file(filename,ext=None,hdu_name=None,meta_data={},name='')
+
+        contains_image = cls.check_contains_image(npdp)
+        if contains_image:
+            return npdp
+        else:
+            raise ValueError(f'FITS file {filename} doesn\'t contain image data.')
+            
+    @staticmethod
+    def check_contains_image(numpy_data_prod):
+        for hdu in numpy_data_prod.data_unit:
+            if hdu.hdu_type in ['primary', 'image']:
+                try:
+                    wcs = WCS(hdu.header)
+                    return True
+                except:
+                    pass
+        return False
+        
