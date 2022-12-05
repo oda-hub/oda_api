@@ -763,7 +763,7 @@ class LightCurveDataProduct(NumpyDataProduct):
                                  meta_data = meta_data,
                                  data_header = data_header,
                                  hdu_type = 'bintable',
-                                 name = 'LIGHTCURVE')],
+                                 name = 'LC')],
                    name = name)            
 
 class PictureProduct:
@@ -840,7 +840,7 @@ class ImageDataProduct(NumpyDataProduct):
         for hdu in numpy_data_prod.data_unit:
             if hdu.hdu_type in ['primary', 'image']:
                 try:
-                    wcs = WCS(hdu)
+                    wcs = WCS(hdu.header)
                     return True
                 except:
                     pass
