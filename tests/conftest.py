@@ -1,6 +1,9 @@
 # we could make a plugin, but it's more effort
 import pytest
 import jwt
+import glob
+import shutil
+import os
 
 from cdci_data_analysis.pytest_fixtures import (
             dispatcher_live_fixture,
@@ -73,3 +76,17 @@ def default_token(default_token_payload, secret_key) -> str:
     if isinstance(token, bytes):
         token = token.decode()
     return token
+
+
+def remove_scratch_folders(job_id=None):
+    if job_id is None:
+        dir_list = glob.glob('scratch_*')
+    else:
+        dir_list = glob.glob(f'scratch_*_jid_{job_id}*')
+    for d in dir_list:
+        shutil.rmtree(d)
+
+
+def remove_old_token_files():
+    list_old_token_files = glob.glob('old-oda-token_*')
+    [os.remove(t) for t in list_old_token_files]

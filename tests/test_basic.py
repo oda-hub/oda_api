@@ -7,8 +7,10 @@ import re
 import glob
 import requests
 import oda_api.api
+import oda_api.token
 
-from cdci_data_analysis.pytest_fixtures import DispatcherJobState, make_hash, ask
+from cdci_data_analysis.pytest_fixtures import DispatcherJobState
+from conftest import remove_old_token_files, remove_scratch_folders
 
 secret_key = 'secretkey_test'
 default_exp_time = int(time.time()) + 5000
@@ -377,3 +379,206 @@ def test_dispatcher_exception(dispatcher_live_fixture, caplog, exception_kind):
         raise RuntimeError()
     
     requests.get = requests._get
+
+
+@pytest.mark.parametrize('token_placement', ['oda_env_var', 'file_home', 'file_cur_dir', 'no'])
+@pytest.mark.parametrize('token_write_method', ['oda_env_var', 'file_home', 'file_cur_dir', 'no'])
+@pytest.mark.parametrize('write_token', [True, False])
+def test_token_refresh(dispatcher_live_fixture, token_placement, monkeypatch, write_token, token_write_method, tmpdir):
+    remove_old_token_files()
+    remove_scratch_folders()
+
+    disp = oda_api.api.DispatcherAPI(url=dispatcher_live_fixture, wait=False)
+
+    # let's generate a valid token
+    token_payload = {
+        **default_token_payload,
+        "roles": ["general", "refresh-tokens"]
+    }
+    encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
+
+    # reset any existing token locations
+    os.makedirs(tmpdir, exist_ok=True)
+    monkeypatch.setenv('HOME', tmpdir)
+
+    oda_token_home_fn = os.path.join(tmpdir, ".oda-token")
+    if os.path.exists(oda_token_home_fn):
+        os.remove(oda_token_home_fn)
+
+    oda_token_cwd_fn = ".oda-token"
+    if os.path.exists(oda_token_cwd_fn):
+        os.remove(oda_token_cwd_fn)
+
+    monkeypatch.setenv('ODA_TOKEN', '')
+
+    if token_placement == 'oda_env_var':
+        monkeypatch.setenv('ODA_TOKEN', encoded_token)
+
+    elif token_placement == 'file_cur_dir':
+        with open(oda_token_cwd_fn, "w") as f:
+            f.write(encoded_token)
+
+    elif token_placement == 'file_home':
+        with open(oda_token_home_fn, "w") as f:
+            f.write(encoded_token)
+
+    token_write_method_enum = None
+    if token_write_method != 'no':
+        token_write_method_enum = oda_api.token.TokenLocation[str.upper(token_write_method)]
+
+    if token_placement == 'no':
+        with pytest.raises(RuntimeError, match="unable to refresh the token with any known method"):
+            if token_write_method != 'no':
+                disp.refresh_token(write_token=write_token, token_write_methods=token_write_method_enum)
+            else:
+                disp.refresh_token(write_token=write_token)
+    else:
+        if token_write_method != 'no':
+            refreshed_token = disp.refresh_token(write_token=write_token, token_write_methods=token_write_method_enum)
+            discovered_token = oda_api.token.discover_token(allow_invalid=True, token_discovery_methods=token_write_method_enum)
+        else:
+            refreshed_token = disp.refresh_token(write_token=write_token)
+            discovered_token = oda_api.token.discover_token(allow_invalid=True)
+        if write_token:
+            assert refreshed_token == discovered_token
+            list_old_token_files = glob.glob('old-oda-token_*')
+            assert len(list_old_token_files) == 1
+            assert open(list_old_token_files[0]).read() == encoded_token
+        else:
+            assert refreshed_token != discovered_token
+
+
+@pytest.mark.parametrize('tokens_tems', [[100, 100],
+                                         [100, 150],
+                                         [150, 100]])
+@pytest.mark.parametrize('tokens_intsubs', [[100, 100],
+                                            [100, 150],
+                                            [150, 100]])
+@pytest.mark.parametrize('tokens_mstouts', [True, False])
+@pytest.mark.parametrize('tokens_mssubs', [True, False])
+@pytest.mark.parametrize('tokens_msdones', [True, False])
+@pytest.mark.parametrize('tokens_fails', [True, False])
+@pytest.mark.parametrize('missing_keys', [True, False])
+@pytest.mark.parametrize('extra_keys', [True, False])
+@pytest.mark.parametrize('tokens_subs', [['sub1', 'sub1'],
+                                         ['sub1', 'sub2'],
+                                         ['sub2', 'sub1']])
+@pytest.mark.parametrize('tokens_emails', [['email1', 'email1'],
+                                           ['email1', 'email2'],
+                                           ['email2', 'email1']
+                                           ])
+@pytest.mark.parametrize('tokens_roles', [[[], ['role1', 'role2']],
+                                          [['role1', 'role2'], []],
+                                          [['role1', 'role2'], ['role1', 'role2']],
+                                          [['role1', 'role2'], ['role1', 'role3', 'role4']],
+                                          [['role1', 'role2'], ['role1', 'role2', 'role3']],
+                                          [['role1', 'role2', 'role3'], ['role1', 'role2']],
+                                          [[], []]
+                                          ])
+@pytest.mark.parametrize('tokens_exps', [[100, 100],
+                                         [100, 150],
+                                         [150, 100]
+                                         ])
+def test_compare_token(tokens_tems, tokens_intsubs, tokens_mstouts, tokens_mssubs, tokens_msdones, tokens_fails,
+                       missing_keys, extra_keys, tokens_subs, tokens_emails, tokens_roles, tokens_exps):
+    from oda_api.token import token_email_options_numeric, token_email_options_flags
+
+    token1_payload = {
+        "sub": tokens_subs[0],
+        "email": tokens_emails[0],
+        "exp": tokens_exps[0],
+        "roles": tokens_roles[0],
+        # email options
+        "tem": tokens_tems[0],
+        "intsub": tokens_intsubs[0],
+        "mssub": tokens_mssubs,
+        "msdone": tokens_msdones,
+        "mstout": tokens_mstouts,
+        "msfail": tokens_fails
+    }
+
+    token2_payload = {
+        'sub': tokens_subs[1],
+        'email': tokens_emails[1],
+        'exp': tokens_exps[1],
+        'roles': tokens_roles[1],
+        # email options
+        "tem": tokens_tems[1],
+        "intsub": tokens_intsubs[1],
+        "mssub": tokens_mssubs,
+        "msdone": tokens_msdones,
+        "mstout": tokens_mstouts,
+        "msfail": tokens_fails
+    }
+
+    if missing_keys:
+        token1_payload.pop('sub')
+
+    if extra_keys:
+        token1_payload['extra_key'] = 'test'
+
+    comparison_result = oda_api.token.compare_token(token1_payload, token2_payload)
+
+    assert 'missing_keys' in comparison_result
+    if missing_keys:
+        assert comparison_result['missing_keys'] == ['sub']
+    else:
+        assert comparison_result['missing_keys'] == []
+
+    assert 'extra_keys' in comparison_result
+    if extra_keys:
+        assert comparison_result['extra_keys'] == ['extra_key']
+    else:
+        assert comparison_result['extra_keys'] == []
+
+    assert 'exp' in comparison_result
+    if tokens_exps[0] > tokens_exps[1]:
+        assert comparison_result['exp'] == 1
+    elif tokens_exps[0] < tokens_exps[1]:
+        assert comparison_result['exp'] == -1
+    elif tokens_exps[0] == tokens_exps[1]:
+        assert comparison_result['exp'] == 0
+
+    assert 'roles' in comparison_result
+    token1_roles_difference = set(token1_payload["roles"]) - set(token2_payload["roles"])
+    token2_roles_difference = set(token2_payload["roles"]) - set(token1_payload["roles"])
+    if token1_roles_difference != set() and token2_roles_difference == set():
+        assert comparison_result["roles"] == 1
+    elif len(token1_roles_difference) < len(token2_roles_difference) or \
+            (len(token1_roles_difference) >= len(token2_roles_difference) and token2_roles_difference != set()):
+        assert comparison_result["roles"] == -1
+    elif len(token1_roles_difference) == len(token2_roles_difference) and \
+            token1_roles_difference == set() and token2_roles_difference == set():
+        assert comparison_result["roles"] == 0
+
+    if not missing_keys:
+        assert 'sub' in comparison_result
+        if tokens_subs[0] == tokens_subs[1]:
+            assert comparison_result['sub']
+        else:
+            assert not comparison_result['sub']
+    else:
+        assert 'sub' not in comparison_result
+
+    assert 'email' in comparison_result
+    if tokens_emails[0] == tokens_emails[1]:
+        assert comparison_result['email']
+    else:
+        assert not comparison_result['email']
+
+    # check email options
+    for opt in token_email_options_numeric:
+        assert opt in comparison_result
+        if token1_payload[opt] > token2_payload[opt]:
+            assert comparison_result[opt] == 1
+        elif token1_payload[opt] < token2_payload[opt]:
+            assert comparison_result[opt] == -1
+        else:
+            assert comparison_result[opt] == 0
+
+    for opt in token_email_options_flags:
+        assert opt in comparison_result
+        if token1_payload[opt] == token2_payload[opt]:
+            assert comparison_result[opt]
+        else:
+            assert not comparison_result[opt]
