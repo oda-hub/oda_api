@@ -1052,7 +1052,12 @@ class DispatcherAPI:
             logger.warning(error_message)
         else:
             response_json = res.json()
-            logger.info(f"Observation with title {observation_title} contains {len(response_json)} files\n")
+            msg = f"Observation with title {observation_title}"
+            if 'file_content' in response_json:
+                msg += " contains a yaml file\n"
+
+            logger.info(msg)
+
 
         return response_json
 
