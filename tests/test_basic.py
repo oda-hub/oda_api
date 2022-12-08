@@ -589,9 +589,10 @@ def test_comment(dispatcher_api, capsys):
     disp.get_product(
         instrument = 'empty',
         product = 'dummy',
-        unkpar = 'foo'
+        unkpar = 'foo', 
+        product_type='Dummy'
     )
     
     captured = capsys.readouterr()
     
-    assert re.match(r'Please note that arguments?.*unkpar.*not used', captured.out)
+    assert re.search(r'Please note that arguments?.*unkpar.*not used', captured.out)
