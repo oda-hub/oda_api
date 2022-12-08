@@ -310,8 +310,9 @@ class OdaImage(OdaProduct):
             self.cs.set_clim(self.smin.val, self.smax.val)
 
 
-    def write_fits(self, file_prefix=''):
-        file_fn = f'{file_prefix}mosaic.fits'
+    def write_fits(self, file_prefix='', output_dir='.'):
+
+        file_fn = os.path.join(output_dir, f'{file_prefix}mosaic.fits')
 
         self.data.mosaic_image_0_mosaic.write_fits_file(file_fn, overwrite=True)
         return file_fn
