@@ -818,6 +818,12 @@ class DispatcherAPI:
                           res_json['exit_status']['error_message'])
         self.logger.error('Remote server debug_message-> %s',
                           res_json['exit_status']['debug_message'])
+        
+    def show_status_comments(self, res_json):
+        if res_json['exit_status']['comment']:
+            print(res_json['exit_status']['comment'])
+        if res_json['exit_status']['warning']:
+            self.logger.warning(res_json['exit_status']['warning'])
 
     def dig_list(self, b, only_prod=False):
         if isinstance(b, (set, tuple, list)):
@@ -1263,6 +1269,8 @@ class DispatcherAPI:
             raise RuntimeError(
                 "not failed, not, but complete? programming error for client!")
 
+        self.show_status_comments(res_json)
+        
         d = DataCollection.from_response_json(
             res_json, instrument, product)
 
