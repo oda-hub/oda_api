@@ -818,6 +818,14 @@ class DispatcherAPI:
                           res_json['exit_status']['error_message'])
         self.logger.error('Remote server debug_message-> %s',
                           res_json['exit_status']['debug_message'])
+        
+    def show_status_comments(self, res_json):
+        if res_json['exit_status']['comment']:
+            print(res_json['exit_status']['comment'])
+        # TODO: warning field is not currently consistently used 
+        #       could be enabled in the future (add test then!)
+        # if res_json['exit_status']['warning']:
+        #     self.logger.warning(res_json['exit_status']['warning'])
 
     def dig_list(self, b, only_prod=False):
         if isinstance(b, (set, tuple, list)):
@@ -1233,8 +1241,8 @@ class DispatcherAPI:
                         msg += '\n'
                         msg += '%s' % valid_names
                         msg += '\n'
-                        msg += 'this will throw an error in a future version \n'
-                        msg += 'and might break the current request!\n '
+                        # msg += 'this will throw an error in a future version \n'
+                        # msg += 'and might break the current request!\n '
                         msg += '----------------------------------------------------------------------------\n'
                         warnings.warn(msg)
 
@@ -1263,6 +1271,8 @@ class DispatcherAPI:
             raise RuntimeError(
                 "not failed, not, but complete? programming error for client!")
 
+        self.show_status_comments(res_json)
+        
         d = DataCollection.from_response_json(
             res_json, instrument, product)
 

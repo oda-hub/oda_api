@@ -582,3 +582,17 @@ def test_compare_token(tokens_tems, tokens_intsubs, tokens_mstouts, tokens_mssub
             assert comparison_result[opt]
         else:
             assert not comparison_result[opt]
+
+def test_comment(dispatcher_api, capsys):
+    disp = dispatcher_api
+    
+    disp.get_product(
+        instrument = 'empty',
+        product = 'dummy',
+        unkpar = 'foo', 
+        product_type='Dummy'
+    )
+    
+    captured = capsys.readouterr()
+    
+    assert re.search(r'Please note that arguments?.*unkpar.*not used', captured.out)
