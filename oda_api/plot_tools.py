@@ -124,6 +124,7 @@ class OdaImage(OdaProduct):
         ax = plt.subplot(projection=w)
         
         data = ext_sig.data
+
         data = numpy.ma.masked_equal(data, numpy.NaN)
 
         self.cs = plt.contourf(data, cmap=cmap, levels=levels,
@@ -170,6 +171,7 @@ class OdaImage(OdaProduct):
                 dec_coord = decs
                 plt.scatter(ra_coord, dec_coord, s=30, marker="o", facecolors='none',
                             edgecolors='magenta', lw=0.5, zorder=5, transform=ax.get_transform('world'))
+
 
             try:
                 m = ~m_new & (sigmas > det_sigma - 1)
