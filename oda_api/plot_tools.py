@@ -146,19 +146,19 @@ class OdaImage(OdaProduct):
 
 
             # plot new sources as pink circles
-            try:
-                m = m_new & (sigmas > det_sigma)
+            
+            m = m_new & (sigmas > det_sigma)
+            if numpy.sum(m) > 0:
                 ra_coord = ras[m]
                 dec_coord = decs[m]
                 new_names = names[m]
-            except:
+                plt.scatter(ra_coord, dec_coord, s=100, marker="o", facecolors='none',
+                        edgecolors='pink',
+                        lw=3, label="NEW any", zorder=5, transform=ax.get_transform('world'))
+            else:
                 ra_coord = []
                 dec_coord = []
                 new_names = []
-
-            plt.scatter(ra_coord, dec_coord, s=100, marker="o", facecolors='none',
-                        edgecolors='pink',
-                        lw=3, label="NEW any", zorder=5, transform=ax.get_transform('world'))
 
             for i in range(len(ra_coord)):
                 plt.text(ra_coord[i],
@@ -171,20 +171,18 @@ class OdaImage(OdaProduct):
                 dec_coord = decs
                 plt.scatter(ra_coord, dec_coord, s=30, marker="o", facecolors='none',
                             edgecolors='magenta', lw=0.5, zorder=5, transform=ax.get_transform('world'))
-
-
-            try:
-                m = ~m_new & (sigmas > det_sigma - 1)
+            
+            m = ~m_new & (sigmas > det_sigma - 1)
+            if numpy.sum(m) > 0:
                 ra_coord = ras[m]
                 dec_coord = decs[m]
                 cat_names = names[m]
-            except:
+                plt.scatter(ra_coord, dec_coord, s=100, marker="o", facecolors='none',
+                        edgecolors='magenta', lw=3, label="known", zorder=5, transform=ax.get_transform('world'))
+            else:
                 ra_coord = []
                 dec_coord = []
                 cat_names = []
-
-            plt.scatter(ra_coord, dec_coord, s=100, marker="o", facecolors='none',
-                        edgecolors='magenta', lw=3, label="known", zorder=5, transform=ax.get_transform('world'))
 
             for i in range(len(ra_coord)):
                 plt.text(ra_coord[i],
