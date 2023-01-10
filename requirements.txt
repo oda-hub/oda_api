@@ -6,7 +6,7 @@ matplotlib
 numpy<1.23.0 # astropy issue: module 'numpy' has no attribute 'asscalar' 
 jsonschema
 astroquery
--e git+https://github.com/oda-hub/dispatcher-app.git@master#egg=cdci_data_analysis[test]
+-e git+https://github.com/oda-hub/dispatcher-app.git@development-instrument-list#egg=cdci_data_analysis[test]
 simplejson
 sentry_sdk
 rdflib
