@@ -139,37 +139,33 @@ class OdaImage(OdaProduct):
                 ra_coord = ras[m]
                 dec_coord = decs[m]
                 new_names = names[m]
-            except:
-                ra_coord = []
-                dec_coord = []
-                new_names = []
+                plt.scatter(ra_coord, dec_coord, s=100, marker="o", facecolors='none',
+                            edgecolors='pink',
+                            lw=3, label="NEW any", zorder=5, transform=ax.get_transform('world'))
+                for i in range(len(ra_coord)):
+                    plt.text(ra_coord[i],
+                            dec_coord[i] + 0.5,
+                            new_names[i], color="pink", size=15, transform=ax.get_transform('world'))
 
-            plt.scatter(ra_coord, dec_coord, s=100, marker="o", facecolors='none',
-                        edgecolors='pink',
-                        lw=3, label="NEW any", zorder=5, transform=ax.get_transform('world'))
-
-            for i in range(len(ra_coord)):
-                plt.text(ra_coord[i],
-                         dec_coord[i] + 0.5,
-                         new_names[i], color="pink", size=15, transform=ax.get_transform('world'))
+            except Exception as e:
+                logger.warn("can not plot known sources: %s", e)
+            
 
             try:
                 m = ~m_new & (sigmas > det_sigma - 1)
                 ra_coord = ras[m]
                 dec_coord = decs[m]
                 cat_names = names[m]
-            except:
-                ra_coord = []
-                dec_coord = []
-                cat_names = []
+            
+                plt.scatter(ra_coord, dec_coord, s=100, marker="o", facecolors='none',
+                            edgecolors='magenta', lw=3, label="known", zorder=5, transform=ax.get_transform('world'))
 
-            plt.scatter(ra_coord, dec_coord, s=100, marker="o", facecolors='none',
-                        edgecolors='magenta', lw=3, label="known", zorder=5, transform=ax.get_transform('world'))
-
-            for i in range(len(ra_coord)):
-                plt.text(ra_coord[i],
-                         dec_coord[i] + 0.5,
-                         cat_names[i], color="magenta", size=15, transform=ax.get_transform('world'))
+                for i in range(len(ra_coord)):
+                    plt.text(ra_coord[i],
+                            dec_coord[i] + 0.5,
+                            cat_names[i], color="magenta", size=15, transform=ax.get_transform('world'))
+            except Exception as e:
+                logger.warn("can not plot known sources: %s", e)
 
         plt.grid(color="grey", zorder=10)
 
