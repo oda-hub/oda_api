@@ -23,7 +23,7 @@ lib64
 /doc/build
 CL.txt
 /venv
-observation_yaml_dummy_files/*
+tests/observation_yaml_dummy_files/*
 #/doc/source/user_guide*
 /doc/source/user_guide/*.png
 /doc/source/user_guide/*.fits
