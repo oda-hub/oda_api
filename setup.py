@@ -42,12 +42,15 @@ setup(name='oda_api',
             "jsonschema",
             "pyjwt",
             "astroquery",
-            "scipy"
+            "scipy",
+            "rdflib",
+            "black"
         ],
       extras_require={
           'test': [
                 "pytest-xdist[psutil]",
                 "astroquery>=0.4.4",
+                "sentry_sdk"
             ],      
           'extra-test': [
                 "pytest-xdist[psutil]",

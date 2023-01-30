@@ -107,36 +107,19 @@ class OdaImage(OdaProduct):
         if sources is None:
             sources = self.data.dispatcher_catalog_1.table
 
-        fig = plt.figure(figsize=(8, 6))
-
-        j, i = plt.meshgrid(range(data.shape[0]), range(data.shape[1]))
         w = wcs.WCS(header)
-        ra, dec = w.wcs_pix2world(numpy.column_stack([i.flatten(), j.flatten()]), 0).transpose()
-        ra = ra.reshape(i.shape)
-        dec = dec.reshape(j.shape)
 
-        data = numpy.transpose(data)
+        fig = plt.figure(figsize=(8, 8./1.62))
+        ax = plt.subplot(projection=w)
+        
         data = numpy.ma.masked_equal(data, numpy.NaN)
 
-        zero_crossing = False
-
-        if numpy.abs(ra.max() - 360.0) < 0.1 and numpy.abs(ra.min()) < 0.1:
-            zero_crossing = True
-            ind_ra = ra > 180.
-            ra[ind_ra] -= 360.
-            ind_sort = numpy.argsort(ra, axis=-1)
-            ra = numpy.take_along_axis(ra, ind_sort, axis=-1)
-            data = numpy.take_along_axis(data, ind_sort, axis=-1)
-
-        self.cs = plt.contourf(ra, dec, data, cmap=cmap, levels=levels,
+        self.cs = plt.contourf(data, cmap=cmap, levels=levels,
                                extend="both", zorder=0)
         self.cs.cmap.set_under('k')
         self.cs.set_clim(numpy.min(levels), numpy.max(levels))
 
         self.cb = plt.colorbar(self.cs)
-
-        plt.xlim([ra.max(), ra.min()])
-        plt.ylim([dec.min(), dec.max()])
 
         if len(sources) > 0:
             ras = numpy.array([x for x in sources['ra']])
@@ -155,12 +138,6 @@ class OdaImage(OdaProduct):
                 ra_coord = ras[m]
                 dec_coord = decs[m]
                 new_names = names[m]
-                if zero_crossing:
-                    ind_ra = ra_coord > 180.
-                    try:
-                        ra_coord[ind_ra] -= 360.
-                    except:
-                        pass
             except:
                 ra_coord = []
                 dec_coord = []
@@ -168,50 +145,30 @@ class OdaImage(OdaProduct):
 
             plt.scatter(ra_coord, dec_coord, s=100, marker="o", facecolors='none',
                         edgecolors='pink',
-                        lw=3, label="NEW any", zorder=5)
+                        lw=3, label="NEW any", zorder=5, transform=ax.get_transform('world'))
 
             for i in range(len(ra_coord)):
                 plt.text(ra_coord[i],
                          dec_coord[i] + 0.5,
-                         new_names[i], color="pink", size=15)
+                         new_names[i], color="pink", size=15, transform=ax.get_transform('world'))
 
             try:
                 m = ~m_new & (sigmas > det_sigma - 1)
                 ra_coord = ras[m]
                 dec_coord = decs[m]
                 cat_names = names[m]
-                if zero_crossing:
-                    ind_ra = ra_coord > 180.
-                    try:
-                        ra_coord[ind_ra] -= 360.
-                    except:
-                        pass
             except:
                 ra_coord = []
                 dec_coord = []
                 cat_names = []
 
             plt.scatter(ra_coord, dec_coord, s=100, marker="o", facecolors='none',
-                        edgecolors='magenta', lw=3, label="known", zorder=5)
+                        edgecolors='magenta', lw=3, label="known", zorder=5, transform=ax.get_transform('world'))
 
             for i in range(len(ra_coord)):
                 plt.text(ra_coord[i],
                          dec_coord[i] + 0.5,
-                         cat_names[i], color="magenta", size=15)
-                
-            #fallback for general catalog (e.g. legacysurvey)
-            if not 'src_names' in sources.columns or not 'significance' in sources.columns:
-                ra_coord = ras
-                dec_coord = decs
-                if zero_crossing:
-                    ind_ra = ra_coord > 180.
-                    try:
-                        ra_coord[ind_ra] -= 360.
-                    except:
-                        pass
-                plt.scatter(ra_coord, dec_coord, s=30, marker="o", facecolors='none',
-                        edgecolors='magenta', lw=0.5, zorder=5)
-            
+                         cat_names[i], color="magenta", size=15, transform=ax.get_transform('world'))
 
         plt.grid(color="grey", zorder=10)
 

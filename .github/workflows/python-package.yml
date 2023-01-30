@@ -45,7 +45,7 @@ jobs:
 
     - name: MyPy
       run: |
-        mypy oda_api --ignore-missing-imports 
+        mypy oda_api --ignore-missing-imports --implicit-optional
 
     - name: Test with pytest
       run: |
