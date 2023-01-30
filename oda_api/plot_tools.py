@@ -11,35 +11,26 @@ from builtins import (str, open, range,
 __author__ = "Carlo Ferrigno"
 
 import json
+
 import numpy
-import copy
-
 from matplotlib import pylab as plt
-from matplotlib.widgets import Slider
+from matplotlib.widgets import Slider, Button, RadioButtons
 from matplotlib import cm
+import time as _time
 
+import astropy.wcs as wcs
 from astropy import table
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astroquery.simbad import Simbad
-
-import oda_api.api as api
-
-import time as _time
-import astropy.wcs as wcs
-
-# NOTE GW, optional
-try:
-    import ligo.skymap.plot
-except ModuleNotFoundError:
-    pass 
+import copy
 
 import logging
 
 logger = logging.getLogger("oda_api.plot_tools")
 
-__all__ = ['OdaImage', 'OdaLightCurve', 'OdaGWContours', 'OdaSpectrum']
+__all__ = ['OdaImage', 'OdaLightCurve']
 
 
 class OdaProduct(object):
@@ -52,8 +43,6 @@ class OdaProduct(object):
 
 
 class OdaImage(OdaProduct):
-
-    name = 'image'
 
     def get_image_for_gallery(self, data=None, meta=None, header=None, sources=None,
              levels=None, cmap=cm.gist_earth, unit_ID=4, det_sigma=3):
@@ -85,7 +74,7 @@ class OdaImage(OdaProduct):
         """
 
         plt = self.build_fig(data=data, meta=meta, header=header, sources=sources,
-                              levels=levels, cmap=cmap, unit_ID=unit_ID, det_sigma=det_sigma, sliders=sliders)
+                              levels=levels, cmap=cmap, unit_ID=unit_ID, det_sigma=det_sigma)
 
         plt.show()
 
@@ -108,30 +97,45 @@ class OdaImage(OdaProduct):
         if sources is None:
             sources = self.data.dispatcher_catalog_1.table
 
-        w = wcs.WCS(header)
+        fig = plt.figure(figsize=(8, 6))
 
-        fig = plt.figure(figsize=(8, 8./1.62))
-        ax = plt.subplot(projection=w)
-        
+        j, i = plt.meshgrid(range(data.shape[0]), range(data.shape[1]))
+        w = wcs.WCS(header)
+        ra, dec = w.wcs_pix2world(numpy.column_stack([i.flatten(), j.flatten()]), 0).transpose()
+        ra = ra.reshape(i.shape)
+        dec = dec.reshape(j.shape)
+
+        data = numpy.transpose(data)
         data = numpy.ma.masked_equal(data, numpy.NaN)
 
-        self.cs = plt.contourf(data, cmap=cmap, levels=levels,
+        zero_crossing = False
+
+        if numpy.abs(ra.max() - 360.0) < 0.1 and numpy.abs(ra.min()) < 0.1:
+            zero_crossing = True
+            ind_ra = ra > 180.
+            ra[ind_ra] -= 360.
+            ind_sort = numpy.argsort(ra, axis=-1)
+            ra = numpy.take_along_axis(ra, ind_sort, axis=-1)
+            data = numpy.take_along_axis(data, ind_sort, axis=-1)
+
+        self.cs = plt.contourf(ra, dec, data, cmap=cmap, levels=levels,
                                extend="both", zorder=0)
         self.cs.cmap.set_under('k')
         self.cs.set_clim(numpy.min(levels), numpy.max(levels))
 
         self.cb = plt.colorbar(self.cs)
 
+        plt.xlim([ra.max(), ra.min()])
+        plt.ylim([dec.min(), dec.max()])
+
         if len(sources) > 0:
             ras = numpy.array([x for x in sources['ra']])
             decs = numpy.array([x for x in sources['dec']])
-            if 'src_names' in sources.columns:
-                names = numpy.array([x for x in sources['src_names']])
-                # Defines relevant indexes for plotting regions
-                m_new = numpy.array(['NEW' in name for name in names])
-            if 'significance' in sources.columns:
-                sigmas = numpy.array([x for x in sources['significance']])
+            names = numpy.array([x for x in sources['src_names']])
+            sigmas = numpy.array([x for x in sources['significance']])
 
+            # Defines relevant indexes for plotting regions
+            m_new = numpy.array(['NEW' in name for name in names])
 
             # plot new sources as pink circles
             try:
@@ -139,33 +143,49 @@ class OdaImage(OdaProduct):
                 ra_coord = ras[m]
                 dec_coord = decs[m]
                 new_names = names[m]
-                plt.scatter(ra_coord, dec_coord, s=100, marker="o", facecolors='none',
-                            edgecolors='pink',
-                            lw=3, label="NEW any", zorder=5, transform=ax.get_transform('world'))
-                for i in range(len(ra_coord)):
-                    plt.text(ra_coord[i],
-                            dec_coord[i] + 0.5,
-                            new_names[i], color="pink", size=15, transform=ax.get_transform('world'))
+                if zero_crossing:
+                    ind_ra = ra_coord > 180.
+                    try:
+                        ra_coord[ind_ra] -= 360.
+                    except:
+                        pass
+            except:
+                ra_coord = []
+                dec_coord = []
+                new_names = []
 
-            except Exception as e:
-                logger.warn("can not plot known sources: %s", e)
-            
+            plt.scatter(ra_coord, dec_coord, s=100, marker="o", facecolors='none',
+                        edgecolors='pink',
+                        lw=3, label="NEW any", zorder=5)
+
+            for i in range(len(ra_coord)):
+                plt.text(ra_coord[i],
+                         dec_coord[i] + 0.5,
+                         new_names[i], color="pink", size=15)
 
             try:
                 m = ~m_new & (sigmas > det_sigma - 1)
                 ra_coord = ras[m]
                 dec_coord = decs[m]
                 cat_names = names[m]
-            
-                plt.scatter(ra_coord, dec_coord, s=100, marker="o", facecolors='none',
-                            edgecolors='magenta', lw=3, label="known", zorder=5, transform=ax.get_transform('world'))
+                if zero_crossing:
+                    ind_ra = ra_coord > 180.
+                    try:
+                        ra_coord[ind_ra] -= 360.
+                    except:
+                        pass
+            except:
+                ra_coord = []
+                dec_coord = []
+                cat_names = []
 
-                for i in range(len(ra_coord)):
-                    plt.text(ra_coord[i],
-                            dec_coord[i] + 0.5,
-                            cat_names[i], color="magenta", size=15, transform=ax.get_transform('world'))
-            except Exception as e:
-                logger.warn("can not plot known sources: %s", e)
+            plt.scatter(ra_coord, dec_coord, s=100, marker="o", facecolors='none',
+                        edgecolors='magenta', lw=3, label="known", zorder=5)
+
+            for i in range(len(ra_coord)):
+                plt.text(ra_coord[i],
+                         dec_coord[i] + 0.5,
+                         cat_names[i], color="magenta", size=15)
 
         plt.grid(color="grey", zorder=10)
 
@@ -192,10 +212,7 @@ class OdaImage(OdaProduct):
 
 
     def write_fits(self, file_prefix=''):
-        file_fn = f'{file_prefix}mosaic.fits'
-
-        self.data.mosaic_image_0_mosaic.write_fits_file(file_fn, overwrite=True)
-        return file_fn
+        self.data.mosaic_image_0_mosaic.write_fits_file(f'{file_prefix}mosaic.fits', overwrite=True)
     
     
     def extract_catalog_from_image(self, include_new_sources=False, det_sigma=5, objects_of_interest=[],
@@ -321,8 +338,6 @@ class OdaImage(OdaProduct):
 
 class OdaLightCurve(OdaProduct):
 
-    name = 'lightcurve'
-
     def get_lc(self, source_name, systematic_fraction=0):
 
         combined_lc = self.data
@@ -396,8 +411,7 @@ class OdaLightCurve(OdaProduct):
         plt = self.build_fig(in_source_name=in_source_name, systematic_fraction=systematic_fraction,
                              ng_sig_limit=ng_sig_limit, find_excesses=find_excesses)
 
-        for p in plt:
-            p.show()
+        plt.show()
 
     def build_fig(self,  in_source_name='', systematic_fraction=0, ng_sig_limit=0, find_excesses=False):
         #if ng_sig_limit <1 does not plot range
@@ -538,17 +552,8 @@ class OdaLightCurve(OdaProduct):
 
         return lc_fn, tstart, tstop, exposure
 
-    @staticmethod
-    def check_product_for_gallery(**kwargs):
-        if 'src_name' not in kwargs:
-            logger.warning('The src_name parameter is mandatory for a light-curve product\n')
-            raise api.UserError('the src_name parameter is mandatory for a light-curve product')
-        logger.info('Policy for a light-curve product successfully verified\n')
-        return True
-
 
 class OdaSpectrum(OdaProduct):
-    name = 'spectrum'
 
     def show_spectral_products(self):
 
@@ -592,8 +597,7 @@ class OdaSpectrum(OdaProduct):
         plt = self.build_fig(in_source_name=in_source_name, systematic_fraction=systematic_fraction,
                              xlim=xlim)
 
-        if plt is not None:
-            plt.show()
+        plt.show()
 
     def build_fig(self, in_source_name='', systematic_fraction=0, xlim=[]):
 
@@ -714,106 +718,3 @@ class OdaSpectrum(OdaProduct):
 
         return spec_fn, tstart, tstop, exposure
 
-    @staticmethod
-    def check_product_for_gallery(**kwargs):
-        if 'src_name' not in kwargs:
-            logger.warning('The src_name parameter is mandatory for a spectrum product\n')
-            raise api.UserError('the src_name parameter is mandatory for a spectrum product')
-
-        logger.info("Policy for a spectrum product successfully verified\n")
-        return True
-
-
-class OdaGWContours(OdaProduct):
-
-    # TODO to clarify the name, also for the gallery
-    name = 'contour'
-    
-    @staticmethod
-    def _plot_single_contour(contour_coords, ax, color='r'):
-        coords = numpy.array(contour_coords)
-        try:
-            ax.plot(coords[:,0], coords[:,1], '-', transform=ax.get_transform('world'), color = color)
-        except TypeError:
-            ax.plot(coords[:,0], coords[:,1], '-', transform=ax.get_transform(), color = color)
-
-    @staticmethod
-    def _plot_contour_list(contour_list, ax, color=None):
-        kwargs = {}
-        if color is not None:
-            kwargs['color'] = color
-        for contour_coords in contour_list:
-            OdaGWContours._plot_single_contour(contour_coords, ax, **kwargs)
-    
-    def plot_event_contours(self, event, legend=True, name_in_legend=True, colors = [], ax = None):
-        if ax is None:
-            ax = plt.axes(projection='astro hours mollweide')
-        
-        if not colors:
-            prop_cycle = plt.rcParams['axes.prop_cycle']
-            colors = prop_cycle.by_key()['color']
-        
-        lpr = []
-        names = []
-        if event in self.data.contours.keys():
-            for i in range(len(self.data.contours[event].levels)):
-                color = colors[i%len(colors)]
-                OdaGWContours._plot_contour_list(self.data.contours[event].contours[i], ax, color)
-                lpr.append(plt.Rectangle((0, 0), 1, 1, fc = color))
-                names.append(f"{self.data.contours[event].name+' ' if name_in_legend else ''}{self.data.contours[event].levels[i]}%")
-        else:
-            raise ValueError(f'Wrong event name: {event}')
-        
-        if legend is True:
-            ax.legend(lpr, names)
-            
-    def plot_contours(self, legend=True, colors = [], ax = None):
-        if ax is None:
-            ax = plt.axes(projection='astro hours mollweide')
-        
-        if not colors:
-            prop_cycle = plt.rcParams['axes.prop_cycle']
-            colors = prop_cycle.by_key()['color']
-        
-        lpr = []
-        names = []
-        i = 0
-        for event, data in self.data.contours.items():
-            color = colors[i%len(colors)]
-            self.plot_event_contours(event, ax = ax, colors = [color], legend = False)
-            i+=1
-            lpr.append(plt.Rectangle((0, 0), 1, 1, fc = color))
-            names.append(event)
-
-        if legend is True:
-            ax.legend(lpr, names, numpoints=1, bbox_to_anchor=(1.05, 1), loc='upper left')            
-        
-    def show(self, event_name = None):
-        fig = self.build_fig(event_name=event_name)
-
-        if fig is not None:
-            fig.show()
-
-    def get_image_for_gallery(self, event_name=None):
-        pic_name = None
-        fig = self.build_fig(event_name=event_name)
-
-        if fig is not None:
-            request_time = _time.time()
-            pic_name = str(request_time) + '_image.png'
-
-            fig.savefig(pic_name)
-
-        return pic_name
-
-    def build_fig(self, event_name = None):
-        fig = plt.figure()
-        if event_name is None:
-            self.plot_contours()
-        else:
-            self.plot_event_contours(event_name)
-        return fig
-
-    # TODO can an implementation of this method provided?
-    def write_fits(self):
-        raise NotImplementedError
