@@ -596,3 +596,26 @@ def test_comment(dispatcher_api, capsys):
     captured = capsys.readouterr()
     
     assert re.search(r'Please note that arguments?.*unkpar.*not used', captured.out)
+
+
+def test_storing(dispatcher_api):
+    disp = dispatcher_api
+
+    token_payload = {
+        **default_token_payload,
+        "roles": ["general", "integral-private-qla"],
+    }
+    encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
+
+    dc = disp.get_product(
+        product_type="Dummy",
+        instrument="empty",
+        product="numerical",
+        token=encoded_token
+    )
+
+    r = disp.response_json
+
+    disp.save_result(r)
+
+    assert disp.load_result() == r
