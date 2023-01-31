@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+import os.path
 from builtins import (str, open, range,
                       zip, round, input, int, pow, object, zip)
 
@@ -11,26 +12,35 @@ from builtins import (str, open, range,
 __author__ = "Carlo Ferrigno"
 
 import json
-
 import numpy
-from matplotlib import pylab as plt
-from matplotlib.widgets import Slider, Button, RadioButtons
-from matplotlib import cm
-import time as _time
+import copy
 
-import astropy.wcs as wcs
+from matplotlib import pylab as plt
+from matplotlib.widgets import Slider
+from matplotlib import cm
+
 from astropy import table
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astroquery.simbad import Simbad
-import copy
+
+import oda_api.api as api
+
+import time as _time
+import astropy.wcs as wcs
+
+# NOTE GW, optional
+try:
+    import ligo.skymap.plot
+except ModuleNotFoundError:
+    pass 
 
 import logging
 
 logger = logging.getLogger("oda_api.plot_tools")
 
-__all__ = ['OdaImage', 'OdaLightCurve']
+__all__ = ['OdaImage', 'OdaLightCurve', 'OdaGWContours', 'OdaSpectrum']
 
 
 class OdaProduct(object):
@@ -40,28 +50,39 @@ class OdaProduct(object):
         self.meta = None
         self.logger = logger.getChild(self.__class__.__name__.lower())
         self.progress_logger = self.logger.getChild("progress")
+        try:
+            self.instrument = data._p_list[0].data_unit[1].header['INSTRUME']
+        except:
+            self.logger.warning('No instrument in data collection')
+            self.instrument = 'none'
 
 
 class OdaImage(OdaProduct):
 
-    def get_image_for_gallery(self, data=None, meta=None, header=None, sources=None,
-             levels=None, cmap=cm.gist_earth, unit_ID=4, det_sigma=3):
-        plt = self.build_fig(data=data, meta=meta, header=header, sources=sources,
+    name = 'image'
+
+    def get_image_for_gallery(self, ext_sig=None, meta=None, header=None, sources=None,
+             levels=None, cmap=cm.gist_earth, unit_ID=4, det_sigma=3, output_folder=None):
+        plt = self.build_fig(ext_sig=ext_sig, meta=meta, header=header, sources=sources,
                               levels=levels, cmap=cmap, unit_ID=unit_ID, det_sigma=det_sigma, sliders=False)
 
         request_time = _time.time()
         pic_name = str(request_time) + '_image.png'
 
-        plt.savefig(pic_name)
+        pic_fn = pic_name
+        if output_folder is not None:
+            pic_fn = os.path.join(output_folder, pic_name)
 
-        return pic_name
+        plt.savefig(pic_fn)
 
-    def show(self, data=None, meta=None, header=None, sources=None,
+        return pic_fn
+
+    def show(self, ext_sig=None, meta=None, header=None, sources=None,
              levels=None, cmap=cm.gist_earth, unit_ID=4, det_sigma=3, sliders=True):
       
         """
         OdaImage.show
-        :param data: ODA data products, takes from class initialisation by default
+        :param ext_sig: ODA data products extension, takes from class initialisation by default
         :param meta: ODA data products metadata, takes from class initialisation by default
         :param header: ODA data product image header, takes from class initialisation by default
         :param sources: ODA catalog table, takes from class initialisation by default
@@ -73,20 +94,20 @@ class OdaImage(OdaProduct):
         :return: matplotlib figure instance
         """
 
-        plt = self.build_fig(data=data, meta=meta, header=header, sources=sources,
-                              levels=levels, cmap=cmap, unit_ID=unit_ID, det_sigma=det_sigma)
+        plt = self.build_fig(ext_sig=ext_sig, meta=meta, header=header, sources=sources,
+                              levels=levels, cmap=cmap, unit_ID=unit_ID, det_sigma=det_sigma, sliders=sliders)
 
         plt.show()
 
-    def build_fig(self, data=None, meta=None, header=None, sources=None,
+    def build_fig(self, ext_sig=None, meta=None, header=None, sources=None,
              levels=None, cmap=cm.gist_earth,
              unit_ID=4, det_sigma=3, sliders=True):
 
         if levels is None:
             levels = numpy.linspace(1, 10, 10)
 
-        if data is None:
-            data = self.data.mosaic_image_0_mosaic.data_unit[unit_ID].data
+        if ext_sig is None:
+            ext_sig = self.data.mosaic_image_0_mosaic.data_unit[unit_ID]
 
         if meta is None:
             self.meta = self.data.mosaic_image_0_mosaic.meta_data
@@ -97,95 +118,76 @@ class OdaImage(OdaProduct):
         if sources is None:
             sources = self.data.dispatcher_catalog_1.table
 
-        fig = plt.figure(figsize=(8, 6))
-
-        j, i = plt.meshgrid(range(data.shape[0]), range(data.shape[1]))
         w = wcs.WCS(header)
-        ra, dec = w.wcs_pix2world(numpy.column_stack([i.flatten(), j.flatten()]), 0).transpose()
-        ra = ra.reshape(i.shape)
-        dec = dec.reshape(j.shape)
 
-        data = numpy.transpose(data)
+        fig = plt.figure(figsize=(8, 8./1.62))
+        ax = plt.subplot(projection=w)
+        
+        data = ext_sig.data
+
         data = numpy.ma.masked_equal(data, numpy.NaN)
 
-        zero_crossing = False
-
-        if numpy.abs(ra.max() - 360.0) < 0.1 and numpy.abs(ra.min()) < 0.1:
-            zero_crossing = True
-            ind_ra = ra > 180.
-            ra[ind_ra] -= 360.
-            ind_sort = numpy.argsort(ra, axis=-1)
-            ra = numpy.take_along_axis(ra, ind_sort, axis=-1)
-            data = numpy.take_along_axis(data, ind_sort, axis=-1)
-
-        self.cs = plt.contourf(ra, dec, data, cmap=cmap, levels=levels,
+        self.cs = plt.contourf(data, cmap=cmap, levels=levels,
                                extend="both", zorder=0)
         self.cs.cmap.set_under('k')
         self.cs.set_clim(numpy.min(levels), numpy.max(levels))
 
         self.cb = plt.colorbar(self.cs)
 
-        plt.xlim([ra.max(), ra.min()])
-        plt.ylim([dec.min(), dec.max()])
-
         if len(sources) > 0:
             ras = numpy.array([x for x in sources['ra']])
             decs = numpy.array([x for x in sources['dec']])
-            names = numpy.array([x for x in sources['src_names']])
-            sigmas = numpy.array([x for x in sources['significance']])
+            if 'src_names' in sources.columns:
+                names = numpy.array([x for x in sources['src_names']])
+                # Defines relevant indexes for plotting regions
+                m_new = numpy.array(['NEW' in name for name in names])
+            if 'significance' in sources.columns:
+                sigmas = numpy.array([x for x in sources['significance']])
 
-            # Defines relevant indexes for plotting regions
-            m_new = numpy.array(['NEW' in name for name in names])
 
             # plot new sources as pink circles
-            try:
-                m = m_new & (sigmas > det_sigma)
+            
+            m = m_new & (sigmas > det_sigma)
+            if numpy.sum(m) > 0:
                 ra_coord = ras[m]
                 dec_coord = decs[m]
                 new_names = names[m]
-                if zero_crossing:
-                    ind_ra = ra_coord > 180.
-                    try:
-                        ra_coord[ind_ra] -= 360.
-                    except:
-                        pass
-            except:
+                plt.scatter(ra_coord, dec_coord, s=100, marker="o", facecolors='none',
+                        edgecolors='pink',
+                        lw=3, label="NEW any", zorder=5, transform=ax.get_transform('world'))
+            else:
                 ra_coord = []
                 dec_coord = []
                 new_names = []
 
-            plt.scatter(ra_coord, dec_coord, s=100, marker="o", facecolors='none',
-                        edgecolors='pink',
-                        lw=3, label="NEW any", zorder=5)
-
             for i in range(len(ra_coord)):
                 plt.text(ra_coord[i],
                          dec_coord[i] + 0.5,
-                         new_names[i], color="pink", size=15)
+                         new_names[i], color="pink", size=15, transform=ax.get_transform('world'))
 
-            try:
-                m = ~m_new & (sigmas > det_sigma - 1)
+            # fallback for general catalog (e.g. legacysurvey)
+            if not 'src_names' in sources.columns or not 'significance' in sources.columns:
+                ra_coord = ras
+                dec_coord = decs
+                plt.scatter(ra_coord, dec_coord, s=30, marker="o", facecolors='none',
+                            edgecolors='magenta', lw=0.5, zorder=5, transform=ax.get_transform('world'))
+            
+            m = ~m_new & (sigmas > det_sigma - 1)
+            if numpy.sum(m) > 0:
                 ra_coord = ras[m]
                 dec_coord = decs[m]
                 cat_names = names[m]
-                if zero_crossing:
-                    ind_ra = ra_coord > 180.
-                    try:
-                        ra_coord[ind_ra] -= 360.
-                    except:
-                        pass
-            except:
+                plt.scatter(ra_coord, dec_coord, s=100, marker="o", facecolors='none',
+                        edgecolors='magenta', lw=3, label="known", zorder=5, transform=ax.get_transform('world'))
+            else:
                 ra_coord = []
                 dec_coord = []
                 cat_names = []
 
-            plt.scatter(ra_coord, dec_coord, s=100, marker="o", facecolors='none',
-                        edgecolors='magenta', lw=3, label="known", zorder=5)
-
             for i in range(len(ra_coord)):
                 plt.text(ra_coord[i],
                          dec_coord[i] + 0.5,
-                         cat_names[i], color="magenta", size=15)
+                         cat_names[i], color="magenta", size=15, transform=ax.get_transform('world'))
 
         plt.grid(color="grey", zorder=10)
 
@@ -205,14 +207,85 @@ class OdaImage(OdaProduct):
 
         return fig
 
+    @staticmethod
+    def get_js9_html(file_path, region_file=None, js9_id='myJS9',
+                     base_url='/mmoda/gallery/sites/default/files'):
+        region = ''
+        file = 'JS9.Preload("%s/%s"' % (base_url, file_path)
+
+        if region_file is not None:
+            file += ', {scale: \'log\', colormap: \'plasma\', onload: function(im){JS9.SetZoom(1); ' + \
+                    'JS9.DisplayCoordGrid(true); JS9.LoadRegions("%s/%s");}}, {display: "%s"});' % (
+                    base_url, region_file, js9_id)
+        else:
+            file += ', {scale: \'log\', colormap: \'plasma\', onload: function(im){JS9.DisplayCoordGrid(true);}, {display: "%s"});' % (
+                js9_id)
+
+        t = '''                                                                                                                                                                             
+    <html>                                                                                                                                                                                     
+                <head>                                                                                                                                                                         
+                  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">                                                                                                          
+                  <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" >                                                                                                              
+                  <meta name="viewport" content="width=device-width, initial-scale=1">                                                                                                         
+                  <link type="image/x-icon" rel="shortcut icon" href="./favicon.ico">                                                                                                          
+                  <link type="text/css" rel="stylesheet" href="../libraries/js9/js9support.css">                                                                                                            
+                  <link type="text/css" rel="stylesheet" href="../libraries/js9/js9.css">                                                                                                                   
+                  <script type="text/javascript" src="../libraries/js9/js9prefs.js"></script>                                                                                                               
+                  <script type="text/javascript" src="../libraries/js9/js9support.min.js"></script>                                                                                                         
+                  <script type="text/javascript" src="../libraries/js9/js9.min.js"></script>                                                                                                                
+                  <script type="text/javascript" src="../libraries/js9/js9plugins.js"></script>                                                                                                             
+                    </head>                                                                                                                                                                    
+                <body>                                                                                                                                                                         
+
+
+                <center><font size="+1">                                                                                                                                                       
+                </font></center>                                                                                                                                                               
+                <table cellspacing="30">                                                                                                                                                       
+                <tr valign="top">                                                                                                                                                              
+        <td>                                                                                                                                                                              
+                </td>                                                                                                                                                                          
+        <td>                                                                                                                                                                                   
+                <tr valign="top">                                                                                                                                                              
+                <td>                                                                                                                                                                           
+                <div class="JS9Menubar"  id="%sMenubar" ></div>
+                <div class="JS9Colorbar" id="%sColorbar" ></div>
+                <div class="JS9" id="%s"></div>                                                                                                                                                        
+                </td>                                                                                                                                                                          
+                <td>                                                                                                                                                                           
+
+                <p>                                                                                                                                                                            
+                </td>                                                                                                                                                                          
+                </tr>                                                                                                                                                                          
+                </table>                                                                                                                                                                       
+                <script type="text/javascript">                                                                                                                                                
+                  function init(){                                                                                                                                                             
+                     var idx, obj;
+                     JS9.imageOpts.wcsunits = "degrees";
+                     %s                
+                  }
+                  $(document).ready(function(){                                                                                                                                                
+                    init();
+                   });                                                                                                                                                                          
+                </script>                                                                                                                                                                      
+
+            </body>                                                                                                                                                                            
+    </html>                                                                                                                                                                                    
+
+    ''' % (js9_id, js9_id, js9_id, file)
+
+        return t
 
     def update(self, x):
         if self.smin.val < self.smax.val:
             self.cs.set_clim(self.smin.val, self.smax.val)
 
 
-    def write_fits(self, file_prefix=''):
-        self.data.mosaic_image_0_mosaic.write_fits_file(f'{file_prefix}mosaic.fits', overwrite=True)
+    def write_fits(self, file_prefix='', output_dir='.'):
+
+        file_fn = os.path.join(output_dir, f'{file_prefix}mosaic.fits')
+
+        self.data.mosaic_image_0_mosaic.write_fits_file(file_fn, overwrite=True)
+        return file_fn
     
     
     def extract_catalog_from_image(self, include_new_sources=False, det_sigma=5, objects_of_interest=[],
@@ -338,6 +411,9 @@ class OdaImage(OdaProduct):
 
 class OdaLightCurve(OdaProduct):
 
+    name = 'lightcurve'
+    used_source_name = ''
+
     def get_lc(self, source_name, systematic_fraction=0):
 
         combined_lc = self.data
@@ -347,9 +423,11 @@ class OdaLightCurve(OdaProduct):
         hdu = None
         for j, dd in enumerate(combined_lc._p_list):
             self.logger.debug(dd.meta_data['src_name'])
-            if dd.meta_data['src_name'] == source_name or dd.meta_data['src_name'] == patched_source_name:
+            if dd.meta_data['src_name'] == source_name or dd.meta_data['src_name'] == patched_source_name or \
+                    dd.meta_data['src_name'] == 'query':
+                self.used_source_name = dd.meta_data['src_name']
                 for ii, du in enumerate(dd.data_unit):
-                    if 'LC' in du.name:
+                    if 'LC' in du.name or 'RATE' in du.name:
                         hdu = du.to_fits_hdu()
 
         if hdu is None:
@@ -369,15 +447,27 @@ class OdaLightCurve(OdaProduct):
         ind = numpy.logical_and(ind, dy > 0)
         self.logger.debug("Final length of light curve %d " % numpy.sum(ind))
 
-        try:
+        if 'E_MIN' in hdu.header:
             e_min = hdu.header['E_MIN']
-        except:
-            e_min = 0
+        else:
+            if self.instrument == 'SPI-ACS':
+                self.logger.debug('e_min set to 75 keV as the instrument is SPI-ACS')
+                e_min = 75
+            else:
+                e_min = 0
 
-        try:
+        if 'E_MAX' in hdu.header:
             e_max = hdu.header['E_MAX']
-        except:
-            e_max = 0
+        else:
+            if self.instrument == 'SPI-ACS':
+                self.logger.debug('e_max set to 2000 keV as the instrument is SPI-ACS')
+                e_max = 2000
+            else:
+                e_max = 0
+        if self.instrument == 'SPI-ACS':
+            self.timezero = hdu.header['TIMEZERO'] / 86400. + hdu.header['MJDREF']
+            from astropy.time import Time
+            self.timezero_utc = Time(self.timezero, format='mjd').iso
 
         #This could only be valid for ISGRI
         try:
@@ -385,33 +475,41 @@ class OdaLightCurve(OdaProduct):
             self.logger.debug('Get time bin directly from light curve')
         except:
             timedel = hdu.header['TIMEDEL']
-            timepix = hdu.header['TIMEPIXR']
+            if 'TIMEPIXR' in hdu.header:
+                timepix = hdu.header['TIMEPIXR']
+            else:
+                timepix = 0.5
             t_lc = hdu.data['TIME'] + (0.5 - timepix) * timedel
             dt_lc = t_lc.copy() * 0.0 + timedel / 2
             for i in range(len(t_lc) - 1):
-                dt_lc[i + 1] = min(timedel / 2, t_lc[i + 1] - t_lc[i] - dt_lc[i])
+                dt_lc[i + 1] = numpy.fabs(min(timedel / 2, t_lc[i + 1] - t_lc[i] - dt_lc[i]))
             self.logger.debug('Computed time bin from TIMEDEL')
 
         return x[ind], dt_lc[ind], y[ind], dy[ind], e_min, e_max
 
-    def get_image_for_gallery(self, in_source_name='', systematic_fraction=0, ng_sig_limit=0, find_excesses=False):
+    def get_image_for_gallery(self, in_source_name='', systematic_fraction=0, ng_sig_limit=0, find_excesses=False, output_folder=None):
         plts = self.build_fig(in_source_name=in_source_name, systematic_fraction=systematic_fraction,
                              ng_sig_limit=ng_sig_limit, find_excesses=find_excesses)
 
         request_time = _time.time()
         pic_name = str(request_time) + '_image.png'
 
-        if len(plts) == 1:
-            plts[0].savefig(pic_name)
+        pic_fn = pic_name
+        if output_folder is not None:
+            pic_fn = os.path.join(output_folder, pic_name)
 
-        return pic_name
+        if len(plts) == 1:
+            plts[0].savefig(pic_fn)
+
+        return pic_fn
 
     def show(self, in_source_name='', systematic_fraction=0, ng_sig_limit=0, find_excesses=False):
 
         plt = self.build_fig(in_source_name=in_source_name, systematic_fraction=systematic_fraction,
                              ng_sig_limit=ng_sig_limit, find_excesses=find_excesses)
 
-        plt.show()
+        for p in plt:
+            p.show()
 
     def build_fig(self,  in_source_name='', systematic_fraction=0, ng_sig_limit=0, find_excesses=False):
         #if ng_sig_limit <1 does not plot range
@@ -435,10 +533,13 @@ class OdaLightCurve(OdaProduct):
 
             std_dev = numpy.std(y)
 
-            figs.append(plt.figure())
+            figs.append(plt.figure(figsize=(8, 8./1.62)))
             _ = plt.errorbar(x, y, xerr=dx, yerr=dy, marker='o', capsize=0, linestyle='', label='Lightcurve')
             _ = plt.axhline(meany, color='green', linewidth=3)
-            _ = plt.xlabel('Time [IJD]')
+            if self.instrument == 'SPI-ACS':
+                _ = plt.xlabel('seconds since %s UTC' % self.timezero_utc)
+            else:
+                _ = plt.xlabel('Time [IJD]')
             if e_min == 0 or e_max ==0:
                 _ = plt.ylabel('Rate')
             else:
@@ -490,10 +591,10 @@ class OdaLightCurve(OdaProduct):
 
     @staticmethod
     def plot_zoom(x, y, dy, i, n_before=5, n_after=15, save_plot=True, name_base='burst_at_'):
-        fig = plt.figure()
+        fig = plt.figure(figsize=(8, 8./1.62))
         _ = plt.errorbar(x[i-n_before:i+n_after], y[i-n_before:i+n_after], yerr=dy[i-n_before:i+n_after],
                          marker='o', capsize=0, linestyle='', label='Lightcurve')
-        _ = plt.xlabel('Time [IJD]')
+        _ = plt.xlabel('Time')
         _ = plt.ylabel('Rate')
         if save_plot:
             _ = plt.savefig(name_base+'%d.png' % i)
@@ -552,8 +653,46 @@ class OdaLightCurve(OdaProduct):
 
         return lc_fn, tstart, tstop, exposure
 
+    @staticmethod
+    def check_product_for_gallery(**kwargs):
+        if 'src_name' not in kwargs:
+            logger.warning('The src_name parameter is mandatory for a light-curve product\n')
+            raise api.UserError('the src_name parameter is mandatory for a light-curve product')
+        logger.info('Policy for a light-curve product successfully verified\n')
+        return True
+
+    def get_html_image(self, source_name, systematic_fraction, color='blue'):
+        import cdci_data_analysis.analysis.plot_tools
+        x, dx, y, dy, e_min, e_max = self.get_lc(source_name, systematic_fraction)
+        mask = numpy.logical_not(numpy.isnan(y))
+
+        x = x[mask]
+        dx = dx[mask]
+        y = y[mask]
+        dy = dy[mask]
+        if self.instrument == 'SPI-ACS':
+            xlabel = 'seconds since %s UTC' % self.timezero_utc
+        else:
+            xlabel = 'Time [IJD]'
+
+        sp = cdci_data_analysis.analysis.plot_tools.ScatterPlot(w=800, h=600,
+                                                                x_label=xlabel,
+                                                                y_label='Rate (%.0f - %.0f keV)' % (e_min, e_max),
+                                                                title=source_name)
+
+        sp.add_errorbar(x, y, yerr=dy, xerr=dx, color=color)
+        html_dict = sp.get_html_draw()
+
+        html_str = html_dict['div'] + '\n'
+        html_str += '<script src="https://cdn.bokeh.org/bokeh/release/bokeh-2.4.2.min.js"></script>\n' + \
+                    '<script src="https://cdn.bokeh.org/bokeh/release/bokeh-widgets-2.4.2.min.js"></script>\n'
+        html_str += html_dict['script']
+
+        return html_str
+
 
 class OdaSpectrum(OdaProduct):
+    name = 'spectrum'
 
     def show_spectral_products(self):
 
@@ -573,41 +712,76 @@ class OdaSpectrum(OdaProduct):
 
         specprod = [l for l in self.data._p_list if l.meta_data['src_name'] == in_source_name]
 
-        if (len(specprod) < 1):
+        if len(specprod) < 1:
             self.logger.warning("source %s not found in spectral products" % in_source_name)
             return None
 
         return specprod
 
-    def get_image_for_gallery(self, in_source_name='', systematic_fraction=0, xlim=[]):
-        pic_name = None
+    def get_image_for_gallery(self, in_source_name='', systematic_fraction=0, xlim=None, output_folder=None):
+        if xlim is None:
+            xlim = []
+        pic_fn = None
         plt = self.build_fig(in_source_name=in_source_name, systematic_fraction=systematic_fraction,
                              xlim=xlim)
 
         if plt is not None:
             request_time = _time.time()
             pic_name = str(request_time) + '_image.png'
+            pic_fn = pic_name
+            if output_folder is not None:
+                pic_fn = os.path.join(output_folder, pic_name)
 
-            plt.savefig(pic_name)
+            plt.savefig(pic_fn)
 
-        return pic_name
+        return pic_fn
 
     def show(self, in_source_name='', systematic_fraction=0, xlim=[]):
 
         plt = self.build_fig(in_source_name=in_source_name, systematic_fraction=systematic_fraction,
                              xlim=xlim)
 
-        plt.show()
+        if plt is not None:
+            plt.show()
 
-    def build_fig(self, in_source_name='', systematic_fraction=0, xlim=[]):
+    def get_html_image(self, in_source_name, systematic_fraction, x_range=None, y_range=None, color='blue'):
+        import cdci_data_analysis.analysis.plot_tools
+
+        x, dx, y, dy = self.get_values(in_source_name, systematic_fraction)
+
+        if x_range is None:
+            x_range = [x.min(), x.max()]
+        if y_range is None:
+            y_range = [numpy.max([1e-4, (y-dy)[x < x_range[1]].min()]), (y+dy).max()]
+
+        sp = cdci_data_analysis.analysis.plot_tools.ScatterPlot(w=800, h=600,
+                                                                x_label="Energy [keV]",
+                                                                y_label='Counts/s/keV',
+                                                                x_axis_type='log',
+                                                                y_axis_type='log',
+                                                                x_range=x_range,
+                                                                y_range=y_range,
+                                                                title=in_source_name)
+        if len(x) == 0:
+            return ''
+        sp.add_errorbar(x, y, yerr=dy, xerr=dx, color=color)
+        html_dict = sp.get_html_draw()
+
+        html_str = html_dict['div'] + '\n'
+        html_str += '<script src="https://cdn.bokeh.org/bokeh/release/bokeh-2.4.2.min.js"></script>\n' + \
+                    '<script src="https://cdn.bokeh.org/bokeh/release/bokeh-widgets-2.4.2.min.js"></script>\n'
+        html_str += html_dict['script']
+
+        return html_str
+
+    def get_values(self, in_source_name='', systematic_fraction=0):
 
         if in_source_name == '':
-            self.show_spectral_products()
-            return
-
+            return [], [], [], []
         specprod = self.get_spectrum_products(in_source_name)
+
         if specprod is None:
-            return
+            return [], [], [], []
 
         spec = specprod[0].data_unit[1].to_fits_hdu()
         for hh in specprod[2].data_unit:
@@ -618,8 +792,26 @@ class OdaSpectrum(OdaProduct):
         dx = (ebounds.data['E_MAX'] - ebounds.data['E_MIN']) / 2.
         y = spec.data['RATE']
         dy = numpy.sqrt(spec.data['STAT_ERR']**2 + spec.data['SYS_ERR']**2 + (y*systematic_fraction)**2)
+        mask = numpy.logical_not(numpy.isnan(y))
+        x = x[mask]
+        dx = dx[mask]
+        y = y[mask]
+        dy = dy[mask]
+        y /= dx
+        dy /= dx
+        return x, dx, y, dy
 
-        fig = plt.figure()
+    def build_fig(self, in_source_name='', systematic_fraction=0, xlim=[]):
+
+        if in_source_name == '':
+            self.show_spectral_products()
+            return
+
+        x , dx, y, dy = self.get_values(in_source_name, systematic_fraction)
+        if len(x) == 0:
+            return
+
+        fig = plt.figure(figsize=(8, 8./1.62))
         _ = plt.errorbar(x, y, xerr=dx, yerr=dy, marker='o', capsize=0, linestyle='', label='spectrum')
 
         _ = plt.xlabel('Energy [keV]')
@@ -718,3 +910,110 @@ class OdaSpectrum(OdaProduct):
 
         return spec_fn, tstart, tstop, exposure
 
+    @staticmethod
+    def check_product_for_gallery(**kwargs):
+        if 'src_name' not in kwargs:
+            logger.warning('The src_name parameter is mandatory for a spectrum product\n')
+            raise api.UserError('the src_name parameter is mandatory for a spectrum product')
+
+        logger.info("Policy for a spectrum product successfully verified\n")
+        return True
+
+
+class OdaGWContours(OdaProduct):
+
+    # TODO to clarify the name, also for the gallery
+    name = 'contour'
+    
+    @staticmethod
+    def _plot_single_contour(contour_coords, ax, color='r'):
+        coords = numpy.array(contour_coords)
+        try:
+            ax.plot(coords[:,0], coords[:,1], '-', transform=ax.get_transform('world'), color = color)
+        except TypeError:
+            ax.plot(coords[:,0], coords[:,1], '-', transform=ax.get_transform(), color = color)
+
+    @staticmethod
+    def _plot_contour_list(contour_list, ax, color=None):
+        kwargs = {}
+        if color is not None:
+            kwargs['color'] = color
+        for contour_coords in contour_list:
+            OdaGWContours._plot_single_contour(contour_coords, ax, **kwargs)
+    
+    def plot_event_contours(self, event, legend=True, name_in_legend=True, colors = [], ax = None):
+        if ax is None:
+            ax = plt.axes(projection='astro hours mollweide')
+        
+        if not colors:
+            prop_cycle = plt.rcParams['axes.prop_cycle']
+            colors = prop_cycle.by_key()['color']
+        
+        lpr = []
+        names = []
+        if event in self.data.contours.keys():
+            for i in range(len(self.data.contours[event].levels)):
+                color = colors[i%len(colors)]
+                OdaGWContours._plot_contour_list(self.data.contours[event].contours[i], ax, color)
+                lpr.append(plt.Rectangle((0, 0), 1, 1, fc = color))
+                names.append(f"{self.data.contours[event].name+' ' if name_in_legend else ''}{self.data.contours[event].levels[i]}%")
+        else:
+            raise ValueError(f'Wrong event name: {event}')
+        
+        if legend is True:
+            ax.legend(lpr, names)
+            
+    def plot_contours(self, legend=True, colors = [], ax = None):
+        if ax is None:
+            ax = plt.axes(projection='astro hours mollweide')
+        
+        if not colors:
+            prop_cycle = plt.rcParams['axes.prop_cycle']
+            colors = prop_cycle.by_key()['color']
+        
+        lpr = []
+        names = []
+        i = 0
+        for event, data in self.data.contours.items():
+            color = colors[i%len(colors)]
+            self.plot_event_contours(event, ax = ax, colors = [color], legend = False)
+            i+=1
+            lpr.append(plt.Rectangle((0, 0), 1, 1, fc = color))
+            names.append(event)
+
+        if legend is True:
+            ax.legend(lpr, names, numpoints=1, bbox_to_anchor=(1.05, 1), loc='upper left')            
+        
+    def show(self, event_name = None):
+        fig = self.build_fig(event_name=event_name)
+
+        if fig is not None:
+            fig.show()
+
+    def get_image_for_gallery(self, event_name=None, output_folder=None):
+        pic_fn = None
+        fig = self.build_fig(event_name=event_name)
+
+        if fig is not None:
+            request_time = _time.time()
+            pic_name = str(request_time) + '_image.png'
+
+            pic_fn = pic_name
+            if output_folder is not None:
+                pic_fn = os.path.join(output_folder, pic_name)
+
+            fig.savefig(pic_fn)
+
+        return pic_fn
+
+    def build_fig(self, event_name=None):
+        fig = plt.figure(figsize=(8, 8./1.62))
+        if event_name is None:
+            self.plot_contours()
+        else:
+            self.plot_event_contours(event_name)
+        return fig
+
+    # TODO can an implementation of this method provided?
+    def write_fits(self):
+        raise NotImplementedError
