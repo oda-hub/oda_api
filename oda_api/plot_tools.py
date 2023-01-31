@@ -383,7 +383,18 @@ class OdaLightCurve(OdaProduct):
             dt_lc = t_lc.copy() * 0.0 + timedel / 2
             for i in range(len(t_lc) - 1):
                 dt_lc[i + 1] = min(timedel / 2, t_lc[i + 1] - t_lc[i] - dt_lc[i])
+                
             self.logger.debug('Computed time bin from TIMEDEL')
+
+        m_negative_bins = dt_lc < 0
+        if numpy.sum(m_negative_bins) > 0:
+            self.logger.debug('found negative time bins at %s: disabling them', x[m_negative_bins])
+            x[m_negative_bins] = numpy.NaN
+            dt_lc[m_negative_bins] = numpy.NaN
+            y[m_negative_bins] = numpy.NaN
+            dy[m_negative_bins] = numpy.NaN
+
+        print(">>>", dt_lc[m_negative_bins], ">>>", m_negative_bins, ">>>", numpy.sum(m_negative_bins))
 
         return x[ind], dt_lc[ind], y[ind], dy[ind], e_min, e_max
 
