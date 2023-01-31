@@ -69,8 +69,8 @@ def test_get(dispatcher_live_fixture, caplog):
     result = runner.invoke(cli.cli, ['-u', dispatcher_live_fixture, 'get'], obj={})
     assert result.exit_code == 0
 
-    assert "found instruments: ['empty', 'empty-async', 'empty-semi-async', 'empty-development']" in caplog.text or \
-           "found instruments: ['empty', 'empty-async', 'empty-semi-async', 'empty-development', 'isgri', 'jemx', 'osa_fake']" in caplog.text
+    assert "found instruments: ['empty', 'empty-async', 'empty-semi-async']" in caplog.text or \
+           "found instruments: ['empty', 'empty-async', 'empty-semi-async', 'isgri', 'jemx', 'osa_fake']" in caplog.text
 
     runner = CliRunner()
     result = runner.invoke(cli.cli, ['-u', dispatcher_live_fixture, 'get', '-i', 'empty'], obj={})
