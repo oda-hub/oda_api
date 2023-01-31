@@ -393,9 +393,7 @@ class OdaLightCurve(OdaProduct):
             dt_lc[m_negative_bins] = numpy.NaN
             y[m_negative_bins] = numpy.NaN
             dy[m_negative_bins] = numpy.NaN
-
-        print(">>>", dt_lc[m_negative_bins], ">>>", m_negative_bins, ">>>", numpy.sum(m_negative_bins))
-
+        
         return x[ind], dt_lc[ind], y[ind], dy[ind], e_min, e_max
 
     def get_image_for_gallery(self, in_source_name='', systematic_fraction=0, ng_sig_limit=0, find_excesses=False):
