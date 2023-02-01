@@ -1341,7 +1341,9 @@ data_collection = disp.get_product(**par_dict)
 
         os.makedirs(os.path.dirname(fn), exist_ok=True)
 
-        json.dump(response_json, gzip.open(fn, "wt"))
+        with gzip.open(fn, "wt") as f:
+            json.dump(response_json, f)
+            
         logger.info('saved result in %s', fn)
 
 
@@ -1350,7 +1352,9 @@ data_collection = disp.get_product(**par_dict)
         logger.info('trying to load result from %s', fn)
 
         t0 = time.time()
-        r = json.load(gzip.open(fn, 'rb'))
+
+        with gzip.open(fn, 'rt') as f:
+            r = json.load(f)
     
         logger.info('\033[32mmanaged to load result\033[0m from %s in %.2f seconds', fn, time.time() - t0)
         return r
