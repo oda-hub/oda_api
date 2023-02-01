@@ -1,7 +1,10 @@
 from __future__ import absolute_import, division, print_function
 
 from collections import OrderedDict
+import gzip
+import hashlib
 from json.decoder import JSONDecodeError
+import pathlib
 
 import rdflib
 import typing
@@ -199,6 +202,8 @@ class DispatcherAPI:
     # but in desirable way
     token_discovery_methods = None
 
+    use_local_cache = False
+
     _known_sites_dict = None
 
     @property
@@ -231,6 +236,7 @@ class DispatcherAPI:
                  wait=True,
                  n_max_tries=200,
                  session_id=None,
+                 use_local_cache=False,
                  ):
 
         self.setup_loggers()
@@ -299,6 +305,8 @@ class DispatcherAPI:
                 "please use 'url' to specify entire URL, no need to provide port separately")
 
         self._progress_iter = cycle(['|', '/', '-', '\\'])
+
+        self.use_local_cache = use_local_cache
 
         # TODO this should really be just swagger/bravado; or at least derived from resources
         self.dispatcher_response_schema = {
@@ -438,6 +446,13 @@ class DispatcherAPI:
         return self.preferred_request_method
 
     def request_to_json(self, verbose=False):
+        if self.use_local_cache:
+            try:
+                return self.load_result()            
+            except Exception as e:
+                logger.debug('unable to load result from %s: will need to compute', self.unique_response_json_fn)        
+
+
         self.progress_logger.info(
             f'- waiting for remote response (since {time.strftime("%Y-%m-%d %H:%M:%S")}), please wait for {self.url}/{self.run_analysis_handle}')
 
@@ -521,6 +536,9 @@ class DispatcherAPI:
             validate_json(response_json, self.dispatcher_response_schema)
 
             self.returned_analysis_parameters = response_json['products'].get('analysis_parameters', None)
+
+            if self.use_local_cache and response_json.get('query_status') in ['done', 'failed']:
+                self.save_result(response_json)
 
             return response_json
         except json.decoder.JSONDecodeError as e:
@@ -1316,6 +1334,37 @@ data_collection = disp.get_product(**par_dict)
 '''
 
         return _cmd_
+
+
+    def save_result(self, response_json):
+        fn = self.unique_response_json_fn
+
+        os.makedirs(os.path.dirname(fn), exist_ok=True)
+
+        with gzip.open(fn, "wt") as f:
+            json.dump(response_json, f)
+            
+        logger.info('saved result in %s', fn)
+
+
+    def load_result(self):
+        fn = self.unique_response_json_fn
+        logger.info('trying to load result from %s', fn)
+
+        t0 = time.time()
+
+        with gzip.open(fn, 'rt') as f:
+            r = json.load(f)
+    
+        logger.info('\033[32mmanaged to load result\033[0m from %s in %.2f seconds', fn, time.time() - t0)
+        return r
+        
+
+    @property
+    def unique_response_json_fn(self):
+        request_hash = hashlib.md5(self.set_api_code(self.parameters_dict).encode()).hexdigest()[:16]        
+        return pathlib.Path(os.getenv('ODA_CACHE', pathlib.Path(os.getenv('HOME')) / ".cache/oda-api")) / f"cache/oda_api_data_collection_{request_hash}.json.gz"
+
 
     def __repr__(self):
         return f"[ {self.__class__.__name__}: {self.url} ]"
