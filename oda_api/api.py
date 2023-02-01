@@ -202,6 +202,8 @@ class DispatcherAPI:
     # but in desirable way
     token_discovery_methods = None
 
+    use_local_cache = False
+
     _known_sites_dict = None
 
     @property
@@ -234,6 +236,7 @@ class DispatcherAPI:
                  wait=True,
                  n_max_tries=200,
                  session_id=None,
+                 use_local_cache=False,
                  ):
 
         self.setup_loggers()
@@ -302,6 +305,8 @@ class DispatcherAPI:
                 "please use 'url' to specify entire URL, no need to provide port separately")
 
         self._progress_iter = cycle(['|', '/', '-', '\\'])
+
+        self.use_local_cache = use_local_cache
 
         # TODO this should really be just swagger/bravado; or at least derived from resources
         self.dispatcher_response_schema = {
@@ -441,10 +446,11 @@ class DispatcherAPI:
         return self.preferred_request_method
 
     def request_to_json(self, verbose=False):
-        try:
-            return self.load_result()            
-        except Exception as e:
-            logger.debug('unable to load result from %s: will need to compute', self.unique_response_json_fn)        
+        if self.use_local_cache:
+            try:
+                return self.load_result()            
+            except Exception as e:
+                logger.debug('unable to load result from %s: will need to compute', self.unique_response_json_fn)        
 
 
         self.progress_logger.info(
@@ -531,7 +537,7 @@ class DispatcherAPI:
 
             self.returned_analysis_parameters = response_json['products'].get('analysis_parameters', None)
 
-            if response_json.get('query_status') in ['done', 'failed']:
+            if self.use_local_cache and response_json.get('query_status') in ['done', 'failed']:
                 self.save_result(response_json)
 
             return response_json
