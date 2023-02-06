@@ -58,7 +58,7 @@ def dispatcher_api(dispatcher_live_fixture):
 @pytest.fixture
 def dispatcher_api_with_gallery(dispatcher_live_fixture_with_gallery):
     import oda_api
-    disp = oda_api.api.DispatcherAPI(
+    disp = oda_api.gallery_api.GalleryDispatcherAPI(
         url=dispatcher_live_fixture_with_gallery
     )
     disp.allow_token_discovery = False
