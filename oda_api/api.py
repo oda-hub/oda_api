@@ -1140,7 +1140,7 @@ data_collection = disp.get_product(**par_dict)
 
     @property
     def unique_response_json_fn(self):
-        request_hash = hashlib.md5(self.set_api_code(self.parameters_dict).encode()).hexdigest()[:16]        
+        request_hash = oda_api.misc_helpers.make_hash(self.set_api_code(self.parameters_dict))
         return pathlib.Path(os.getenv('ODA_CACHE', pathlib.Path(os.getenv('HOME')) / ".cache/oda-api")) / f"cache/oda_api_data_collection_{request_hash}.json.gz"
 
 
