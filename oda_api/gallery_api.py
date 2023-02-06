@@ -15,6 +15,9 @@ import inspect
 
 logger = logging.getLogger("oda_api.gallery_api")
 
+
+__all__ = ['GalleryDispatcherAPI']
+
 class GalleryDispatcherAPI(DispatcherAPI):
 
     def get_list_terms_gallery(self,

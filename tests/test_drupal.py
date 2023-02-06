@@ -12,6 +12,7 @@ from datetime import datetime
 
 import oda_api
 import oda_api.api
+import oda_api.gallery_api
 from cdci_data_analysis.analysis.drupal_helper import get_observations_for_time_range, get_user_id, generate_gallery_jwt_token
 from test_basic import  default_token_payload, secret_key
 
@@ -55,9 +56,7 @@ def test_image_product_gallery(dispatcher_api_with_gallery, dispatcher_test_conf
         "detection_threshold": "7.0",
         "instrument": instrument,
         "integral_data_rights": "public",
-        "oda_api_version": "1.1.22",
         "off_line": "False",
-        "osa_version": "OSA11.1",
         "product": product_name,
         "product_type": "Dummy",
         'token': encoded_token
@@ -162,9 +161,7 @@ def test_light_curve_product_gallery(dispatcher_api_with_gallery, dispatcher_tes
         "detection_threshold": "7.0",
         "instrument": "isgri",
         "integral_data_rights": "public",
-        "oda_api_version": "1.1.22",
         "off_line": "False",
-        "osa_version": "OSA11.1",
         "product": product_name,
         "product_type": "Dummy",
     }
@@ -303,7 +300,6 @@ def test_spectrum_product_gallery(dispatcher_api_with_gallery, dispatcher_test_c
         "instrument": "isgri",
         "integral_data_rights": "public",
         "off_line": "False",
-        "osa_version": "OSA11.1",
         "product": "isgri_spectrum",
         "product_type": "Dummy",
     }
@@ -699,7 +695,6 @@ def test_update_product_gallery(dispatcher_api_with_gallery, dispatcher_test_con
         "instrument": "isgri",
         "integral_data_rights": "public",
         "off_line": "False",
-        "osa_version": "OSA11.1",
         "product": "isgri_spectrum",
         "product_type": "Dummy",
     }
