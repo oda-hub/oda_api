@@ -28,8 +28,6 @@ CL.txt
 /doc/source/user_guide/*.png
 /doc/source/user_guide/*.fits
 /doc/source/user_guide/*.root
-/doc/source/user_guide/ScienceWindowList-Copy1.ipynb
-/doc/source/user_guide/Untitled.ipynb
 /doc/source/user_guide/chains
 #!/doc/source/user_guide/*ipynb
 #!/doc/source/user_guide/TestAPI_files
