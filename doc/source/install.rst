@@ -3,7 +3,7 @@ Installation
 
 Download code
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-https://github.com/oda-hub/oda_api/archive/refs/tags/v1.1.33.tar.gz
+https://github.com/oda-hub/oda_api/archive/refs/tags/v1.1.34-dev0.tar.gz
 
 Installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
