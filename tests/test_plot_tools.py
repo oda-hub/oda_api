@@ -24,8 +24,7 @@ def test_image_no_sources():
     from oda_api.plot_tools import OdaImage
 
     oda_image = OdaImage(None)
-    oda_image.build_fig(data=np.zeros((100, 100)), 
-                        header=WCS().to_header(),
+    oda_image.build_fig(header=WCS().to_header(),
                         meta={"src_name": "testsource"},
                         sources=[])
 
