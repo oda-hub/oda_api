@@ -1,9 +1,9 @@
 requests
 future
-astropy<5.0.0
+astropy
 json_tricks
 matplotlib
-numpy<1.23.0 # astropy issue: module 'numpy' has no attribute 'asscalar' 
+numpy
 jsonschema
 astroquery
 -e git+https://github.com/oda-hub/dispatcher-app.git@master#egg=cdci_data_analysis[test]

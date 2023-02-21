@@ -23,8 +23,12 @@ lib64
 /doc/build
 CL.txt
 /venv
+/tests/observation_yaml_dummy_files/*
 #/doc/source/user_guide*
-#!/doc/source/user_guide/*rst
+/doc/source/user_guide/*.png
+/doc/source/user_guide/*.fits
+/doc/source/user_guide/*.root
+/doc/source/user_guide/chains
 #!/doc/source/user_guide/*ipynb
 #!/doc/source/user_guide/TestAPI_files
 *.gpg

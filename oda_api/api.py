@@ -7,8 +7,6 @@ from json.decoder import JSONDecodeError
 import pathlib
 
 import rdflib
-import typing
-from astropy.coordinates import Angle
 
 # NOTE gw is optional for now
 try:
@@ -49,7 +47,6 @@ import pickle
 from . import __version__
 from . import custom_formatters
 from . import colors as C
-from . import plot_tools
 from itertools import cycle
 import numpy as np
 import traceback
@@ -383,6 +380,17 @@ class DispatcherAPI:
     def generate_session_id(self, size=16):
         chars = string.ascii_uppercase + string.digits
         return ''.join(random.choice(chars) for _ in range(size))
+
+    @classmethod
+    def calculate_param_dict_id(cls,
+                      par_dict: dict):
+
+        ordered_par_dic = OrderedDict({
+            k: par_dict[k] for k in sorted(par_dict.keys())
+            if par_dict[k] is not None
+        })
+
+        return oda_api.misc_helpers.make_hash(ordered_par_dic)
 
     @property
     def session_id(self):
@@ -964,236 +972,6 @@ class DispatcherAPI:
         self.logger.info(
             f"{C.GREY}last request completed in {self.last_request_t_complete - self.last_request_t0} seconds{C.NC}")
 
-    def get_list_terms_gallery(self,
-                               group: typing.Optional[str] = None,
-                               parent: typing.Optional[str] = None,
-                               parent_id: typing.Optional[str] = None,
-                               token: typing.Optional[str] = None
-                               ):
-        logger.debug("Getting the list of available instruments on the gallery")
-        params = {
-            'group': group,
-            'parent': parent,
-            'parent_id': parent_id,
-            'token': token
-        }
-
-        res = requests.get("%s/get_list_terms" % self.url,
-                           params={**params}
-                           )
-        response_json = self._decode_res_json(res)
-
-        if res.status_code != 200:
-            logger.warning(f"An issue occurred while getting the list of terms from the group {group}, "
-                           f"from the product gallery : {res.text}")
-        else:
-            logger.info(f"List of terms from the group {group} successfully returned")
-
-        return response_json
-
-    def post_data_product_to_gallery(self,
-                                     product_title: typing.Optional[str] = None,
-                                     observation_id: typing.Optional[str] = None,
-                                     gallery_image_path: typing.Optional[str] = None,
-                                     fits_file_path=None,
-                                     token: typing.Optional[str] = None,
-                                     insert_new_source: bool = False,
-                                     validate_source: bool = False,
-                                     force_insert_not_valid_new_source: bool = False,
-                                     apply_fields_source_resolution: bool = True,
-                                     **kwargs):
-        """
-
-        :param product_title: title to assign to the product, in case this is not provided, then a title is
-                automatically built using the name of the source and the type of product
-        :param observation_id:  this can be indicated in two different ways
-            * by specifying the id of an already present observation (eg 'test observation')
-            * by specifying the time range, in particular the value of T1 and T2 in the following format '2003-03-15T23:27:40.0'
-        :param gallery_image_path: path of the generated image and to be uploaded over the gallery
-        :param fits_file_path: a list of fits file links used for the generation of the product to upload over the gallery
-        :param token: user token
-        :param insert_new_source: a boolean value to specify if, in case a source currently not available on the
-               product gallery is passed within the parameters, this will be created and then used for the newly created
-               data product
-        :param validate_source: a boolean value to specify if, in case a source is passed within the parameters,
-               this will be validated against an online service
-        :param force_insert_not_valid_new_source: a boolean value to specify if, in case a source is passed within the
-                parameters and its validation fails, this should be provided as a parameter for the data product
-        :param apply_fields_source_resolution: a boolean value to specify if, in case a source is passed within the
-                parameters and then successfully validated, to apply the parameters values returned from the validation
-                (an example of these parameters are RA and DEC)
-        :param kwargs: keyword arguments representing the main parameters values used to generate the product. Amongst them,
-               it is important to mention the following ones:
-            * instrument: name of the instrument used for the generated product (e.g. isgri, jemx1)
-            * product_type: type of product generated (e.g. isgri_lc, jemx_image)
-            * src_name: name of the source used
-            * others: other parameters used for the product. Not all the parameters are currently supported,
-                but the list of the supported ones will be extended. RA=25
-
-        """
-
-        # apply policy for the specific data product
-        # use the product_type, if provided, and apply the policy, if applicable
-        self.check_gallery_data_product_policy(token=token, **kwargs)
-
-        copied_kwargs = kwargs.copy()
-
-        # generate file obj
-        files_obj = {}
-        if gallery_image_path is not None:
-            files_obj['img'] = open(gallery_image_path, 'rb')
-        if fits_file_path is not None:
-            if isinstance(fits_file_path, list):
-                for fits_path in fits_file_path:
-                    files_obj['fits_file_' + str(fits_file_path.index(fits_path))] = open(fits_path, 'rb')
-            elif isinstance(fits_file_path, str):
-                files_obj['fits_file'] = open(fits_file_path, 'rb')
-
-        # validate source
-        src_name = kwargs.get('src_name', None)
-        if src_name is not None and validate_source:
-            resolved_source = False
-            # remove any underscore (following the logic of the resolver) and use the edited one
-            copied_kwargs['src_name'] = src_name.replace('_', ' ')
-            resolved_obj = self.resolve_source(src_name=src_name, token=token)
-            if resolved_obj is not None:
-                msg = ''
-                if 'message' in resolved_obj:
-                    if 'could not be resolved' in resolved_obj['message']:
-                        msg = f'\nSource {src_name} could not be validated'
-                    elif 'successfully resolved' in resolved_obj['message']:
-                        resolved_source = True
-                        msg = f'\nSource {src_name} was successfully validated'
-                msg += '\n'
-                logger.info(msg)
-                if 'RA' in resolved_obj and apply_fields_source_resolution:
-                    RA = Angle(resolved_obj["RA"], unit='degree')
-                    copied_kwargs['RA'] = RA.deg
-                if 'DEC' in resolved_obj and apply_fields_source_resolution:
-                    DEC = Angle(resolved_obj["DEC"], unit='degree')
-                    copied_kwargs['DEC'] = DEC.deg
-                if 'entity_portal_link' in resolved_obj and apply_fields_source_resolution:
-                    copied_kwargs['entity_portal_link'] = resolved_obj['entity_portal_link']
-            else:
-                logger.warning(f"{src_name} could not be validated")
-
-            if src_name is not None and not resolved_source and not force_insert_not_valid_new_source:
-                # a source won't be added
-                logger.warning(f"the specified source will not be added")
-                copied_kwargs.pop('src_name', None)
-
-        params = {
-            'content_type': 'data_product',
-            'product_title': product_title,
-            'observation_id': observation_id,
-            'token': token,
-            'insert_new_source': insert_new_source,
-            **copied_kwargs
-        }
-
-        res = requests.post("%s/post_product_to_gallery" % self.url,
-                            params={**params},
-                            files=files_obj
-                            )
-        response_json = self._decode_res_json(res)
-
-        if res.status_code != 200:
-            logger.warning(f"An issue occurred while posting on the product gallery: {res.text}")
-        else:
-            self.check_missing_parameters_data_product(response_json, token=token, **kwargs)
-
-            product_posted_link = response_json['_links']['self']['href'].split("?")[0]
-            logger.info(f"Product successfully posted on the gallery, at the link {product_posted_link}\n"
-                        f"Using the above link you can modify the newly created product in the future.\n"
-                        f"For example, you will be able to change the instrument as well as the product type.\n")
-
-        return response_json
-
-    def resolve_source(self,
-                       src_name: typing.Optional[str] = None,
-                       token: typing.Optional[str] = None):
-        resolved_obj = None
-        if src_name is not None and src_name != '':
-            params = {
-                'name': src_name,
-                'token': token
-            }
-
-            logger.info(f"Searching the object {src_name}\n")
-
-            res = requests.get("%s/resolve_name" % self.url,
-                               params={**params}
-                               )
-            resolved_obj = self._decode_res_json(res)
-
-            if resolved_obj is not None and 'message' in resolved_obj:
-                logger.info(f'{resolved_obj["message"]}')
-        else:
-            logger.info("Please provide the name of the source\n")
-
-        return resolved_obj
-
-    def check_gallery_data_product_policy(self,
-                                          token: typing.Optional[str] = None,
-                                          **kwargs):
-        product_type = kwargs.get('product_type', None)
-        if product_type is not None and product_type != '':
-            params = {
-                'term': product_type,
-                'group': 'products',
-                'token': token
-            }
-
-            logger.info(f"Applying the policy for the product {product_type}\n")
-
-            res = requests.get("%s/get_parents_term" % self.url,
-                               params={**params}
-                               )
-            parents_term_list = self._decode_res_json(res)
-
-            if parents_term_list is not None and isinstance(parents_term_list, list):
-                # loop over the available ODAProduct from the plot_tools and find the correspondent one
-                for name, c in inspect.getmembers(plot_tools, inspect.isclass):
-                    if issubclass(c, plot_tools.OdaProduct) \
-                            and hasattr(c, 'name') and c.name is not None and c.name in parents_term_list \
-                            and hasattr(c, 'check_product_for_gallery'):
-                        return c.check_product_for_gallery(**kwargs)
-            logger.info(f"A policy for the product_type {product_type} could not be applied\n")
-        else:
-            logger.info("A product_type has not been provided for the given data product, "
-                        "therefore no policy will be verified\n")
-
-        return True
-
-    def check_missing_parameters_data_product(self, response, token: typing.Optional[str] = None, **kwargs):
-        missing_instrument = True
-        instrument_used = None
-        missing_product_type = True
-        if '_links' in response:
-            for field_link in response['_links']:
-                field = field_link.split('/')[-1]
-                if field == 'field_instrumentused':
-                    missing_instrument = False
-                    instrument_used = kwargs.get('instrument', None)
-                elif field == 'field_data_product_type':
-                    missing_product_type = False
-
-        if missing_instrument:
-            list_instruments = self.get_list_terms_gallery(group='instruments', token=token)
-            logger.info(f'\nWe noticed no instrument has been specified, the following are available:\n'
-                        f'{list_instruments}\n'
-                        'Please remember that this can be set at a later stage by editing the newly created data product.\n')
-
-        if missing_product_type:
-            if not missing_instrument and instrument_used is not None:
-                list_instrument_data_products = self.get_list_terms_gallery(group='products', parent=instrument_used,
-                                                                            token=token)
-                if list_instrument_data_products is not None:
-                    logger.info(f'\nWe noticed no product type has been specified,\n'
-                                f'for the instrument {instrument_used}, the following products are available:\n'
-                                f'{list_instrument_data_products}\n'
-                                'Please remember that this can be set at a later stage by editing the newly created data product.\n')
-
     def get_product(self,
                     product: str,
                     instrument: str,
@@ -1362,7 +1140,7 @@ data_collection = disp.get_product(**par_dict)
 
     @property
     def unique_response_json_fn(self):
-        request_hash = hashlib.md5(self.set_api_code(self.parameters_dict).encode()).hexdigest()[:16]        
+        request_hash = oda_api.misc_helpers.make_hash(self.set_api_code(self.parameters_dict))
         return pathlib.Path(os.getenv('ODA_CACHE', pathlib.Path(os.getenv('HOME')) / ".cache/oda-api")) / f"cache/oda_api_data_collection_{request_hash}.json.gz"
 
 
