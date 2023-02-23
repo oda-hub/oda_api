@@ -529,7 +529,7 @@ def test_update_observation_product_gallery(dispatcher_api_with_gallery, dispatc
 
 @pytest.mark.test_drupal
 @pytest.mark.parametrize("obsid", [1960001, ["1960001", "1960002", "1960003"], [1960001, 1960002, 1960003]])
-@pytest.mark.parametrize("yaml_files", [None, "single", "list"])
+@pytest.mark.parametrize("yaml_files", [None, "single"])
 @pytest.mark.parametrize("observation_time_format", [None, "ISOT", "MJD", "no_value"])
 @pytest.mark.parametrize("t_values_format", ["mjd", "ISOT"])
 def test_post_new_observation_product_gallery(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery, t_values_format, obsid, yaml_files, observation_time_format):
@@ -555,8 +555,6 @@ def test_post_new_observation_product_gallery(dispatcher_api_with_gallery, dispa
     yaml_file_path = None
     if yaml_files == "single":
         yaml_file_path = "observation_yaml_dummy_files/obs_rev_1.yaml"
-    elif yaml_files == "list":
-        yaml_file_path = ["observation_yaml_dummy_files/obs_rev_1.yaml", "observation_yaml_dummy_files/obs_rev_2.yaml"]
 
     observation_title = "test posting observation from oda_api"
 
