@@ -539,7 +539,6 @@ class GalleryDispatcherAPI(DispatcherAPI):
                             params={**params},
                             files=files_obj
                             )
-        response_json = self._decode_res_json(res)
 
         if res.status_code != 200:
             res_obj = res.json()
@@ -553,6 +552,7 @@ class GalleryDispatcherAPI(DispatcherAPI):
                 error_message += res.text
             logger.warning(error_message)
         else:
+            response_json = self._decode_res_json(res)
             action = 'posted'
             if product_id is not None and response_json['created'][0]['value'] != response_json['changed'][0]['value']:
                 action = 'updated'
