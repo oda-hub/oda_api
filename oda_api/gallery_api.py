@@ -539,20 +539,20 @@ class GalleryDispatcherAPI(DispatcherAPI):
                             params={**params},
                             files=files_obj
                             )
-        response_json = self._decode_res_json(res)
 
         if res.status_code != 200:
-            res_obj = res.json()
+            response_json = res.json()
             error_message = (f"An issue occurred while performing a request on the product gallery, "
                              f"the following error was returned:\n")
-            if 'error_message' in res_obj:
-                error_message += '\n' + res_obj['error_message']
-                if 'drupal_helper_error_message' in res_obj:
-                    error_message += '-' + res_obj['drupal_helper_error_message']
+            if 'error_message' in response_json:
+                error_message += '\n' + response_json['error_message']
+                if 'drupal_helper_error_message' in response_json:
+                    error_message += '-' + response_json['drupal_helper_error_message']
             else:
                 error_message += res.text
             logger.warning(error_message)
         else:
+            response_json = self._decode_res_json(res)
             action = 'posted'
             if product_id is not None and response_json['created'][0]['value'] != response_json['changed'][0]['value']:
                 action = 'updated'
