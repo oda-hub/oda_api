@@ -1,12 +1,9 @@
 import pathlib
 import pytest
 
-from cdci_data_analysis.pytest_fixtures import DispatcherJobState
-
 
 @pytest.mark.live
 def test_plot_tools_notebook(request):
-    DispatcherJobState.remove_scratch_folders()
     import papermill as pm
 
     in_nb = pathlib.Path(request.fspath.dirname) / "../doc/source/user_guide/Show_and_Save_Products.ipynb"
@@ -20,3 +17,41 @@ def test_plot_tools_notebook(request):
         log_level="DEBUG",
         log_output=True
     )
+
+@pytest.mark.xfail(reason="fails")
+def test_image_no_sources():
+    import numpy as np
+    from astropy.wcs import WCS
+    from oda_api.plot_tools import OdaImage
+
+    oda_image = OdaImage(None)
+    oda_image.build_fig(header=WCS().to_header(),
+                        meta={"src_name": "testsource"},
+                        sources=[])
+
+
+def test_lc_adjustend_bins(request):
+    import numpy as np
+    from oda_api.plot_tools import OdaLightCurve
+    from oda_api.api import NumpyDataProduct, DataCollection
+    from astropy.table import Table
+
+    lc_fn = pathlib.Path(request.fspath.dirname) / "test_data/lc.fits"
+
+    lc_data = Table.read(lc_fn)
+
+    t = lc_data['TIME']
+    i = np.argmin(t[1:]-t[:-1])
+    print(lc_data[i:i+2])
+
+    # both bins have the same timestamp
+    assert lc_data[i:i+2]['TIME'].std() < 1e-10
+
+    # two parts of the same bin
+    assert lc_data[i:i+2]['FRACEXP'].sum() <= 1 
+    
+    oda_lc = OdaLightCurve(DataCollection([
+        NumpyDataProduct.from_fits_file(lc_fn, meta_data={"src_name": "test_source"})
+    ]))
+
+    oda_lc.build_fig()    
