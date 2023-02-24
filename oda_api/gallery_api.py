@@ -548,6 +548,10 @@ class GalleryDispatcherAPI(DispatcherAPI):
             except json.decoder.JSONDecodeError:
                 error_msg = res.text
                 response_json = {'error_message': error_msg}
+            except Exception as e:
+                error_msg = res
+                response_json = {'error_message': error_msg}
+                logger.debug(response_json)
 
             if 'error_message' in response_json:
                 error_message += '\n' + response_json['error_message']
