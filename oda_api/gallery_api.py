@@ -549,7 +549,7 @@ class GalleryDispatcherAPI(DispatcherAPI):
                 error_msg = res.text
                 response_json = {'error_message': error_msg}
             except Exception as e:
-                error_msg = res
+                error_msg = res.text
                 response_json = {'error_message': error_msg}
                 logger.debug(response_json)
 
