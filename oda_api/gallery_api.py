@@ -129,6 +129,36 @@ class GalleryDispatcherAPI(DispatcherAPI):
 
         return response_json
 
+
+    def get_list_products_by_source_name(self,
+                                 source_name: str = None,
+                                 token: str = None):
+
+        params = {
+            'token': token,
+            'src_name': source_name
+        }
+
+        res = requests.get(os.path.join(self.url, "get_data_product_list_by_source_name"),
+                         params=params
+                         )
+
+        if res.status_code != 200:
+            response_json = res.json()
+            error_message = (f"An issue occurred while performing a request on the product gallery, "
+                             f"the following error was returned:\n")
+            if 'error_message' in response_json:
+                error_message += '\n' + response_json['error_message']
+                if 'drupal_helper_error_message' in response_json:
+                    error_message += '-' + response_json['drupal_helper_error_message']
+            else:
+                error_message += res.text
+            logger.warning(error_message)
+        else:
+            response_json = self._decode_res_json(res)
+
+        return response_json
+
     def update_source_with_name(self,
                                  source_name: str = None,
                                  auto_update: bool = False,
