@@ -766,28 +766,49 @@ def test_update_product_gallery(dispatcher_api_with_gallery, dispatcher_test_con
 
 
 @pytest.mark.test_drupal
-def test_product_gallery_get_product_list_by_source_name(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery):
+@pytest.mark.parametrize("source_name", ["new", "known"])
+def test_product_gallery_get_product_list_by_source_name(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery, source_name):
     # let's generate a valid token
     token_payload = {
         **default_token_payload,
         "roles": "general, gallery contributor",
     }
-    source_name = 'test astro entity' + '_' + str(uuid.uuid4())
     encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
-    product_title = 'test same source different name'
     disp = dispatcher_api_with_gallery
-    disp.post_data_product_to_gallery(product_title=product_title,
-                                      token=encoded_token,
-                                      insert_new_source=True,
-                                      src_name=source_name)
 
-    product_list_given_source = disp.get_list_products_by_source_name(source_name=source_name,
-                                                                      token=encoded_token)
+    if source_name == 'new':
+        source_name = 'test astro entity' + '_' + str(uuid.uuid4())
+        product_title = 'test same source different name'
+        disp.post_data_product_to_gallery(product_title=product_title,
+                                          token=encoded_token,
+                                          insert_new_source=True,
+                                          src_name=source_name)
 
-    assert isinstance(product_list_given_source, list)
-    assert len(product_list_given_source) == 1
-    assert 'title' in product_list_given_source[0]
-    assert product_list_given_source[0]['title'] == product_title
+        product_list_given_source = disp.get_list_products_by_source_name(source_name=source_name,
+                                                                          token=encoded_token)
+
+        assert isinstance(product_list_given_source, list)
+        assert len(product_list_given_source) == 1
+        assert 'title' in product_list_given_source[0]
+        assert product_list_given_source[0]['title'] == product_title
+    else:
+        source_name = "V404 Cyg"
+        product_list_given_source_name = disp.get_list_products_by_source_name(source_name=source_name,
+                                                                               token=encoded_token)
+        source_name = "1RXS J202405.3+335157"
+        product_list_given_alternative_name = disp.get_list_products_by_source_name(source_name=source_name,
+                                                                                    token=encoded_token)
+
+        # Create sets of dictionaries
+        set1 = set(map(lambda d: frozenset(d.items()), product_list_given_source_name))
+        set2 = set(map(lambda d: frozenset(d.items()), product_list_given_alternative_name))
+
+        # Find the differences
+        diff1 = set1 - set2
+        diff2 = set2 - set1
+
+        assert diff2 == set()
+        assert diff1 == set()
 
 
 @pytest.mark.test_drupal
