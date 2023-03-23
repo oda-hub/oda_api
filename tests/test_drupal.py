@@ -795,9 +795,13 @@ def test_product_gallery_get_product_list_by_source_name(dispatcher_api_with_gal
         source_name = "V404 Cyg"
         product_list_given_source_name = disp.get_list_products_by_source_name(source_name=source_name,
                                                                                token=encoded_token)
+
+        print(f"List product for source {source_name}: {product_list_given_source_name}")
+
         source_name = "1RXS J202405.3+335157"
         product_list_given_alternative_name = disp.get_list_products_by_source_name(source_name=source_name,
                                                                                     token=encoded_token)
+        print(f"List product for source {source_name}: {product_list_given_alternative_name}")
 
         # Create sets of dictionaries
         set1 = set(map(lambda d: frozenset(d.items()), product_list_given_source_name))
