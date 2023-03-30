@@ -541,15 +541,23 @@ class GalleryDispatcherAPI(DispatcherAPI):
                             )
 
         if res.status_code != 200:
-            response_json = res.json()
             error_message = (f"An issue occurred while performing a request on the product gallery, "
                              f"the following error was returned:\n")
+            try:
+                response_json = res.json()
+            except json.decoder.JSONDecodeError:
+                error_msg = res.text
+                response_json = {'error_message': error_msg}
+            except Exception as e:
+                error_msg = res.text
+                response_json = {'error_message': error_msg}
+                logger.debug(response_json)
+
             if 'error_message' in response_json:
                 error_message += '\n' + response_json['error_message']
                 if 'drupal_helper_error_message' in response_json:
                     error_message += '-' + response_json['drupal_helper_error_message']
-            else:
-                error_message += res.text
+
             logger.warning(error_message)
         else:
             response_json = self._decode_res_json(res)
