@@ -321,20 +321,26 @@ class GalleryDispatcherAPI(DispatcherAPI):
                             params={**params},
                             files=files_obj
                             )
-        response_json = self._decode_res_json(res)
 
         if res.status_code != 200:
-            res_obj = res.json()
             error_message = (f"An issue occurred while performing a request on the product gallery, "
                              f"the following error was returned:\n")
-            if 'error_message' in res_obj:
-                error_message += '\n' + res_obj['error_message']
-                if 'drupal_helper_error_message' in res_obj:
-                    error_message += '-' + res_obj['drupal_helper_error_message']
+            try:
+                response_json = res.json()
+            except json.decoder.JSONDecodeError:
+                error_msg = res.text
+                response_json = {'error_message': error_msg}
+                logger.debug(response_json)
+
+            if 'error_message' in response_json:
+                error_message += '\n' + response_json['error_message']
+                if 'drupal_helper_error_message' in response_json:
+                    error_message += '-' + response_json['drupal_helper_error_message']
             else:
                 error_message += res.text
             logger.warning(error_message)
         else:
+            response_json = self._decode_res_json(res)
             observation_link = response_json['_links']['self']['href'].split("?")[0]
             observation_title = response_json['title'][0]['value']
             logger.info(f"Observation with title {observation_title} successfully posted on the gallery, at the link {observation_link}\n"
@@ -578,9 +584,6 @@ class GalleryDispatcherAPI(DispatcherAPI):
             try:
                 response_json = res.json()
             except json.decoder.JSONDecodeError:
-                error_msg = res.text
-                response_json = {'error_message': error_msg}
-            except Exception as e:
                 error_msg = res.text
                 response_json = {'error_message': error_msg}
                 logger.debug(response_json)
