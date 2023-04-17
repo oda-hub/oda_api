@@ -1,3 +1,5 @@
+import hashlib
+
 from .api import DispatcherAPI, UserError
 from . import plot_tools
 
@@ -420,9 +422,9 @@ class GalleryDispatcherAPI(DispatcherAPI):
             elif isinstance(yaml_file_path, str):
                 files_obj['yaml_file'] = open(yaml_file_path, 'rb')
         if html_image is not None:
-            if tmp_path_html_folder_path is None:
-                tmp_path_html_folder_path = tempfile.mkdtemp(suffix="gallery_temp_files")
-            tmp_path_html_file_path = os.path.join(tmp_path_html_folder_path, 'additional_html_file.html')
+            html_image_hash = hashlib.md5(html_image.encode()).hexdigest()[:8]
+            tmp_path_html_folder_path = tempfile.mkdtemp(suffix="gallery_temp_files")
+            tmp_path_html_file_path = os.path.join(tmp_path_html_folder_path, f'additional_html_file_{html_image_hash}.html')
             with open(tmp_path_html_file_path, "w") as f_html:
                 f_html.write(html_image)
 
