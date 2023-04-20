@@ -419,7 +419,21 @@ class OdaLightCurve(OdaProduct):
     used_source_name = ''
 
     def get_lc(self, source_name, systematic_fraction=0):
+        """_summary_
 
+        Args:
+            source_name (str): Source name to get the LC, for SPI-ACS, use 'query'
+            systematic_fraction (int, optional): relative systematic error to add in quadrature. Defaults to 0.
+
+        Returns:
+            numpy array time
+            numpy array delta_time, 
+            numpy array  rate
+            numpy array  rate_error
+            float e_min 
+            float e_max
+            _type_: _description_
+        """        
         combined_lc = self.data
         # In LC name has no "-" nor "+" ??????
         patched_source_name = source_name.replace('-', ' ').replace('+', ' ')
