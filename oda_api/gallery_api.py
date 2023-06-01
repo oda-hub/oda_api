@@ -1,3 +1,5 @@
+import hashlib
+
 from .api import DispatcherAPI, UserError
 from . import plot_tools
 
@@ -126,6 +128,36 @@ class GalleryDispatcherAPI(DispatcherAPI):
 
             logger.info(msg)
 
+
+        return response_json
+
+
+    def get_list_products_by_source_name(self,
+                                 source_name: str = None,
+                                 token: str = None):
+
+        params = {
+            'token': token,
+            'src_name': source_name
+        }
+
+        res = requests.get(os.path.join(self.url, "get_data_product_list_by_source_name"),
+                         params=params
+                         )
+
+        if res.status_code != 200:
+            response_json = res.json()
+            error_message = (f"An issue occurred while performing a request on the product gallery, "
+                             f"the following error was returned:\n")
+            if 'error_message' in response_json:
+                error_message += '\n' + response_json['error_message']
+                if 'drupal_helper_error_message' in response_json:
+                    error_message += '-' + response_json['drupal_helper_error_message']
+            else:
+                error_message += res.text
+            logger.warning(error_message)
+        else:
+            response_json = self._decode_res_json(res)
 
         return response_json
 
@@ -289,20 +321,26 @@ class GalleryDispatcherAPI(DispatcherAPI):
                             params={**params},
                             files=files_obj
                             )
-        response_json = self._decode_res_json(res)
 
         if res.status_code != 200:
-            res_obj = res.json()
             error_message = (f"An issue occurred while performing a request on the product gallery, "
                              f"the following error was returned:\n")
-            if 'error_message' in res_obj:
-                error_message += '\n' + res_obj['error_message']
-                if 'drupal_helper_error_message' in res_obj:
-                    error_message += '-' + res_obj['drupal_helper_error_message']
+            try:
+                response_json = res.json()
+            except json.decoder.JSONDecodeError:
+                error_msg = res.text
+                response_json = {'error_message': error_msg}
+                logger.debug(response_json)
+
+            if 'error_message' in response_json:
+                error_message += '\n' + response_json['error_message']
+                if 'drupal_helper_error_message' in response_json:
+                    error_message += '-' + response_json['drupal_helper_error_message']
             else:
                 error_message += res.text
             logger.warning(error_message)
         else:
+            response_json = self._decode_res_json(res)
             observation_link = response_json['_links']['self']['href'].split("?")[0]
             observation_title = response_json['title'][0]['value']
             logger.info(f"Observation with title {observation_title} successfully posted on the gallery, at the link {observation_link}\n"
@@ -390,9 +428,9 @@ class GalleryDispatcherAPI(DispatcherAPI):
             elif isinstance(yaml_file_path, str):
                 files_obj['yaml_file'] = open(yaml_file_path, 'rb')
         if html_image is not None:
-            if tmp_path_html_folder_path is None:
-                tmp_path_html_folder_path = tempfile.mkdtemp(suffix="gallery_temp_files")
-            tmp_path_html_file_path = os.path.join(tmp_path_html_folder_path, 'additional_html_file.html')
+            html_image_hash = hashlib.md5(html_image.encode()).hexdigest()[:8]
+            tmp_path_html_folder_path = tempfile.mkdtemp(suffix="gallery_temp_files")
+            tmp_path_html_file_path = os.path.join(tmp_path_html_folder_path, f'additional_html_file_{html_image_hash}.html')
             with open(tmp_path_html_file_path, "w") as f_html:
                 f_html.write(html_image)
 
@@ -539,20 +577,25 @@ class GalleryDispatcherAPI(DispatcherAPI):
                             params={**params},
                             files=files_obj
                             )
-        response_json = self._decode_res_json(res)
 
         if res.status_code != 200:
-            res_obj = res.json()
             error_message = (f"An issue occurred while performing a request on the product gallery, "
                              f"the following error was returned:\n")
-            if 'error_message' in res_obj:
-                error_message += '\n' + res_obj['error_message']
-                if 'drupal_helper_error_message' in res_obj:
-                    error_message += '-' + res_obj['drupal_helper_error_message']
-            else:
-                error_message += res.text
+            try:
+                response_json = res.json()
+            except json.decoder.JSONDecodeError:
+                error_msg = res.text
+                response_json = {'error_message': error_msg}
+                logger.debug(response_json)
+
+            if 'error_message' in response_json:
+                error_message += '\n' + response_json['error_message']
+                if 'drupal_helper_error_message' in response_json:
+                    error_message += '-' + response_json['drupal_helper_error_message']
+
             logger.warning(error_message)
         else:
+            response_json = self._decode_res_json(res)
             action = 'posted'
             if product_id is not None and response_json['created'][0]['value'] != response_json['changed'][0]['value']:
                 action = 'updated'
