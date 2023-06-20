@@ -929,12 +929,19 @@ class DispatcherAPI:
             raise RemoteException(message=msg)
 
     @safe_run
-    def get_instrument_description(self, instrument=None):
+    def get_instrument_description(self, instrument=None, token=None):
+
         if instrument is None:
             instrument = self.instrument
 
+        if token is None and self.token_discovery_methods is not None:
+            discovered_token = oda_api.token.discover_token(self.token_discovery_methods)
+            if discovered_token is not None:
+                logger.info("discovered token in environment")
+                token = discovered_token
+
         res = requests.get("%s/api/meta-data" % self.url,
-                           params=dict(instrument=instrument), cookies=self.cookies)
+                           params=dict(instrument=instrument, token=token), cookies=self.cookies)
 
         if res.status_code != 200:
             raise UnexpectedDispatcherStatusCode(
@@ -957,10 +964,17 @@ class DispatcherAPI:
         return self._decode_res_json(res)
 
     @safe_run
-    def get_instruments_list(self):
+    def get_instruments_list(self, token=None):
+
+        if token is None and self.token_discovery_methods is not None:
+            discovered_token = oda_api.token.discover_token(self.token_discovery_methods)
+            if discovered_token is not None:
+                logger.info("discovered token in environment")
+                token = discovered_token
+
         # print ('instr',self.instrument)
         res = requests.get("%s/api/instr-list" % self.url,
-                           params=dict(instrument=self.instrument), cookies=self.cookies)
+                           params=dict(instrument=self.instrument, token=token), cookies=self.cookies)
 
         if res.status_code != 200:
             raise UnexpectedDispatcherStatusCode(
