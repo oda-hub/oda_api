@@ -6,7 +6,7 @@ matplotlib
 numpy
 jsonschema
 astroquery
--e git+https://github.com/oda-hub/dispatcher-app.git@freeze-version-python-shell-colors#egg=cdci_data_analysis[test]
+-e git+https://github.com/oda-hub/dispatcher-app.git#egg=cdci_data_analysis[test]
 simplejson
 sentry_sdk
 rdflib
