@@ -103,6 +103,7 @@ def test_instrument_description_not_null():
     if token is not None:
         print("there was a token as env var")
 
+    token=None
     if os.path.exists(os.path.join(os.getcwd(), ".oda-token")):
         with open(os.path.join(os.getcwd(), ".oda-token")) as ft:
             token = ft.read().strip()
@@ -110,6 +111,7 @@ def test_instrument_description_not_null():
         print(f"there was a token in the .oda-token file of the current folder: {os.getcwd()}")
         os.remove(os.path.join(os.getcwd(), ".oda-token"))
 
+    token = None
     if os.path.exists(os.path.join(os.environ["HOME"], ".oda-token")):
         with open(os.path.join(os.environ["HOME"], ".oda-token")) as ft:
             token = ft.read().strip()
