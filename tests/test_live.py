@@ -91,33 +91,12 @@ def test_instruments():
     assert {'isgri', 'jemx', 'polar', 'antares', 'gw', 'spi_acs', 'legacysurvey'} - set(disp.get_instruments_list()) == set()
 
 
-def test_instrument_description_not_null():
+def test_instrument_description_not_null(remove_any_token_from_environment):
     from oda_api.api import DispatcherAPI
     disp = DispatcherAPI(
         host=get_platform_dispatcher(),
         instrument="mock",
     )
-
-    # remove any token
-    token = os.environ.pop('ODA_TOKEN', None)
-    if token is not None:
-        print("there was a token as env var")
-
-    token=None
-    if os.path.exists(os.path.join(os.getcwd(), ".oda-token")):
-        with open(os.path.join(os.getcwd(), ".oda-token")) as ft:
-            token = ft.read().strip()
-    if token is not None:
-        print(f"there was a token in the .oda-token file of the current folder: {os.getcwd()}")
-        os.remove(os.path.join(os.getcwd(), ".oda-token"))
-
-    token = None
-    if os.path.exists(os.path.join(os.environ["HOME"], ".oda-token")):
-        with open(os.path.join(os.environ["HOME"], ".oda-token")) as ft:
-            token = ft.read().strip()
-    if token is not None:
-        print(f"there was a token in the .oda-token file in the HOME folder")
-        os.remove(os.path.join(os.environ["HOME"], ".oda-token"))
 
     assert disp.get_instrument_description('isgri') is not None
 
