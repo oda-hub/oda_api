@@ -940,11 +940,11 @@ class DispatcherAPI:
         if instrument is None:
             instrument = self.instrument
 
-        # if token is None:
-        #     token = self.get_token_from_environment()
+        if token is None:
+            token = self.get_token_from_environment()
 
         res = requests.get("%s/api/meta-data" % self.url,
-                           params=dict(instrument=instrument), cookies=self.cookies)
+                           params=dict(instrument=instrument, token=token), cookies=self.cookies)
 
         if res.status_code != 200:
             raise UnexpectedDispatcherStatusCode(
@@ -969,12 +969,12 @@ class DispatcherAPI:
     @safe_run
     def get_instruments_list(self, token=None):
 
-        # if token is None:
-        #     token = self.get_token_from_environment()
+        if token is None:
+            token = self.get_token_from_environment()
 
         # print ('instr',self.instrument)
         res = requests.get("%s/api/instr-list" % self.url,
-                           params=dict(instrument=self.instrument), cookies=self.cookies)
+                           params=dict(instrument=self.instrument, token=token), cookies=self.cookies)
 
         if res.status_code != 200:
             raise UnexpectedDispatcherStatusCode(
