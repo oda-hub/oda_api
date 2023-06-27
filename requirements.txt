@@ -6,7 +6,7 @@ matplotlib
 numpy
 jsonschema
 astroquery
--e git+https://github.com/oda-hub/dispatcher-app.git@list-products-from-given-source#egg=cdci_data_analysis[test]
+-e git+https://github.com/oda-hub/dispatcher-app.git#egg=cdci_data_analysis[test]
 simplejson
 sentry_sdk
 rdflib
