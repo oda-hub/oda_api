@@ -1160,7 +1160,7 @@ class DataCollection(object):
             if hasattr(data, 'name'):
                 name = data.name
 
-            if name.strip() == '':
+            if name is None or name.strip() == '':
                 if product is not None:
                     name = '%s' % product
                 elif instrument is not None:
