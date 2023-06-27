@@ -183,7 +183,42 @@ class BinaryData(object):
         return base64.urlsafe_b64decode(encoded_obj.encode('ascii', 'ignore'))
          
 
-
+class BinaryProduct:
+    # New implementation of binary data product. 
+    # The meaning of the methods is more in-line with the rest of the products
+    def __init__(self, bin_data, name=None):
+        self.bin_data = bin_data
+        if name == 'None': name = None
+        self.name = name
+        
+    def encode(self):
+        return {
+            'name': self.name,
+            'data': base64.urlsafe_b64encode(self.bin_data),
+            'md5': hashlib.md5(self.data).hexdigest()
+        }
+    
+    @classmethod
+    def decode(cls, encoded_obj):
+        if not isinstance(encoded_obj, dict):
+            encoded_obj = json.loads(encoded_obj)
+            
+        name = encoded_obj['name']
+        bin_data = base64.urlsafe_b64decode(encoded_obj['data'].encode('ascii', 'ignore'))
+        decoded_md5 = hashlib.md5(bin_data).hexdigest()
+        assert decoded_md5 == encoded_obj['md5']
+        
+        return cls(bin_data, name)
+    
+    def write_file(self, file_path):
+        with open(file_path, 'wb') as fd:
+            fd.write(self.bin_data)
+    
+    @classmethod        
+    def from_file(cls, file_path, name=None):
+        with open(file_path, 'rb') as fd:
+            bin_data = fd.read()
+        return cls(bin_data, name)
 
 class NumpyDataUnit(object):
 
