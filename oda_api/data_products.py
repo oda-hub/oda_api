@@ -818,7 +818,7 @@ class PictureProduct:
         return cls(binary_data, 
                    metadata = _encoded_data['metadata'],
                    file_path = _encoded_data.get('filename'),
-                   name = encoded_data.get('name'),
+                   name = _encoded_data.get('name'),
                    write_on_creation = write_on_creation)
     
     def show(self):
