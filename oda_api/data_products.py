@@ -195,7 +195,7 @@ class BinaryProduct:
         return {
             'name': self.name,
             'data': base64.urlsafe_b64encode(self.bin_data),
-            'md5': hashlib.md5(self.data).hexdigest()
+            'md5': hashlib.md5(self.bin_data).hexdigest()
         }
     
     @classmethod
