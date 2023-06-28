@@ -1282,7 +1282,7 @@ class DataCollection(object):
         if 'text_product_list' in res_json['products'].keys():
             try:
                 data.extend([{'name': json.loads(text_data)['name'], 
-                              'text': json.loads(text_data)['text']}
+                              'value': json.loads(text_data)['value']}
                                for text_data in res_json['products']['text_product_list']])
             except:
                 data.extend([text_data
