@@ -194,7 +194,7 @@ class BinaryProduct:
     def encode(self):
         return {
             'name': self.name,
-            'data': base64.urlsafe_b64encode(self.bin_data),
+            'data': base64.urlsafe_b64encode(self.bin_data).decode(),
             'md5': hashlib.md5(self.bin_data).hexdigest()
         }
     
