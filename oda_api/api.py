@@ -1285,7 +1285,7 @@ class DataCollection(object):
             try:
                 data.extend([TextLikeProduct.decode(text_data)
                              for text_data in res_json['products']['text_product_list']])
-            except JSONDecodeError, KeyError:
+            except (JSONDecodeError, KeyError):
                 data.extend([text_data
                              for text_data in res_json['products']['text_product_list']])
             
