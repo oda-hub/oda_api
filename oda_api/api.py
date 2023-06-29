@@ -7,6 +7,7 @@ from json.decoder import JSONDecodeError
 import pathlib
 
 import rdflib
+from json.decoder import JSONDecodeError 
 
 # NOTE gw is optional for now
 try:
@@ -1284,7 +1285,7 @@ class DataCollection(object):
             try:
                 data.extend([TextLikeProduct.decode(text_data)
                              for text_data in res_json['products']['text_product_list']])
-            except:
+            except JSONDecodeError, KeyError:
                 data.extend([text_data
                              for text_data in res_json['products']['text_product_list']])
             
