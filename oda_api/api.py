@@ -22,7 +22,8 @@ from .data_products import (NumpyDataProduct,
                             ApiCatalog, 
                             GWContoursDataProduct, 
                             PictureProduct,
-                            ODAAstropyTable)
+                            ODAAstropyTable,
+                            TextLikeProduct)
 from oda_api.token import TokenLocation
 
 from builtins import (bytes, str, open, super, range,
@@ -1164,7 +1165,7 @@ class DataCollection(object):
 
             name = ''
             if hasattr(data, 'name'):
-                name = data.name
+                name = data.name    
 
             if name is None or name.strip() == '':
                 if product is not None:
@@ -1281,10 +1282,8 @@ class DataCollection(object):
         
         if 'text_product_list' in res_json['products'].keys():
             try:
-                data.extend([{'name': json.loads(text_data)['name'], 
-                              'value': json.loads(text_data)['value'],
-                              'meta_data': json.loads(text_data)['meta_data']}
-                               for text_data in res_json['products']['text_product_list']])
+                data.extend([TextLikeProduct.decode(text_data)
+                             for text_data in res_json['products']['text_product_list']])
             except:
                 data.extend([text_data
                              for text_data in res_json['products']['text_product_list']])

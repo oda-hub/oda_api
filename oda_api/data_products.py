@@ -278,7 +278,7 @@ class NumpyDataUnit(object):
     @classmethod
     def from_fits_hdu(cls,hdu,name=None):
 
-        if not name:
+        if name is None or name == '':
             name=hdu.name
 
         return cls(data=hdu.data,
@@ -885,3 +885,24 @@ class ImageDataProduct(NumpyDataProduct):
                     pass
         return False
         
+class TextLikeProduct:
+    def __init__(self, value, name=None, meta_data={}):
+        self.value = value
+        self.name = name
+        self.meta_data = meta_data
+        
+    def encode(self):
+        return {'name': self.name,
+                'value': self.value,
+                'meta_data': self.meta_data}
+        
+    @classmethod
+    def decode(cls, encoded):
+        if not isinstance(encoded, dict):
+            encoded = json.loads(encoded)
+        return cls(name=encoded.get('name'), 
+                   value=encoded['value'],
+                   meta_data=encoded.get('meta_data', {}))
+        
+    def __repr__(self):
+        return self.encode().__repr__()
