@@ -85,10 +85,9 @@ def _chekc_enc_data(data):
 
     return _l
 
-# not used?
 class ODAAstropyTable(object):
 
-    def __init__(self,table_object,name='astropy table', meta_data={}):
+    def __init__(self,table_object,name=None, meta_data={}):
         self.name=name
         self.meta_data=meta_data
         self._table=table_object
@@ -119,7 +118,7 @@ class ODAAstropyTable(object):
         if hasattr(table, 'meta'):
             meta = table.meta
 
-        return cls(table, meta_data=meta)
+        return cls(table, meta_data=meta, name=name)
 
     def encode(self,use_binary=False,to_json = False):
 
@@ -179,14 +178,51 @@ class BinaryData(object):
         _file_b64_md5 = hashlib.md5(_file_binary).hexdigest()
 
         return _file_b64,_file_b64_md5
-
+    
     def decode(self,encoded_obj):
         return base64.urlsafe_b64decode(encoded_obj.encode('ascii', 'ignore'))
+         
 
+class BinaryProduct:
+    # New implementation of binary data product. 
+    # The meaning of the methods is more in-line with the rest of the products
+    def __init__(self, bin_data, name=None):
+        self.bin_data = bin_data
+        if name == 'None': name = None
+        self.name = name
+        
+    def encode(self):
+        return {
+            'name': self.name,
+            'data': base64.urlsafe_b64encode(self.bin_data).decode(),
+            'md5': hashlib.md5(self.bin_data).hexdigest()
+        }
+    
+    @classmethod
+    def decode(cls, encoded_obj):
+        if not isinstance(encoded_obj, dict):
+            encoded_obj = json.loads(encoded_obj)
+            
+        name = encoded_obj['name']
+        bin_data = base64.urlsafe_b64decode(encoded_obj['data'].encode('ascii', 'ignore'))
+        decoded_md5 = hashlib.md5(bin_data).hexdigest()
+        assert decoded_md5 == encoded_obj['md5']
+        
+        return cls(bin_data, name)
+    
+    def write_file(self, file_path):
+        with open(file_path, 'wb') as fd:
+            fd.write(self.bin_data)
+    
+    @classmethod        
+    def from_file(cls, file_path, name=None):
+        with open(file_path, 'rb') as fd:
+            bin_data = fd.read()
+        return cls(bin_data, name)
 
 class NumpyDataUnit(object):
 
-    def __init__(self, data, data_header={}, meta_data={}, hdu_type=None, name='table', units_dict=None):
+    def __init__(self, data, data_header={}, meta_data={}, hdu_type=None, name=None, units_dict=None):
         self._hdu_type_list_ = ['primary', 'image', 'table', 'bintable']
 
         self.name=name
@@ -240,9 +276,9 @@ class NumpyDataUnit(object):
 
 
     @classmethod
-    def from_fits_hdu(cls,hdu,name=''):
+    def from_fits_hdu(cls,hdu,name=None):
 
-        if name=='':
+        if name is None or name == '':
             name=hdu.name
 
         return cls(data=hdu.data,
@@ -433,7 +469,7 @@ class NumpyDataUnit(object):
     @classmethod
     def from_pandas(cls, 
                     pandas_dataframe, 
-                    name = 'table', 
+                    name = None, 
                     column_names=[], 
                     units_dict={}, 
                     meta_data = {},
@@ -455,7 +491,7 @@ class NumpyDataUnit(object):
 
 class NumpyDataProduct(object):
 
-    def __init__(self, data_unit, name='', meta_data={}):
+    def __init__(self, data_unit, name=None, meta_data={}):
 
         self.name=name
 
@@ -621,7 +657,7 @@ class NumpyDataProduct(object):
 class ApiCatalog(object):
 
 
-    def __init__(self,cat_dict,name='catalog'):
+    def __init__(self,cat_dict,name=None):
         self.name=name
         _skip_list=['meta_ID']
         meta = {}
@@ -703,7 +739,7 @@ class LightCurveDataProduct(NumpyDataProduct):
                     errors = None,
                     units_spec = {}, # TODO: not used yet
                     time_format = None,
-                    name = 'lightcurve'):
+                    name = None):
         
         data_header = {}
         meta_data = {} # meta data could be attached to both NumpyDataUnit and NumpyDataProduct. Decide on this
@@ -767,9 +803,10 @@ class LightCurveDataProduct(NumpyDataProduct):
                    name = name)            
 
 class PictureProduct:
-    def __init__(self, binary_data, metadata={}, file_path=None, write_on_creation = False):
+    def __init__(self, binary_data, name=None, metadata={}, file_path=None, write_on_creation = False):
         self.binary_data = binary_data
         self.metadata = metadata
+        self.name = name
         if file_path is not None and os.path.isfile(file_path):
             self.file_path = file_path 
             logger.info(f'Image file {file_path} already exist. No automatical rewriting.')
@@ -784,10 +821,10 @@ class PictureProduct:
         self.img_type = tp
     
     @classmethod
-    def from_file(cls, file_path):
+    def from_file(cls, file_path, name=None):
         with open(file_path, 'rb') as fd:
             binary_data = fd.read()
-        return cls(binary_data, file_path=file_path)
+        return cls(binary_data, name=name, file_path=file_path)
             
     def write_file(self, file_path):
         logger.info(f'Creating image file {file_path}.')
@@ -801,6 +838,7 @@ class PictureProduct:
         output_dict['img_type'] = self.img_type
         output_dict['b64data'] = b64data.decode()
         output_dict['metadata'] = self.metadata
+        output_dict['name'] = self.name
         if self.file_path:
             output_dict['filename'] = os.path.basename(self.file_path)
         return output_dict
@@ -815,6 +853,7 @@ class PictureProduct:
         return cls(binary_data, 
                    metadata = _encoded_data['metadata'],
                    file_path = _encoded_data.get('filename'),
+                   name = _encoded_data.get('name'),
                    write_on_creation = write_on_creation)
     
     def show(self):
@@ -826,8 +865,8 @@ class PictureProduct:
         
 class ImageDataProduct(NumpyDataProduct):  
     @classmethod
-    def from_fits_file(cls,filename,ext=None,hdu_name=None,meta_data={},name=''):
-        npdp = super().from_fits_file(filename,ext=None,hdu_name=None,meta_data={},name='')
+    def from_fits_file(cls,filename,ext=None,hdu_name=None,meta_data={},name=None):
+        npdp = super().from_fits_file(filename,ext=ext,hdu_name=hdu_name,meta_data=meta_data,name=name)
 
         contains_image = cls.check_contains_image(npdp)
         if contains_image:
@@ -846,3 +885,24 @@ class ImageDataProduct(NumpyDataProduct):
                     pass
         return False
         
+class TextLikeProduct:
+    def __init__(self, value, name=None, meta_data={}):
+        self.value = value
+        self.name = name
+        self.meta_data = meta_data
+        
+    def encode(self):
+        return {'name': self.name,
+                'value': self.value,
+                'meta_data': self.meta_data}
+        
+    @classmethod
+    def decode(cls, encoded):
+        if not isinstance(encoded, dict):
+            encoded = json.loads(encoded)
+        return cls(name=encoded.get('name'), 
+                   value=encoded['value'],
+                   meta_data=encoded.get('meta_data', {}))
+        
+    def __repr__(self):
+        return self.encode().__repr__()
