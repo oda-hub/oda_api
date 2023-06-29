@@ -968,7 +968,6 @@ class DispatcherAPI:
 
     @safe_run
     def get_instruments_list(self, token=None):
-
         if token is None:
             token = self.get_token_from_environment()
 

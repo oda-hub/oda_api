@@ -70,7 +70,8 @@ def test_get(dispatcher_live_fixture, caplog):
     assert result.exit_code == 0
 
     assert "found instruments: ['empty', 'empty-async', 'empty-semi-async']" in caplog.text or \
-           "found instruments: ['empty', 'empty-async', 'empty-semi-async', 'isgri', 'jemx', 'osa_fake']" in caplog.text
+           "found instruments: ['empty', 'empty-async', 'empty-semi-async', 'isgri', 'jemx', 'osa_fake']" in caplog.text or \
+           "found instruments: ['isgri', 'jemx', 'osa_fake', 'empty', 'empty-async', 'empty-semi-async']" in caplog.text
 
     runner = CliRunner()
     result = runner.invoke(cli.cli, ['-u', dispatcher_live_fixture, 'get', '-i', 'empty'], obj={})
@@ -79,4 +80,13 @@ def test_get(dispatcher_live_fixture, caplog):
 
     runner = CliRunner()
     result = runner.invoke(cli.cli, ['-u', dispatcher_live_fixture, '--no-wait', 'get', '-i', 'empty', '-p', 'dummy', '-a', 'product_type=Dummy'], obj={})
+    assert result.exit_code == 0
+
+    runner = CliRunner()
+    result = runner.invoke(cli.cli,
+                           ['-u', dispatcher_live_fixture, '--no-wait', 'get', '-T'], obj={})
+    assert result.exit_code == 0
+
+    runner = CliRunner()
+    result = runner.invoke(cli.cli, ['-u', dispatcher_live_fixture, '--no-wait', 'get', '-i', 'empty', '-T'], obj={})
     assert result.exit_code == 0
