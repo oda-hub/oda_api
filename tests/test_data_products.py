@@ -9,8 +9,13 @@ import time
 import os
 import typing
 from oda_api.json import CustomJSONEncoder
+import filecmp
 
-from oda_api.data_products import LightCurveDataProduct, NumpyDataProduct, ODAAstropyTable, PictureProduct
+from oda_api.data_products import (LightCurveDataProduct, 
+                                   NumpyDataProduct, 
+                                   ODAAstropyTable, 
+                                   PictureProduct,
+                                   BinaryProduct)
 from astropy import time as atime
 from astropy import units as u
 from astropy.table import Table
@@ -165,4 +170,15 @@ def test_lightcurve_product_from_arrays(times, values, time_format, expected_uni
     lc = LightCurveDataProduct.from_arrays(times = times, fluxes = values, errors = errors, time_format=time_format)
     assert lc.data_unit[1].units_dict in expected_units_dict_variants
     assert all(lc.data_unit[1].data['TIME'].astype('int') == 59630)
+    
+def test_new_binary_product():
+    infile = 'tests/test_data/lc.fits'
+    bin_prod = BinaryProduct.from_file(infile, name='binprd')
+    encoded = bin_prod.encode()
+    assert encoded['name'] == 'binprd'
+    decoded = BinaryProduct.decode(encoded)
+    assert decoded.name == 'binprd'
+    decoded.write_file('decbinprd.foo')
+    assert filecmp.cmp(infile, 'decbinprd.foo')
+    os.remove('decbinprd.foo') 
     

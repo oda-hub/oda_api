@@ -7,6 +7,7 @@ from json.decoder import JSONDecodeError
 import pathlib
 
 import rdflib
+from json.decoder import JSONDecodeError 
 
 # NOTE gw is optional for now
 try:
@@ -16,7 +17,14 @@ try:
 except ModuleNotFoundError:
     pass
 
-from .data_products import NumpyDataProduct, BinaryData, ApiCatalog, GWContoursDataProduct, PictureProduct
+from .data_products import (NumpyDataProduct, 
+                            BinaryData, 
+                            BinaryProduct, 
+                            ApiCatalog, 
+                            GWContoursDataProduct, 
+                            PictureProduct,
+                            ODAAstropyTable,
+                            TextLikeProduct)
 from oda_api.token import TokenLocation
 
 from builtins import (bytes, str, open, super, range,
@@ -1171,9 +1179,9 @@ class DataCollection(object):
 
             name = ''
             if hasattr(data, 'name'):
-                name = data.name
+                name = data.name    
 
-            if name.strip() == '':
+            if name is None or name.strip() == '':
                 if product is not None:
                     name = '%s' % product
                 elif instrument is not None:
@@ -1263,19 +1271,23 @@ class DataCollection(object):
                          for d in res_json['products']['numpy_data_product_list']])
 
         if 'binary_data_product_list' in res_json['products'].keys():
-            data.extend([BinaryData().decode(d)
-                         for d in res_json['products']['binary_data_product_list']])
+            try:
+                data.extend([BinaryProduct.decode(d)
+                             for d in res_json['products']['binary_data_product_list']])
+            except:
+                data.extend([BinaryData().decode(d)
+                             for d in res_json['products']['binary_data_product_list']])
         
         if 'catalog' in res_json['products'].keys():
             data.append(ApiCatalog(
                 res_json['products']['catalog'], name='dispatcher_catalog'))
 
-        if 'astropy_table_product_ascii_list' in res_json['products'].keys():
-            data.extend([ascii.read(table_text['ascii'])
+        if 'astropy_table_product_ascii_list' in res_json['products'].keys():         
+            data.extend([ODAAstropyTable.decode(table_text, use_binary=False)
                          for table_text in res_json['products']['astropy_table_product_ascii_list']])
 
         if 'astropy_table_product_binary_list' in res_json['products'].keys():
-            data.extend([ascii.read(table_binary)
+            data.extend([ODAAstropyTable.decode(table_binary, use_binary=True)
                          for table_binary in res_json['products']['astropy_table_product_binary_list']])
 
         if 'binary_image_product_list' in res_json['products'].keys():
@@ -1283,8 +1295,12 @@ class DataCollection(object):
                          for bin_image_data in res_json['products']['binary_image_product_list']])
         
         if 'text_product_list' in res_json['products'].keys():
-            data.extend([text_data
-                         for text_data in res_json['products']['text_product_list']])
+            try:
+                data.extend([TextLikeProduct.decode(text_data)
+                             for text_data in res_json['products']['text_product_list']])
+            except (JSONDecodeError, KeyError):
+                data.extend([text_data
+                             for text_data in res_json['products']['text_product_list']])
             
         if 'gw_strain_product_list' in res_json['products'].keys():
             data.extend([TimeSeries(strain_data['value'],
