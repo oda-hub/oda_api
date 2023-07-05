@@ -288,6 +288,15 @@ class NumpyDataUnit(object):
 
     def to_fits_hdu(self):
         try:
+
+            print('------------------------------')
+            print('inside to_fits_hdu methos')
+            print('header: ', self.header)
+            print('data: ', self.data)
+            print('units_dict: ', self.units_dict)
+            print('hdu_type: ', self.hdu_type)
+            print('------------------------------')
+
             for k,v in self.header.items():
                 if isinstance(v, list):
                     s=''
