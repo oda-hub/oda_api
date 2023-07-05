@@ -311,7 +311,13 @@ class NumpyDataUnit(object):
                                     header=pf.header.Header(self.header),
                                     hdu_type=self.hdu_type,units_dict=self.units_dict)
         except Exception as e:
-            raise Exception("the platfrom encourntered a bug which happens when ScW list is sent as a file; we are working on it! raw message: "+repr(e))
+            raise Exception("------------------------------\n"
+                            "inside to_fits_hdu methods\n"
+                            f"header: {self.header}\n"
+                            f"data: {self.data}\n"
+                            f"units_dict: {self.units_dict}\n"
+                            f"hdu_type: {self.hdu_type}\n"
+                            "the platfrom encourntered a bug which happens when ScW list is sent as a file; we are working on it! raw message: "+repr(e))
 
 
 
