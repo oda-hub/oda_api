@@ -287,7 +287,6 @@ class NumpyDataUnit(object):
 
 
     def to_fits_hdu(self):
-        logger.info('entering to_fits_hdu methos')
         try:
 
             logger.warning('------------------------------')
