@@ -237,6 +237,17 @@ class NumpyDataUnit(object):
         self.hdu_type=hdu_type
         self.units_dict=units_dict
 
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, name_value):
+        if name_value is None:
+            self._name = 'table'
+        else:
+            self._name = name_value
+
     # interface with a typo, preserving with a warning
     def _warn_chekc_typo(self):
         logger.debug('please _check_* instead of _chekc_* functions, they will be removed')
