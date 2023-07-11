@@ -71,6 +71,13 @@ def test_one_image():
 
     assert np.all(ndu_decoded.data == data)
 
+    ndp.data_unit[1].name = None
+
+    hdu_list_obj = ndp.to_fits_hdu_list()
+
+    assert hdu_list_obj[0].name == 'PRIMARY'
+    assert hdu_list_obj[1].name == 'TABLE'
+
 
 def test_variable_length_table():
     from oda_api.data_products import NumpyDataProduct
