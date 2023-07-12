@@ -1,15 +1,13 @@
 from datetime import datetime
 from email.policy import default
 import json
-from attr import validate
-from black import out
 import click
 import logging
 import time
 
 import oda_api.api as api
 from oda_api import plot_tools
-from oda_api.token import discover_token, decode_oda_token, format_token, update_token
+from oda_api.token import discover_token, discover_token_and_method, decode_oda_token, format_token, update_token, TokenLocation
 
 logger = logging.getLogger('oda_api')
 
@@ -41,8 +39,12 @@ def cli(obj, debug=False, dispatcher_url=None, test_connection=False, wait=True,
 @click.option("-i", "--instrument", default=None)
 @click.option("-p", "--product", default=None)
 @click.option("-a", "--argument", default=None, multiple=True)
+@click.option("-T", "--token-discovery-method", "_token_discovery_method", default=None)
 @click.pass_obj
-def get(obj, instrument, product, argument):
+def get(obj, instrument, product, argument, _token_discovery_method):
+    if _token_discovery_method is not None:
+        _token_discovery_method = TokenLocation[str.upper(_token_discovery_method)]
+        obj['dispatcher'].token = discover_token(token_discovery_methods=_token_discovery_method)
     if instrument is None:
         logger.info("found instruments: %s", obj['dispatcher'].get_instruments_list())
     else:
