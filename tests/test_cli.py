@@ -126,3 +126,9 @@ def test_get(dispatcher_live_fixture, caplog, monkeypatch, tmpdir):
     result = runner.invoke(cli.cli, ['-u', dispatcher_live_fixture, '--no-wait', 'get', '-i', 'empty', '-T', token_write_method], obj={})
     assert result.exit_code == 0
     os.remove(os.path.join(os.getcwd(), ".oda-token"))
+
+    runner = CliRunner()
+    result = runner.invoke(cli.cli, ['-u', dispatcher_live_fixture, '--no-wait', 'get', '-i', 'empty', '-T', token_write_method], obj={})
+    assert result.exit_code == 0
+
+    assert "A token could not be found with the desired method, if present, the one automatically discovered will be used" in caplog.text

@@ -44,7 +44,11 @@ def cli(obj, debug=False, dispatcher_url=None, test_connection=False, wait=True,
 def get(obj, instrument, product, argument, _token_discovery_method):
     if _token_discovery_method is not None:
         _token_discovery_method = TokenLocation[str.upper(_token_discovery_method)]
-        obj['dispatcher'].token = discover_token(token_discovery_methods=_token_discovery_method)
+        discovered_token = discover_token(token_discovery_methods=_token_discovery_method)
+        if discovered_token is None:
+            logger.info("A token could not be found with the desired method, if present, the one automatically discovered will be used")
+        else:
+            obj['dispatcher'].token = discovered_token
     if instrument is None:
         logger.info("found instruments: %s", obj['dispatcher'].get_instruments_list())
     else:
