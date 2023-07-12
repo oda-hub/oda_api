@@ -621,16 +621,16 @@ def test_storing(dispatcher_api):
     assert disp.load_result() == r
 
 
-@pytest.mark.parametrize('token', ['real', 'not-valid', 'not_provided', None])
+@pytest.mark.parametrize('token', ['real', 'not-valid', None])
 def test_local_instrument_description_not_null(dispatcher_api, token):
     disp = dispatcher_api
 
     if token is None:
-        assert disp.get_instrument_description('empty', token=None) is not None
+        disp.token=None
+        assert disp.get_instrument_description('empty') is not None
     elif token == 'real':
         encoded_token = jwt.encode(default_token_payload, secret_key, algorithm='HS256')
-        assert disp.get_instrument_description('empty', token=encoded_token) is not None
-    elif token == 'not_provided':
+        disp.token = encoded_token
         assert disp.get_instrument_description('empty') is not None
     elif token == 'not-valid':
         # let's generate an expired token
@@ -641,19 +641,22 @@ def test_local_instrument_description_not_null(dispatcher_api, token):
             "exp": exp_time
         }
         encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
+        disp.token = encoded_token
         with pytest.raises(oda_api.api.UnexpectedDispatcherStatusCode):
-            disp.get_instrument_description('empty', token=encoded_token)
+            disp.get_instrument_description('empty')
 
 
-@pytest.mark.parametrize('token', ['real', 'not-valid', 'not_provided', None])
+@pytest.mark.parametrize('token', ['real', 'not-valid', None])
 def test_local_instruments(dispatcher_api, token):
     disp = dispatcher_api
 
     if token is None:
-        assert {'empty', 'empty-async', 'empty-semi-async'} - set(disp.get_instruments_list(token=None)) == set()
+        disp.token=None
+        assert {'empty', 'empty-async', 'empty-semi-async'} - set(disp.get_instruments_list()) == set()
     elif token == 'real':
         encoded_token = jwt.encode(default_token_payload, secret_key, algorithm='HS256')
-        assert {'empty', 'empty-async', 'empty-semi-async'} - set(disp.get_instruments_list(token=encoded_token)) == set()
+        disp.token = encoded_token
+        assert {'empty', 'empty-async', 'empty-semi-async'} - set(disp.get_instruments_list()) == set()
     elif token == 'not_provided':
         assert {'empty', 'empty-async', 'empty-semi-async'} - set(disp.get_instruments_list()) == set()
     elif token == 'not-valid':
@@ -665,5 +668,6 @@ def test_local_instruments(dispatcher_api, token):
             "exp": exp_time
         }
         encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
+        disp.token = encoded_token
         with pytest.raises(oda_api.api.UnexpectedDispatcherStatusCode):
-            disp.get_instruments_list(token=encoded_token)
+            disp.get_instruments_list()

@@ -84,9 +84,9 @@ def test_get(dispatcher_live_fixture, caplog):
 
     runner = CliRunner()
     result = runner.invoke(cli.cli,
-                           ['-u', dispatcher_live_fixture, '--no-wait', 'get', '-T'], obj={})
+                           ['-u', dispatcher_live_fixture, '--no-wait', 'get'], obj={})
     assert result.exit_code == 0
 
     runner = CliRunner()
-    result = runner.invoke(cli.cli, ['-u', dispatcher_live_fixture, '--no-wait', 'get', '-i', 'empty', '-T'], obj={})
+    result = runner.invoke(cli.cli, ['-u', dispatcher_live_fixture, '--no-wait', 'get', '-i', 'empty'], obj={})
     assert result.exit_code == 0
