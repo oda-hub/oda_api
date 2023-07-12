@@ -237,6 +237,17 @@ class NumpyDataUnit(object):
         self.hdu_type=hdu_type
         self.units_dict=units_dict
 
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, name_value):
+        if name_value is None:
+            self._name = 'table'
+        else:
+            self._name = name_value
+
     # interface with a typo, preserving with a warning
     def _warn_chekc_typo(self):
         logger.debug('please _check_* instead of _chekc_* functions, they will be removed')
@@ -288,6 +299,16 @@ class NumpyDataUnit(object):
 
     def to_fits_hdu(self):
         try:
+
+            logger.warning('------------------------------')
+            logger.warning('inside to_fits_hdu methods')
+            logger.warning(f'name: {self.name}')
+            logger.warning(f'header: {self.header}')
+            logger.warning(f'data: {self.data}')
+            logger.warning(f'units_dict: {self.units_dict}')
+            logger.warning(f'hdu_type: {self.hdu_type}')
+            logger.warning('------------------------------')
+
             for k,v in self.header.items():
                 if isinstance(v, list):
                     s=''
@@ -301,7 +322,7 @@ class NumpyDataUnit(object):
                                     header=pf.header.Header(self.header),
                                     hdu_type=self.hdu_type,units_dict=self.units_dict)
         except Exception as e:
-            raise Exception("the platfrom encourntered a bug which happens when ScW list is sent as a file; we are working on it! raw message: "+repr(e))
+            raise Exception("an exception occurred in oda_api when binary products are formatted to fits header: " + repr(e))
 
 
 
