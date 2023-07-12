@@ -42,7 +42,7 @@ def cli(obj, debug=False, dispatcher_url=None, test_connection=False, wait=True,
 @click.option("-p", "--product", default=None)
 @click.option("-a", "--argument", default=None, multiple=True)
 @click.pass_obj
-def get(obj, instrument, product, argument, _discover_token):
+def get(obj, instrument, product, argument):
     if instrument is None:
         logger.info("found instruments: %s", obj['dispatcher'].get_instruments_list())
     else:
