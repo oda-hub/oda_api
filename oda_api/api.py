@@ -242,6 +242,7 @@ class DispatcherAPI:
                  n_max_tries=200,
                  session_id=None,
                  use_local_cache=False,
+                 token=None
                  ):
 
         self.setup_loggers()
@@ -290,7 +291,9 @@ class DispatcherAPI:
 
         if session_id is not None:
             self._session_id = session_id
-        
+
+        self.token = token if token is not None else self.get_token_from_environment()
+
         self._carriage_return_progress = False
 
         self.run_analysis_handle = run_analysis_handle
@@ -936,13 +939,20 @@ class DispatcherAPI:
 
             raise RemoteException(message=msg)
 
+    def get_token_from_environment(self):
+        token = oda_api.token.discover_token(self.token_discovery_methods)
+        if token is not None:
+            logger.info("discovered token in environment")
+
+        return token
+
     @safe_run
     def get_instrument_description(self, instrument=None):
         if instrument is None:
             instrument = self.instrument
 
         res = requests.get("%s/api/meta-data" % self.url,
-                           params=dict(instrument=instrument), cookies=self.cookies)
+                           params=dict(instrument=instrument, token=self.token), cookies=self.cookies)
 
         if res.status_code != 200:
             raise UnexpectedDispatcherStatusCode(
@@ -953,7 +963,7 @@ class DispatcherAPI:
     @safe_run
     def get_product_description(self, instrument, product_name):
         res = requests.get("%s/api/meta-data" % self.url, params=dict(
-            instrument=instrument, product_type=product_name), cookies=self.cookies)
+            instrument=instrument, product_type=product_name, token=self.token), cookies=self.cookies)
 
         if res.status_code != 200:
             raise UnexpectedDispatcherStatusCode(
@@ -966,9 +976,8 @@ class DispatcherAPI:
 
     @safe_run
     def get_instruments_list(self):
-        # print ('instr',self.instrument)
         res = requests.get("%s/api/instr-list" % self.url,
-                           params=dict(instrument=self.instrument), cookies=self.cookies)
+                           params=dict(instrument=self.instrument, token=self.token), cookies=self.cookies)
 
         if res.status_code != 200:
             raise UnexpectedDispatcherStatusCode(

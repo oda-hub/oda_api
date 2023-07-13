@@ -5,6 +5,7 @@ import requests
 import pytest
 import logging
 import contextlib
+import os
 
 from oda_api.api import DispatcherAPI, Unauthorized
 
@@ -90,12 +91,13 @@ def test_instruments():
     assert {'isgri', 'jemx', 'polar', 'antares', 'gw', 'spi_acs', 'legacysurvey'} - set(disp.get_instruments_list()) == set()
 
 
-def test_instrument_description_not_null():
+def test_instrument_description_not_null(remove_any_token_from_environment):
     from oda_api.api import DispatcherAPI
     disp = DispatcherAPI(
         host=get_platform_dispatcher(),
         instrument="mock",
     )
+
     assert disp.get_instrument_description('isgri') is not None
 
 

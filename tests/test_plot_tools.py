@@ -3,7 +3,7 @@ import pytest
 
 
 @pytest.mark.live
-def test_plot_tools_notebook(request):
+def test_plot_tools_notebook(request, remove_any_token_from_environment):
     import papermill as pm
 
     in_nb = pathlib.Path(request.fspath.dirname) / "../doc/source/user_guide/Show_and_Save_Products.ipynb"
