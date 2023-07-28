@@ -1121,9 +1121,13 @@ disp=DispatcherAPI(url='{url}', instrument='mock')'''
                 if query_dict[k] is not None:
                     _api_dict[n] = query_dict[k]
 
+        python_compatible_par_dict_str = json.dumps(_api_dict, indent=4)
+        python_compatible_par_dict_str = python_compatible_par_dict_str.replace('false', 'False')
+        python_compatible_par_dict_str = python_compatible_par_dict_str.replace('true', 'True')
+
         _cmd_ = f'''{_header}
 
-par_dict={json.dumps(_api_dict, indent=4)}
+par_dict={python_compatible_par_dict_str}
 
 data_collection = disp.get_product(**par_dict)
 '''
