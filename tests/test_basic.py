@@ -11,6 +11,7 @@ import oda_api.token
 
 from cdci_data_analysis.pytest_fixtures import DispatcherJobState
 from conftest import remove_old_token_files, remove_scratch_folders
+from collections import OrderedDict
 
 secret_key = 'secretkey_test'
 default_exp_time = int(time.time()) + 5000
@@ -101,6 +102,33 @@ def test_job_id_data_collection(dispatcher_api):
     assert jdata_output['prod_dictionary']['job_id'] == job_id_second_request
 
     assert job_id_second_request != job_id_first_request
+
+
+def test_oda_api_code_boolean():
+    par_dict = {
+        "DEC": -29.74516667,
+        "RA": 265.97845833,
+        "T1": "2017-03-06T13:26:48.000",
+        "T2": "2017-03-06T15:32:27.000",
+        "T_format": "isot",
+        "api": "True",
+        "instrument": "empty",
+        "oda_api_version": "{oda_api.__version__}",
+        "off_line": "False",
+        "p_list": [],
+        "b": True,
+        "product_type": "dummy",
+        "src_name": "1E 1740.7-2942"
+    }
+
+    output_api_code = oda_api.api.DispatcherAPI.set_api_code(par_dict)
+
+    expected_api_code = json.dumps(OrderedDict(sorted(par_dict.items())), indent=4)
+    expected_api_code = expected_api_code.replace("true", "True")
+    expected_api_code = expected_api_code.replace("false", "False")
+    expected_api_code = expected_api_code.replace("product_type", "product")
+
+    assert expected_api_code in output_api_code
 
 
 def test_oda_api_code(dispatcher_api):
