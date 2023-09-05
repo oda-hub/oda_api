@@ -42,3 +42,27 @@ jobs:
         user: __token__
         verify_metadata: false
         password: ${{ secrets.PYPI_API_TOKEN }}        
+
+    - name: Conda publish
+      # You may pin to the exact commit or the version.
+      # uses: silvxlabs/conda-skeleton-publish@5a89b70689c690cd83b7475fb6a1a0f332fa0ccf
+      uses: silvxlabs/conda-skeleton-publish@v2
+      with:
+        # Name of PyPI package
+        pypi_package: oda-api # optional
+        # Package version on PyPi
+        #package_version: # optional, default is latest
+        # Python version to build
+        #python_version: # optional
+        # Conda channels to use for building package
+        build_channels: conda-forge
+        # Conda channel to upload to
+        upload_channel: mmoda# optional
+        # Anaconda client access token
+        access_token: ${{ secrets.CONDA_ACCESS_TOKEN }}
+        # Platforms to publish
+        #platforms: # optional, default is win-64 osx-64 osx-arm64 linux-64 linux-aarch64
+        # Set this to true if this is a stable release. Passese a `-l beta` arg if false.
+        #stable: # optional
+        # If true, waits for the PyPi package to become available.
+        wait: true # optional
