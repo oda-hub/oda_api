@@ -20,6 +20,3 @@ sphinx:
 # python:
 #   install:
 #   - requirements: docs/requirements.txt
-
-github:
-  build_pull_requests: true
