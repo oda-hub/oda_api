@@ -132,9 +132,124 @@ class GalleryDispatcherAPI(DispatcherAPI):
         return response_json
 
 
+    def get_list_lightcurve_with_conditions(self,
+                                            token: str = None,
+                                            instrument=None,
+                                            src_name=None,
+                                            e1_kev=None, e2_kev=None,
+                                            t1=None, t2=None
+                                            ):
+        rev1_value = None
+        if t1 is not None:
+            params = {'time_to_convert': t1,
+                      'token': token}
+
+            c = requests.get(os.path.join(self.url, "get_revnum"),
+                             params={**params}
+                             )
+            revnum_obj = c.json()
+            rev1_value = revnum_obj['revnum']
+
+        rev2_value = None
+        if t2 is not None:
+            params = {'time_to_convert': t2,
+                      'token': token}
+
+            c = requests.get(os.path.join(self.url, "get_revnum"),
+                             params={**params}
+                             )
+            revnum_obj = c.json()
+            rev2_value = revnum_obj['revnum']
+
+        return self.get_list_products_with_conditions(token=token,
+                                                      instrument_name=instrument,
+                                                      product_type='lightcurve',
+                                                      src_name=src_name,
+                                                      e1_kev=e1_kev,
+                                                      e2_kev=e2_kev,
+                                                      rev1_value=rev1_value,
+                                                      rev2_value=rev2_value)
+
+    def get_list_spectra_with_conditions(self,
+                                         token: str = None,
+                                         instrument=None,
+                                         src_name=None,
+                                         t1=None, t2=None
+                                         ):
+        rev1_value = None
+        if t1 is not None:
+            params = {'time_to_convert': t1,
+                      'token': token}
+
+            c = requests.get(os.path.join(self.url, "get_revnum"),
+                             params={**params}
+                             )
+            revnum_obj = c.json()
+            rev1_value = revnum_obj['revnum']
+
+        rev2_value = None
+        if t2 is not None:
+            params = {'time_to_convert': t2,
+                      'token': token}
+
+            c = requests.get(os.path.join(self.url, "get_revnum"),
+                             params={**params}
+                             )
+            revnum_obj = c.json()
+            rev2_value = revnum_obj['revnum']
+
+        return self.get_list_products_with_conditions(token=token,
+                                                      instrument_name=instrument,
+                                                      src_name=src_name,
+                                                      product_type='spectrum',
+                                                      rev1_value=rev1_value,
+                                                      rev2_value=rev2_value)
+
+
+    def get_list_products_with_conditions(self,
+                                          token: str = None,
+                                          **kwargs):
+
+        """
+        :param token: user token
+        :param kwargs: keyword arguments representing the main parameters values used to generate the product. Amongst them,
+               it is important to mention the following ones:
+            * instrument_name: name of the instrument used for the generated product (e.g. isgri, jemx1)
+            * product_type: type of product generated (e.g. lightcurve, image)
+            * src_name: name of a single, or a list of, known sources (eg Crab, Cyg X-1)
+            * others: other parameters used for the product. Not all the parameters are currently supported,
+                but the list of the supported ones will be extended. E1_kev=25
+        """
+
+        params = {
+            'token': token,
+            **kwargs
+        }
+
+        res = requests.get(os.path.join(self.url, "get_data_product_list_with_conditions"),
+                           params=params
+                           )
+
+        if res.status_code != 200:
+            response_json = res.json()
+            error_message = (f"An issue occurred while performing a request on the product gallery, "
+                             f"the following error was returned:\n")
+            if 'error_message' in response_json:
+                error_message += '\n' + response_json['error_message']
+                if 'drupal_helper_error_message' in response_json:
+                    error_message += '-' + response_json['drupal_helper_error_message']
+            else:
+                error_message += res.text
+            logger.warning(error_message)
+        else:
+            response_json = self._decode_res_json(res)
+
+        return response_json
+
+
     def get_list_products_by_source_name(self,
-                                 source_name: str = None,
-                                 token: str = None):
+                                         source_name: str = None,
+                                         token: str = None):
 
         params = {
             'token': token,
