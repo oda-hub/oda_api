@@ -484,8 +484,9 @@ class OdaLightCurve(OdaProduct):
                 e_max = 0
         if self.instrument == 'SPI-ACS':
             self.timezero = hdu.header['TIMEZERO'] / 86400. + hdu.header['MJDREF']
-            from astropy.time import Time
-            self.timezero_utc = Time(self.timezero, format='mjd').iso
+            import requests
+            rr = requests.get('https://www.astro.unige.ch/mmoda/dispatch-data/gw/timesystem/api/v1.0/converttime/IJD/%.6f/UTC'% self.timezero)
+            self.timezero_utc = rr.text
 
         #This could only be valid for ISGRI
         try:
@@ -531,7 +532,14 @@ class OdaLightCurve(OdaProduct):
         return pic_fn
 
     def show(self, in_source_name='', systematic_fraction=0, ng_sig_limit=0, find_excesses=False):
+        """This will show the image and display characeristics
 
+        Args:
+            in_source_name (str, optional): Source name. Defaults to ''.
+            systematic_fraction (int, optional): adding a systematic fraction. Defaults to 0.
+            ng_sig_limit (int, optional): it shows the +/- sigma limits . Defaults to 0, if ng_sig_limit <1 does not plot range.
+            find_excesses (bool, optional): Tries to find excesses above the n_sig_limit. Defaults to False.
+        """        
         plt = self.build_fig(in_source_name=in_source_name, systematic_fraction=systematic_fraction,
                              ng_sig_limit=ng_sig_limit, find_excesses=find_excesses)
 
@@ -539,6 +547,14 @@ class OdaLightCurve(OdaProduct):
             p.show()
 
     def build_fig(self,  in_source_name='', systematic_fraction=0, ng_sig_limit=0, find_excesses=False):
+        """This will build the image and display characeristics
+
+        Args:
+            in_source_name (str, optional): Source name. Defaults to '', use "qury" for SPI-ACS.
+            systematic_fraction (int, optional): adding a systematic fraction. Defaults to 0.
+            ng_sig_limit (int, optional): it shows the +/- sigma limits . Defaults to 0, if ng_sig_limit <1 does not plot range.
+            find_excesses (bool, optional): Tries to find excesses above the n_sig_limit. Defaults to False.
+        """ 
         #if ng_sig_limit <1 does not plot range
         combined_lc = self.data
         from scipy import stats
