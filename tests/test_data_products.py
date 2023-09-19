@@ -9,8 +9,13 @@ import time
 import os
 import typing
 from oda_api.json import CustomJSONEncoder
+import filecmp
 
-from oda_api.data_products import LightCurveDataProduct, NumpyDataProduct, ODAAstropyTable, PictureProduct
+from oda_api.data_products import (LightCurveDataProduct, 
+                                   NumpyDataProduct, 
+                                   ODAAstropyTable, 
+                                   PictureProduct,
+                                   BinaryProduct)
 from astropy import time as atime
 from astropy import units as u
 from astropy.table import Table
@@ -65,6 +70,13 @@ def test_one_image():
     ndu_decoded = encode_decode(ndp).get_data_unit(1)
 
     assert np.all(ndu_decoded.data == data)
+
+    ndp.data_unit[1].name = None
+
+    hdu_list_obj = ndp.to_fits_hdu_list()
+
+    assert hdu_list_obj[0].name == 'PRIMARY'
+    assert hdu_list_obj[1].name == 'TABLE'
 
 
 def test_variable_length_table():
@@ -136,31 +148,44 @@ def test_bin_image():
     assert bin_image_decoded.binary_data == figdata
 
 
-@pytest.mark.parametrize('times,values,time_format,expected_units_dict',
+@pytest.mark.parametrize('times,values,time_format,expected_units_dict_variants',
                          [(atime.Time(['2022-02-20T13:45:34', '2022-02-20T14:45:34', '2022-02-20T15:45:34']), 
                            [2/u.cm**2/u.s] * 3, 
                            None,
-                           {'TIME': 'd', 'FLUX': '1 / (cm**2 s)', 'ERROR': '1 / (cm**2 s)'}),
+                           [{'TIME': 'd', 'FLUX': '1 / (cm**2 s)', 'ERROR': '1 / (cm**2 s)'},
+                            {'TIME': 'd', 'FLUX': '1 / (s cm**2)', 'ERROR': '1 / (s cm**2)'}]),
                                                   
                           (['2022-02-20T13:45:34', '2022-02-20T14:45:34', '2022-02-20T15:45:34'],
                            [2] * 3,
                            None,
-                           {'TIME': 'd'}),
+                           [{'TIME': 'd'}]),
                           
                           ([59630.3, 59630.5, 59630.7],
                            [2] * 3,
                            'mjd',
-                           {'TIME': 'd'}),
+                           [{'TIME': 'd'}]),
                           
                           (list(map(datetime.fromisoformat, ['2022-02-20T13:45:34', '2022-02-20T14:45:34', '2022-02-20T15:45:34'])),
                            [2/u.cm**2/u.s] * 3, 
                            None,
-                           {'TIME': 'd', 'FLUX': '1 / (cm**2 s)', 'ERROR': '1 / (cm**2 s)'}),
+                           [{'TIME': 'd', 'FLUX': '1 / (cm**2 s)', 'ERROR': '1 / (cm**2 s)'},
+                            {'TIME': 'd', 'FLUX': '1 / (s cm**2)', 'ERROR': '1 / (s cm**2)'}]),
                           ]
                          )
-def test_lightcurve_product_from_arrays(times, values, time_format, expected_units_dict):
+def test_lightcurve_product_from_arrays(times, values, time_format, expected_units_dict_variants):
     errors = [0.05 * x for x in values]
     lc = LightCurveDataProduct.from_arrays(times = times, fluxes = values, errors = errors, time_format=time_format)
-    assert lc.data_unit[1].units_dict == expected_units_dict
+    assert lc.data_unit[1].units_dict in expected_units_dict_variants
     assert all(lc.data_unit[1].data['TIME'].astype('int') == 59630)
+    
+def test_new_binary_product():
+    infile = 'tests/test_data/lc.fits'
+    bin_prod = BinaryProduct.from_file(infile, name='binprd')
+    encoded = bin_prod.encode()
+    assert encoded['name'] == 'binprd'
+    decoded = BinaryProduct.decode(encoded)
+    assert decoded.name == 'binprd'
+    decoded.write_file('decbinprd.foo')
+    assert filecmp.cmp(infile, 'decbinprd.foo')
+    os.remove('decbinprd.foo') 
     

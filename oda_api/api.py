@@ -7,6 +7,7 @@ from json.decoder import JSONDecodeError
 import pathlib
 
 import rdflib
+from json.decoder import JSONDecodeError 
 
 # NOTE gw is optional for now
 try:
@@ -16,7 +17,14 @@ try:
 except ModuleNotFoundError:
     pass
 
-from .data_products import NumpyDataProduct, BinaryData, ApiCatalog, GWContoursDataProduct, PictureProduct
+from .data_products import (NumpyDataProduct, 
+                            BinaryData, 
+                            BinaryProduct, 
+                            ApiCatalog, 
+                            GWContoursDataProduct, 
+                            PictureProduct,
+                            ODAAstropyTable,
+                            TextLikeProduct)
 from oda_api.token import TokenLocation
 
 from builtins import (bytes, str, open, super, range,
@@ -234,6 +242,7 @@ class DispatcherAPI:
                  n_max_tries=200,
                  session_id=None,
                  use_local_cache=False,
+                 token=None
                  ):
 
         self.setup_loggers()
@@ -282,7 +291,9 @@ class DispatcherAPI:
 
         if session_id is not None:
             self._session_id = session_id
-        
+
+        self.token = token if token is not None else self.get_token_from_environment()
+
         self._carriage_return_progress = False
 
         self.run_analysis_handle = run_analysis_handle
@@ -928,13 +939,20 @@ class DispatcherAPI:
 
             raise RemoteException(message=msg)
 
+    def get_token_from_environment(self):
+        token = oda_api.token.discover_token(self.token_discovery_methods)
+        if token is not None:
+            logger.info("discovered token in environment")
+
+        return token
+
     @safe_run
     def get_instrument_description(self, instrument=None):
         if instrument is None:
             instrument = self.instrument
 
         res = requests.get("%s/api/meta-data" % self.url,
-                           params=dict(instrument=instrument), cookies=self.cookies)
+                           params=dict(instrument=instrument, token=self.token), cookies=self.cookies)
 
         if res.status_code != 200:
             raise UnexpectedDispatcherStatusCode(
@@ -945,7 +963,7 @@ class DispatcherAPI:
     @safe_run
     def get_product_description(self, instrument, product_name):
         res = requests.get("%s/api/meta-data" % self.url, params=dict(
-            instrument=instrument, product_type=product_name), cookies=self.cookies)
+            instrument=instrument, product_type=product_name, token=self.token), cookies=self.cookies)
 
         if res.status_code != 200:
             raise UnexpectedDispatcherStatusCode(
@@ -958,9 +976,8 @@ class DispatcherAPI:
 
     @safe_run
     def get_instruments_list(self):
-        # print ('instr',self.instrument)
         res = requests.get("%s/api/instr-list" % self.url,
-                           params=dict(instrument=self.instrument), cookies=self.cookies)
+                           params=dict(instrument=self.instrument, token=self.token), cookies=self.cookies)
 
         if res.status_code != 200:
             raise UnexpectedDispatcherStatusCode(
@@ -1104,9 +1121,13 @@ disp=DispatcherAPI(url='{url}', instrument='mock')'''
                 if query_dict[k] is not None:
                     _api_dict[n] = query_dict[k]
 
+        python_compatible_par_dict_str = json.dumps(_api_dict, indent=4)
+        python_compatible_par_dict_str = python_compatible_par_dict_str.replace('false', 'False')
+        python_compatible_par_dict_str = python_compatible_par_dict_str.replace('true', 'True')
+
         _cmd_ = f'''{_header}
 
-par_dict={json.dumps(_api_dict, indent=4)}
+par_dict={python_compatible_par_dict_str}
 
 data_collection = disp.get_product(**par_dict)
 '''
@@ -1158,9 +1179,9 @@ class DataCollection(object):
 
             name = ''
             if hasattr(data, 'name'):
-                name = data.name
+                name = data.name    
 
-            if name.strip() == '':
+            if name is None or name.strip() == '':
                 if product is not None:
                     name = '%s' % product
                 elif instrument is not None:
@@ -1250,19 +1271,23 @@ class DataCollection(object):
                          for d in res_json['products']['numpy_data_product_list']])
 
         if 'binary_data_product_list' in res_json['products'].keys():
-            data.extend([BinaryData().decode(d)
-                         for d in res_json['products']['binary_data_product_list']])
+            try:
+                data.extend([BinaryProduct.decode(d)
+                             for d in res_json['products']['binary_data_product_list']])
+            except:
+                data.extend([BinaryData().decode(d)
+                             for d in res_json['products']['binary_data_product_list']])
         
         if 'catalog' in res_json['products'].keys():
             data.append(ApiCatalog(
                 res_json['products']['catalog'], name='dispatcher_catalog'))
 
-        if 'astropy_table_product_ascii_list' in res_json['products'].keys():
-            data.extend([ascii.read(table_text['ascii'])
+        if 'astropy_table_product_ascii_list' in res_json['products'].keys():         
+            data.extend([ODAAstropyTable.decode(table_text, use_binary=False)
                          for table_text in res_json['products']['astropy_table_product_ascii_list']])
 
         if 'astropy_table_product_binary_list' in res_json['products'].keys():
-            data.extend([ascii.read(table_binary)
+            data.extend([ODAAstropyTable.decode(table_binary, use_binary=True)
                          for table_binary in res_json['products']['astropy_table_product_binary_list']])
 
         if 'binary_image_product_list' in res_json['products'].keys():
@@ -1270,8 +1295,12 @@ class DataCollection(object):
                          for bin_image_data in res_json['products']['binary_image_product_list']])
         
         if 'text_product_list' in res_json['products'].keys():
-            data.extend([text_data
-                         for text_data in res_json['products']['text_product_list']])
+            try:
+                data.extend([TextLikeProduct.decode(text_data)
+                             for text_data in res_json['products']['text_product_list']])
+            except (JSONDecodeError, KeyError):
+                data.extend([text_data
+                             for text_data in res_json['products']['text_product_list']])
             
         if 'gw_strain_product_list' in res_json['products'].keys():
             data.extend([TimeSeries(strain_data['value'],

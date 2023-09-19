@@ -2,8 +2,10 @@ from typing import ChainMap
 from click.testing import CliRunner
 import pytest
 import os
+import jwt
 
 from oda_api import cli
+from tests.test_basic import default_token_payload, secret_key
 
 
 @pytest.mark.parametrize('token_placement', ['no', 'env', 'homedotfile', 'cwddotfile'])
@@ -64,13 +66,14 @@ def test_token_modify(default_token, secret_key, monkeypatch, caplog):
     assert '"msdone": false' in caplog.text    
     assert '"mssub": false' in caplog.text    
     
-def test_get(dispatcher_live_fixture, caplog):
+def test_get(dispatcher_live_fixture, caplog, monkeypatch, tmpdir):
     runner = CliRunner()
     result = runner.invoke(cli.cli, ['-u', dispatcher_live_fixture, 'get'], obj={})
     assert result.exit_code == 0
 
     assert "found instruments: ['empty', 'empty-async', 'empty-semi-async']" in caplog.text or \
-           "found instruments: ['empty', 'empty-async', 'empty-semi-async', 'isgri', 'jemx', 'osa_fake']" in caplog.text
+           "found instruments: ['empty', 'empty-async', 'empty-semi-async', 'isgri', 'jemx', 'osa_fake']" in caplog.text or \
+           "found instruments: ['isgri', 'jemx', 'osa_fake', 'empty', 'empty-async', 'empty-semi-async']" in caplog.text
 
     runner = CliRunner()
     result = runner.invoke(cli.cli, ['-u', dispatcher_live_fixture, 'get', '-i', 'empty'], obj={})
@@ -80,3 +83,52 @@ def test_get(dispatcher_live_fixture, caplog):
     runner = CliRunner()
     result = runner.invoke(cli.cli, ['-u', dispatcher_live_fixture, '--no-wait', 'get', '-i', 'empty', '-p', 'dummy', '-a', 'product_type=Dummy'], obj={})
     assert result.exit_code == 0
+
+    runner = CliRunner()
+    result = runner.invoke(cli.cli,
+                           ['-u', dispatcher_live_fixture, '--no-wait', 'get'], obj={})
+    assert result.exit_code == 0
+
+    runner = CliRunner()
+    result = runner.invoke(cli.cli, ['-u', dispatcher_live_fixture, '--no-wait', 'get', '-i', 'empty'], obj={})
+    assert result.exit_code == 0
+
+    # using the discovering token arg
+    token_payload = default_token_payload.copy()
+    encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
+
+    runner = CliRunner()
+    token_write_method = 'oda_env_var'
+    monkeypatch.setenv('ODA_TOKEN', encoded_token)
+    result = runner.invoke(cli.cli, ['-u', dispatcher_live_fixture, '--no-wait', 'get', '-i', 'empty', '-T', token_write_method], obj={})
+    assert result.exit_code == 0
+    os.environ.pop('ODA_TOKEN', None)
+
+    runner = CliRunner()
+    token_write_method = 'file_home'
+    os.makedirs(tmpdir, exist_ok=True)
+    monkeypatch.setenv('HOME', tmpdir)
+    oda_token_home_fn = os.path.join(tmpdir, ".oda-token")
+    token_payload['exp'] = token_payload['exp'] + 15000
+    encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
+    with open(oda_token_home_fn, "w") as f:
+        f.write(encoded_token)
+    result = runner.invoke(cli.cli, ['-u', dispatcher_live_fixture, '--no-wait', 'get', '-i', 'empty', '-T', token_write_method], obj={})
+    assert result.exit_code == 0
+    os.remove(oda_token_home_fn)
+
+    runner = CliRunner()
+    token_write_method = 'file_cur_dir'
+    token_payload['exp'] = token_payload['exp'] + 15000
+    encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
+    with open(".oda-token", "w") as f:
+        f.write(encoded_token)
+    result = runner.invoke(cli.cli, ['-u', dispatcher_live_fixture, '--no-wait', 'get', '-i', 'empty', '-T', token_write_method], obj={})
+    assert result.exit_code == 0
+    os.remove(os.path.join(os.getcwd(), ".oda-token"))
+
+    runner = CliRunner()
+    result = runner.invoke(cli.cli, ['-u', dispatcher_live_fixture, '--no-wait', 'get', '-i', 'empty', '-T', token_write_method], obj={})
+    assert result.exit_code == 0
+
+    assert "A token could not be found with the desired method, if present, the one automatically discovered will be used" in caplog.text
