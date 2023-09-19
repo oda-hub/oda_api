@@ -69,6 +69,31 @@ def dispatcher_api_with_gallery(dispatcher_live_fixture_with_gallery):
 def secret_key(dispatcher_test_conf):
     return dispatcher_test_conf['secret_key']
 
+
+@pytest.fixture
+def remove_any_token_from_environment():
+    # remove any token
+    token = os.environ.pop('ODA_TOKEN', None)
+    if token is not None:
+        print("there was a token as env var")
+
+    token = None
+    if os.path.exists(os.path.join(os.getcwd(), ".oda-token")):
+        with open(os.path.join(os.getcwd(), ".oda-token")) as ft:
+            token = ft.read().strip()
+    if token is not None:
+        print(f"there was a token in the .oda-token file of the current folder: {os.getcwd()}")
+        os.remove(os.path.join(os.getcwd(), ".oda-token"))
+
+    token = None
+    if os.path.exists(os.path.join(os.environ["HOME"], ".oda-token")):
+        with open(os.path.join(os.environ["HOME"], ".oda-token")) as ft:
+            token = ft.read().strip()
+    if token is not None:
+        print(f"there was a token in the .oda-token file in the HOME folder")
+        os.remove(os.path.join(os.environ["HOME"], ".oda-token"))
+
+
 @pytest.fixture
 def default_token(default_token_payload, secret_key) -> str:    
     token = jwt.encode(default_token_payload, secret_key, algorithm='HS256')

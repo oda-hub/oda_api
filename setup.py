@@ -22,13 +22,11 @@ __version__ = _info['version']
 
 include_package_data=True
 
-scripts_list=glob.glob('./bin/*')
 setup(name='oda_api',
       version=__version__,
       description='API plugin  for CDCI online data analysis',
       author='Andrea Tramacere, Volodymyr Savchenko',
       author_email='contact@odahub.io',
-      scripts=scripts_list,
       packages=packs,
       package_data={'oda_api': ['config_dir/*']},
       include_package_data=True,
