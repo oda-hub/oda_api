@@ -135,7 +135,7 @@ class GalleryDispatcherAPI(DispatcherAPI):
     def get_list_lightcurve_with_conditions(self,
                                             token: str = None,
                                             instrument=None,
-                                            src_name=None,
+                                            source_name=None,
                                             e1_kev=None, e2_kev=None,
                                             t1=None, t2=None
                                             ):
@@ -164,7 +164,7 @@ class GalleryDispatcherAPI(DispatcherAPI):
         return self.get_list_products_with_conditions(token=token,
                                                       instrument_name=instrument,
                                                       product_type='lightcurve',
-                                                      src_name=src_name,
+                                                      src_name=source_name,
                                                       e1_kev=e1_kev,
                                                       e2_kev=e2_kev,
                                                       rev1_value=rev1_value,
@@ -173,7 +173,7 @@ class GalleryDispatcherAPI(DispatcherAPI):
     def get_list_spectra_with_conditions(self,
                                          token: str = None,
                                          instrument=None,
-                                         src_name=None,
+                                         source_name=None,
                                          t1=None, t2=None
                                          ):
         rev1_value = None
@@ -200,7 +200,7 @@ class GalleryDispatcherAPI(DispatcherAPI):
 
         return self.get_list_products_with_conditions(token=token,
                                                       instrument_name=instrument,
-                                                      src_name=src_name,
+                                                      src_name=source_name,
                                                       product_type='spectrum',
                                                       rev1_value=rev1_value,
                                                       rev2_value=rev2_value)
