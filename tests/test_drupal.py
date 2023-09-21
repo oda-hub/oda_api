@@ -783,24 +783,24 @@ def test_product_gallery_get_product_with_conditions(dispatcher_api_with_gallery
 
     instrument_name = 'isgri'
     T1 = '2022-07-21T00:29:47'
-    params = {'time_to_convert': T1,
-              'token': encoded_token}
-
-    c = requests.get(os.path.join(disp.url, "get_revnum"),
-                     params={**params}
-                     )
-    revnum_obj = c.json()
-    T1_revs = revnum_obj['revnum']
+    # params = {'time_to_convert': T1,
+    #           'token': encoded_token}
+    #
+    # c = requests.get(os.path.join(disp.url, "get_revnum"),
+    #                  params={**params}
+    #                  )
+    # revnum_obj = c.json()
+    T1_revs = 2528
 
     T2 = '2022-08-23T05:29:11'
-    params = {'time_to_convert': T2,
-              'token': encoded_token}
-
-    c = requests.get(os.path.join(disp.url, "get_revnum"),
-                     params={**params}
-                     )
-    revnum_obj = c.json()
-    T2_revs = revnum_obj['revnum']
+    # params = {'time_to_convert': T2,
+    #           'token': encoded_token}
+    #
+    # c = requests.get(os.path.join(disp.url, "get_revnum"),
+    #                  params={**params}
+    #                  )
+    # revnum_obj = c.json()
+    T2_revs = 2540
 
     source_name = 'test astro entity' + '_' + str(uuid.uuid4())
     product_title = 'test same source different name'
@@ -816,66 +816,70 @@ def test_product_gallery_get_product_with_conditions(dispatcher_api_with_gallery
         T1=T1, T2=T2
     )
 
-    for e1_kev, e2_kev, t1, t2 in [
-        (100, 350, '2022-07-21T00:29:47', '2022-08-23T05:29:11'),
-        (100, 350, '2022-07-19T00:29:47', '2022-08-25T05:29:11'),
-        (100, 350, '2022-07-29T00:29:47', '2022-08-01T05:29:11'),
-        (100, 350, '2022-07-19T00:29:47', '2022-08-23T05:29:11'),
-        (50, 400, '2022-07-21T00:29:47', '2022-08-23T05:29:11'),
-        (200, 350, '2022-07-21T00:29:47', '2022-08-23T05:29:11'),
-        (50, 300, '2022-07-21T00:29:47', '2022-08-23T05:29:11'),
-    ]:
-        params = {'time_to_convert': t1,
-                  'token': encoded_token}
+    if product_type == 'spectrum' or product_type == 'lightcurve':
+        for e1_kev, e2_kev, t1, t2 in [
+            (100, 350, '2022-07-21T00:29:47', '2022-08-23T05:29:11'),
+            (100, 350, '2022-07-19T00:29:47', '2022-08-25T05:29:11'),
+            (100, 350, '2022-07-29T00:29:47', '2022-08-01T05:29:11'),
+            (100, 350, '2022-07-19T00:29:47', '2022-08-23T05:29:11'),
+            (50, 400, '2022-07-21T00:29:47', '2022-08-23T05:29:11'),
+            (200, 350, '2022-07-21T00:29:47', '2022-08-23T05:29:11'),
+            (50, 300, '2022-07-21T00:29:47', '2022-08-23T05:29:11'),
+        ]:
+            params = {'time_to_convert': t1,
+                      'token': encoded_token}
 
-        c = requests.get(os.path.join(disp.url, "get_revnum"),
-                         params={**params}
-                         )
-        revnum_obj = c.json()
-        t1_revs = revnum_obj['revnum']
+            c = requests.get(os.path.join(disp.url, "get_revnum"),
+                             params={**params}
+                             )
+            revnum_obj = c.json()
+            t1_revs = revnum_obj['revnum']
 
-        params['time_to_convert'] = t2
-        c = requests.get(os.path.join(disp.url, "get_revnum"),
-                         params={**params}
-                         )
-        revnum_obj = c.json()
+            params['time_to_convert'] = t2
+            c = requests.get(os.path.join(disp.url, "get_revnum"),
+                             params={**params}
+                             )
+            revnum_obj = c.json()
 
-        t2_revs = revnum_obj['revnum']
-        if product_type == 'spectrum':
-            spectra_list = disp.get_list_spectra_with_conditions(source_name=source_name,
-                                                                 t1=t1, t2=t2,
-                                                                 instrument=instrument_name,
-                                                                 token=encoded_token)
-            assert isinstance(spectra_list, list)
+            t2_revs = revnum_obj['revnum']
+            if product_type == 'spectrum':
+                spectra_list = disp.get_list_spectra_with_conditions(source_name=source_name,
+                                                                     t1=t1, t2=t2,
+                                                                     instrument=instrument_name,
+                                                                     token=encoded_token)
+                assert isinstance(spectra_list, list)
 
-            if t1_revs > T1_revs or t2_revs < T2_revs:
-                assert len(spectra_list) == 0
-            else:
-                assert len(spectra_list) == 1
+                if t1_revs > T1_revs or t2_revs < T2_revs:
+                    assert len(spectra_list) == 0
+                else:
+                    assert len(spectra_list) == 1
 
-        elif product_type == 'lightcurve':
-            spectra_list = disp.get_list_lightcurve_with_conditions(source_name=source_name,
-                                                                    e1_kev=e1_kev, e2_kev=e2_kev,
-                                                                    t1=t1, t2=t2,
-                                                                    instrument=instrument_name,
-                                                                    token=encoded_token)
-            assert isinstance(spectra_list, list)
+            elif product_type == 'lightcurve':
+                spectra_list = disp.get_list_lightcurve_with_conditions(source_name=source_name,
+                                                                        e1_kev=e1_kev, e2_kev=e2_kev,
+                                                                        t1=t1, t2=t2,
+                                                                        instrument=instrument_name,
+                                                                        token=encoded_token)
+                assert isinstance(spectra_list, list)
 
-            if e1_kev > 100 or e2_kev < 350 or t1_revs > T1_revs or t2_revs < T2_revs:
-                assert len(spectra_list) == 0
-            else:
-                assert len(spectra_list) == 1
+                if e1_kev > 100 or e2_kev < 350 or t1_revs > T1_revs or t2_revs < T2_revs:
+                    assert len(spectra_list) == 0
+                else:
+                    assert len(spectra_list) == 1
 
-        elif product_type == 'image':
-            images_list = disp.get_list_images_with_conditions(source_name='crab',
-                                                               # e1_kev=e1_kev, e2_kev=e2_kev,
-                                                               t1='2012-01-01T00:00:00', t2='2012-11-01T00:00:00',
-                                                               ra_ref=50, dec_ref=60, r=100,
+    elif product_type == 'image':
+        for r in [0, 20, 200]:
+            images_list = disp.get_list_images_with_conditions(e1_kev=100, e2_kev=400,
+                                                               t1='2022-07-20T00:00:00', t2='2022-08-24T23:59:59',
+                                                               ra_ref=100, dec_ref=0, r=r,
                                                                instrument=instrument_name,
                                                                token=encoded_token)
             assert isinstance(images_list, list)
 
-
+            if r > 20:
+                assert any(image.get("title") == product_title for image in images_list)
+            else:
+                assert all(image.get("title") != product_title for image in images_list)
 
 @pytest.mark.test_drupal
 @pytest.mark.parametrize("source_name", ["new", "known"])
