@@ -766,7 +766,7 @@ def test_update_product_gallery(dispatcher_api_with_gallery, dispatcher_test_con
 
 
 @pytest.mark.test_drupal
-@pytest.mark.parametrize("product_type", ["spectrum", "lightcurve"])
+@pytest.mark.parametrize("product_type", ["spectrum", "lightcurve", "image"])
 def test_product_gallery_get_product_with_conditions(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery, product_type):
     # let's generate a valid token
     token_payload = {
@@ -775,9 +775,12 @@ def test_product_gallery_get_product_with_conditions(dispatcher_api_with_gallery
     }
     encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
     disp = dispatcher_api_with_gallery
-    product_type = 'isgri_lightcurve'
+    product_type_arg = 'isgri_lightcurve'
     if product_type == 'spectrum':
-        product_type = 'isgri_spectrum'
+        product_type_arg = 'isgri_spectrum'
+    elif product_type == 'image':
+        product_type_arg = 'isgri_image'
+
     instrument_name = 'isgri'
     T1 = '2022-07-21T00:29:47'
     params = {'time_to_convert': T1,
@@ -804,11 +807,12 @@ def test_product_gallery_get_product_with_conditions(dispatcher_api_with_gallery
     disp.post_data_product_to_gallery(
         product_title=product_title,
         instrument=instrument_name,
-        product_type=product_type,
+        product_type=product_type_arg,
         src_name=source_name,
         insert_new_source=True,
         token=encoded_token,
         e1_kev=150, e2_kev=350,
+        ra=140, dec=-10,
         T1=T1, T2=T2
     )
 
@@ -861,6 +865,16 @@ def test_product_gallery_get_product_with_conditions(dispatcher_api_with_gallery
                 assert len(spectra_list) == 0
             else:
                 assert len(spectra_list) == 1
+
+        elif product_type == 'image':
+            images_list = disp.get_list_images_with_conditions(source_name='crab',
+                                                               # e1_kev=e1_kev, e2_kev=e2_kev,
+                                                               t1='2012-01-01T00:00:00', t2='2012-11-01T00:00:00',
+                                                               ra_ref=50, dec_ref=60, r=100,
+                                                               instrument=instrument_name,
+                                                               token=encoded_token)
+            assert isinstance(images_list, list)
+
 
 
 @pytest.mark.test_drupal
