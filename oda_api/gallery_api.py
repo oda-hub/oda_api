@@ -4,7 +4,9 @@ from .api import DispatcherAPI, UserError
 from . import plot_tools
 
 from datetime import datetime
-from astropy.coordinates import Angle
+from astropy.coordinates import Angle, SkyCoord
+from astropy import units as u
+import numpy as np
 
 import logging
 import typing
@@ -131,6 +133,61 @@ class GalleryDispatcherAPI(DispatcherAPI):
 
         return response_json
 
+
+    def get_list_images_with_conditions(self,
+                                        token: str = None,
+                                        instrument=None,
+                                        source_name=None,
+                                        e1_kev=None, e2_kev=None,
+                                        t1=None, t2=None,
+                                        ra_ref=None, dec_ref=None,
+                                        r=None
+                                        ):
+        rev1_value = None
+        if t1 is not None:
+            params = {'time_to_convert': t1,
+                      'token': token}
+
+            c = requests.get(os.path.join(self.url, "get_revnum"),
+                             params={**params}
+                             )
+            revnum_obj = c.json()
+            rev1_value = revnum_obj['revnum']
+
+        rev2_value = None
+        if t2 is not None:
+            params = {'time_to_convert': t2,
+                      'token': token}
+
+            c = requests.get(os.path.join(self.url, "get_revnum"),
+                             params={**params}
+                             )
+            revnum_obj = c.json()
+            rev2_value = revnum_obj['revnum']
+
+        product_list = self.get_list_products_with_conditions(token=token,
+                                                              instrument_name=instrument,
+                                                              product_type='image',
+                                                              src_name=source_name,
+                                                              e1_kev=e1_kev,
+                                                              e2_kev=e2_kev,
+                                                              rev1_value=rev1_value,
+                                                              rev2_value=rev2_value)
+
+        if isinstance(product_list, list) and ra_ref is not None and dec_ref is not None and r is not None:
+            source_coord_ref = SkyCoord(ra_ref, dec_ref, unit=(u.deg, u.deg))
+
+            ra_values_prod_list = list(map(lambda x: x['ra'], filter(lambda x: 'ra' in x, product_list)))
+            dec_values_prod_list = list(map(lambda x: x['dec'], filter(lambda x: 'dec' in x, product_list)))
+            coords_prod_list = SkyCoord(ra_values_prod_list, dec_values_prod_list, unit=(u.deg, u.deg))
+
+            separation = source_coord_ref.separation(coords_prod_list).deg
+
+            ind = (separation <= r)
+
+            product_list = list(np.array(product_list)[ind])
+
+        return product_list
 
     def get_list_lightcurve_with_conditions(self,
                                             token: str = None,
