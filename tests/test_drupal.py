@@ -775,7 +775,7 @@ def test_product_gallery_get_product_with_conditions(dispatcher_api_with_gallery
     }
     encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
     disp = dispatcher_api_with_gallery
-    product_type_arg = 'isgri_lightcurve'
+    product_type_arg = 'isgri_lc'
     if product_type == 'spectrum':
         product_type_arg = 'isgri_spectrum'
     elif product_type == 'image':
@@ -783,23 +783,9 @@ def test_product_gallery_get_product_with_conditions(dispatcher_api_with_gallery
 
     instrument_name = 'isgri'
     T1 = '2022-07-21T00:29:47'
-    # params = {'time_to_convert': T1,
-    #           'token': encoded_token}
-    #
-    # c = requests.get(os.path.join(disp.url, "get_revnum"),
-    #                  params={**params}
-    #                  )
-    # revnum_obj = c.json()
     T1_revs = 2528
 
     T2 = '2022-08-23T05:29:11'
-    # params = {'time_to_convert': T2,
-    #           'token': encoded_token}
-    #
-    # c = requests.get(os.path.join(disp.url, "get_revnum"),
-    #                  params={**params}
-    #                  )
-    # revnum_obj = c.json()
     T2_revs = 2540
 
     source_name = 'test astro entity' + '_' + str(uuid.uuid4())
@@ -862,7 +848,7 @@ def test_product_gallery_get_product_with_conditions(dispatcher_api_with_gallery
                                                                         token=encoded_token)
                 assert isinstance(spectra_list, list)
 
-                if e1_kev > 100 or e2_kev < 350 or t1_revs > T1_revs or t2_revs < T2_revs:
+                if e1_kev > 150 or e2_kev < 350 or t1_revs > T1_revs or t2_revs < T2_revs:
                     assert len(spectra_list) == 0
                 else:
                     assert len(spectra_list) == 1
