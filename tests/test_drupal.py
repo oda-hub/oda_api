@@ -841,17 +841,17 @@ def test_product_gallery_get_product_with_conditions(dispatcher_api_with_gallery
                     assert len(spectra_list) == 1
 
             elif product_type == 'lightcurve':
-                spectra_list = disp.get_list_lightcurve_with_conditions(source_name=source_name,
+                lightcurves_list = disp.get_list_lightcurve_with_conditions(source_name=source_name,
                                                                         e1_kev=e1_kev, e2_kev=e2_kev,
                                                                         t1=t1, t2=t2,
                                                                         instrument=instrument_name,
                                                                         token=encoded_token)
-                assert isinstance(spectra_list, list)
+                assert isinstance(lightcurves_list, list)
 
                 if e1_kev > 150 or e2_kev < 350 or t1_revs > T1_revs or t2_revs < T2_revs:
-                    assert len(spectra_list) == 0
+                    assert len(lightcurves_list) == 0
                 else:
-                    assert len(spectra_list) == 1
+                    assert len(lightcurves_list) == 1
 
     elif product_type == 'image':
         for r in [0, 20, 200]:
