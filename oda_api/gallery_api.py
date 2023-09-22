@@ -220,8 +220,8 @@ class GalleryDispatcherAPI(DispatcherAPI):
                                                       instrument_name=instrument,
                                                       product_type='lightcurve',
                                                       src_name=source_name,
-                                                      e1_kev=e1_kev,
-                                                      e2_kev=e2_kev,
+                                                      e1_kev_value=e1_kev,
+                                                      e2_kev_value=e2_kev,
                                                       rev1_value=rev1_value,
                                                       rev2_value=rev2_value)
 
