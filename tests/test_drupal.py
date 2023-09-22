@@ -855,11 +855,11 @@ def test_product_gallery_get_product_with_conditions(dispatcher_api_with_gallery
 
     elif product_type == 'image':
         for r in [0, 20, 200]:
-            images_list = disp.get_list_images_with_conditions(e1_kev=100, e2_kev=400,
-                                                               t1='2022-07-20T00:00:00', t2='2022-08-24T23:59:59',
-                                                               ra_ref=100, dec_ref=0, r=r,
-                                                               instrument=instrument_name,
-                                                               token=encoded_token)
+            images_list = disp.get_list_images_angular_distance(e1_kev=100, e2_kev=400,
+                                                                t1='2022-07-20T00:00:00', t2='2022-08-24T23:59:59',
+                                                                ra_ref=100, dec_ref=0, r=r,
+                                                                instrument=instrument_name,
+                                                                token=encoded_token)
             assert isinstance(images_list, list)
 
             if r > 20:
