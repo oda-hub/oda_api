@@ -4,8 +4,8 @@ from .api import DispatcherAPI, UserError
 from . import plot_tools
 
 from datetime import datetime
-from astropy.coordinates import Angle, SkyCoord
 from astropy import units as u
+from astropy.coordinates import Angle, SkyCoord
 import numpy as np
 
 import logging
