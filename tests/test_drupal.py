@@ -766,6 +766,108 @@ def test_update_product_gallery(dispatcher_api_with_gallery, dispatcher_test_con
 
 
 @pytest.mark.test_drupal
+@pytest.mark.parametrize("product_type", ["spectrum", "lightcurve", "image"])
+def test_product_gallery_get_product_with_conditions(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery, product_type):
+    # let's generate a valid token
+    token_payload = {
+        **default_token_payload,
+        "roles": "general, gallery contributor",
+    }
+    encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
+    disp = dispatcher_api_with_gallery
+    product_type_arg = 'isgri_lc'
+    if product_type == 'spectrum':
+        product_type_arg = 'isgri_spectrum'
+    elif product_type == 'image':
+        product_type_arg = 'isgri_image'
+
+    instrument_name = 'isgri'
+    T1 = '2022-07-21T00:29:47'
+    T1_revs = 2528
+
+    T2 = '2022-08-23T05:29:11'
+    T2_revs = 2540
+
+    source_name = 'test astro entity' + '_' + str(uuid.uuid4())
+    product_title = 'test same source different name'
+    disp.post_data_product_to_gallery(
+        product_title=product_title,
+        instrument=instrument_name,
+        product_type=product_type_arg,
+        src_name=source_name,
+        insert_new_source=True,
+        token=encoded_token,
+        e1_kev=150, e2_kev=350,
+        ra=140, dec=-10,
+        T1=T1, T2=T2
+    )
+
+    if product_type == 'spectrum' or product_type == 'lightcurve':
+        for e1_kev, e2_kev, t1, t2 in [
+            (100, 350, '2022-07-21T00:29:47', '2022-08-23T05:29:11'),
+            (100, 350, '2022-07-19T00:29:47', '2022-08-25T05:29:11'),
+            (100, 350, '2022-07-29T00:29:47', '2022-08-01T05:29:11'),
+            (100, 350, '2022-07-19T00:29:47', '2022-08-23T05:29:11'),
+            (50, 400, '2022-07-21T00:29:47', '2022-08-23T05:29:11'),
+            (200, 350, '2022-07-21T00:29:47', '2022-08-23T05:29:11'),
+            (50, 300, '2022-07-21T00:29:47', '2022-08-23T05:29:11'),
+        ]:
+            params = {'time_to_convert': t1,
+                      'token': encoded_token}
+
+            c = requests.get(os.path.join(disp.url, "get_revnum"),
+                             params={**params}
+                             )
+            revnum_obj = c.json()
+            t1_revs = revnum_obj['revnum']
+
+            params['time_to_convert'] = t2
+            c = requests.get(os.path.join(disp.url, "get_revnum"),
+                             params={**params}
+                             )
+            revnum_obj = c.json()
+
+            t2_revs = revnum_obj['revnum']
+            if product_type == 'spectrum':
+                spectra_list = disp.get_list_spectra_with_conditions(source_name=source_name,
+                                                                     t1=t1, t2=t2,
+                                                                     instrument=instrument_name,
+                                                                     token=encoded_token)
+                assert isinstance(spectra_list, list)
+
+                if t1_revs > T1_revs or t2_revs < T2_revs:
+                    assert len(spectra_list) == 0
+                else:
+                    assert len(spectra_list) == 1
+
+            elif product_type == 'lightcurve':
+                lightcurves_list = disp.get_list_lightcurve_with_conditions(source_name=source_name,
+                                                                        e1_kev=e1_kev, e2_kev=e2_kev,
+                                                                        t1=t1, t2=t2,
+                                                                        instrument=instrument_name,
+                                                                        token=encoded_token)
+                assert isinstance(lightcurves_list, list)
+
+                if e1_kev > 150 or e2_kev < 350 or t1_revs > T1_revs or t2_revs < T2_revs:
+                    assert len(lightcurves_list) == 0
+                else:
+                    assert len(lightcurves_list) == 1
+
+    elif product_type == 'image':
+        for r in [0, 20, 200]:
+            images_list = disp.get_list_images_angular_distance(e1_kev=100, e2_kev=400,
+                                                                t1='2022-07-20T00:00:00', t2='2022-08-24T23:59:59',
+                                                                ra_ref=100, dec_ref=0, r=r,
+                                                                instrument=instrument_name,
+                                                                token=encoded_token)
+            assert isinstance(images_list, list)
+
+            if r > 20:
+                assert any(image.get("title") == product_title for image in images_list)
+            else:
+                assert all(image.get("title") != product_title for image in images_list)
+
+@pytest.mark.test_drupal
 @pytest.mark.parametrize("source_name", ["new", "known"])
 def test_product_gallery_get_product_list_by_source_name(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery, source_name):
     # let's generate a valid token

@@ -41,7 +41,7 @@ jobs:
 
     - name: PyLint - more lint
       run: |
-        pylint -E oda_api
+        pylint --rcfile=.pylintrc -E oda_api
 
     - name: MyPy
       run: |
