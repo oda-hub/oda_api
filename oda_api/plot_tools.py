@@ -606,7 +606,7 @@ class OdaLightCurve(OdaProduct):
             plot_title = source_name
             _ = plt.title(plot_title)
             if find_excesses:
-                ind = numpy.abs(y - band_width)/dy > ng_sig_limit
+                ind = numpy.abs(y - meany) / std_dev > ng_sig_limit
                 if numpy.sum(ind) > 0:
                     _ = plt.plot(x[ind], y[ind], marker='x', color='red', linestyle='', markersize=10)
                     self.logger.info('We found positive excesses on the lightcurve at times')
