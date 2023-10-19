@@ -8,6 +8,7 @@ import glob
 import requests
 import oda_api.api
 import oda_api.token
+from oda_api.misc_helpers import validate_url
 
 from cdci_data_analysis.pytest_fixtures import DispatcherJobState
 from conftest import remove_old_token_files, remove_scratch_folders
@@ -227,6 +228,31 @@ def test_default_url_init():
         url=None
     )
     assert disp.url == "https://www.astro.unige.ch/mmoda/dispatch-data"
+
+
+@pytest.mark.parametrize("protocol", [('http://', True), ('https://', True), ('', False)])
+@pytest.mark.parametrize("hostname", [("localhost", True), 
+                                      ("oda-dispatcher", True), 
+                                      ("foo.bar.baz", True), 
+                                      ("1.2.3.4", True), 
+                                      ("", False),
+                                      ("*", False),
+                                      ("foo-", False,),
+                                      ("bar.", False)])
+@pytest.mark.parametrize("port", [("", True), (":8000", True), (':ab', False)])
+@pytest.mark.parametrize("path", [("", True), 
+                                  ("/", True), 
+                                  ("/foo", True), 
+                                  ("/foo/", True), 
+                                  ("/foo/b-ar", True),
+                                  ("/foo/b^ar", False)])
+def test_validate_url(protocol, hostname, port, path):
+    url = f"{protocol[0]}{hostname[0]}{port[0]}{path[0]}"
+    if protocol[1] and hostname[1] and port[1] and path[1]:
+        assert validate_url(url) is True
+    else:
+        assert validate_url(url) is False
+    
 
 
 @pytest.mark.parametrize("protocol_url", ['http://', 'https://', ''])
