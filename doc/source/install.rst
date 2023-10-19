@@ -19,7 +19,7 @@ Development version
 
 Download code and contribute
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Source code can be found can be found on github https://github.com/oda-hub/oda_api  (see https://github.com/oda-hub/oda_api/archive/refs/tags/v1.1.43.tar.gz for latest release bundle).
+Source code can be found can be found on github https://github.com/oda-hub/oda_api  (see https://github.com/oda-hub/oda_api/archive/refs/tags/v1.1.44.tar.gz for latest release bundle).
 
 To contribute, please feel free to fork the repository, apply your changes, and prepare a pull request.
 
