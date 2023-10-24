@@ -57,6 +57,9 @@ setup(name='oda_api',
           'gw': [
             "gwpy",
             "ligo.skymap"
+          ],
+          'ontology': [
+            "rdflib"
           ]
          },
       entry_points={
