@@ -59,14 +59,14 @@ class MainOntologyGraph:
             self._path = ontology_path
             self._ver = version 
 
+main_ontology_graph = None
+
 class Ontology:
     def __init__(self, ontology_path):
         global main_ontology_graph
-        try: 
-            self.g = main_ontology_graph.graph
-        except NameError: 
+        if main_ontology_graph is None:
             main_ontology_graph = MainOntologyGraph(ontology_path, '0') 
-            self.g = main_ontology_graph.graph
+        self.g = main_ontology_graph.graph
         # NOTE: the main ontology graph is initialized in first call and then persist 
         #       this reduces amount of ttl parsing and requests if it's read from remote
         #       every instance will reuse the copy of it 
@@ -236,7 +236,7 @@ class Ontology:
             try:
                 self.parse_oda_annotations(tmpg)
             except RuntimeError as e:
-                raise RequestNotUnderstood(e.message)
+                raise RequestNotUnderstood(str(e))
             extra_triples = tmpg.serialize(format=format)
         self.g.parse(data = extra_triples, format = format)
             
