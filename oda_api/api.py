@@ -36,6 +36,7 @@ import warnings
 import requests
 import ast
 import json
+import re
 
 try:
     # compatibility in some remaining environments
@@ -1339,3 +1340,46 @@ class DataCollection(object):
                 p.meta_data = p.meta
 
         return d
+
+class ProgressReporter(object):
+    """
+    The class allows to report task progress to end user
+    """
+    def __init__(self):
+        self._callback = None
+        callback_file = ".oda_api_callback"  # perhaps it would be better to define this constant in a common lib
+        if not os.path.isfile(callback_file):
+            return
+        with open(callback_file, 'r') as file:
+            self._callback = file.read().strip()
+
+    @property
+    def enabled(self):
+        return self._callback is not None
+
+    def report_progress(self, message: str):
+        """
+        Report progress via callback URL
+        :param message: message to pass
+        """
+        if not self.enabled:
+            logger.info('no callback registered, skipping')
+            return
+
+        logger.info('will perform callback: %s', self._callback)
+
+        callback_payload = dict(
+            message=message
+        )
+
+        if re.match('^file://', self._callback):
+            with open(self._callback.replace('file://', ''), "w") as f:
+                json.dump(callback_payload, f)
+            logger.info('stored callback in a file %s', self._callback)
+
+        elif re.match('^https?://', self._callback):
+            r = requests.get(self._callback, params=callback_payload)
+            logger.info('callback %s returns %s : %s', self._callback, r, r.text)
+
+        else:
+            raise NotImplementedError
