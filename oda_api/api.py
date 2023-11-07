@@ -1357,20 +1357,22 @@ class ProgressReporter(object):
     def enabled(self):
         return self._callback is not None
 
-    def report_progress(self, message: str):
+    def report_progress(self, stage: str=None, progress: int=50, substage: str=None, subprogress: int=None, message:str=None):
         """
         Report progress via callback URL
+        :param stage: current stage description string
+        :param stage: current stage progress in %
+        :param stage: current substage description string
+        :param stage: current substage progress in %
         :param message: message to pass
         """
+        callback_payload = {k: str(v) for k, v in locals().items() if v is not None and k != 'self'}
+
         if not self.enabled:
             logger.info('no callback registered, skipping')
             return
 
         logger.info('will perform callback: %s', self._callback)
-
-        callback_payload = dict(
-            message=message
-        )
 
         if re.match('^file://', self._callback):
             with open(self._callback.replace('file://', ''), "w") as f:
