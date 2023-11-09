@@ -65,7 +65,6 @@ def test_token_modify(default_token, secret_key, monkeypatch, caplog):
     assert 'your new token payload:' in caplog.text    
     assert '"msdone": false' in caplog.text    
     assert '"mssub": false' in caplog.text
-    assert '"mssub": false' in caplog.text
 
 def test_get(dispatcher_live_fixture, caplog, monkeypatch, tmpdir):
     runner = CliRunner()
