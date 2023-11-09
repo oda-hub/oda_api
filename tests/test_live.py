@@ -90,6 +90,7 @@ def test_instruments():
         host=host,
         instrument="mock",
     )
+    disp.token = None
     instrument_list = disp.get_instruments_list()
     print(f"instrument list: {instrument_list}")
     assert {'isgri', 'jemx', 'polar', 'antares', 'gw', 'spi_acs', 'legacysurvey'} - set(instrument_list) == set()
@@ -101,7 +102,6 @@ def test_instrument_description_not_null(remove_any_token_from_environment):
         host=get_platform_dispatcher(),
         instrument="mock",
     )
-
     assert disp.get_instrument_description('isgri') is not None
 
 
