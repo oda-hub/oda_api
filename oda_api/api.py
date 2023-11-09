@@ -976,7 +976,9 @@ class DispatcherAPI:
 
     @safe_run
     def get_instruments_list(self):
-        res = requests.get("%s/api/instr-list" % self.url,
+        url_request = "%s/api/instr-list" % self.url
+        print(f"url request: {url_request}")
+        res = requests.get(url_request,
                            params=dict(instrument=self.instrument, token=self.token), cookies=self.cookies)
 
         if res.status_code != 200:
