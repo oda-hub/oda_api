@@ -84,13 +84,13 @@ def validate_data(data, scw_kind):
 
 def test_instruments():
     from oda_api.api import DispatcherAPI
+
     host=get_platform_dispatcher()
     print(f"host: {host}")
     disp = DispatcherAPI(
         host=host,
         instrument="mock",
     )
-    disp.token = None
     instrument_list = disp.get_instruments_list()
     print(f"instrument list: {instrument_list}")
     assert {'isgri', 'jemx', 'polar', 'antares', 'gw', 'spi_acs', 'legacysurvey'} - set(instrument_list) == set()
