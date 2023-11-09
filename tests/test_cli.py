@@ -44,11 +44,7 @@ def test_token_inspect(token_placement, default_token, monkeypatch, caplog, tmpd
     else:
         assert result.exit_code == 0
         assert '"sub": "mtm@mtmco.net"' in caplog.text
-        assert '"mssub": true' in caplog.text
-
-    os.remove(os.path.join(os.getcwd(), ".oda-token"))
-    os.environ.pop('ODA_TOKEN', None)
-    os.remove(oda_token_home_fn)
+        assert '"mssub": true' in caplog.text    
 
 def test_token_modify(default_token, secret_key, monkeypatch, caplog):
     monkeypatch.setenv('ODA_TOKEN', default_token)
