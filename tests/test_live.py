@@ -84,11 +84,15 @@ def validate_data(data, scw_kind):
 
 def test_instruments():
     from oda_api.api import DispatcherAPI
+    host=get_platform_dispatcher()
+    print(f"host: {host}")
     disp = DispatcherAPI(
-        host=get_platform_dispatcher(),
+        host=host,
         instrument="mock",
     )
-    assert {'isgri', 'jemx', 'polar', 'antares', 'gw', 'spi_acs', 'legacysurvey'} - set(disp.get_instruments_list()) == set()
+    instrument_list = disp.get_instruments_list()
+    print(f"instrument list: {instrument_list}")
+    assert {'isgri', 'jemx', 'polar', 'antares', 'gw', 'spi_acs', 'legacysurvey'} - set(instrument_list) == set()
 
 
 def test_instrument_description_not_null(remove_any_token_from_environment):
