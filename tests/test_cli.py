@@ -66,8 +66,6 @@ def test_token_modify(default_token, secret_key, monkeypatch, caplog):
     assert '"msdone": false' in caplog.text    
     assert '"mssub": false' in caplog.text
 
-    os.environ.pop('ODA_TOKEN', None)
-    
 def test_get(dispatcher_live_fixture, caplog, monkeypatch, tmpdir):
     runner = CliRunner()
     result = runner.invoke(cli.cli, ['-u', dispatcher_live_fixture, 'get'], obj={})
