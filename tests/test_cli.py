@@ -46,10 +46,6 @@ def test_token_inspect(token_placement, default_token, monkeypatch, caplog, tmpd
         assert '"sub": "mtm@mtmco.net"' in caplog.text
         assert '"mssub": true' in caplog.text    
 
-    os.remove(os.path.join(os.getcwd(), ".oda-token"))
-    os.environ.pop('ODA_TOKEN', None)
-    os.remove(oda_token_home_fn)
-
 def test_token_modify(default_token, secret_key, monkeypatch, caplog):
     monkeypatch.setenv('ODA_TOKEN', default_token)
 
@@ -68,9 +64,7 @@ def test_token_modify(default_token, secret_key, monkeypatch, caplog):
     assert 'your current token payload:' in caplog.text    
     assert 'your new token payload:' in caplog.text    
     assert '"msdone": false' in caplog.text    
-    assert '"mssub": false' in caplog.text
-
-    os.environ.pop('ODA_TOKEN', None)
+    assert '"mssub": false' in caplog.text    
     
 def test_get(dispatcher_live_fixture, caplog, monkeypatch, tmpdir):
     runner = CliRunner()

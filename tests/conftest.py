@@ -103,6 +103,19 @@ def default_token(default_token_payload, secret_key) -> str:
     return token
 
 
+@pytest.fixture
+def environment_token_clean_up():
+    oda_token_cwd_fn = ".oda-token"
+    if os.path.exists(oda_token_cwd_fn):
+        os.remove(oda_token_cwd_fn)
+
+    home_dir = os.environ.get('HOME', None)
+    if home_dir is not None:
+        oda_token_home_fn = os.path.join(home_dir, ".oda-token")
+        os.remove(oda_token_home_fn)
+
+    os.environ.pop('ODA_TOKEN', None)
+
 def remove_scratch_folders(job_id=None):
     if job_id is None:
         dir_list = glob.glob('scratch_*')
