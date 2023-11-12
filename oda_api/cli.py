@@ -149,7 +149,7 @@ def modify(obj, disable_email, disable_matrix, matrix_room_id, new_validity_hour
 
         if matrix_room_id is not None:
             logger.info("setting matrix room id")
-            new_payload['mxroomid'] = False
+            new_payload['mxroomid'] = matrix_room_id
 
         if new_validity_hours is not None:
             new_payload['exp'] = time.time() + new_validity_hours * 3600
