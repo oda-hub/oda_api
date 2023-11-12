@@ -123,9 +123,11 @@ def inspect(obj):
     
 @tokencli.command()
 @click.option("--disable-email", default=False, is_flag=True)
+@click.option("--disable-matrix", default=False, is_flag=True)
+@click.option("--matrix-room-id", default=None)
 @click.option("--new-validity-hours", default=None, type=float)
 @click.pass_obj
-def modify(obj, disable_email, new_validity_hours):
+def modify(obj, disable_email, disable_matrix, matrix_room_id, new_validity_hours):
     token = obj['token']
     decoded_token = obj['decoded_token']
 
@@ -140,6 +142,14 @@ def modify(obj, disable_email, new_validity_hours):
             # TODO: think if need this
             # new_payload['msfail'] = False
 
+        if disable_matrix:
+            logger.info("disabling matrix submission")
+            new_payload['mxsub'] = False
+            new_payload['mxdone'] = False
+
+        if matrix_room_id is not None:
+            logger.info("setting matrix room id")
+            new_payload['mxroomid'] = False
 
         if new_validity_hours is not None:
             new_payload['exp'] = time.time() + new_validity_hours * 3600
