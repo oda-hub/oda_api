@@ -21,9 +21,8 @@ oda_api is distributed under the terms of The MIT License.
 
 Who's responsible?
 -------------------
-Andrea Tramacere
-
-Volodymyr Savchenko
+Volodymyr Savchenko (https://github.com/volodymyrss)
+Gabriele Barni (https://github.com/burnout87)
 
 Astronomy Department of the University of Geneva
 
@@ -31,11 +30,6 @@ Chemin d'Ecogia 16
 CH-1290 Versoix
 Switzerland
 
-
-
-Download the code
--------------------
-   - pip install --upgrade oda-api
 
 Installation
 -------------------
