@@ -31,11 +31,6 @@ CH-1290 Versoix
 Switzerland
 
 
-
-Download the code
--------------------
-   - pip install --upgrade oda-api
-
 Installation
 -------------------
 
