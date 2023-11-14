@@ -2,7 +2,11 @@ oda_api
 ==========================================
 
 [![PyPI version](https://badge.fury.io/py/oda-api.svg)](https://badge.fury.io/py/oda-api)
+![](https://anaconda.org/mmoda/oda-api/badges/version.svg)
+![](https://anaconda.org/mmoda/oda-api/badges/latest_release_date.svg)
 [![Documentation Status](https://readthedocs.org/projects/oda-api/badge/?version=latest)](https://oda-api.readthedocs.io/en/latest/?badge=latest)
+
+
 ![Upload Python Package](https://github.com/cdcihub/oda_api/workflows/Upload%20Python%20Package/badge.svg)
 ![Prose Linting](https://github.com/volodymyrss/integral-isgri-rate-meaning/workflows/Prose%20Linting/badge.svg)
 ![Executing Notebook](https://github.com/volodymyrss/integral-isgri-rate-meaning/workflows/Executing%20Notebook/badge.svg)
@@ -17,9 +21,8 @@ oda_api is distributed under the terms of The MIT License.
 
 Who's responsible?
 -------------------
-Andrea Tramacere
-
-Volodymyr Savchenko
+Volodymyr Savchenko (https://github.com/volodymyrss)
+Gabriele Barni (https://github.com/burnout87)
 
 Astronomy Department of the University of Geneva
 
@@ -27,11 +30,6 @@ Chemin d'Ecogia 16
 CH-1290 Versoix
 Switzerland
 
-
-
-Download the code
--------------------
-   - pip install --upgrade oda-api
 
 Installation
 -------------------

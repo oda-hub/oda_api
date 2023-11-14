@@ -1,8 +1,8 @@
-from flask.json import JSONEncoder
+from json import JSONEncoder
 import logging
 import numpy as np
 
-from .data_products import NumpyDataProduct, ODAAstropyTable, PictureProduct, BinaryData
+from .data_products import NumpyDataProduct, ODAAstropyTable, PictureProduct, BinaryData, BinaryProduct
 
 from astropy.io.fits.card import Undefined as astropyUndefined
 
@@ -15,7 +15,7 @@ class CustomJSONEncoder(JSONEncoder):
         if isinstance(obj, astropyUndefined):
             return "UNDEFINED"
         
-        if isinstance(obj, (NumpyDataProduct, ODAAstropyTable, PictureProduct)):
+        if isinstance(obj, (NumpyDataProduct, ODAAstropyTable, PictureProduct, BinaryProduct)):
             return obj.encode()
         
         if isinstance(obj, BinaryData):
