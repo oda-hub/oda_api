@@ -776,8 +776,12 @@ class OdaSpectrum(OdaProduct):
 
         x, dx, y, dy = self.get_values(in_source_name, systematic_fraction)
 
+        if len(x) == 0:
+            logger.warning('Returning empty HTML string, as no data are retrieved')
+            return ''
         if x_range is None:
             x_range = [x.min(), x.max()]
+        
         if y_range is None:
             y_range = [numpy.max([1e-4, (y-dy)[x < x_range[1]].min()]), (y+dy).max()]
 
@@ -804,12 +808,12 @@ class OdaSpectrum(OdaProduct):
     def get_values(self, in_source_name='', systematic_fraction=0):
 
         if in_source_name == '':
-            return [], [], [], []
+            return numpy.array([]), numpy.array([]), numpy.array([]), numpy.array([])
         specprod = self.get_spectrum_products(in_source_name)
 
         if specprod is None:
-            return [], [], [], []
-
+            return numpy.array([]), numpy.array([]), numpy.array([]), numpy.array([])
+        
         spec = specprod[0].data_unit[1].to_fits_hdu()
         for hh in specprod[2].data_unit:
             if hh.to_fits_hdu().header['EXTNAME'] == 'EBOUNDS':
@@ -826,6 +830,7 @@ class OdaSpectrum(OdaProduct):
         dy = dy[mask]
         y /= dx
         dy /= dx
+
         return x, dx, y, dy
 
     def build_fig(self, in_source_name='', systematic_fraction=0, xlim=[]):
