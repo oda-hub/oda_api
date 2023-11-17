@@ -1366,7 +1366,8 @@ class ProgressReporter(object):
         :param subprogress: current substage progress in %
         :param message: message to pass
         """
-        callback_payload = {k: str(v) for k, v in locals().items() if v is not None and k != 'self'}
+        callback_payload = dict(stage=stage, progress=progress, substage=substage, subprogress=subprogress, message=message)
+        callback_payload = {k: v for k, v in callback_payload.items() if v is not None}
 
         if not self.enabled:
             logger.info('no callback registered, skipping')
