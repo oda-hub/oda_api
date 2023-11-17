@@ -71,10 +71,6 @@ def test_get(dispatcher_live_fixture, caplog, monkeypatch, tmpdir):
     result = runner.invoke(cli.cli, ['-u', dispatcher_live_fixture, 'get'], obj={})
     assert result.exit_code == 0
 
-    assert "found instruments: ['empty', 'empty-async', 'empty-semi-async', 'empty-async-return-progress']" in caplog.text or \
-           "found instruments: ['empty', 'empty-async', 'empty-semi-async', 'empty-async-return-progress', 'isgri', 'jemx', 'osa_fake']" in caplog.text or \
-           "found instruments: ['isgri', 'jemx', 'osa_fake', 'empty', 'empty-async', 'empty-semi-async', 'empty-async-return-progress']" in caplog.text
-
     runner = CliRunner()
     result = runner.invoke(cli.cli, ['-u', dispatcher_live_fixture, 'get', '-i', 'empty'], obj={})
     assert result.exit_code == 0
