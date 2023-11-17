@@ -4,6 +4,7 @@ on:
   push:
     branches:
     - master
+    - main
     - ci
     # - main
 
@@ -29,9 +30,17 @@ jobs:
         git config --global user.name "ODA Release Bot"
         bump2version patch --verbose --commit --tag
         bump2version release --verbose --commit --tag
-        git push --tags
+        # git push origin master --tags
 
-    - uses: stefanzweifel/git-auto-commit-action@v4
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: ${{ github.ref }}        
+        # force: true
+        tags: true
+
+    # - uses: stefanzweifel/git-auto-commit-action@v4
 
     - name: Build package
       run: python -m build
