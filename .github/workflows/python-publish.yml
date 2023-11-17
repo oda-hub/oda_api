@@ -30,7 +30,6 @@ jobs:
         git config --global user.name "ODA Release Bot"
         bump2version patch --verbose --commit --tag
         bump2version release --verbose --commit --tag
-        # git push origin master --tags
 
     - name: Push changes
       uses: ad-m/github-push-action@master
