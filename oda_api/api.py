@@ -1361,9 +1361,9 @@ class ProgressReporter(object):
         """
         Report progress via callback URL
         :param stage: current stage description string
-        :param stage: current stage progress in %
-        :param stage: current substage description string
-        :param stage: current substage progress in %
+        :param progress: current stage progress in %
+        :param substage: current substage description string
+        :param subprogress: current substage progress in %
         :param message: message to pass
         """
         callback_payload = {k: str(v) for k, v in locals().items() if v is not None and k != 'self'}
