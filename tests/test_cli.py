@@ -25,8 +25,8 @@ def test_token_inspect(token_placement, default_token, monkeypatch, caplog, tmpd
     monkeypatch.setenv('ODA_TOKEN', '')
 
     if token_placement == 'env':
-        monkeypatch.setenv('ODA_TOKEN', default_token)    
-        
+        monkeypatch.setenv('ODA_TOKEN', default_token)
+
     elif token_placement == 'cwddotfile':
         with open(oda_token_cwd_fn, "w") as f:
             f.write(default_token)
@@ -57,7 +57,7 @@ def test_token_modify(default_token, secret_key, monkeypatch, caplog):
     assert '"msdone": false' not in caplog.text    
     
     runner = CliRunner()
-    result = runner.invoke(cli.tokencli, ['-s', secret_key, 'modify', "--disable-email", "--new-validity-hours", "100"], obj={})
+    result = runner.invoke(cli.tokencli, ['-s', secret_key, 'modify', "--disable-email", "--new-validity-hours", "100", "--disable-matrix", "--matrix-room-id", "test_room_id:matrix.org"], obj={})
     assert result.exit_code == 0
         
     assert '"sub": "mtm@mtmco.net"' in caplog.text
@@ -65,6 +65,9 @@ def test_token_modify(default_token, secret_key, monkeypatch, caplog):
     assert 'your new token payload:' in caplog.text    
     assert '"msdone": false' in caplog.text    
     assert '"mssub": false' in caplog.text
+    assert '"mxdone": false' in caplog.text
+    assert '"mxsub": false' in caplog.text
+    assert '"mxroomid": "test_room_id:matrix.org"' in caplog.text
 
 def test_get(dispatcher_live_fixture, caplog, monkeypatch, tmpdir):
     runner = CliRunner()
