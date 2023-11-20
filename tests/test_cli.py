@@ -1,3 +1,4 @@
+import re
 from typing import ChainMap
 from click.testing import CliRunner
 import pytest
@@ -73,6 +74,8 @@ def test_get(dispatcher_live_fixture, caplog, monkeypatch, tmpdir):
     runner = CliRunner()
     result = runner.invoke(cli.cli, ['-u', dispatcher_live_fixture, 'get'], obj={})
     assert result.exit_code == 0
+
+    assert re.search(r"found instruments: \[.*\]", caplog.text)
 
     runner = CliRunner()
     result = runner.invoke(cli.cli, ['-u', dispatcher_live_fixture, 'get', '-i', 'empty'], obj={})
