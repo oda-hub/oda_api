@@ -531,7 +531,7 @@ class GalleryDispatcherAPI(DispatcherAPI):
         return response_json
 
     def delete_data_product_from_gallery_via_product_id(self,
-                                                        product_id: str = None,
+                                                        product_id: str,
                                                         token: typing.Optional[str] = None):
         """
 
@@ -548,11 +548,7 @@ class GalleryDispatcherAPI(DispatcherAPI):
             'product_id': product_id,
         }
 
-        posting_msg = 'Posting a product'
-        if product_id is not None:
-            posting_msg += f' with product_id {product_id}'
-        posting_msg += ' on the gallery'
-
+        posting_msg = f'Deleting from the gallery a product with product_id {product_id}'
         logger.info(posting_msg)
 
         res = requests.post("%s/delete_product_to_gallery" % self.url,
