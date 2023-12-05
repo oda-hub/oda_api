@@ -766,6 +766,32 @@ def test_update_product_gallery(dispatcher_api_with_gallery, dispatcher_test_con
 
 
 @pytest.mark.test_drupal
+def test_delete_product_gallery(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery):
+    # let's generate a valid token
+    token_payload = {
+        **default_token_payload,
+        'roles': 'general, gallery contributor'
+    }
+    encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
+    product_id = 'aaabbbccc_' + str(time.time())
+    disp = dispatcher_api_with_gallery
+
+    disp.post_data_product_to_gallery(product_title='Test data product to be deleted',
+                                      token=encoded_token,
+                                      product_id=product_id,
+                                      e1_kev=45, e2_kev=95)
+
+    list_products = disp.get_list_products_with_conditions(token=encoded_token, product_id=product_id)
+    assert len(list_products) == 1
+
+    res = disp.delete_data_product_from_gallery_via_product_id(token=encoded_token, product_id=product_id)
+    assert res == {}
+
+    list_products = disp.get_list_products_with_conditions(token=encoded_token, product_id=product_id)
+    assert len(list_products) == 0
+
+
+@pytest.mark.test_drupal
 @pytest.mark.parametrize("product_type", ["spectrum", "lightcurve", "image"])
 def test_product_gallery_get_product_with_conditions(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery, product_type):
     # let's generate a valid token
