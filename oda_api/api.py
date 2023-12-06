@@ -1368,7 +1368,7 @@ class ProgressReporter(object):
         """
         callback_payload = dict(stage=stage, progress=progress, substage=substage, subprogress=subprogress, message=message)
         callback_payload = {k: v for k, v in callback_payload.items() if v is not None}
-
+        callback_payload['action'] = 'progress'
         if not self.enabled:
             logger.info('no callback registered, skipping')
             return
