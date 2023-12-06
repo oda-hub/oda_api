@@ -530,6 +530,54 @@ class GalleryDispatcherAPI(DispatcherAPI):
 
         return response_json
 
+    def delete_data_product_from_gallery_via_product_id(self,
+                                                        product_id: str,
+                                                        token: typing.Optional[str] = None):
+        """
+
+        :param product_id: identifier of a data product assigned by the user, this can be used during the creation of a new data-product,
+               as well as to identify an already existing one and update it with the arguments provided by the user
+        :param token: user token
+        """
+        if token is None:
+            token = self.token
+
+        params = {
+            'content_type': 'data_product',
+            'token': token,
+            'product_id': product_id,
+        }
+
+        posting_msg = f'Deleting from the gallery a product with product_id {product_id}'
+        logger.info(posting_msg)
+
+        res = requests.post("%s/delete_product_to_gallery" % self.url,
+                            params={**params}
+                            )
+
+        if res.status_code != 200:
+            error_message = (f"An issue occurred while performing a request on the product gallery, "
+                             f"the following error was returned:\n")
+            try:
+                response_json = res.json()
+            except json.decoder.JSONDecodeError:
+                error_msg = res.text
+                response_json = {'error_message': error_msg}
+                logger.debug(response_json)
+
+            if 'error_message' in response_json:
+                error_message += '\n' + response_json['error_message']
+                if 'drupal_helper_error_message' in response_json:
+                    error_message += '-' + response_json['drupal_helper_error_message']
+
+            logger.warning(error_message)
+        else:
+            response_json = self._decode_res_json(res)
+            logger.info(f"Product successfully deleted from the gallery")
+
+        return response_json
+
+
     def post_data_product_to_gallery(self,
                                      product_title: typing.Optional[str] = None,
                                      product_id: str = None,

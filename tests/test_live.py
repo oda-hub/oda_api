@@ -82,7 +82,7 @@ def validate_data(data, scw_kind):
         assert len(t) == 1
 
 
-def test_instruments():
+def test_instruments(remove_any_token_from_environment):
     from oda_api.api import DispatcherAPI
     disp = DispatcherAPI(
         host=get_platform_dispatcher(),
