@@ -3,6 +3,7 @@ import os
 import json
 
 callback_file = ".oda_api_callback"
+request_params = dict(stage='simulation', progress=50, substage='spectra', subprogress=30, message='some message')
 
 def test_progress_reporter_disabled():
     if os.path.isfile(callback_file):
@@ -10,7 +11,11 @@ def test_progress_reporter_disabled():
     # if callback is not available
     pr = ProgressReporter()
     assert not pr.enabled
-    pr.report_progress(stage='simulation', progress=50, substage='spectra', subprogress=30, message='some message')
+    # the call below should not produce exception
+    try:
+        pr.report_progress(**request_params)
+    except:
+        assert False, 'report_progress raises exception in case of disabled ProgressReporter'
 
 def test_progress_reporter_enabled():
     # if callback is available
@@ -21,11 +26,13 @@ def test_progress_reporter_enabled():
 
         pr = ProgressReporter()
         assert pr.enabled
-        params = dict(stage='simulation', progress=50, substage='spectra', subprogress=30, message='some message')
-        pr.report_progress(**params)
+
+        pr.report_progress(**request_params)
+
+        # verify that params passed to report_progress were saved to dump_file
         with open(dump_file) as json_file:
-            passed_params = json.load(json_file)
-            assert len([k for k in passed_params.keys() if k not in params]) == 0
+            saved_params = json.load(json_file)
+            assert saved_params == request_params
     finally:
         if os.path.isfile(callback_file):
             os.remove(callback_file)
