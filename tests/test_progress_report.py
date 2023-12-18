@@ -32,6 +32,8 @@ def test_progress_reporter_enabled():
         # verify that params passed to report_progress were saved to dump_file
         with open(dump_file) as json_file:
             saved_params = json.load(json_file)
+            # append extra param befor check
+            request_params['action'] = 'progress'  # this key is added by report_progress
             assert saved_params == request_params
     finally:
         if os.path.isfile(callback_file):
