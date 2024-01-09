@@ -167,14 +167,15 @@ def modify(obj, disable_email, disable_matrix, matrix_room_id, new_validity_hour
 @cli.command("inspect")
 @click.option("-s", "--store", default="dispatcher-state.json")
 @click.option("-j", "--job-id", default=None)
+@click.option("--group-by-job", default=False, is_flag=True)
 @click.option("-l", "--local", default=False, is_flag=True)
 # @click.option("-V", "--validate", default=None)
 @click.pass_obj
-def inspect_state(obj, store, job_id, local):
+def inspect_state(obj, store, job_id, local, group_by_job):
     if local:
         state = json.load(open(store))
     else:
-        state = obj['dispatcher'].inspect_state(job_id=job_id)    
+        state = obj['dispatcher'].inspect_state(job_id=job_id, group_by_job=group_by_job)
         json.dump(
                 state,
                 open(store, "w"),
