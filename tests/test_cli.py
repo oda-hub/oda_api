@@ -41,14 +41,13 @@ def test_inspect_state(dispatcher_live_fixture, monkeypatch, group_by_job):
     if group_by_job:
         args.append('--group-by-job')
     result = runner.invoke(cli.cli, args=args, obj={})
-    print(result)
     assert result.exit_code == 0
 
 
 @pytest.mark.parametrize('token_placement', ['no', 'env', 'homedotfile', 'cwddotfile'])
 def test_token_inspect(token_placement, default_token, monkeypatch, caplog, tmpdir):
     # this to make sure the level is sufficient to capture the DEBUG logs
-    caplog.set_level(logging.DEBUG)
+    logging.getLogger('oda_api').setLevel("DEBUG")
     # reset any existing token locations    
     os.makedirs(tmpdir, exist_ok=True)    
     monkeypatch.setenv('HOME', tmpdir)
