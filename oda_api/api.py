@@ -36,6 +36,7 @@ import warnings
 import requests
 import ast
 import json
+import re
 
 try:
     # compatibility in some remaining environments
@@ -1339,3 +1340,49 @@ class DataCollection(object):
                 p.meta_data = p.meta
 
         return d
+
+class ProgressReporter(object):
+    """
+    The class allows to report task progress to end user
+    """
+    def __init__(self):
+        self._callback = None
+        callback_file = ".oda_api_callback"  # perhaps it would be better to define this constant in a common lib
+        if not os.path.isfile(callback_file):
+            return
+        with open(callback_file, 'r') as file:
+            self._callback = file.read().strip()
+
+    @property
+    def enabled(self):
+        return self._callback is not None
+
+    def report_progress(self, stage: str=None, progress: int=50, substage: str=None, subprogress: int=None, message:str=None):
+        """
+        Report progress via callback URL
+        :param stage: current stage description string
+        :param progress: current stage progress in %
+        :param substage: current substage description string
+        :param subprogress: current substage progress in %
+        :param message: message to pass
+        """
+        callback_payload = dict(stage=stage, progress=progress, substage=substage, subprogress=subprogress, message=message)
+        callback_payload = {k: v for k, v in callback_payload.items() if v is not None}
+        callback_payload['action'] = 'progress'
+        if not self.enabled:
+            logger.info('no callback registered, skipping')
+            return
+
+        logger.info('will perform callback: %s', self._callback)
+
+        if re.match('^file://', self._callback):
+            with open(self._callback.replace('file://', ''), "w") as f:
+                json.dump(callback_payload, f)
+            logger.info('stored callback in a file %s', self._callback)
+
+        elif re.match('^https?://', self._callback):
+            r = requests.get(self._callback, params=callback_payload)
+            logger.info('callback %s returns %s : %s', self._callback, r, r.text)
+
+        else:
+            raise NotImplementedError
