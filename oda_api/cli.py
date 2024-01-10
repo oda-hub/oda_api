@@ -184,11 +184,17 @@ def inspect_state(obj, store, job_id, local, group_by_job):
             )
 
     # if validate:
-    for record in sorted(state['records'], key=lambda r:r['mtime']):
-        print("session_id", record['session_id'], "job_id", record['job_id'], datetime.fromtimestamp(record['mtime']))
-        for email in record.get('analysis_parameters', {}).get('email_history', []):
-            print("    - ", email)
-
+    if not group_by_job:
+        for record in sorted(state['records'], key=lambda r:r['mtime']):
+            print("session_id", record['session_id'], "job_id", record['job_id'], datetime.fromtimestamp(record['mtime']))
+            for email in record.get('analysis_parameters', {}).get('email_history', []):
+                print("    - ", email)
+            for matrix_message in record.get('analysis_parameters', {}).get('matrix_message_history', []):
+                print("    - ", matrix_message)
+    else:
+        for record in state['records']:
+            print("job_id", record['job_id'])
+            # TODO which information should be printed?
 
 def main():
     cli(obj={})
