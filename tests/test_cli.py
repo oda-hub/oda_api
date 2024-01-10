@@ -23,7 +23,7 @@ default_token_payload = dict(
 )
 
 @pytest.mark.parametrize('group_by_job', [True, False])
-def test_inspect_state(dispatcher_live_fixture, caplog, monkeypatch, group_by_job):
+def test_inspect_state(dispatcher_live_fixture, monkeypatch, group_by_job):
     token_payload = default_token_payload.copy()
     token_payload['roles'] = ['general', 'job manager']
     encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
