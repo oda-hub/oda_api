@@ -194,13 +194,20 @@ def inspect_state(obj, store, job_id, local, group_by_job):
     else:
         for record in state['records']:
             logger.info(f"job_id: {record['job_id']}")
-            # TODO which information should be printed?
             for job_status_data in record['job_status_data']:
                 request_completed = job_status_data['request_completed']
                 token_expired = job_status_data.get('token_expired', None)
                 scratch_dir_fn = job_status_data['scratch_dir_fn']
                 session_id = scratch_dir_fn.split('_')[2]
-                logger.info(f"\tsession_id: {session_id}")
+                msg = f'\tsession_id: {session_id}'
+                if not request_completed:
+                    msg += ' - request did not complete'
+                    if token_expired:
+                        msg += ' because the token was expired'
+                else:
+                    msg += ' - request completed successfully'
+                logger.info(msg)
+
 
 def main():
     cli(obj={})
