@@ -195,7 +195,7 @@ def inspect_state(obj, store, job_id, local, group_by_job):
         for record in state['records']:
             logger.info(f"job_id: {record['job_id']}")
             # TODO which information should be printed?
-            for job_status_data in record['job_id']:
+            for job_status_data in record['job_status_data']:
                 request_completed = job_status_data['request_completed']
                 token_expired = job_status_data.get('token_expired', None)
                 scratch_dir_fn = job_status_data['scratch_dir_fn']
