@@ -191,6 +191,15 @@ def inspect_state(obj, store, job_id, local, group_by_job):
                 logger.info(f"    - {email}")
             for matrix_message in record.get('analysis_parameters', {}).get('matrix_message_history', []):
                 logger.info(f"    - {matrix_message}")
+            request_completed = record['request_completed']
+            token_expired = record.get('token_expired', None)
+            if not request_completed:
+                msg = '\tRequest did not complete'
+                if token_expired:
+                    msg += ' because the token was expired'
+            else:
+                msg = '\tRequest completed successfully'
+            logger.info(msg)
     else:
         for record in state['records']:
             logger.info(f"job_id: {record['job_id']}")
