@@ -337,8 +337,8 @@ class DispatcherAPI:
             }
         }
 
-    def inspect_state(self, job_id=None):
-        params = dict(token=oda_api.token.discover_token())
+    def inspect_state(self, job_id=None, group_by_job=False):
+        params = dict(token=oda_api.token.discover_token(), group_by_job=group_by_job)
 
         if job_id is not None:
             params['job_id'] = job_id

@@ -1,16 +1,53 @@
+import logging
 import re
 from typing import ChainMap
 from click.testing import CliRunner
 import pytest
 import os
 import jwt
+import time
 
 from oda_api import cli
-from tests.test_basic import default_token_payload, secret_key
+from cdci_data_analysis.pytest_fixtures import DispatcherJobState
+# from tests.test_basic import default_token_payload, secret_key
+
+secret_key = 'secretkey_test'
+default_exp_time = int(time.time()) + 5000
+default_token_payload = dict(
+    sub="mtm@mtmco.net",
+    name="mmeharga",
+    roles="general",
+    exp=default_exp_time,
+    tem=0,
+    mstout=True,
+    mssub=True
+)
+
+@pytest.mark.parametrize('group_by_job', [True, False])
+def test_inspect_state(dispatcher_live_fixture, monkeypatch, group_by_job):
+    token_payload = default_token_payload.copy()
+    token_payload['roles'] = ['general', 'job manager']
+    encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
+    monkeypatch.setenv('ODA_TOKEN', encoded_token)
+
+    DispatcherJobState.remove_scratch_folders()
+
+    runner = CliRunner()
+    result = runner.invoke(cli.cli, ['-u', dispatcher_live_fixture, 'get', '-i', 'empty', '-p', 'dummy', '-a', 'product_type=Dummy'], obj={})
+    assert result.exit_code == 0
+
+    runner = CliRunner()
+    args = ['-u', dispatcher_live_fixture, 'inspect']
+    if group_by_job:
+        args.append('--group-by-job')
+    result = runner.invoke(cli.cli, args=args, obj={})
+    assert result.exit_code == 0
 
 
 @pytest.mark.parametrize('token_placement', ['no', 'env', 'homedotfile', 'cwddotfile'])
 def test_token_inspect(token_placement, default_token, monkeypatch, caplog, tmpdir):
+    # this to make sure the level is sufficient to capture the DEBUG logs
+    logging.getLogger('oda_api').setLevel("DEBUG")
     # reset any existing token locations    
     os.makedirs(tmpdir, exist_ok=True)    
     monkeypatch.setenv('HOME', tmpdir)

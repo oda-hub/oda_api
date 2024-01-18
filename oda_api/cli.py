@@ -167,14 +167,15 @@ def modify(obj, disable_email, disable_matrix, matrix_room_id, new_validity_hour
 @cli.command("inspect")
 @click.option("-s", "--store", default="dispatcher-state.json")
 @click.option("-j", "--job-id", default=None)
+@click.option("--group-by-job", default=False, is_flag=True)
 @click.option("-l", "--local", default=False, is_flag=True)
 # @click.option("-V", "--validate", default=None)
 @click.pass_obj
-def inspect_state(obj, store, job_id, local):
+def inspect_state(obj, store, job_id, local, group_by_job):
     if local:
         state = json.load(open(store))
     else:
-        state = obj['dispatcher'].inspect_state(job_id=job_id)    
+        state = obj['dispatcher'].inspect_state(job_id=job_id, group_by_job=group_by_job)
         json.dump(
                 state,
                 open(store, "w"),
@@ -183,10 +184,38 @@ def inspect_state(obj, store, job_id, local):
             )
 
     # if validate:
-    for record in sorted(state['records'], key=lambda r:r['mtime']):
-        print("session_id", record['session_id'], "job_id", record['job_id'], datetime.fromtimestamp(record['mtime']))
-        for email in record.get('analysis_parameters', {}).get('email_history', []):
-            print("    - ", email)
+    if not group_by_job:
+        for record in sorted(state['records'], key=lambda r:r['mtime']):
+            logger.info(f"session_id: {record['session_id']}, job_id: {record['job_id']} - {datetime.fromtimestamp(record['mtime'])}")
+            for email in record.get('analysis_parameters', {}).get('email_history', []):
+                logger.info(f"    - {email}")
+            for matrix_message in record.get('analysis_parameters', {}).get('matrix_message_history', []):
+                logger.info(f"    - {matrix_message}")
+            request_completed = record['request_completed']
+            token_expired = record.get('token_expired', None)
+            if not request_completed:
+                msg = '\tRequest did not complete'
+                if token_expired:
+                    msg += ' because the token was expired'
+            else:
+                msg = '\tRequest completed successfully'
+            logger.info(msg)
+    else:
+        for record in state['records']:
+            logger.info(f"job_id: {record['job_id']}")
+            for job_status_data in record['job_status_data']:
+                request_completed = job_status_data['request_completed']
+                token_expired = job_status_data.get('token_expired', None)
+                scratch_dir_fn = job_status_data['scratch_dir_fn']
+                session_id = scratch_dir_fn.split('_')[2]
+                msg = f'\tsession_id: {session_id}'
+                if not request_completed:
+                    msg += ' - request did not complete'
+                    if token_expired:
+                        msg += ' because the token was expired'
+                else:
+                    msg += ' - request completed successfully'
+                logger.info(msg)
 
 
 def main():
