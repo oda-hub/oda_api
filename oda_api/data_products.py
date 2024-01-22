@@ -299,16 +299,6 @@ class NumpyDataUnit(object):
 
     def to_fits_hdu(self):
         try:
-
-            logger.warning('------------------------------')
-            logger.warning('inside to_fits_hdu methods')
-            logger.warning(f'name: {self.name}')
-            logger.warning(f'header: {self.header}')
-            logger.warning(f'data: {self.data}')
-            logger.warning(f'units_dict: {self.units_dict}')
-            logger.warning(f'hdu_type: {self.hdu_type}')
-            logger.warning('------------------------------')
-
             for k,v in self.header.items():
                 if isinstance(v, list):
                     s=''
