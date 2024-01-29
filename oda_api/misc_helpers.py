@@ -7,7 +7,7 @@ regex_url = re.compile(
                 r'^https?://'  # http:// or https://
                 r'[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*'  # domain...
                 r'(?::\d+)?'  # optional port
-                r'(?:/[a-z0-9.~/-]*)?$', re.IGNORECASE)
+                r'(?:/[a-z0-9/-]*)?$', re.IGNORECASE)
 
 
 def validate_url(url):
