@@ -245,6 +245,7 @@ def test_default_url_init():
                                   ("/foo", True), 
                                   ("/foo/", True), 
                                   ("/foo/b-ar", True),
+                                  ("/foo34bar", True),
                                   ("/foo/b^ar", False)])
 def test_validate_url(protocol, hostname, port, path):
     url = f"{protocol[0]}{hostname[0]}{port[0]}{path[0]}"
