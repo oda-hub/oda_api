@@ -612,6 +612,10 @@ class DispatcherAPI:
             'oda_api_version': __version__,
         }
 
+        for k, v in p.items():
+            if isinstance(v, (list, dict, set)) and (k not in ['catalog_selected_objects', 'selected_catalog']):
+                p[k] = json.dumps(v)
+        
         if self.is_submitted:
             return {
                 **p,

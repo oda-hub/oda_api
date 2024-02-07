@@ -749,3 +749,18 @@ def test_local_products(dispatcher_api, token):
         disp.token = encoded_token
         with pytest.raises(oda_api.api.UnexpectedDispatcherStatusCode):
             disp.get_product_description('empty', 'dummy')
+            
+def test_structured_param_encoding():
+    disp = oda_api.api.DispatcherAPI(url='http://example.org/dispatcher')
+    disp.parameters_dict = {
+        'str_par': 'foo',
+        'num_par': 4.5,
+        'dic_par': {'a': 4.6, 'b': 3.4},
+        'lst_par': ['spam', 'ham'] 
+    }
+    
+    payload = disp.parameters_dict_payload
+    assert payload['str_par'] == 'foo'
+    assert payload['num_par'] == 4.5
+    assert payload['dic_par'] == '{"a": 4.6, "b": 3.4}'
+    assert payload['lst_par'] == '["spam", "ham"]'
