@@ -3,7 +3,7 @@ import os
 import json
 
 callback_file = ".oda_api_callback"
-request_params = dict(stage='simulation', progress=50, substage='spectra', subprogress=30, message='some message')
+request_params = dict(stage='simulation', progress=50, progress_max=100, substage='spectra', subprogress=30, message='some message')
 
 def test_progress_reporter_disabled():
     if os.path.isfile(callback_file):
