@@ -187,10 +187,14 @@ def inspect_state(obj, store, job_id, local, group_by_job):
     if not group_by_job:
         for record in sorted(state['records'], key=lambda r:r['mtime']):
             logger.info(f"session_id: {record['session_id']}, job_id: {record['job_id']} - {datetime.fromtimestamp(record['mtime'])}")
-            for email in record.get('analysis_parameters', {}).get('email_history', []):
-                logger.info(f"    - {email}")
-            for matrix_message in record.get('analysis_parameters', {}).get('matrix_message_history', []):
-                logger.info(f"    - {matrix_message}")
+            record_analysis_parameters = record.get('analysis_parameters', None)
+            if record_analysis_parameters is not None and isinstance(record_analysis_parameters, dict):
+                for email in record_analysis_parameters.get('email_history', []):
+                    logger.info(f"    - {email}")
+                for matrix_message in record_analysis_parameters.get('matrix_message_history', []):
+                    logger.info(f"    - {matrix_message}")
+            else:
+                logger.debug(record_analysis_parameters)
             request_completed = record['request_completed']
             token_expired = record.get('token_expired', None)
             if not request_completed:
