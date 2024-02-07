@@ -6,10 +6,11 @@ import pytest
 import os
 import jwt
 import time
+import glob
 
 from oda_api import cli
 from cdci_data_analysis.pytest_fixtures import DispatcherJobState
-# from tests.test_basic import default_token_payload, secret_key
+from conftest import remove_scratch_folders
 
 secret_key = 'secretkey_test'
 default_exp_time = int(time.time()) + 5000
@@ -43,6 +44,14 @@ def test_inspect_state(dispatcher_live_fixture, monkeypatch, group_by_job):
     result = runner.invoke(cli.cli, args=args, obj={})
     assert result.exit_code == 0
 
+    # check there is no crash in case the analysis_parameters.json fil e was not found
+    list_scratch_dir = glob.glob(f'scratch_sid_*_jid_*')
+    os.remove(os.path.join(list_scratch_dir[0], "analysis_parameters.json"))
+
+    runner = CliRunner()
+    args = ['-u', dispatcher_live_fixture, 'inspect']
+    result = runner.invoke(cli.cli, args=args, obj={})
+    assert result.exit_code == 0
 
 @pytest.mark.parametrize('token_placement', ['no', 'env', 'homedotfile', 'cwddotfile'])
 def test_token_inspect(token_placement, default_token, monkeypatch, caplog, tmpdir):
