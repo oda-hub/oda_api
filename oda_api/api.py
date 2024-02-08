@@ -1361,19 +1361,20 @@ class ProgressReporter(object):
     def enabled(self):
         return self._callback is not None
 
-    def report_progress(self, stage: str=None, progress: int=50, progress_max: int=100, substage: str=None,
-                        subprogress: int=None, message:str=None):
+    def report_progress(self, stage: str=None, progress: float=50., progress_max: float=100., substage: str=None,
+                        subprogress: float=None, subprogress_max: float=100., message:str=None):
         """
         Report progress via callback URL
         :param stage: current stage description string
         :param progress: current stage progress
         :param progress_max: maximal progress value
         :param substage: current substage description string
-        :param subprogress: current substage progress in %
+        :param subprogress: current substage progress
+        :param subprogress_max: maximal substage progress value
         :param message: message to pass
         """
         callback_payload = dict(stage=stage, progress=progress, progress_max=progress_max, substage=substage,
-                                subprogress=subprogress, message=message)
+                                subprogress=subprogress, subprogress_max=subprogress_max, message=message)
         callback_payload = {k: v for k, v in callback_payload.items() if v is not None}
         callback_payload['action'] = 'progress'
         if not self.enabled:
