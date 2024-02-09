@@ -613,7 +613,7 @@ class DispatcherAPI:
         }
 
         for k, v in p.items():
-            if isinstance(v, (list, dict, set)) and (k not in ['catalog_selected_objects', 'selected_catalog']):
+            if isinstance(v, (list, dict, set)) and (k not in ['catalog_selected_objects', 'selected_catalog', 'scw_list']):
                 p[k] = json.dumps(v)
         
         if self.is_submitted:
