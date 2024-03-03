@@ -413,4 +413,46 @@ class Ontology:
         
         if int(list(qres)[0][0]) == 0: return False
         
-        return True    
+        return True
+
+    @staticmethod
+    def verify_base_class(graph, cls_uri, base_class_uri):
+        if cls_uri == base_class_uri:
+            return True
+        for superclass in graph.objects(cls_uri, RDFS.subClassOf):
+            if superclass == base_class_uri:
+                return True
+            if Ontology.verify_base_class(graph, superclass, base_class_uri):
+                return True
+        return False
+
+    @staticmethod
+    def verify_object_base_class(graph, obj, class_uri):
+        for objclass in graph.objects(obj, RDF.type):
+            if Ontology.verify_base_class(graph, objclass, class_uri):
+                return True
+        return False
+
+    def get_requested_resources(self, graph, base_class_uri=None):
+        usesRequiredResource = rdf.term.URIRef('http://odahub.io/ontology#usesRequiredResource')
+        usesOptionalResource = rdf.term.URIRef('http://odahub.io/ontology#usesOptionalResource')
+        binding_env = rdf.term.URIRef('http://odahub.io/ontology#resourceBindingEnvVarName')
+
+        if base_class_uri == None:
+            base_class_uri = rdf.term.URIRef('http://odahub.io/ontology#Resource')
+
+        def resources():
+            for s, p, o in graph.triples((None, usesRequiredResource, None)):
+                yield o, True
+            for s, p, o in graph.triples((None, usesOptionalResource, None)):
+                yield o, False
+
+        g_combined = graph + self.g
+
+        for resource, required in resources():
+            if base_class_uri and not Ontology.verify_object_base_class(g_combined, resource, base_class_uri):
+                continue
+            env_vars = set()
+            for s, p, o in graph.triples((resource, binding_env, None)):
+                env_vars.add(str(o))
+            yield dict(resource=str(resource).split('#')[-1], required=required, env_vars=env_vars)
