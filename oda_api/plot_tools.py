@@ -441,7 +441,7 @@ class OdaLightCurve(OdaProduct):
         hdu = None
         for j, dd in enumerate(combined_lc._p_list):
             self.logger.debug(dd.meta_data['src_name'])
-            if dd.meta_data['src_name'] == source_name or dd.meta_data['src_name'] == patched_source_name or \
+            if dd.meta_data['src_name'] in source_name or dd.meta_data['src_name'] in patched_source_name or \
                     dd.meta_data['src_name'] == 'query':
                 self.used_source_name = dd.meta_data['src_name']
                 for ii, du in enumerate(dd.data_unit):
@@ -737,7 +737,7 @@ class OdaSpectrum(OdaProduct):
         if in_source_name == 'none':
             return None
 
-        specprod = [l for l in self.data._p_list if l.meta_data['src_name'] == in_source_name]
+        specprod = [l for l in self.data._p_list if l.meta_data['src_name'] in in_source_name]
 
         if len(specprod) < 1:
             self.logger.warning("source %s not found in spectral products" % in_source_name)
