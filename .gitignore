@@ -48,3 +48,6 @@ tests/.oda-token
 
 .ipynb_checkpoints
 .venv
+
+dispatcher-state.json
+tests/dispatcher-state.json

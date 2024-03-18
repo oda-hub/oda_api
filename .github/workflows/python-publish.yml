@@ -4,7 +4,7 @@ on:
   push:
     branches:
     - master
-    - ci
+    - release-action
     # - main
 
 jobs:
@@ -12,10 +12,18 @@ jobs:
     name: Bump package version
     if: "!contains(github.event.head_commit.message, 'Bump version')"
     runs-on: ubuntu-20.04
+
+    permissions:
+      # Give the default GITHUB_TOKEN write permission to commit and push the
+      # added or changed files to the repository.
+      contents: write
+
     steps:
     - name: actions/checkout
-      uses: actions/checkout@v2
-      # with:
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.BOT_SECRET }}
       #     persist-credentials: false
 
     - name: Install dependencies
@@ -29,10 +37,13 @@ jobs:
         git config --global user.name "ODA Release Bot"
         bump2version patch --verbose --commit --tag
         bump2version release --verbose --commit --tag
-        git push --tags
 
-    - uses: stefanzweifel/git-auto-commit-action@v4
-
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: ${{ github.ref }}
+        
     - name: Build package
       run: python -m build
 
@@ -42,26 +53,3 @@ jobs:
         user: __token__
         verify_metadata: false
         password: ${{ secrets.PYPI_API_TOKEN }}        
-      
-    #TODO: #211 fix this
-    # - name: Conda publish
-    #   uses: silvxlabs/conda-skeleton-publish@v2
-    #   with:
-    #     # Name of PyPI package
-    #     pypi_package: oda-api # optional
-    #     # Package version on PyPi
-    #     #package_version: # optional, default is latest
-    #     # Python version to build
-    #     #python_version: # optional
-    #     # Conda channels to use for building package
-    #     build_channels: conda-forge
-    #     # Conda channel to upload to
-    #     upload_channel: mmoda# optional
-    #     # Anaconda client access token
-    #     access_token: ${{ secrets.CONDA_ACCESS_TOKEN }}
-    #     # Platforms to publish
-    #     #platforms: # optional, default is win-64 osx-64 osx-arm64 linux-64 linux-aarch64
-    #     # Set this to true if this is a stable release. Passese a `-l beta` arg if false.
-    #     #stable: # optional
-    #     # If true, waits for the PyPi package to become available.
-    #     wait: true # optional

@@ -36,6 +36,7 @@ import warnings
 import requests
 import ast
 import json
+import re
 
 try:
     # compatibility in some remaining environments
@@ -336,8 +337,8 @@ class DispatcherAPI:
             }
         }
 
-    def inspect_state(self, job_id=None):
-        params = dict(token=oda_api.token.discover_token())
+    def inspect_state(self, job_id=None, group_by_job=False):
+        params = dict(token=oda_api.token.discover_token(), group_by_job=group_by_job)
 
         if job_id is not None:
             params['job_id'] = job_id
@@ -611,6 +612,10 @@ class DispatcherAPI:
             'oda_api_version': __version__,
         }
 
+        for k, v in p.items():
+            if isinstance(v, (list, dict, set)) and (k not in ['catalog_selected_objects', 'selected_catalog', 'scw_list']):
+                p[k] = json.dumps(v)
+        
         if self.is_submitted:
             return {
                 **p,
@@ -1339,3 +1344,53 @@ class DataCollection(object):
                 p.meta_data = p.meta
 
         return d
+
+class ProgressReporter(object):
+    """
+    The class allows to report task progress to end user
+    """
+    def __init__(self):
+        self._callback = None
+        callback_file = ".oda_api_callback"  # perhaps it would be better to define this constant in a common lib
+        if not os.path.isfile(callback_file):
+            return
+        with open(callback_file, 'r') as file:
+            self._callback = file.read().strip()
+
+    @property
+    def enabled(self):
+        return self._callback is not None
+
+    def report_progress(self, stage: str=None, progress: float=50., progress_max: float=100., substage: str=None,
+                        subprogress: float=None, subprogress_max: float=100., message:str=None):
+        """
+        Report progress via callback URL
+        :param stage: current stage description string
+        :param progress: current stage progress
+        :param progress_max: maximal progress value
+        :param substage: current substage description string
+        :param subprogress: current substage progress
+        :param subprogress_max: maximal substage progress value
+        :param message: message to pass
+        """
+        callback_payload = dict(stage=stage, progress=progress, progress_max=progress_max, substage=substage,
+                                subprogress=subprogress, subprogress_max=subprogress_max, message=message)
+        callback_payload = {k: v for k, v in callback_payload.items() if v is not None}
+        callback_payload['action'] = 'progress'
+        if not self.enabled:
+            logger.info('no callback registered, skipping')
+            return
+
+        logger.info('will perform callback: %s', self._callback)
+
+        if re.match('^file://', self._callback):
+            with open(self._callback.replace('file://', ''), "w") as f:
+                json.dump(callback_payload, f)
+            logger.info('stored callback in a file %s', self._callback)
+
+        elif re.match('^https?://', self._callback):
+            r = requests.get(self._callback, params=callback_payload)
+            logger.info('callback %s returns %s : %s', self._callback, r, r.text)
+
+        else:
+            raise NotImplementedError
