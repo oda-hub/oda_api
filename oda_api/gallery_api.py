@@ -170,25 +170,10 @@ class GalleryDispatcherAPI(DispatcherAPI):
                                         ):
         rev1_value = None
         if t1 is not None:
-            params = {'time_to_convert': t1,
-                      'token': token}
-
-            c = requests.get(os.path.join(self.url, "get_revnum"),
-                             params={**params}
-                             )
-            revnum_obj = c.json()
-            rev1_value = revnum_obj['revnum']
-
+            rev1_value = self.get_revnum(t1, token)
         rev2_value = None
         if t2 is not None:
-            params = {'time_to_convert': t2,
-                      'token': token}
-
-            c = requests.get(os.path.join(self.url, "get_revnum"),
-                             params={**params}
-                             )
-            revnum_obj = c.json()
-            rev2_value = revnum_obj['revnum']
+            rev2_value = self.get_revnum(t2, token)
 
         return self.get_list_products_with_conditions(token=token,
                                                               instrument_name=instrument,
@@ -208,25 +193,10 @@ class GalleryDispatcherAPI(DispatcherAPI):
                                             ):
         rev1_value = None
         if t1 is not None:
-            params = {'time_to_convert': t1,
-                      'token': token}
-
-            c = requests.get(os.path.join(self.url, "get_revnum"),
-                             params={**params}
-                             )
-            revnum_obj = c.json()
-            rev1_value = revnum_obj['revnum']
-
+            rev1_value = self.get_revnum(t1, token)
         rev2_value = None
         if t2 is not None:
-            params = {'time_to_convert': t2,
-                      'token': token}
-
-            c = requests.get(os.path.join(self.url, "get_revnum"),
-                             params={**params}
-                             )
-            revnum_obj = c.json()
-            rev2_value = revnum_obj['revnum']
+            rev2_value = self.get_revnum(t2, token)
 
         return self.get_list_products_with_conditions(token=token,
                                                       instrument_name=instrument,
@@ -237,6 +207,34 @@ class GalleryDispatcherAPI(DispatcherAPI):
                                                       rev1_value=rev1_value,
                                                       rev2_value=rev2_value)
 
+
+    def get_revnum(self, time_to_convert, token):
+        rev1_value = None
+        params = {'time_to_convert': time_to_convert,
+                  'token': token}
+
+        res = requests.get(os.path.join(self.url, "get_revnum"),
+                           params={**params}
+                           )
+
+        if res.status_code != 200:
+            response_json = res.json()
+            error_message = (f"An issue occurred while performing a request on the product gallery, "
+                             f"the following error was returned:\n")
+            if 'error_message' in response_json:
+                error_message += '\n' + response_json['error_message']
+                if 'drupal_helper_error_message' in response_json:
+                    error_message += '-' + response_json['drupal_helper_error_message']
+            else:
+                error_message += res.text
+            logger.warning(error_message)
+        else:
+            response_json = res.json()
+            rev1_value = response_json['revnum']
+
+        return rev1_value
+
+
     def get_list_spectra_with_conditions(self,
                                          token: str = None,
                                          instrument=None,
@@ -245,25 +243,10 @@ class GalleryDispatcherAPI(DispatcherAPI):
                                          ):
         rev1_value = None
         if t1 is not None:
-            params = {'time_to_convert': t1,
-                      'token': token}
-
-            c = requests.get(os.path.join(self.url, "get_revnum"),
-                             params={**params}
-                             )
-            revnum_obj = c.json()
-            rev1_value = revnum_obj['revnum']
-
+            rev1_value = self.get_revnum(t1, token)
         rev2_value = None
         if t2 is not None:
-            params = {'time_to_convert': t2,
-                      'token': token}
-
-            c = requests.get(os.path.join(self.url, "get_revnum"),
-                             params={**params}
-                             )
-            revnum_obj = c.json()
-            rev2_value = revnum_obj['revnum']
+            rev2_value = self.get_revnum(t2, token)
 
         return self.get_list_products_with_conditions(token=token,
                                                       instrument_name=instrument,
