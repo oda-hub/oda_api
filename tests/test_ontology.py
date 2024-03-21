@@ -342,3 +342,22 @@ def test_parsing_limits_bad_class(onto):
             """ 
         g.parse(data = annotated_ttl)
         onto.parse_oda_annotations(g)
+
+
+def test_get_requested_resources(onto):
+    g = rdf.Graph()
+    annotated_ttl = add_prefixes + """
+            oda:notebook1 oda:usesRequiredResource oda:MyS3 .
+            oda:MyS3 a oda:S3 .
+            oda:MyS3 oda:resourceBindingEnvVarName "My_S3_CREDENTIALS" .
+            oda:notebook2 oda:usesOptionalResource oda:MyComputeResource .
+            oda:MyComputeResource a oda:ComputeResource .
+            oda:MyComputeResource oda:resourceBindingEnvVarName "MY_COMPUTE_CREDENTIALS" .
+"""
+    resource_uri = rdf.term.URIRef('http://odahub.io/ontology#S3')
+    g.parse(data = annotated_ttl)
+    data = list(onto.get_requested_resources(g, resource_uri))
+    assert len(data) == 1
+    assert data[0] == dict(resource="MyS3", required=True, env_vars=set(["My_S3_CREDENTIALS"]))
+    data = list(onto.get_requested_resources(g))
+    assert len(data) == 2
