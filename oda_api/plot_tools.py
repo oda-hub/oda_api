@@ -419,7 +419,21 @@ class OdaLightCurve(OdaProduct):
     used_source_name = ''
 
     def get_lc(self, source_name, systematic_fraction=0):
+        """_summary_
 
+        Args:
+            source_name (str): Source name to get the LC, for SPI-ACS, use 'query'
+            systematic_fraction (int, optional): relative systematic error to add in quadrature. Defaults to 0.
+
+        Returns:
+            numpy array time
+            numpy array delta_time, 
+            numpy array  rate
+            numpy array  rate_error
+            float e_min 
+            float e_max
+            _type_: _description_
+        """        
         combined_lc = self.data
         # In LC name has no "-" nor "+" ??????
         patched_source_name = source_name.replace('-', ' ').replace('+', ' ')
@@ -427,7 +441,7 @@ class OdaLightCurve(OdaProduct):
         hdu = None
         for j, dd in enumerate(combined_lc._p_list):
             self.logger.debug(dd.meta_data['src_name'])
-            if dd.meta_data['src_name'] == source_name or dd.meta_data['src_name'] == patched_source_name or \
+            if dd.meta_data['src_name'] in source_name or dd.meta_data['src_name'] in patched_source_name or \
                     dd.meta_data['src_name'] == 'query':
                 self.used_source_name = dd.meta_data['src_name']
                 for ii, du in enumerate(dd.data_unit):
@@ -723,7 +737,7 @@ class OdaSpectrum(OdaProduct):
         if in_source_name == 'none':
             return None
 
-        specprod = [l for l in self.data._p_list if l.meta_data['src_name'] == in_source_name]
+        specprod = [l for l in self.data._p_list if l.meta_data['src_name'] in in_source_name]
 
         if len(specprod) < 1:
             self.logger.warning("source %s not found in spectral products" % in_source_name)
@@ -762,8 +776,12 @@ class OdaSpectrum(OdaProduct):
 
         x, dx, y, dy = self.get_values(in_source_name, systematic_fraction)
 
+        if len(x) == 0:
+            logger.warning('Returning empty HTML string, as no data are retrieved')
+            return ''
         if x_range is None:
             x_range = [x.min(), x.max()]
+        
         if y_range is None:
             y_range = [numpy.max([1e-4, (y-dy)[x < x_range[1]].min()]), (y+dy).max()]
 
@@ -790,12 +808,12 @@ class OdaSpectrum(OdaProduct):
     def get_values(self, in_source_name='', systematic_fraction=0):
 
         if in_source_name == '':
-            return [], [], [], []
+            return numpy.array([]), numpy.array([]), numpy.array([]), numpy.array([])
         specprod = self.get_spectrum_products(in_source_name)
 
         if specprod is None:
-            return [], [], [], []
-
+            return numpy.array([]), numpy.array([]), numpy.array([]), numpy.array([])
+        
         spec = specprod[0].data_unit[1].to_fits_hdu()
         for hh in specprod[2].data_unit:
             if hh.to_fits_hdu().header['EXTNAME'] == 'EBOUNDS':
@@ -812,6 +830,7 @@ class OdaSpectrum(OdaProduct):
         dy = dy[mask]
         y /= dx
         dy /= dx
+
         return x, dx, y, dy
 
     def build_fig(self, in_source_name='', systematic_fraction=0, xlim=[]):
