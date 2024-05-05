@@ -1345,17 +1345,23 @@ class DataCollection(object):
 
         return d
 
+def get_context():
+    """
+    load context from file .oda_api_context in the notebook dir
+    """
+    context_file = ".oda_api_context"  # perhaps it would be better to define this constant in a common lib
+    if not os.path.isfile(context_file):
+        return {}
+    with open(context_file, 'r') as file:
+        context = json.load(file)
+    return context
+
 class ProgressReporter(object):
     """
     The class allows to report task progress to end user
     """
     def __init__(self):
-        self._callback = None
-        callback_file = ".oda_api_callback"  # perhaps it would be better to define this constant in a common lib
-        if not os.path.isfile(callback_file):
-            return
-        with open(callback_file, 'r') as file:
-            self._callback = file.read().strip()
+        self._callback = get_context().get('callback', None).strip()
 
     @property
     def enabled(self):

@@ -2,12 +2,12 @@ from oda_api.api import ProgressReporter
 import os
 import json
 
-callback_file = ".oda_api_callback"
+context_file = ".oda_api_context"
 request_params = dict(stage='simulation', progress=50., progress_max=100., substage='spectra', subprogress=30., subprogress_max=100., message='some message')
 
 def test_progress_reporter_disabled():
-    if os.path.isfile(callback_file):
-        os.remove(callback_file)
+    if os.path.isfile(context_file):
+        os.remove(context_file)
     # if callback is not available
     pr = ProgressReporter()
     assert not pr.enabled
@@ -21,8 +21,12 @@ def test_progress_reporter_enabled():
     # if callback is available
     try:
         dump_file = 'callback'
-        with open(callback_file, 'w') as file:
-            print(f'file://{os.getcwd()}/{dump_file}', file=file)
+        context = {
+            "callback": f'file://{os.getcwd()}/{dump_file}'
+        }
+        with open(context_file, 'w') as file:
+            with open(context_file_path, 'wt') as output:
+                json.dump(context, output)
 
         pr = ProgressReporter()
         assert pr.enabled
@@ -36,8 +40,8 @@ def test_progress_reporter_enabled():
             request_params['action'] = 'progress'  # this key is added by report_progress
             assert saved_params == request_params
     finally:
-        if os.path.isfile(callback_file):
-            os.remove(callback_file)
+        if os.path.isfile(context_file):
+            os.remove(context_file)
         if os.path.isfile(dump_file):
             os.remove(dump_file)
 
