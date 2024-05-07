@@ -1361,7 +1361,10 @@ class ProgressReporter(object):
     The class allows to report task progress to end user
     """
     def __init__(self):
-        self._callback = get_context().get('callback', None).strip()
+        callback = get_context().get('callback', None)
+        if callback:
+            callback = callback.strip()
+        self._callback = callback
 
     @property
     def enabled(self):

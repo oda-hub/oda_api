@@ -24,9 +24,8 @@ def test_progress_reporter_enabled():
         context = {
             "callback": f'file://{os.getcwd()}/{dump_file}'
         }
-        with open(context_file, 'w') as file:
-            with open(context_file_path, 'wt') as output:
-                json.dump(context, output)
+        with open(context_file, 'w') as output:
+            json.dump(context, output)
 
         pr = ProgressReporter()
         assert pr.enabled
