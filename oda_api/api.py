@@ -1364,6 +1364,14 @@ class ProgressReporter(object):
         callback = get_context().get('callback', None)
         if callback:
             callback = callback.strip()
+        else:
+            # backward compatibility
+            callback_file = ".oda_api_callback"
+            if os.path.isfile(callback_file):
+                logger.warning(f'reading callback from the deprecated location: {callback_file}')
+                with open(callback_file, 'r') as file:
+                    callback = file.read().strip()
+
         self._callback = callback
 
     @property
