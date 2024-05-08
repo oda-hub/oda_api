@@ -8,7 +8,6 @@ from enum import Enum
 from types import FunctionType
 import time
 import traceback
-from oda_api.api import get_context
 
 from jwt.exceptions import ExpiredSignatureError # type: ignore
 
@@ -316,6 +315,7 @@ def rewrite_token(new_token,
 def discover_token_and_method(
         allow_invalid=False,
         token_discovery_methods=None):
+    from oda_api.api import get_context
     failed_methods = []
     token = None
     if token_discovery_methods is None:
