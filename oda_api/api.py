@@ -5,6 +5,7 @@ import gzip
 import hashlib
 from json.decoder import JSONDecodeError
 import pathlib
+from oda_api import context_file
 
 import rdflib
 from json.decoder import JSONDecodeError 
@@ -1349,7 +1350,6 @@ def get_context():
     """
     load context from file .oda_api_context in the notebook dir
     """
-    context_file = ".oda_api_context"  # perhaps it would be better to define this constant in a common lib
     if not os.path.isfile(context_file):
         return {}
     with open(context_file, 'r') as file:

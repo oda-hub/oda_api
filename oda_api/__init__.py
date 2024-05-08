@@ -39,4 +39,5 @@ if env_phat is not None:
 
 conf_file=os.path.join(conf_dir,'data_server_conf.yml')
 
+context_file = ".oda_api_context"
 

@@ -8,6 +8,8 @@ from enum import Enum
 from types import FunctionType
 import time
 import traceback
+from oda_api import context_file
+from oda_api.api import get_context
 
 from jwt.exceptions import ExpiredSignatureError # type: ignore
 
@@ -23,6 +25,7 @@ class TokenLocation(Enum):
     ODA_ENV_VAR = "environment variable ODA_TOKEN"
     FILE_CUR_DIR = "file in current directory"
     FILE_HOME = "file in home"
+    CONTEXT_FILE = context_file + " file current directory"
 
 try:
     import jwt
@@ -332,6 +335,8 @@ def discover_token_and_method(
                 elif n == TokenLocation.FILE_HOME:
                     with open(path.join(environ["HOME"], ".oda-token")) as ft:
                         token = ft.read().strip()
+                elif n == TokenLocation.CONTEXT_FILE:
+                    token = get_context()['token'].strip()
 
                 logger.debug("searching for token in %s", n)
                 decoded_token = decode_oda_token(token, allow_invalid=allow_invalid)
