@@ -8,7 +8,6 @@ from enum import Enum
 from types import FunctionType
 import time
 import traceback
-from oda_api import context_file
 from oda_api.api import get_context
 
 from jwt.exceptions import ExpiredSignatureError # type: ignore
@@ -25,7 +24,7 @@ class TokenLocation(Enum):
     ODA_ENV_VAR = "environment variable ODA_TOKEN"
     FILE_CUR_DIR = "file in current directory"
     FILE_HOME = "file in home"
-    CONTEXT_FILE = context_file + " file current directory"
+    CONTEXT_FILE = "context file current directory"
 
 try:
     import jwt
