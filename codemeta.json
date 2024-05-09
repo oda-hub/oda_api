@@ -1,0 +1,154 @@
+{
+    "@context": [
+        "https://doi.org/10.5063/schema/codemeta-2.0",
+        "https://w3id.org/software-iodata",
+        "https://raw.githubusercontent.com/jantman/repostatus.org/master/badges/latest/ontology.jsonld",
+        "https://schema.org",
+        "https://w3id.org/software-types"
+    ],
+    "@type": "SoftwareSourceCode",
+    "author": [
+        {
+            "@type": "Person",
+            "familyName": "Tramacere",
+            "givenName": "Andrea"
+        },
+        {
+            "@type": "Person",
+            "familyName": "Savchenko",
+            "givenName": "Volodymyr"
+        },
+        {
+            "@type": "Person",
+            "familyName": "Barni",
+            "givenName": "Gabriele"
+        },
+        {
+            "@type": "Person",
+            "familyName": "Savchenko",
+            "givenName": "Denys"
+        },
+        {
+            "@type": "Person",
+            "familyName": "Kalashev",
+            "givenName": "Oleg"
+        }
+    ],
+    "description": "API plugin for MMODA",
+    "identifier": "oda-api",
+    "name": "oda-api",
+    "runtimePlatform": "Python 3",
+    "softwareRequirements": [
+        {
+            "@type": "SoftwareApplication",
+            "identifier": "astropy",
+            "name": "astropy",
+            "runtimePlatform": "Python 3",
+            "version": ">= 3.2"
+        },
+        {
+            "@type": "SoftwareApplication",
+            "identifier": "astroquery",
+            "name": "astroquery",
+            "runtimePlatform": "Python 3",
+            "version": ">= 0.4.4"
+        },
+        {
+            "@type": "SoftwareApplication",
+            "identifier": "astroquery",
+            "name": "astroquery",
+            "runtimePlatform": "Python 3"
+        },
+        {
+            "@type": "SoftwareApplication",
+            "identifier": "black",
+            "name": "black",
+            "runtimePlatform": "Python 3"
+        },
+        {
+            "@type": "SoftwareApplication",
+            "identifier": "future",
+            "name": "future",
+            "runtimePlatform": "Python 3"
+        },
+        {
+            "@type": "SoftwareApplication",
+            "identifier": "gwpy",
+            "name": "gwpy",
+            "runtimePlatform": "Python 3"
+        },
+        {
+            "@type": "SoftwareApplication",
+            "identifier": "json-tricks",
+            "name": "json-tricks",
+            "runtimePlatform": "Python 3"
+        },
+        {
+            "@type": "SoftwareApplication",
+            "identifier": "jsonschema",
+            "name": "jsonschema",
+            "runtimePlatform": "Python 3"
+        },
+        {
+            "@type": "SoftwareApplication",
+            "identifier": "ligo.skymap",
+            "name": "ligo.skymap",
+            "runtimePlatform": "Python 3"
+        },
+        {
+            "@type": "SoftwareApplication",
+            "identifier": "matplotlib",
+            "name": "matplotlib",
+            "runtimePlatform": "Python 3"
+        },
+        {
+            "@type": "SoftwareApplication",
+            "identifier": "numpy",
+            "name": "numpy",
+            "runtimePlatform": "Python 3"
+        },
+        {
+            "@type": "SoftwareApplication",
+            "identifier": "pyjwt",
+            "name": "pyjwt",
+            "runtimePlatform": "Python 3"
+        },
+        {
+            "@type": "SoftwareApplication",
+            "identifier": "pytest-xdist[psutil]",
+            "name": "pytest-xdist[psutil]",
+            "runtimePlatform": "Python 3"
+        },
+        {
+            "@type": "SoftwareApplication",
+            "identifier": "rdflib",
+            "name": "rdflib",
+            "runtimePlatform": "Python 3"
+        },
+        {
+            "@type": "SoftwareApplication",
+            "identifier": "requests",
+            "name": "requests",
+            "runtimePlatform": "Python 3"
+        },
+        {
+            "@type": "SoftwareApplication",
+            "identifier": "scipy",
+            "name": "scipy",
+            "runtimePlatform": "Python 3"
+        },
+        {
+            "@type": "SoftwareApplication",
+            "identifier": "sentry-sdk",
+            "name": "sentry-sdk",
+            "runtimePlatform": "Python 3"
+        }
+    ],
+    "targetProduct": {
+        "@type": "CommandLineApplication",
+        "executableName": "oda-api",
+        "name": "oda-api",
+        "runtimePlatform": "Python 3"
+    },
+    "version": "1.2.12"
+}
