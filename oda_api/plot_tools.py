@@ -101,6 +101,8 @@ class OdaImage(OdaProduct):
     def build_fig(self, ext_sig=None, meta=None, header=None, sources=None,
              levels=None, cmap=cm.gist_earth,
              unit_ID=4, det_sigma=3, sliders=True):
+        if self.data is None:
+            raise ValueError('data is required')
 
         if levels is None:
             levels = numpy.linspace(1, 10, 10)
