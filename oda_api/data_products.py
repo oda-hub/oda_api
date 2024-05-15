@@ -150,6 +150,8 @@ class ODAAstropyTable(object):
             _o_dict = o_dict
         elif isinstance(o_dict, str):
             _o_dict = json.loads(literal_to_json(o_dict))
+        else:
+            raise RuntimeError('Wrong table structure')
         encoded_name = _o_dict['name']
         encoded_meta_data = _o_dict['meta_data']
         if use_binary is True:
@@ -779,6 +781,8 @@ class LightCurveDataProduct(NumpyDataProduct):
         elif counts is not None:
             col_name = 'COUNTS'
             values = counts
+        else:
+            raise ValueError('One of fluxes/magnitudes/rates/counts arguments is required')
         
         if len(values) != len(times):
             raise ValueError(f'Value column length {len(values)} do not coincide with time {len(times)} column length')
