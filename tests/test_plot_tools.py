@@ -20,15 +20,17 @@ def test_plot_tools_notebook(request, remove_any_token_from_environment):
 
 @pytest.mark.xfail(reason="fails")
 def test_image_no_sources():
-    import numpy as np
     from astropy.wcs import WCS
     from oda_api.plot_tools import OdaImage
 
     oda_image = OdaImage(None)
-    oda_image.build_fig(header=WCS().to_header(),
-                        meta={"src_name": "testsource"},
-                        sources=[])
-
+    try:
+        oda_image.build_fig(header=WCS().to_header(),
+                            meta={"src_name": "testsource"},
+                            sources=[])
+        assert False, 'the code above should have raised the ValueError exception'
+    except ValueError:
+        pass
 
 def test_lc_adjustend_bins(request):
     import numpy as np
