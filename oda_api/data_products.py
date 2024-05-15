@@ -27,6 +27,7 @@ from astropy.utils.misc import JsonCustomEncoder
 from astropy.table import Table
 from astropy.coordinates import Angle
 from astropy.wcs import WCS
+from astropy import units as u
 
 import  numpy
 import numpy as np
@@ -804,15 +805,15 @@ class LightCurveDataProduct(NumpyDataProduct):
             atimes = astropy.time.Time(times)
             mjd = atimes.mjd 
         
-        if any(isinstance(x, astropy.units.Quantity) for x in values):
-            values = astropy.units.Quantity(values)
-        if isinstance(values, astropy.units.Quantity):
+        if any(isinstance(x, u.Quantity) for x in values):
+            values = u.Quantity(values)
+        if isinstance(values, u.Quantity):
             units_dict[col_name] = values.unit.to_string(format='OGIP')
             values = values.value
             
-        if errors is not None and any(isinstance(x, astropy.units.Quantity) for x in errors):
-            errors = astropy.units.Quantity(errors)
-        if errors is not None and isinstance(errors, astropy.units.Quantity):
+        if errors is not None and any(isinstance(x, u.Quantity) for x in errors):
+            errors = u.Quantity(errors)
+        if errors is not None and isinstance(errors, u.Quantity):
             units_dict['ERROR'] = errors.unit.to_string(format='OGIP')
             errors = errors.value
             
