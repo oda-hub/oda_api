@@ -297,7 +297,14 @@ def test_parsing_limits_annotation(onto, input_ttl, expected_restr):
     onto.parse_oda_annotations(g)
     
     assert isomorphic(g, g_expect)
-    
+
+def test_is_optional(onto):
+    extra_ttl = add_prefixes + 'oda:OptFloat rdfs:subClassOf oda:Float, oda:optional .'
+    onto.parse_extra_triples(extra_ttl)
+
+    assert onto.is_optional('oda:Float') is False
+    assert onto.is_optional('oda:OptFloat') is True
+    assert onto.is_optional('oda:optional') is True
 
 def test_parsing_lower_limit_multiple_exception(onto):
     g = rdf.Graph()

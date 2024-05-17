@@ -460,5 +460,5 @@ class Ontology:
             yield dict(resource=str(resource).split('#')[-1], required=required, env_vars=env_vars)
     
     def is_optional(self, uri: str) -> bool:
-        s_qres = self.g.query("ASK { %s rdfs:subClassOf* oda:optional. }" % uri )
+        s_qres = self.g.query("ASK { %s rdfs:subClassOf? oda:optional. }" % uri )
         return cast(bool, list(s_qres)[0])
