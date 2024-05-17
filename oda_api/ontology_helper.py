@@ -1,9 +1,11 @@
+from __future__ import annotations
 import rdflib as rdf
 from rdflib.collection import Collection
 from rdflib.namespace import RDF, RDFS, OWL, XSD
 import logging
 import builtins
 from copy import deepcopy
+from typing import cast
 
 try:
     from cdci_data_analysis.analysis.exceptions import RequestNotUnderstood
@@ -198,7 +200,7 @@ class Ontology:
             graph.add((bn, OWL.allValuesFrom, dtype))
             
             graph.add((classuri, RDFS.subClassOf, bn))
-    
+
     def _get_datatype_restriction(self, param_uri):
         param_uri = f"<{param_uri}>" if param_uri.startswith("http") else param_uri
         query = """
@@ -456,3 +458,7 @@ class Ontology:
             for s, p, o in graph.triples((resource, binding_env, None)):
                 env_vars.add(str(o))
             yield dict(resource=str(resource).split('#')[-1], required=required, env_vars=env_vars)
+    
+    def is_optional(self, uri: str) -> bool:
+        s_qres = self.g.query("ASK { %s rdfs:subClassOf? oda:optional. }" % uri )
+        return cast(bool, list(s_qres)[0])
