@@ -508,7 +508,7 @@ class DispatcherAPI:
                     allow_redirects=False
                 )
             else:
-                NotImplementedError
+                raise NotImplementedError
 
             if response.status_code in (301, 302):
                 # we can not automatically redirect with POST due to unexpected behavior of requests module

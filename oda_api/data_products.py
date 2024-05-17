@@ -27,6 +27,7 @@ from astropy.utils.misc import JsonCustomEncoder
 from astropy.table import Table
 from astropy.coordinates import Angle
 from astropy.wcs import WCS
+from astropy import units as u
 
 import  numpy
 import numpy as np
@@ -150,6 +151,8 @@ class ODAAstropyTable(object):
             _o_dict = o_dict
         elif isinstance(o_dict, str):
             _o_dict = json.loads(literal_to_json(o_dict))
+        else:
+            raise RuntimeError('Wrong table structure')
         encoded_name = _o_dict['name']
         encoded_meta_data = _o_dict['meta_data']
         if use_binary is True:
@@ -779,6 +782,8 @@ class LightCurveDataProduct(NumpyDataProduct):
         elif counts is not None:
             col_name = 'COUNTS'
             values = counts
+        else:
+            raise ValueError('One of fluxes/magnitudes/rates/counts arguments is required')
         
         if len(values) != len(times):
             raise ValueError(f'Value column length {len(values)} do not coincide with time {len(times)} column length')
@@ -800,15 +805,15 @@ class LightCurveDataProduct(NumpyDataProduct):
             atimes = astropy.time.Time(times)
             mjd = atimes.mjd 
         
-        if any(isinstance(x, astropy.units.Quantity) for x in values):
-            values = astropy.units.Quantity(values)
-        if isinstance(values, astropy.units.Quantity):
+        if any(isinstance(x, u.Quantity) for x in values):
+            values = u.Quantity(values)
+        if isinstance(values, u.Quantity):
             units_dict[col_name] = values.unit.to_string(format='OGIP')
             values = values.value
             
-        if errors is not None and any(isinstance(x, astropy.units.Quantity) for x in errors):
-            errors = astropy.units.Quantity(errors)
-        if errors is not None and isinstance(errors, astropy.units.Quantity):
+        if errors is not None and any(isinstance(x, u.Quantity) for x in errors):
+            errors = u.Quantity(errors)
+        if errors is not None and isinstance(errors, u.Quantity):
             units_dict['ERROR'] = errors.unit.to_string(format='OGIP')
             errors = errors.value
             
