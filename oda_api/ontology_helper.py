@@ -400,6 +400,19 @@ class Ontology:
         
         return label
 
+    def get_oda_metadata(self, param_uri, metadata):
+        if param_uri.startswith("http"): param_uri = f"<{param_uri}>"
+
+        query = f"SELECT ?{metadata} WHERE {{{param_uri} oda:{metadata} ?{metadata}}}"
+
+        qres = self.g.query(query)
+
+        if len(qres) == 0: return None
+
+        metadata_value = " ".join([str(x[0]) for x in qres])
+
+        return metadata_value
+
     def is_data_product(self, owl_uri, include_parameter_products=True):
         if owl_uri.startswith("http"): owl_uri = f"<{owl_uri}>"
         
