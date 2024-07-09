@@ -12,8 +12,8 @@ jobs:
     container: integralsw/osa-python:auto-latest
     
     steps:
-    - uses: actions/checkout@v4.1.7
-    
+    - uses: actions/checkout@v2
+
     #- name: Sphinx Docs build with ReadTheDocs Docker
     #  uses: DavidLeoni/readthedocs-to-actions@v1.2
     #  with:
