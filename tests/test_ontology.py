@@ -127,9 +127,9 @@ def test_ontology_limits(onto, owl_uri, expected, extra_ttl):
 def test_ontology_extra_metadata(onto, owl_uri, expected, extra_ttl):
     if extra_ttl is not None:
         onto.parse_extra_triples(extra_ttl)
-    label = onto.get_oda_metadata(owl_uri, "label")
+    label = onto.get_direct_annotation(owl_uri, "label", predicate="oda")
     assert label == expected[0]
-    description = onto.get_oda_metadata(owl_uri, "description")
+    description = onto.get_direct_annotation(owl_uri, "description", predicate="oda")
     assert description == expected[1]
     
 @pytest.mark.parametrize(
