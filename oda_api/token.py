@@ -25,6 +25,10 @@ class TokenLocation(Enum):
     FILE_HOME = "file in home"
     CONTEXT_FILE = "context file current directory"
 
+class TokenFileName(Enum):
+    ODA_TOKEN_FILE = ".oda-token"
+    RENKU_ODA_TOKEN_FILE = "oda-token"
+
 try:
     import jwt
 except ImportError:
@@ -329,8 +333,11 @@ def discover_token_and_method(
                 if n == TokenLocation.ODA_ENV_VAR:
                     token = environ['ODA_TOKEN'].strip()
                 elif n == TokenLocation.FILE_CUR_DIR:
-                    with open(path.join(getcwd(), ".oda-token")) as ft:
+                    with open(path.join(getcwd(), TokenFileName.ODA_TOKEN_FILE.value)) as ft:
                         token = ft.read().strip()
+                    if token is None:
+                        with open(path.join(getcwd(), TokenFileName.RENKU_ODA_TOKEN_FILE.value)) as ft:
+                            token = ft.read().strip()
                 elif n == TokenLocation.FILE_HOME:
                     with open(path.join(environ["HOME"], ".oda-token")) as ft:
                         token = ft.read().strip()
