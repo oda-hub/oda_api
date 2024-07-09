@@ -388,22 +388,13 @@ class Ontology:
         return [str(row[0]) for row in qres]
     
     def get_oda_label(self, param_uri):
+
+        return self.get_direct_annotation(param_uri, "label")
+
+    def get_direct_annotation(self, param_uri, metadata, predicate="oda"):
         if param_uri.startswith("http"): param_uri = f"<{param_uri}>"
 
-        query = "SELECT ?label WHERE {%s oda:label ?label}" % (param_uri)
-        
-        qres = self.g.query(query)
-   
-        if len(qres) == 0: return None
-        
-        label = " ".join([str(x[0]) for x in qres])
-        
-        return label
-
-    def get_oda_metadata(self, param_uri, metadata):
-        if param_uri.startswith("http"): param_uri = f"<{param_uri}>"
-
-        query = f"SELECT ?{metadata} WHERE {{{param_uri} oda:{metadata} ?{metadata}}}"
+        query = f"SELECT ?{metadata} WHERE {{{param_uri} {predicate}:{metadata} ?{metadata}}}"
 
         qres = self.g.query(query)
 
