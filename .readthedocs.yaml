@@ -20,7 +20,3 @@ sphinx:
 python:
   install:
   - requirements: doc/requirements.txt
-  - method: pip
-    path: .
-    extra_requirements:
-      - setuptools: "71.1.0"
