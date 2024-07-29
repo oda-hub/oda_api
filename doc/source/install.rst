@@ -15,6 +15,7 @@ Development version
 
      - git clone https://github.com/oda-hub/oda_api.git
      - cd oda_api
+     - pip install --no-cache-dir pip setuptools<72
 
 
 Download code and contribute
