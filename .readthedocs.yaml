@@ -22,5 +22,5 @@ python:
   - requirements: doc/requirements.txt
   - method: pip
     path: .
-    extra_requirements:
-      - settuptools<72
+    requirements:
+      - setuptools==49.6.0
