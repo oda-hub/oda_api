@@ -43,7 +43,7 @@ setup(name='oda_api',
             "scipy",
             "rdflib",
             "black",
-            "setuptools<72.0.0"
+            "setuptools<72"
         ],
       extras_require={
           'test': [
