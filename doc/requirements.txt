@@ -19,4 +19,4 @@ astroquery==0.4.4
 
 rdflib
 
-setuptools<=72.0.0
+setuptools<72.0.0
