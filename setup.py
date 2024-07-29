@@ -42,7 +42,8 @@ setup(name='oda_api',
             "astroquery",
             "scipy",
             "rdflib",
-            "black"
+            "black",
+            "setuptools<72.0.0"
         ],
       extras_require={
           'test': [
