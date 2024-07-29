@@ -11,16 +11,6 @@ build:
   tools:
     python: "3.11"
   jobs:
-    pre_install:
-      - python -m pip install --upgrade "setuptools<72"
-    post_install:
-      - python -m pip install --upgrade "setuptools<72"
-    pre_system_dependencies:
-      - python -m pip install --upgrade "setuptools<72"
-    post_system_dependencies:
-      - python -m pip install --upgrade "setuptools<72"
-    pre_build:
-      - python -m pip install --upgrade "setuptools<72"
     post_build:
       - python -m pip install --upgrade "setuptools<72"
 
