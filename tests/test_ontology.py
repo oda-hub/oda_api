@@ -113,6 +113,24 @@ def test_ontology_limits(onto, owl_uri, expected, extra_ttl):
         onto.parse_extra_triples(extra_ttl)
     limits = onto.get_limits(owl_uri)
     assert limits == expected
+
+@pytest.mark.parametrize("owl_uri, expected, extra_ttl",
+                         [('http://odahub.io/ontology#Unknown', (None, None), ""),
+                          ('oda:Flux_FluxmicroJyorABMagnitude_Magnitude_String_label_description', ("Flux [microJy] or AB Magnitude", "Test description"),
+                                                      """@prefix oda: <http://odahub.io/ontology#> .
+                                                         @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+                                                         oda:Flux_FluxmicroJyorABMagnitude_Magnitude_String_label_description 
+                                                                    rdfs:subClassOf oda:String ;
+                                                                    oda:label "Flux [microJy] or AB Magnitude" ;
+                                                                    oda:description "Test description" .""")
+                         ])
+def test_ontology_extra_metadata(onto, owl_uri, expected, extra_ttl):
+    if extra_ttl is not None:
+        onto.parse_extra_triples(extra_ttl)
+    label = onto.get_direct_annotation(owl_uri, "label", predicate="oda")
+    assert label == expected[0]
+    description = onto.get_direct_annotation(owl_uri, "description", predicate="oda")
+    assert description == expected[1]
     
 @pytest.mark.parametrize(
     "owl_uri, expected, extra_ttl",
