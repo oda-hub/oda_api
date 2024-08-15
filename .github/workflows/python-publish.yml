@@ -21,9 +21,9 @@ jobs:
     steps:
     - name: checkout
       uses: actions/checkout@v4
-      with:
+      # with:
       #   fetch-depth: 0
-        token: ${{ secrets.BOT_SECRET }}
+        # token: ${{ secrets.BOT_SECRET }}
 
     - name: Install dependencies
       run: |
@@ -32,6 +32,7 @@ jobs:
 
     - name: Bump version
       run: |
+        git remote set-url origin https://odabot:${{ secrets.BOT_SECRET }}@github.com/oda-hub/oda_api.git
         git config --global user.email "vladimir.savchenko+oda-release-bot@gmail.com"
         git config --global user.name "ODA Release Bot"
         bump2version patch --verbose --commit --tag
