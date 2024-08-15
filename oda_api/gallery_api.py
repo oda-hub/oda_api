@@ -347,7 +347,7 @@ class GalleryDispatcherAPI(DispatcherAPI):
         logger.info(posting_msg)
 
         res = requests.post(os.path.join(self.url, "post_astro_entity_to_gallery"),
-                            params={**params},
+                            data=params,
                             )
         response_json = self._decode_res_json(res)
 
@@ -416,7 +416,7 @@ class GalleryDispatcherAPI(DispatcherAPI):
         logger.info(posting_msg)
 
         res = requests.post(os.path.join(self.url, "post_observation_to_gallery"),
-                            params={**params},
+                            data=params,
                             files=files_obj
                             )
         response_json = self._decode_res_json(res)
@@ -483,7 +483,7 @@ class GalleryDispatcherAPI(DispatcherAPI):
         logger.info(posting_msg)
 
         res = requests.post(os.path.join(self.url, "post_observation_to_gallery"),
-                            params={**params},
+                            data=params,
                             files=files_obj
                             )
 
@@ -535,7 +535,7 @@ class GalleryDispatcherAPI(DispatcherAPI):
         logger.info(posting_msg)
 
         res = requests.post("%s/delete_product_to_gallery" % self.url,
-                            params={**params}
+                            data=params
                             )
 
         if res.status_code != 200:
@@ -787,7 +787,7 @@ class GalleryDispatcherAPI(DispatcherAPI):
         logger.info(posting_msg)
 
         res = requests.post("%s/post_product_to_gallery" % self.url,
-                            params={**params},
+                            data=params,
                             files=files_obj
                             )
 
