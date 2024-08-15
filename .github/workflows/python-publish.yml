@@ -24,10 +24,10 @@ jobs:
       with:
         fetch-depth: 0
         token: ${{ secrets.BOT_SECRET }}
-      run: |
-        git config user.name "github-actions[bot]"
-        git config user.email "oda-bot@odahub.io"
-        git pull
+          #run: |
+          # git config user.name "github-actions[bot]"
+          #git config user.email "oda-bot@odahub.io"
+          #git pull
 
     - name: Install dependencies
       run: |
