@@ -40,7 +40,8 @@ jobs:
     - name: Push changes
       uses: ad-m/github-push-action@master
       with:
-        github_token: ${{ secrets.BOT_SECRET }}
+        github_token: ${{ secrets.GITHUB_TOKEN }} 
+          # ${{ secrets.BOT_SECRET }}
         branch: ${{ github.ref }}
         
     - name: Build package
