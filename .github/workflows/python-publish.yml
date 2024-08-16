@@ -50,8 +50,10 @@ jobs:
           Bump version to ${{ steps.bump-version.outputs.new_version }}
           This PR was created automatically by the Bump version workflow.
 
-    - name: Enable Pull Request Automerge
-      run: gh pr merge --merge --auto ${{ steps.cpr.outputs.pull-request-number }}
+    - name: Enable Pull Request Automerge and Approve
+      run: |
+        gh pr merge --merge --auto ${{ steps.cpr.outputs.pull-request-number }}
+        gh pr review --approve ${{ steps.cpr.outputs.pull-request-number }}
       env:
         GH_TOKEN: ${{ secrets.BOT_SECRET }}
         
