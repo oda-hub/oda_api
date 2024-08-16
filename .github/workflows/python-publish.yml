@@ -12,10 +12,10 @@ jobs:
     if: "!contains(github.event.head_commit.message, 'Bump version')"
     runs-on: ubuntu-20.04
 
-    permissions:
+    permissions: write-all
       # Give the default GITHUB_TOKEN write permission to commit and push the
       # added or changed files to the repository.
-      contents: write
+      # contents: write
 
     steps:
     - name: checkout
@@ -41,7 +41,7 @@ jobs:
       with:
         reviewers: "volodymyrss"
         assignees: "volodymyrss"
-        
+
     # - name: Push changes
     #   uses: ad-m/github-push-action@master
     #   with:
