@@ -22,8 +22,8 @@ jobs:
     - name: checkout
       uses: actions/checkout@v4
       with:
-        fetch-depth: 0
-        token: ${{ secrets.BOT_SECRET }}
+        persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal access token.
+        fetch-depth: 0 # otherwise, there would be errors pushing refs to the destination repository.
 
     - name: Install dependencies
       run: |
@@ -40,7 +40,8 @@ jobs:
     - name: Push changes
       uses: ad-m/github-push-action@master
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
+        github_token: ${{ secrets.GITHUB_TOKEN }} 
+          # ${{ secrets.BOT_SECRET }}
         branch: ${{ github.ref }}
         
     - name: Build package
