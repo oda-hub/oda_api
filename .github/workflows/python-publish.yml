@@ -46,6 +46,9 @@ jobs:
         assignees: "volodymyrss"
         title: "Bump version to ${{ steps.bump-version.outputs.new_version }}"
         branch: "bump-version-${{ steps.bump-version.outputs.new_version }}"
+        body: |
+          Bump version to ${{ steps.bump-version.outputs.new_version }}
+          This PR was created automatically by the Bump version workflow.
 
     - name: Enable Pull Request Automerge
       run: gh pr merge --merge --auto ${{ steps.cpr.outputs.pull-request-number }}
