@@ -2,8 +2,8 @@ oda_api
 ==========================================
 
 [![PyPI version](https://badge.fury.io/py/oda-api.svg)](https://badge.fury.io/py/oda-api)
-![](https://anaconda.org/mmoda/oda-api/badges/version.svg)
-![](https://anaconda.org/mmoda/oda-api/badges/latest_release_date.svg)
+![](https://anaconda.org//conda-forge/oda-api/badges/version.svg)
+![](https://anaconda.org//conda-forge/oda-api/badges/latest_release_date.svg)
 [![Documentation Status](https://readthedocs.org/projects/oda-api/badge/?version=latest)](https://oda-api.readthedocs.io/en/latest/?badge=latest)
 
 
