@@ -4,7 +4,6 @@ on:
   push:
     branches:
     - master
-    - release-action
     # - main
 
 jobs:
@@ -37,13 +36,26 @@ jobs:
         bump2version patch --verbose --commit --tag
         bump2version release --verbose --commit --tag
 
-    - name: Push changes
-      uses: ad-m/github-push-action@master
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v6        
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }} 
-          # ${{ secrets.BOT_SECRET }}
-        branch: ${{ github.ref }}
+        reviewers: "volodymyrss"
+        assignees: "volodymyrss"
         
+    # - name: Push changes
+    #   uses: ad-m/github-push-action@master
+    #   with:
+    #     github_token: ${{ secrets.GITHUB_TOKEN }} 
+    #       # ${{ secrets.BOT_SECRET }}
+    #     branch: ${{ github.ref }}
+
+  publish-version:
+    name: Publish new package version
+    if: "contains(github.event.head_commit.message, 'Bump version')"
+    runs-on: ubuntu-20.04
+
+    steps:
+  
     - name: Build package
       run: python -m build
 
