@@ -52,6 +52,7 @@ jobs:
 
     - name: Enable Pull Request Automerge and Approve
       run: |
+        gh pr edit --add-label "test-live" ${{ steps.cpr.outputs.pull-request-number }}
         gh pr merge --merge --auto ${{ steps.cpr.outputs.pull-request-number }}
         gh pr review --approve ${{ steps.cpr.outputs.pull-request-number }}
       env:
