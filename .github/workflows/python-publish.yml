@@ -45,6 +45,11 @@ jobs:
         assignees: "volodymyrss"
         title: "Bump version to ${{ steps.bump-version.outputs.new_version }}"
         branch: "bump-version-${{ steps.bump-version.outputs.new_version }}"
+
+    - name: Enable Pull Request Automerge
+      run: gh pr merge --merge --auto "1"
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
 
   publish-version:
