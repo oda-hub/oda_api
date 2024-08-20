@@ -1,12 +1,13 @@
 requests
 future
-astropy
+astropy>=3.2
 json_tricks
 matplotlib
 numpy
 jsonschema
+pyjwt
 astroquery
-simplejson
-sentry_sdk
+scipy
 rdflib
+black
 bokeh
