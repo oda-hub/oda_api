@@ -24,7 +24,7 @@ include_package_data=True
 
 setup(name='oda_api',
       version=__version__,
-      description='API plugin  for CDCI online data analysis',
+      description='API plugin for Multi-Messenger online data analysis',
       author='Andrea Tramacere, Volodymyr Savchenko',
       author_email='contact@odahub.io',
       packages=packs,
@@ -49,7 +49,8 @@ setup(name='oda_api',
           'test': [
                 "pytest-xdist[psutil]",
                 "astroquery>=0.4.4",
-                "sentry_sdk"
+                "sentry_sdk",
+                "cdci_data_analysis"
             ],      
           'extra-test': [
                 "pytest-xdist[psutil]",
