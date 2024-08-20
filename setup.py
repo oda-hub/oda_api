@@ -42,7 +42,8 @@ setup(name='oda_api',
             "astroquery",
             "scipy",
             "rdflib",
-            "black"
+            "black",
+            "bokeh"
         ],
       extras_require={
           'test': [

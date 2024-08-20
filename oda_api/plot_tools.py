@@ -30,6 +30,22 @@ import oda_api.api as api
 import time as _time
 import astropy.wcs as wcs
 
+from bokeh.layouts import row, gridplot
+#column,
+from bokeh.models import HoverTool
+#                          (CustomJS,
+#                           Toggle, 
+#                           RangeSlider,
+#                           HoverTool,
+#                           ColorBar,
+#                           LinearColorMapper,
+#                           LabelSet,
+#                           ColumnDataSource,
+#                           LogColorMapper)
+from bokeh.embed import components
+from bokeh.plotting import figure
+#from bokeh.palettes import Plasma256
+
 # NOTE GW, optional
 try:
     import ligo.skymap.plot
@@ -691,7 +707,7 @@ class OdaLightCurve(OdaProduct):
         return True
 
     def get_html_image(self, source_name, systematic_fraction, color='blue'):
-        import cdci_data_analysis.analysis.plot_tools
+        
         x, dx, y, dy, e_min, e_max = self.get_lc(source_name, systematic_fraction)
         mask = numpy.logical_not(numpy.isnan(y))
 
@@ -704,10 +720,10 @@ class OdaLightCurve(OdaProduct):
         else:
             xlabel = 'Time [IJD]'
 
-        sp = cdci_data_analysis.analysis.plot_tools.ScatterPlot(w=800, h=600,
-                                                                x_label=xlabel,
-                                                                y_label='Rate (%.0f - %.0f keV)' % (e_min, e_max),
-                                                                title=source_name)
+        sp = ScatterPlot(w=800, h=600,
+                        x_label=xlabel,
+                        y_label='Rate (%.0f - %.0f keV)' % (e_min, e_max),
+                        title=source_name)
 
         sp.add_errorbar(x, y, yerr=dy, xerr=dx, color=color)
         html_dict = sp.get_html_draw()
@@ -774,8 +790,7 @@ class OdaSpectrum(OdaProduct):
             plt.show()
 
     def get_html_image(self, in_source_name, systematic_fraction, x_range=None, y_range=None, color='blue'):
-        import cdci_data_analysis.analysis.plot_tools
-
+        
         x, dx, y, dy = self.get_values(in_source_name, systematic_fraction)
 
         if len(x) == 0:
@@ -787,14 +802,14 @@ class OdaSpectrum(OdaProduct):
         if y_range is None:
             y_range = [numpy.max([1e-4, (y-dy)[x < x_range[1]].min()]), (y+dy).max()]
 
-        sp = cdci_data_analysis.analysis.plot_tools.ScatterPlot(w=800, h=600,
-                                                                x_label="Energy [keV]",
-                                                                y_label='Counts/s/keV',
-                                                                x_axis_type='log',
-                                                                y_axis_type='log',
-                                                                x_range=x_range,
-                                                                y_range=y_range,
-                                                                title=in_source_name)
+        sp = ScatterPlot(w=800, h=600,
+                        x_label="Energy [keV]",
+                        y_label='Counts/s/keV',
+                        x_axis_type='log',
+                        y_axis_type='log',
+                        x_range=x_range,
+                        y_range=y_range,
+                        title=in_source_name)
         if len(x) == 0:
             return ''
         sp.add_errorbar(x, y, yerr=dy, xerr=dx, color=color)
@@ -1051,3 +1066,102 @@ class OdaGWContours(OdaProduct):
     # TODO can an implementation of this method provided?
     def write_fits(self):
         raise NotImplementedError
+
+
+class ScatterPlot(object):
+
+    def __init__(self,w,h,x_label=None,y_label=None,x_range=None,y_range=None,title=None,y_axis_type='linear',x_axis_type='linear'):
+        hover = HoverTool(tooltips=[("x", "$x"), ("y", "$y")])
+
+        self.fig = figure(title=title, width=w, height=h,x_range=x_range,y_range=y_range,
+                          y_axis_type=y_axis_type,
+                          x_axis_type=x_axis_type,
+                     tools=[hover, 'pan,box_zoom,box_select,wheel_zoom,reset,save,crosshair']
+                     )
+
+        if x_label is not None:
+            self.fig.xaxis.axis_label = x_label
+
+        if y_label is not None:
+            self.fig.yaxis.axis_label = y_label
+
+    def add_errorbar(self, x, y, xerr=None, yerr=None, color='red',
+                 point_kwargs={}, error_kwargs={}):
+
+        self.fig.circle(x, y, color=color, **point_kwargs)
+
+        if xerr is not None:
+            x_err_x = []
+            x_err_y = []
+            for px, py, err in zip(x, y, xerr):
+                x_err_x.append((px - err, px + err))
+                x_err_y.append((py, py))
+            self.fig.multi_line(x_err_x, x_err_y, color=color, **error_kwargs)
+
+        if yerr is not None:
+            y_err_x = []
+            y_err_y = []
+            for px, py, err in zip(x, y, yerr):
+                y_err_x.append((px, px))
+                y_err_y.append((py - err, py + err))
+            self.fig.multi_line(y_err_x, y_err_y, color=color, **error_kwargs)
+
+
+
+    def add_step_line(self, x, y, legend=None):
+        if legend:
+            self.fig.step(x, y, legend_label=legend, mode="center")
+        else:
+            self.fig.step(x, y, mode="center")
+
+    def add_line(self, x, y, legend=None, color='red'):
+        if legend:
+            self.fig.line(x, y, legend_label=legend, line_color=color)
+        else:
+            self.fig.line(x, y, line_color=color)
+
+    def get_html_draw(self):
+
+
+
+        layout = row(
+            self.fig
+        )
+        #curdoc().add_root(layout)
+
+
+        #show(layout)
+
+        script, div = components(layout)
+
+        #print ('script',script)
+        #print ('div',div)
+
+        html_dict = {}
+        html_dict['script'] = script
+        html_dict['div'] = div
+        return html_dict
+
+
+class GridPlot(object):
+
+    def __init__(self,f1,f2,w=None,h=None):
+
+        self.f1=f1
+        self.f2=f2
+
+    def get_html_draw(self,w=None,h=None):
+        #l = layout([self.f1.fig],[self.f2.fig])
+
+
+        grid = gridplot([self.f1.fig,self.f2.fig],ncols=1,plot_width=w, plot_height=h)
+        #curdoc().add_root(grid)
+        #show(grid)
+        #output_file("test.html")
+        script, div = components(grid)
+
+        html_dict={}
+        html_dict['script']=script
+        html_dict['div'] = div
+        return html_dict
+
