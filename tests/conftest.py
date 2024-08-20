@@ -5,18 +5,18 @@ import glob
 import shutil
 import os
 
-from cdci_data_analysis.pytest_fixtures import (
-            dispatcher_live_fixture,
-            dispatcher_live_fixture_with_gallery,
-            dispatcher_test_conf_fn,
-            dispatcher_test_conf_with_gallery_fn,
-            dispatcher_test_conf,
-            dispatcher_debug,
-            dispatcher_nodebug,
-            dispatcher_long_living_fixture,
-            dispatcher_test_conf_with_gallery,
-            default_token_payload,
-        )
+# from cdci_data_analysis.pytest_fixtures import (
+#             dispatcher_live_fixture,
+#             dispatcher_live_fixture_with_gallery,
+#             dispatcher_test_conf_fn,
+#             dispatcher_test_conf_with_gallery_fn,
+#             dispatcher_test_conf,
+#             dispatcher_debug,
+#             dispatcher_nodebug,
+#             dispatcher_long_living_fixture,
+#             dispatcher_test_conf_with_gallery,
+#             default_token_payload,
+#         )
 
 pytest_options = ["slow", "dda", "live"]
 
@@ -45,29 +45,29 @@ def pytest_collection_modifyitems(config, items):
 
 
 
-@pytest.fixture
-def dispatcher_api(dispatcher_live_fixture):
-    import oda_api
-    disp = oda_api.api.DispatcherAPI(
-        url=dispatcher_live_fixture
-    )
-    disp.allow_token_discovery = False
-    return disp
+# @pytest.fixture
+# def dispatcher_api(dispatcher_live_fixture):
+#     import oda_api
+#     disp = oda_api.api.DispatcherAPI(
+#         url=dispatcher_live_fixture
+#     )
+#     disp.allow_token_discovery = False
+#     return disp
 
 
-@pytest.fixture
-def dispatcher_api_with_gallery(dispatcher_live_fixture_with_gallery):
-    import oda_api
-    disp = oda_api.gallery_api.GalleryDispatcherAPI(
-        url=dispatcher_live_fixture_with_gallery
-    )
-    disp.allow_token_discovery = False
-    return disp
+# @pytest.fixture
+# def dispatcher_api_with_gallery(dispatcher_live_fixture_with_gallery):
+#     import oda_api
+#     disp = oda_api.gallery_api.GalleryDispatcherAPI(
+#         url=dispatcher_live_fixture_with_gallery
+#     )
+#     disp.allow_token_discovery = False
+#     return disp
 
 
-@pytest.fixture
-def secret_key(dispatcher_test_conf):
-    return dispatcher_test_conf['secret_key']
+# @pytest.fixture
+# def secret_key(dispatcher_test_conf):
+#     return dispatcher_test_conf['secret_key']
 
 
 @pytest.fixture
@@ -94,13 +94,13 @@ def remove_any_token_from_environment():
         os.remove(os.path.join(os.environ["HOME"], ".oda-token"))
 
 
-@pytest.fixture
-def default_token(default_token_payload, secret_key) -> str:    
-    token = jwt.encode(default_token_payload, secret_key, algorithm='HS256')
-    # this changes depending on jwt implementation
-    if isinstance(token, bytes):
-        token = token.decode()
-    return token
+# @pytest.fixture
+# def default_token(default_token_payload, secret_key) -> str:    
+#     token = jwt.encode(default_token_payload, secret_key, algorithm='HS256')
+#     # this changes depending on jwt implementation
+#     if isinstance(token, bytes):
+#         token = token.decode()
+#     return token
 
 
 def remove_scratch_folders(job_id=None):
