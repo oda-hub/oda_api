@@ -18,4 +18,4 @@ pyjwt==2.4.0
 astroquery==0.4.4
 
 rdflib
-
+bokeh
