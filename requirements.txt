@@ -11,5 +11,5 @@ scipy
 rdflib
 black
 bokeh
-git+https://github.com/oda-hub/dispatcher-app.git#egg=cdci_data_analysis[test]
+-e git+https://github.com/oda-hub/dispatcher-app.git#egg=cdci_data_analysis[test]
 
