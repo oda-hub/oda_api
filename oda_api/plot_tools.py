@@ -729,8 +729,8 @@ class OdaLightCurve(OdaProduct):
         html_dict = sp.get_html_draw()
 
         html_str = html_dict['div'] + '\n'
-        html_str += '<script src="https://cdn.bokeh.org/bokeh/release/bokeh-2.4.2.min.js"></script>\n' + \
-                    '<script src="https://cdn.bokeh.org/bokeh/release/bokeh-widgets-2.4.2.min.js"></script>\n'
+        html_str += '<script src="https://cdn.bokeh.org/bokeh/release/bokeh-3.5.1.min.js"></script>\n' + \
+                    '<script src="https://cdn.bokeh.org/bokeh/release/bokeh-widgets-3.5.1.min.js"></script>\n'
         html_str += html_dict['script']
 
         return html_str
