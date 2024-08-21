@@ -12,4 +12,5 @@ rdflib
 black
 bokeh
 -e git+https://github.com/oda-hub/dispatcher-app.git#egg=cdci_data_analysis[test]
+# This needs to be editable to allow setting the necessary variables. 
 
