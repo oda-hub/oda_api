@@ -33,7 +33,7 @@ setup(name='oda_api',
       install_requires=[
             "requests",
             "future",
-            "astropy>=3.2",
+            "astropy>=5.0.1",
             "json_tricks",
             "matplotlib",
             "numpy",
