@@ -1,7 +1,7 @@
 from typing import Optional
 import os
 
-def get_secret(secret_name: str) -> str:
+def get_secret(secret_name: str) -> Optional[str]:
     # Get secret by name
     # For now only default renku file secret storage is supported whuch stores secrets as plain text
 
