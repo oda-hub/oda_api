@@ -1,3 +1,4 @@
+from typing import Optional
 import os
 
 def get_secret(secret_name: str) -> str:
