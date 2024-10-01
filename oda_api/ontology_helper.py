@@ -242,19 +242,19 @@ class Ontology:
             extra_triples = tmpg.serialize(format=format)
         self.g.parse(data = extra_triples, format = format)
             
-        
-    def get_parameter_hierarchy(self, param_uri):
-        param_uri_m = f"<{param_uri}>" if param_uri.startswith("http") else param_uri
+    def get_uri_hierarchy(self, uri, base_uri):
+        uri_m = f"<{uri}>" if uri.startswith("http") else uri
+        base_uri_m = f"<{base_uri}>" if base_uri.startswith("http") else base_uri
         query = """
         select ?mid ( count(?mid2) as ?midcount ) where { 
         %s  (rdfs:subClassOf|a)* ?mid . 
         
         ?mid rdfs:subClassOf* ?mid2 .
-        ?mid2 rdfs:subClassOf* oda:WorkflowParameter .
+        ?mid2 rdfs:subClassOf* %s .
         }
         group by ?mid
         order by desc(?midcount)
-        """ % ( param_uri_m )
+        """ % ( uri_m, base_uri_m )
 
         qres = self.g.query(query)
         
@@ -262,9 +262,15 @@ class Ontology:
         if len(hierarchy) > 0:
             return hierarchy  
         else:
-            logger.warning("%s is not in ontology or not an oda:WorkflowParameter", param_uri)
-            return [ param_uri ]
-        
+            logger.warning("%s is not in ontology or not an %s", uri, base_uri)
+            return [ uri ]
+    
+    def get_parameter_hierarchy(self, param_uri):
+        return self.get_uri_hierarchy(param_uri, base_uri='oda:WorkflowParameter')
+
+    def get_product_hierarchy(self, prod_uri):
+        return self.get_uri_hierarchy(prod_uri, base_uri='oda:DataProduct')
+
     def get_parameter_format(self, param_uri, return_uri = False):
         if param_uri.startswith("http"): param_uri = f"<{param_uri}>"
        
