@@ -48,7 +48,7 @@ jobs:
         papermill doc/source/user_guide/AsynchronousAPI.ipynb doc/source/user_guide/AsynchronousAPI-output.ipynb
         jupyter nbconvert --to html doc/source/user_guide/AsynchronousAPI-output.ipynb
         
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v4
       with:
         name: AsynchronousAPI-output.html
         path: doc/source/user_guide/AsynchronousAPI-output.html
