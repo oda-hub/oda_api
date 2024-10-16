@@ -40,6 +40,9 @@ default_token_payload = dict(
 def test_rmf():
     isgri_rmf_dp = NumpyDataProduct.from_fits_file("tests/test_data/isgri_rmf_Crab.fits")
 
+    for ID, _d in enumerate(isgri_rmf_dp.data_unit):
+        print(ID, _d.header['EXTNAME'], _d.to_fits_hdu())
+        
     encoded_numpy_data_prod = isgri_rmf_dp.encode()
     decoded_numpy_data_prod = NumpyDataProduct.decode(encoded_numpy_data_prod)
     
