@@ -43,12 +43,7 @@ def test_rmf():
     encoded_numpy_data_prod = isgri_rmf_dp.encode()
     decoded_numpy_data_prod = NumpyDataProduct.decode(encoded_numpy_data_prod)
     
-    binarys = base64.b64decode(encoded_numpy_data_prod['data_unit_list'][2]['binarys'])
-    try:
-        pickle.loads(binarys, encoding='bytes')
-    except Exception as ee:
-        raise Exception(ee)
-    
+    # this is the higher-level call causing the above error in nb2workflow
     _hdul = fits.HDUList()
     for ID, _d in enumerate(decoded_numpy_data_prod.data_unit):
         print(ID, _d.header['EXTNAME'])
@@ -56,6 +51,13 @@ def test_rmf():
             _hdul.append(_d.to_fits_hdu())
         except Exception as ee:
             raise Exception(ee)
+        
+    # this reproduces the commands done in the nb2workflow plugin
+    binarys = base64.b64decode(encoded_numpy_data_prod['data_unit_list'][2]['binarys'])
+    try:
+        pickle.loads(binarys, encoding='bytes')
+    except Exception as ee:
+        raise Exception(ee)
 
 
 # TODO: adapt to new product types and implement corresponding tests
