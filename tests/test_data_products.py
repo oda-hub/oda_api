@@ -38,7 +38,7 @@ default_token_payload = dict(
 
 
 def test_rmf():
-    isgri_rmf_dp = NumpyDataProduct.from_fits_file("test_data/isgri_rmf_Crab.fits")
+    isgri_rmf_dp = NumpyDataProduct.from_fits_file("tests/test_data/isgri_rmf_Crab.fits")
 
     encoded_numpy_data_prod = isgri_rmf_dp.encode()
     decoded_numpy_data_prod = NumpyDataProduct.decode(encoded_numpy_data_prod)
@@ -50,12 +50,14 @@ def test_rmf():
         try:
             _hdul.append(_d.to_fits_hdu())
         except Exception as ee:
+            # print(ee)
             raise Exception(ee)
         
-    # this reproduces the commands done in the nb2workflow plugin
+    # this reproduces the commands done inside the above call (?)
     binarys = base64.b64decode(encoded_numpy_data_prod['data_unit_list'][2]['binarys'])
     try:
         pickle.loads(binarys, encoding='bytes')
+        print('pickle test successful')
     except Exception as ee:
         raise Exception(ee)
 
