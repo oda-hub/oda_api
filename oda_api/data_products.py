@@ -643,7 +643,6 @@ class NumpyDataProduct(object):
             for hdu in hdul:
                 if hdu.name == hdu_name:
                     _hdul.append(hdu)
-                # this ensures that the hdu is read, necessary for the case when hdu_name is not found
             hdul=_hdul
 
         return cls(data_unit=[NumpyDataUnit.from_fits_hdu(h) for h in  hdul],meta_data=meta_data,name=name)
