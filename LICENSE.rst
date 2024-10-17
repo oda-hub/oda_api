@@ -1,4 +1,4 @@
-cdci_data_analysis is distributed under the terms of The MIT License (MIT), reproduced below.
+oda_api is distributed under the terms of The MIT License (MIT), reproduced below.
 
 MIT License
 
