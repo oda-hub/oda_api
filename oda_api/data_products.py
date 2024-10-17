@@ -300,8 +300,8 @@ class NumpyDataUnit(object):
         r = cls(data=hdu.data,
                    data_header={k:v for k, v in hdu.header.items()},
                    hdu_type=cls._map_hdu_type(hdu),name=name)
-        # this is needed to re-read the file
-        # r.to_fits_hdu()
+        # this is needed to re-read the file due to variable length file
+        r.to_fits_hdu()
         return r
 
 
