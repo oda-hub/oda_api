@@ -37,6 +37,22 @@ default_token_payload = dict(
 )
 
 
+def test_variable_length_rmf():
+    # "compressed" (by removing small matrix values, special RMF spec) RMF is stored in variable length table
+    # which is not well supported by astropy
+
+    isgri_rmf_dp_post_scan = NumpyDataProduct.from_fits_file("tests/test_data/isgri_rmf_Crab.fits")
+    isgri_rmf_dp_post_scan.data_unit[2].to_fits_hdu()
+    encoded_numpy_data_prod_postscan = isgri_rmf_dp_post_scan.encode()
+    decoded_numpy_data_prod_postscan = NumpyDataProduct.decode(encoded_numpy_data_prod_postscan)                
+    decoded_numpy_data_prod_postscan.data_unit[2].to_fits_hdu()
+    
+    isgri_rmf_dp = NumpyDataProduct.from_fits_file("tests/test_data/isgri_rmf_Crab.fits")
+    encoded_numpy_data_prod = isgri_rmf_dp.encode()
+    decoded_numpy_data_prod = NumpyDataProduct.decode(encoded_numpy_data_prod)                    
+    decoded_numpy_data_prod.data_unit[2].to_fits_hdu()
+
+        
 def test_rmf():
     isgri_rmf_dp = NumpyDataProduct.from_fits_file("tests/test_data/isgri_rmf_Crab.fits")
 
@@ -64,6 +80,7 @@ def test_rmf():
     except Exception as ee:
         raise Exception(ee)
 
+        
 
 # TODO: adapt to new product types and implement corresponding tests
 def encode_decode(ndp: typing.Union[NumpyDataProduct, 

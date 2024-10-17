@@ -18,6 +18,8 @@ __author__ = "Andrea Tramacere"
 
 import typing
 
+import traceback
+
 from json_tricks import numpy_encode,dumps,loads,numeric_types_hook,hashodict,json_numpy_obj_hook
 from astropy.io import fits as pf
 from astropy.io import ascii as astropy_io_ascii
@@ -295,9 +297,12 @@ class NumpyDataUnit(object):
         if name is None or name == '':
             name=hdu.name
 
-        return cls(data=hdu.data,
+        r = cls(data=hdu.data,
                    data_header={k:v for k, v in hdu.header.items()},
                    hdu_type=cls._map_hdu_type(hdu),name=name)
+        # this is needed to re-read the file
+        # r.to_fits_hdu()
+        return r
 
 
     def to_fits_hdu(self):
@@ -307,7 +312,7 @@ class NumpyDataUnit(object):
             logger.debug('inside to_fits_hdu methods')
             logger.debug(f'name: {self.name}')
             logger.debug(f'header: {self.header}')
-            logger.debug(f'data: {self.data}')
+            # logger.debug(f'data: {self.data}')
             logger.debug(f'units_dict: {self.units_dict}')
             logger.debug(f'hdu_type: {self.hdu_type}')
             logger.debug('------------------------------')
@@ -325,6 +330,9 @@ class NumpyDataUnit(object):
                                     header=pf.header.Header(self.header),
                                     hdu_type=self.hdu_type,units_dict=self.units_dict)
         except Exception as e:
+            error_message = 'an exception occurred in oda_api when binary products are formatted to fits header: ' + repr(e)
+            logger.error(error_message)
+            logger.error('traceback: %s', traceback.format_exc())
             raise Exception("an exception occurred in oda_api when binary products are formatted to fits header: " + repr(e))
 
 
@@ -635,9 +643,11 @@ class NumpyDataProduct(object):
             for hdu in hdul:
                 if hdu.name == hdu_name:
                     _hdul.append(hdu)
+                # this ensures that the hdu is read, necessary for the case when hdu_name is not found
             hdul=_hdul
 
         return cls(data_unit=[NumpyDataUnit.from_fits_hdu(h) for h in  hdul],meta_data=meta_data,name=name)
+        
 
     @classmethod
     def decode(cls, encoded_obj: typing.Union[str, dict], from_json=False):
