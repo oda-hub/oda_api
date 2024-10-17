@@ -312,7 +312,7 @@ class NumpyDataUnit(object):
             logger.debug('inside to_fits_hdu methods')
             logger.debug(f'name: {self.name}')
             logger.debug(f'header: {self.header}')
-            # logger.debug(f'data: {self.data}')
+            logger.debug(f'data: {self.data}')
             logger.debug(f'units_dict: {self.units_dict}')
             logger.debug(f'hdu_type: {self.hdu_type}')
             logger.debug('------------------------------')
