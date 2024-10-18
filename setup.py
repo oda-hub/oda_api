@@ -8,11 +8,9 @@ from builtins import (bytes, str, open, super, range,
 __author__ = 'andrea tramacere'
 
 
-from setuptools import setup, find_packages
+from distutils.core import setup
 import glob
 import json
-
-packs=find_packages()
 
 with open('oda_api/pkg_info.json') as fp:
     _info = json.load(fp)
@@ -27,7 +25,7 @@ setup(name='oda_api',
       description='API plugin  for CDCI online data analysis',
       author='Andrea Tramacere, Volodymyr Savchenko',
       author_email='contact@odahub.io',
-      packages=packs,
+      packages=['oda_api'],
       package_data={'oda_api': ['config_dir/*']},
       include_package_data=True,
       install_requires=[
