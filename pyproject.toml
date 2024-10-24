@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=64",]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "oda_api"
+dynamic = ["version"]
+description = "API plugin for CDCI online data analysis"
+authors = [
+    {name = "Andrea Tramacere", email = "contact@odahub.io"},
+    {name = "Volodymyr Savchenko", email = "contact@odahub.io"}
+]
+maintainers = [
+  {name = "Gabriele Barni", email = "contact@odahub.io"},
+  {name = "Denys Savchenko", email = "contact@odahub.io"}
+]
+readme = "README.md"
+requires-python = ">=2.7"
+
+dependencies = [
+    "requests",
+    "future",
+    "astropy>=3.2",
+    "json_tricks",
+    "matplotlib",
+    "numpy",
+    "jsonschema",
+    "pyjwt",
+    "astroquery",
+    "scipy",
+    "rdflib",
+    "black"
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest-xdist[psutil]",
+    "astroquery>=0.4.4",
+    "sentry_sdk"
+]
+extra-test = [
+    "pytest-xdist[psutil]",
+    "astroquery>=0.4.4"
+]
+gw = [
+    "gwpy",
+    "ligo.skymap"
+]
+ontology = [
+    "rdflib"
+]
+
+[project.scripts]
+oda-api = "oda_api.cli:main"
+
+[tool.setuptools_scm]
