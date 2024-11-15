@@ -29,7 +29,8 @@ dependencies = [
     "astroquery",
     "scipy",
     "rdflib",
-    "black"
+    "black",
+    "puremagic"
 ]
 
 [project.optional-dependencies]

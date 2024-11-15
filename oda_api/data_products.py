@@ -41,7 +41,7 @@ from numpy import nan,inf
 from sys import path_importer_cache, version_info
 
 from io import StringIO, BytesIO
-import imghdr
+import puremagic
 import os
 import logging
 from matplotlib import image as mpimg
@@ -850,7 +850,7 @@ class PictureProduct:
         else:
             self.file_path = None                        
         byte_stream = BytesIO(binary_data)
-        tp = imghdr.what(byte_stream)
+        tp = puremagic.what(byte_stream)
         if tp is None:
             raise ValueError('Provided data is not an image')
         self.img_type = tp
