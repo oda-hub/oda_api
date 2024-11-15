@@ -851,7 +851,21 @@ class PictureProduct:
             self.file_path = None                        
         byte_stream = BytesIO(binary_data)
         tp = puremagic.what(byte_stream)
-        if tp is None:
+        if tp not in [ # the same as was in imghdr
+            'rgb',
+            'gif',
+            'pbm',
+            'pgm',
+            'ppm',
+            'tiff',
+            'rast',
+            'xbm',
+            'jpeg',
+            'bmp',
+            'png',
+            'webp',
+            'exr',
+        ]:
             raise ValueError('Provided data is not an image')
         self.img_type = tp
     
