@@ -20,7 +20,7 @@ requires-python = ">=2.7"
 dependencies = [
     "requests",
     "future",
-    "astropy>=3.2",
+    "astropy >=3.2 <6.0",
     "json_tricks",
     "matplotlib",
     "numpy",
