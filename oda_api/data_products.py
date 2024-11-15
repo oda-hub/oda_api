@@ -849,8 +849,7 @@ class PictureProduct:
             self.write_file(file_path)
         else:
             self.file_path = None                        
-        byte_stream = BytesIO(binary_data)
-        tp = puremagic.what(byte_stream)
+        tp = puremagic.what(None, h=binary_data)
         if tp not in [ # the same as was in imghdr
             'rgb',
             'gif',
