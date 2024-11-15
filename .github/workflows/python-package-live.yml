@@ -40,6 +40,7 @@ jobs:
         python -m pip install -r doc/requirements.txt
         python -m ipykernel install --prefix $HOME/.local/share/jupyter/kernels --name python3
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        pip install .[test,extra-test,ontology]
 
     - name: Test with pytest
       run: |
