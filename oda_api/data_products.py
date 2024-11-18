@@ -482,6 +482,8 @@ class NumpyDataUnit(object):
                     _data = pickle.loads(_binarys,encoding='bytes')
                 else:
                     _data = pickle.loads(_binarys)
+            
+            _data = pf.FITS_rec(_data)
 
         elif encoded_data is not None:
             encoded_data=eval(encoded_data) # !!
