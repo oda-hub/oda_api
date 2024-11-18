@@ -261,7 +261,7 @@ class NumpyDataUnit(object):
         self._warn_chekc_typo()
         return self._check_data(data)        
 
-    def _chekc_hdu_type(self,hdu_type):
+    def _check_hdu_type(self,hdu_type):
         return self._check_hdu_type(hdu_type)
 
     def _chekc_dict(self, _kw):
@@ -355,7 +355,7 @@ class NumpyDataUnit(object):
 
     def new_hdu_from_data(self,data,hdu_type, header=None,units_dict=None):
 
-        self._chekc_hdu_type(hdu_type)
+        self._check_hdu_type(hdu_type)
 
         if hdu_type=='primary':
             h = pf.PrimaryHDU
@@ -484,7 +484,7 @@ class NumpyDataUnit(object):
                     _data = pickle.loads(_binarys)
             
             if isinstance(_data, pf.FITS_rec):
-                _data = pf.FITS_rec(_data)
+                _data = pf.FITS_rec.from_columns(_data.columns)
 
         elif encoded_data is not None:
             encoded_data=eval(encoded_data) # !!
