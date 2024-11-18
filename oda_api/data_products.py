@@ -261,7 +261,7 @@ class NumpyDataUnit(object):
         self._warn_chekc_typo()
         return self._check_data(data)        
 
-    def _check_hdu_type(self,hdu_type):
+    def _chekc_hdu_type(self,hdu_type):
         return self._check_hdu_type(hdu_type)
 
     def _chekc_dict(self, _kw):
