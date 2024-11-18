@@ -10,3 +10,4 @@ astroquery
 simplejson
 sentry_sdk
 rdflib
+puremagic
