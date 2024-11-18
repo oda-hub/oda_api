@@ -355,7 +355,7 @@ class NumpyDataUnit(object):
 
     def new_hdu_from_data(self,data,hdu_type, header=None,units_dict=None):
 
-        self._chekc_hdu_type(hdu_type)
+        self._check_hdu_type(hdu_type)
 
         if hdu_type=='primary':
             h = pf.PrimaryHDU
