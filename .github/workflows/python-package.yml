@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11']
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
 
     steps:
     - uses: actions/checkout@v4
@@ -31,6 +31,7 @@ jobs:
         python -m pip install types-simplejson types-requests types-click
         python -m pip install oda-knowledge-base[rdf,cwl]
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        pip install .[test,extra-test,ontology]
         curl -o tests/oda-ontology.ttl https://raw.githubusercontent.com/oda-hub/ontology/main/ontology.ttl
 
     - name: Lint with flake8

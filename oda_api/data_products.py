@@ -41,7 +41,7 @@ from numpy import nan,inf
 from sys import path_importer_cache, version_info
 
 from io import StringIO, BytesIO
-import imghdr
+import puremagic
 import os
 import logging
 from matplotlib import image as mpimg
@@ -355,7 +355,7 @@ class NumpyDataUnit(object):
 
     def new_hdu_from_data(self,data,hdu_type, header=None,units_dict=None):
 
-        self._chekc_hdu_type(hdu_type)
+        self._check_hdu_type(hdu_type)
 
         if hdu_type=='primary':
             h = pf.PrimaryHDU
@@ -849,9 +849,22 @@ class PictureProduct:
             self.write_file(file_path)
         else:
             self.file_path = None                        
-        byte_stream = BytesIO(binary_data)
-        tp = imghdr.what(byte_stream)
-        if tp is None:
+        tp = puremagic.what(None, h=binary_data)
+        if tp not in [ # the same as was in imghdr
+            'rgb',
+            'gif',
+            'pbm',
+            'pgm',
+            'ppm',
+            'tiff',
+            'rast',
+            'xbm',
+            'jpeg',
+            'bmp',
+            'png',
+            'webp',
+            'exr',
+        ]:
             raise ValueError('Provided data is not an image')
         self.img_type = tp
     
