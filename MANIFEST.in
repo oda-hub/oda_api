@@ -4,3 +4,4 @@ include proj_descr.md
 include oda_api/pkg_info.json
 include tests/observation_yaml_dummy_files/*
 include tests/test_data/*
+include tests/conftest.py
