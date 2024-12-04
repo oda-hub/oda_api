@@ -15,7 +15,7 @@ jobs:
     container: ghcr.io/dsavchenko/heasoft-container/heasoft:6.34docker0.99-python-2e32ba2
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     #- name: Sphinx Docs build with ReadTheDocs Docker
     #  uses: DavidLeoni/readthedocs-to-actions@v1.2
@@ -30,6 +30,7 @@ jobs:
     #    RTD_HTML_EXT: false              
    
     - name: Run Tutorial Notebooks
+      id: nb
       run: |
         set +e
         env
@@ -43,10 +44,15 @@ jobs:
         mkdir -pv /tmp/home
 
         papermill doc/source/user_guide/AsynchronousAPI.ipynb doc/source/user_guide/AsynchronousAPI-output.ipynb
+        echo "exit_code=$?" >> $GITHUB_OUTPUT
         jupyter nbconvert --to html doc/source/user_guide/AsynchronousAPI-output.ipynb
         
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: AsynchronousAPI-output.html
         path: doc/source/user_guide/AsynchronousAPI-output.html
 
+    - name: Determine failure
+      run: |
+        exit_code=${{ steps.nb.outputs.exit_code }}
+        if (( $exit_code )); then exit 1 ; fi
