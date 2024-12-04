@@ -12,7 +12,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: ghcr.io/dsavchenko/heasoft-container/heasoft:6.34docker0.99-python-d810060
+    container: ghcr.io/dsavchenko/heasoft-container/heasoft:6.34docker0.99-python-2e32ba2
     
     steps:
     - uses: actions/checkout@v3
@@ -32,18 +32,16 @@ jobs:
     - name: Run Tutorial Notebooks
       run: |
         set +e
-        cat /init.sh
-        
-        source /etc/pyenvrc
+        env
+
         which python
         pip install --upgrade pip
         pip install wheel
-        pip install papermill jupyter_client astropy oda-api>=1.1.1 nbconvert scipy --upgrade --ignore-installed
+        pip install papermill jupyter_client astropy numpy<2.0 oda-api>=1.1.1 nbconvert scipy --upgrade --ignore-installed
         pip install 'git+https://github.com/integral-observatory/astroquery.git#egg=astroquery'
         export HOME_OVERRRIDE=/tmp/home
         mkdir -pv /tmp/home
-        export
-        source /init.sh
+
         papermill doc/source/user_guide/AsynchronousAPI.ipynb doc/source/user_guide/AsynchronousAPI-output.ipynb
         jupyter nbconvert --to html doc/source/user_guide/AsynchronousAPI-output.ipynb
         
