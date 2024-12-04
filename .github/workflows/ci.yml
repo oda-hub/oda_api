@@ -52,7 +52,6 @@ jobs:
         name: AsynchronousAPI-output.html
         path: doc/source/user_guide/AsynchronousAPI-output.html
 
-    - name: Determine failure
+    - name: Determine nb execution failure
       run: |
-        exit_code=${{ steps.nb.outputs.exit_code }}
-        if (( $exit_code )); then exit 1 ; fi
+        exit ${{ steps.nb.outputs.exit_code }}
