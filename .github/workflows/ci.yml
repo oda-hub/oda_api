@@ -12,10 +12,10 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: integralsw/osa-python:auto-latest
+    container: ghcr.io/dsavchenko/heasoft-container/heasoft:6.34docker0.99-python-2e32ba2
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     #- name: Sphinx Docs build with ReadTheDocs Docker
     #  uses: DavidLeoni/readthedocs-to-actions@v1.2
@@ -30,26 +30,28 @@ jobs:
     #    RTD_HTML_EXT: false              
    
     - name: Run Tutorial Notebooks
+      id: nb
       run: |
         set +e
-        cat /init.sh
-        
-        source /etc/pyenvrc
+        env
+
         which python
         pip install --upgrade pip
         pip install wheel
-        pip install papermill jupyter_client astropy oda-api>=1.1.1 nbconvert scipy --upgrade --ignore-installed
-        pip install 'git+https://github.com/integral-observatory/astroquery.git#egg=astroquery'
-        pip install --force-reinstall 'urllib3<2.0' # TODO: to remove after https://github.com/oda-hub/oda_api/issues/198
+        pip install papermill jupyter_client 'numpy<2.0' oda-api>=1.1.1 nbconvert scipy --upgrade --ignore-installed
+        # pip install 'git+https://github.com/integral-observatory/astroquery.git#egg=astroquery'
         export HOME_OVERRRIDE=/tmp/home
         mkdir -pv /tmp/home
-        export
-        source /init.sh
+
         papermill doc/source/user_guide/AsynchronousAPI.ipynb doc/source/user_guide/AsynchronousAPI-output.ipynb
+        echo "exit_code=$?" >> $GITHUB_OUTPUT
         jupyter nbconvert --to html doc/source/user_guide/AsynchronousAPI-output.ipynb
         
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: AsynchronousAPI-output.html
         path: doc/source/user_guide/AsynchronousAPI-output.html
 
+    - name: Determine nb execution failure
+      run: |
+        exit ${{ steps.nb.outputs.exit_code }}
