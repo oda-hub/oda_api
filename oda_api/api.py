@@ -615,6 +615,8 @@ class DispatcherAPI:
         for k, v in p.items():
             if isinstance(v, (list, dict, set)) and (k not in ['catalog_selected_objects', 'selected_catalog', 'scw_list']):
                 p[k] = json.dumps(v)
+            if v is None and k != 'token':
+                p[k] = '\x00'
         
         if self.is_submitted:
             return {
@@ -922,7 +924,9 @@ class DispatcherAPI:
             else:
                 res = ast.literal_eval(str(res).replace('null', 'None'))
 
+            # what is it for?
             self.dig_list(res)
+            
             return res
         except Exception as e:
 

@@ -764,3 +764,13 @@ def test_structured_param_encoding():
     assert payload['num_par'] == 4.5
     assert payload['dic_par'] == '{"a": 4.6, "b": 3.4}'
     assert payload['lst_par'] == '["spam", "ham"]'
+
+def test_none_payload():
+    disp = oda_api.api.DispatcherAPI(url='http://example.org/dispatcher')
+    disp.parameters_dict = {
+        'optional_par': None,
+    }
+    
+    payload = disp.parameters_dict_payload
+    assert payload['optional_par'] == '\x00'
+    
