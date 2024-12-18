@@ -22,7 +22,7 @@ dependencies = [
     "future",
     "astropy>=3.2,<=6.1.4",
     "json_tricks",
-    "matplotlib",
+    "matplotlib<3.10",
     "numpy<2.0",
     "jsonschema",
     "pyjwt",
