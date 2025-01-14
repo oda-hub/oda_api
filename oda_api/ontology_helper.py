@@ -246,14 +246,14 @@ class Ontology:
         uri_m = self._normalize_uri(uri)
         base_uri_m = self._normalize_uri(base_uri)
         query = """
-        select ?mid ( count(?mid2) as ?midcount ) where { 
+        SELECT ?mid ( count(?mid2) as ?midcount ) WHERE { 
         %s  (rdfs:subClassOf|a)* ?mid . 
         
         ?mid rdfs:subClassOf* ?mid2 .
         ?mid2 rdfs:subClassOf* %s .
         }
-        group by ?mid
-        order by desc(?midcount)
+        GROUP BY ?mid
+        ORDER BY DESC(?midcount)
         """ % ( uri_m, base_uri_m )
 
         qres = self.g.query(query)
@@ -381,14 +381,10 @@ class Ontology:
     
     def get_parprod_terms(self):
         query = """
-            SELECT ?s WHERE {
+            SELECT DISTINCT ?s WHERE {
                 ?s (rdfs:subClassOf|a)* ?mid0.
-                ?mid0 rdfs:subClassOf* oda:DataProduct. 
-
-                ?s (rdfs:subClassOf|a)* ?mid1.
-                ?mid1 rdfs:subClassOf* oda:WorkflowParameter .
+                ?mid0 rdfs:subClassOf* oda:ParameterProduct .
             }
-            GROUP BY ?s
             """
         qres = self.g.query(query)
         return [str(row[0]) for row in qres]
