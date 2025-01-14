@@ -354,7 +354,7 @@ class Ontology:
     def get_allowed_values(self, param_uri):
         param_uri = self._normalize_uri(param_uri)
         
-        query = """ SELECT DISTINCT ?item (count(?list) as ?midcount) WHERE {    
+        query = """ SELECT ?item (count(?list) as ?midcount) WHERE {    
             
             ?list rdf:rest*/rdf:first ?item .
                 
@@ -367,6 +367,7 @@ class Ontology:
                     ]
                 ] 
             }
+            GROUP BY ?item
             ORDER BY DESC(?midcount)
             """ % param_uri
 
