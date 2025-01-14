@@ -246,12 +246,13 @@ class Ontology:
         uri_m = self._normalize_uri(uri)
         base_uri_m = self._normalize_uri(base_uri)
         query = """
-        SELECT DISTINCT ?mid ( count(?mid2) as ?midcount ) WHERE { 
+        SELECT ?mid ( count(?mid2) as ?midcount ) WHERE { 
         %s  (rdfs:subClassOf|a)* ?mid . 
         
         ?mid rdfs:subClassOf* ?mid2 .
         ?mid2 rdfs:subClassOf* %s .
         }
+        GROUP BY ?mid
         ORDER BY DESC(?midcount)
         """ % ( uri_m, base_uri_m )
 
