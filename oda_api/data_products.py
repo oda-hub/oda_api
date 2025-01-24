@@ -18,6 +18,8 @@ __author__ = "Andrea Tramacere"
 
 import typing
 
+import traceback
+
 from json_tricks import numpy_encode,dumps,loads,numeric_types_hook,hashodict,json_numpy_obj_hook
 from astropy.io import fits as pf
 from astropy.io import ascii as astropy_io_ascii
@@ -39,7 +41,7 @@ from numpy import nan,inf
 from sys import path_importer_cache, version_info
 
 from io import StringIO, BytesIO
-import imghdr
+import puremagic
 import os
 import logging
 from matplotlib import image as mpimg
@@ -295,9 +297,12 @@ class NumpyDataUnit(object):
         if name is None or name == '':
             name=hdu.name
 
-        return cls(data=hdu.data,
+        r = cls(data=hdu.data,
                    data_header={k:v for k, v in hdu.header.items()},
                    hdu_type=cls._map_hdu_type(hdu),name=name)
+        # this is needed to re-read the file due to variable length file
+        r.to_fits_hdu()
+        return r
 
 
     def to_fits_hdu(self):
@@ -325,6 +330,9 @@ class NumpyDataUnit(object):
                                     header=pf.header.Header(self.header),
                                     hdu_type=self.hdu_type,units_dict=self.units_dict)
         except Exception as e:
+            error_message = 'an exception occurred in oda_api when binary products are formatted to fits header: ' + repr(e)
+            logger.error(error_message)
+            logger.error('traceback: %s', traceback.format_exc())
             raise Exception("an exception occurred in oda_api when binary products are formatted to fits header: " + repr(e))
 
 
@@ -347,7 +355,7 @@ class NumpyDataUnit(object):
 
     def new_hdu_from_data(self,data,hdu_type, header=None,units_dict=None):
 
-        self._chekc_hdu_type(hdu_type)
+        self._check_hdu_type(hdu_type)
 
         if hdu_type=='primary':
             h = pf.PrimaryHDU
@@ -638,6 +646,7 @@ class NumpyDataProduct(object):
             hdul=_hdul
 
         return cls(data_unit=[NumpyDataUnit.from_fits_hdu(h) for h in  hdul],meta_data=meta_data,name=name)
+        
 
     @classmethod
     def decode(cls, encoded_obj: typing.Union[str, dict], from_json=False):
@@ -840,9 +849,22 @@ class PictureProduct:
             self.write_file(file_path)
         else:
             self.file_path = None                        
-        byte_stream = BytesIO(binary_data)
-        tp = imghdr.what(byte_stream)
-        if tp is None:
+        tp = puremagic.what(None, h=binary_data)
+        if tp not in [ # the same as was in imghdr
+            'rgb',
+            'gif',
+            'pbm',
+            'pgm',
+            'ppm',
+            'tiff',
+            'rast',
+            'xbm',
+            'jpeg',
+            'bmp',
+            'png',
+            'webp',
+            'exr',
+        ]:
             raise ValueError('Provided data is not an image')
         self.img_type = tp
     

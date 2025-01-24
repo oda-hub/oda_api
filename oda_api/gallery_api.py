@@ -669,7 +669,7 @@ class GalleryDispatcherAPI(DispatcherAPI):
                 src_name_list = src_name_arg
 
             for src_name in src_name_list:
-                resolved_source = False
+                resolved_source = True
                 entity_portal_link = None
                 object_ids = None
                 object_type = None
@@ -681,6 +681,7 @@ class GalleryDispatcherAPI(DispatcherAPI):
                     msg = ''
                     if 'message' in resolved_obj:
                         if 'could not be resolved' in resolved_obj['message']:
+                            resolved_source = False
                             msg = f'\nSource {src_name} could not be validated'
                         elif 'successfully resolved' in resolved_obj['message']:
                             resolved_source = True
@@ -710,6 +711,7 @@ class GalleryDispatcherAPI(DispatcherAPI):
                         object_ids = resolved_obj['object_ids']
                 else:
                     logger.warning(f"{src_name} could not be validated")
+                    resolved_source = False
 
                 if not resolved_source and not force_insert_not_valid_new_source:
                     # a source won't be added

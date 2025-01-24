@@ -1006,6 +1006,7 @@ def test_resolve_source(dispatcher_api_with_gallery, dispatcher_test_conf_with_g
         assert 'object_ids' in resolved_obj
         assert 'RA' in resolved_obj
         assert 'DEC' in resolved_obj
+        assert 'message' in resolved_obj
 
         quoted_source_name = urllib.parse.quote(source_name.strip())
 

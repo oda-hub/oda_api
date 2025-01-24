@@ -19,3 +19,4 @@ astroquery==0.4.4
 
 rdflib
 bokeh
+puremagic
