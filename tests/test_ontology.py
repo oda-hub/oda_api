@@ -387,3 +387,11 @@ def test_get_requested_resources(onto):
     assert data[0] == dict(resource="MyS3", required=True, env_vars=set(["My_S3_CREDENTIALS"]))
     data = list(onto.get_requested_resources(g))
     assert len(data) == 2
+
+def test_parprod_terms(onto):
+    parprod = onto.get_parprod_terms()
+    assert parprod[0] == 'http://odahub.io/ontology#ParameterProduct'
+    assert 'http://odahub.io/ontology#Float' in parprod
+    assert 'http://odahub.io/ontology#String' in parprod
+    assert 'http://odahub.io/ontology#StartTimeISOT' in parprod
+    

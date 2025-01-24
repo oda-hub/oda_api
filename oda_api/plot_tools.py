@@ -95,28 +95,37 @@ class OdaImage(OdaProduct):
         :return: matplotlib figure instance
         """
 
-        plt = self.build_fig(ext_sig=ext_sig, meta=meta, header=header, sources=sources,
-                              levels=levels, cmap=cmap, unit_ID=unit_ID, det_sigma=det_sigma, sliders=sliders)
+        plt = self.build_fig(ext_sig=ext_sig, meta=meta, header=header,
+                             sources=sources,
+                             levels=levels, cmap=cmap, unit_ID=unit_ID, 
+                             det_sigma=det_sigma, sliders=sliders)
 
         plt.show()
 
     def build_fig(self, ext_sig=None, meta=None, header=None, sources=None,
-             levels=None, cmap=cm.gist_earth,
-             unit_ID=4, det_sigma=3, sliders=True):
+                  levels=None, cmap=cm.gist_earth,
+                  unit_ID=4, det_sigma=3, sliders=True):
         if self.data is None:
             raise ValueError('data is required')
 
         if levels is None:
             levels = numpy.linspace(1, 10, 10)
 
+        if hasattr(self.data, 'mosaic_image_0_mosaic'):
+            my_mosaic = self.data.mosaic_image_0_mosaic
+        elif hasattr(self.data, 'mosaic_image_0'):
+            my_mosaic = self.data.mosaic_image_0
+        else:
+            raise Exception('No mosaic extension in data product')
+
         if ext_sig is None:
-            ext_sig = self.data.mosaic_image_0_mosaic.data_unit[unit_ID]
+            ext_sig = my_mosaic.data_unit[unit_ID]
 
         if meta is None:
-            self.meta = self.data.mosaic_image_0_mosaic.meta_data
+            self.meta = my_mosaic.meta_data
 
         if header is None:
-            header = self.data.mosaic_image_0_mosaic.data_unit[unit_ID].header
+            header = my_mosaic.data_unit[unit_ID].header
 
         if sources is None:
             sources = self.data.dispatcher_catalog_1.table
@@ -147,17 +156,17 @@ class OdaImage(OdaProduct):
             if 'significance' in sources.columns:
                 sigmas = numpy.array([x for x in sources['significance']])
 
-
-            # plot new sources as pink circles
-            
+            # plot new sources as pink circles            
             m = m_new & (sigmas > det_sigma)
             if numpy.sum(m) > 0:
                 ra_coord = ras[m]
                 dec_coord = decs[m]
                 new_names = names[m]
-                plt.scatter(ra_coord, dec_coord, s=100, marker="o", facecolors='none',
-                        edgecolors='pink',
-                        lw=3, label="NEW any", zorder=5, transform=ax.get_transform('world'))
+                plt.scatter(ra_coord, dec_coord, s=100, marker="o",
+                            facecolors='none',
+                            edgecolors='pink',
+                            lw=3, label="NEW any", zorder=5, 
+                            transform=ax.get_transform('world'))
             else:
                 ra_coord = []
                 dec_coord = []
@@ -169,19 +178,25 @@ class OdaImage(OdaProduct):
                          new_names[i], color="pink", size=15, transform=ax.get_transform('world'))
 
             # fallback for general catalog (e.g. legacysurvey)
-            if not 'src_names' in sources.columns or not 'significance' in sources.columns:
+            if 'src_names' not in sources.columns or \
+                    'significance' not in sources.columns:
                 ra_coord = ras
                 dec_coord = decs
-                plt.scatter(ra_coord, dec_coord, s=30, marker="o", facecolors='none',
-                            edgecolors='magenta', lw=0.5, zorder=5, transform=ax.get_transform('world'))
+                plt.scatter(ra_coord, dec_coord, s=30, marker="o", 
+                            facecolors='none',
+                            edgecolors='magenta', 
+                            lw=0.5, zorder=5, 
+                            transform=ax.get_transform('world'))
             
             m = ~m_new & (sigmas > det_sigma - 1)
             if numpy.sum(m) > 0:
                 ra_coord = ras[m]
                 dec_coord = decs[m]
                 cat_names = names[m]
-                plt.scatter(ra_coord, dec_coord, s=100, marker="o", facecolors='none',
-                        edgecolors='magenta', lw=3, label="known", zorder=5, transform=ax.get_transform('world'))
+                plt.scatter(ra_coord, dec_coord, s=100, marker="o", 
+                            facecolors='none',
+                            edgecolors='magenta', lw=3, label="known", 
+                            zorder=5, transform=ax.get_transform('world'))
             else:
                 ra_coord = []
                 dec_coord = []
@@ -282,21 +297,23 @@ class OdaImage(OdaProduct):
         if self.smin.val < self.smax.val:
             self.cs.set_clim(self.smin.val, self.smax.val)
 
-
     def write_fits(self, file_prefix='', output_dir='.'):
 
         file_fn = os.path.join(output_dir, f'{file_prefix}mosaic.fits')
-
-        self.data.mosaic_image_0_mosaic.write_fits_file(file_fn, overwrite=True)
+        if hasattr(self.data, 'mosaic_image_0_mosaic'):
+            my_mosaic = self.data.mosaic_image_0_mosaic
+        elif hasattr(self.data, 'mosaic_image_0'):
+            my_mosaic = self.data.mosaic_image_0
+        else:
+            raise Exception('No mosaic extension in data product')
+        my_mosaic.write_fits_file(file_fn, overwrite=True)
         return file_fn
-    
-    
+      
     def extract_catalog_from_image(self, include_new_sources=False, det_sigma=5, objects_of_interest=[],
                                    flag=1, isgri_flag=2, update_catalog=False):
         catalog_str = self.extract_catalog_string_from_image(include_new_sources, det_sigma, objects_of_interest,
                                               flag, isgri_flag, update_catalog)
         return json.loads(catalog_str)
-
 
     def extract_catalog_string_from_image(self, include_new_sources=False, det_sigma=5, 
                                           objects_of_interest=None,
@@ -332,7 +349,7 @@ class OdaImage(OdaProduct):
                 return 'none'
 
         if not include_new_sources:
-            ind = [not 'NEW' in ss for ss in sources['src_names']]
+            ind = ['NEW' not in ss for ss in sources['src_names']]
             clean_sources = sources[ind]
             self.logger.debug(ind)
             self.logger.debug(sources)
@@ -340,8 +357,9 @@ class OdaImage(OdaProduct):
         else:
             clean_sources = sources
 
-        unique_sources = self.add_objects_of_interest(clean_sources, objects_of_interest,
-                                                                 flag, isgri_flag)
+        unique_sources = self.add_objects_of_interest(clean_sources, 
+                                                      objects_of_interest,
+                                                      flag, isgri_flag)
 
         copied_image = copy.deepcopy(image)
         copied_image.dispatcher_catalog_1.table = unique_sources
@@ -353,10 +371,12 @@ class OdaImage(OdaProduct):
 
     @staticmethod
     def make_one_source_catalog_string(name, ra, dec, isgri_flag, flag):
-        out_str_templ ='{"cat_frame": "fk5", "cat_coord_units": "deg", "cat_column_list": [[1], ["%s"], [0.0], [%f], [%f], [-32768], [%d], [%d], [0.001]], "cat_column_names": ["meta_ID", "src_names", "significance", "ra", "dec", "NEW_SOURCE", "ISGRI_FLAG", "FLAG", "ERR_RAD"], "cat_column_descr": [["meta_ID", "<i8"], ["src_names", "<U7"], ["significance", "<f8"], ["ra", "<f8"], ["dec", "<f8"], ["NEW_SOURCE", "<i8"], ["ISGRI_FLAG", "<i8"], ["FLAG", "<i8"], ["ERR_RAD", "<f8"]], "cat_lat_name": "dec", "cat_lon_name": "ra"}'
+        out_str_templ = '{"cat_frame": "fk5", "cat_coord_units": "deg", "cat_column_list": [[1], ["%s"], [0.0], [%f], [%f], [-32768], [%d], [%d], [0.001]], "cat_column_names": ["meta_ID", "src_names", "significance", "ra", "dec", "NEW_SOURCE", "ISGRI_FLAG", "FLAG", "ERR_RAD"], "cat_column_descr": [["meta_ID", "<i8"], ["src_names", "<U7"], ["significance", "<f8"], ["ra", "<f8"], ["dec", "<f8"], ["NEW_SOURCE", "<i8"], ["ISGRI_FLAG", "<i8"], ["FLAG", "<i8"], ["ERR_RAD", "<f8"]], "cat_lat_name": "dec", "cat_lon_name": "ra"}'
         return out_str_templ % (name, ra, dec, isgri_flag, flag)
 
-    def add_objects_of_interest(self, clean_sources, objects_of_interest, flag=1, isgri_flag=2, tolerance = 1./60.):
+    def add_objects_of_interest(self, clean_sources, objects_of_interest, 
+                                flag=1, isgri_flag=2,
+                                tolerance=1./60.):
         for ooi in objects_of_interest:
             if isinstance(ooi, tuple):
                 ooi, t = ooi
@@ -370,14 +390,14 @@ class OdaImage(OdaProduct):
             if isinstance(t, table.Table):
                 source_coord = SkyCoord(t['RA'], t['DEC'], unit=(u.hourangle, u.deg), frame="fk5")
 
-            self.logger.info("Elaborating object of interest: %s %f %f" %
-                                       (ooi, source_coord.ra.deg, source_coord.dec.deg))
+            self.logger.info("Elaborating object of interest: %s %f %f" %(ooi, source_coord.ra.deg, 
+                             source_coord.dec.deg))
             ra = source_coord.ra.deg
             dec = source_coord.dec.deg
             self.logger.info("RA=%g Dec=%g" % (ra, dec))
 
             if clean_sources is not None:
-                #Look for the source of interest in NEW sources by coordinates
+                # Look for the source of interest in NEW sources by coordinates
                 for ss in clean_sources:
                     if 'NEW' in ss['src_names']:
                         if numpy.abs(ra - ss['ra']) <= tolerance and numpy.abs(dec - ss['dec']) <= tolerance:

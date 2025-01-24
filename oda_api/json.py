@@ -2,7 +2,14 @@ from json import JSONEncoder
 import logging
 import numpy as np
 
-from .data_products import NumpyDataProduct, ODAAstropyTable, PictureProduct, BinaryData, BinaryProduct
+from .data_products import (
+    NumpyDataProduct, 
+    ODAAstropyTable, 
+    PictureProduct, 
+    BinaryData, 
+    BinaryProduct, 
+    TextLikeProduct
+    )
 
 from astropy.io.fits.card import Undefined as astropyUndefined
 
@@ -15,7 +22,11 @@ class CustomJSONEncoder(JSONEncoder):
         if isinstance(obj, astropyUndefined):
             return "UNDEFINED"
         
-        if isinstance(obj, (NumpyDataProduct, ODAAstropyTable, PictureProduct, BinaryProduct)):
+        if isinstance(obj, (NumpyDataProduct, 
+                            ODAAstropyTable, 
+                            PictureProduct, 
+                            BinaryProduct, 
+                            TextLikeProduct)):
             return obj.encode()
         
         if isinstance(obj, BinaryData):

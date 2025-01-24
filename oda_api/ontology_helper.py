@@ -202,7 +202,7 @@ class Ontology:
             graph.add((classuri, RDFS.subClassOf, bn))
 
     def _get_datatype_restriction(self, param_uri):
-        param_uri = f"<{param_uri}>" if param_uri.startswith("http") else param_uri
+        param_uri = self._normalize_uri(param_uri)
         query = """
             SELECT ?dt WHERE {
                 {
@@ -242,19 +242,19 @@ class Ontology:
             extra_triples = tmpg.serialize(format=format)
         self.g.parse(data = extra_triples, format = format)
             
-        
-    def get_parameter_hierarchy(self, param_uri):
-        param_uri_m = f"<{param_uri}>" if param_uri.startswith("http") else param_uri
+    def get_uri_hierarchy(self, uri, base_uri):
+        uri_m = self._normalize_uri(uri)
+        base_uri_m = self._normalize_uri(base_uri)
         query = """
-        select ?mid ( count(?mid2) as ?midcount ) where { 
+        SELECT ?mid ( count(?mid2) as ?midcount ) WHERE { 
         %s  (rdfs:subClassOf|a)* ?mid . 
         
         ?mid rdfs:subClassOf* ?mid2 .
-        ?mid2 rdfs:subClassOf* oda:WorkflowParameter .
+        ?mid2 rdfs:subClassOf* %s .
         }
-        group by ?mid
-        order by desc(?midcount)
-        """ % ( param_uri_m )
+        GROUP BY ?mid
+        ORDER BY DESC(?midcount)
+        """ % ( uri_m, base_uri_m )
 
         qres = self.g.query(query)
         
@@ -262,11 +262,17 @@ class Ontology:
         if len(hierarchy) > 0:
             return hierarchy  
         else:
-            logger.warning("%s is not in ontology or not an oda:WorkflowParameter", param_uri)
-            return [ param_uri ]
-        
+            logger.warning("%s is not in ontology or not an %s", uri, base_uri)
+            return [ uri ]
+    
+    def get_parameter_hierarchy(self, param_uri):
+        return self.get_uri_hierarchy(param_uri, base_uri='oda:WorkflowParameter')
+
+    def get_product_hierarchy(self, prod_uri):
+        return self.get_uri_hierarchy(prod_uri, base_uri='oda:DataProduct')
+
     def get_parameter_format(self, param_uri, return_uri = False):
-        if param_uri.startswith("http"): param_uri = f"<{param_uri}>"
+        param_uri = self._normalize_uri(param_uri)
        
         query = """ SELECT ?format_uri WHERE { 
             %s (rdfs:subClassOf|a)* [
@@ -290,7 +296,7 @@ class Ontology:
         return uri
         
     def get_parameter_unit(self, param_uri, return_uri = False):
-        if param_uri.startswith("http"): param_uri = f"<{param_uri}>"
+        param_uri = self._normalize_uri(param_uri)
 
         query = """SELECT ?unit_uri WHERE {
         %s (rdfs:subClassOf|a)* [
@@ -314,7 +320,7 @@ class Ontology:
         return uri
         
     def get_limits(self, param_uri):
-        if param_uri.startswith("http"): param_uri = f"<{param_uri}>"
+        param_uri = self._normalize_uri(param_uri)
 
         query = """  
             SELECT ?lim WHERE {
@@ -346,7 +352,7 @@ class Ontology:
         return (ll, ul)
     
     def get_allowed_values(self, param_uri):
-        if param_uri.startswith("http"): param_uri = f"<{param_uri}>"
+        param_uri = self._normalize_uri(param_uri)
         
         query = """ SELECT ?item (count(?list) as ?midcount) WHERE {    
             
@@ -375,14 +381,10 @@ class Ontology:
     
     def get_parprod_terms(self):
         query = """
-            SELECT ?s WHERE {
+            SELECT DISTINCT ?s WHERE {
                 ?s (rdfs:subClassOf|a)* ?mid0.
-                ?mid0 rdfs:subClassOf* oda:DataProduct. 
-
-                ?s (rdfs:subClassOf|a)* ?mid1.
-                ?mid1 rdfs:subClassOf* oda:WorkflowParameter .
+                ?mid0 rdfs:subClassOf* oda:ParameterProduct .
             }
-            GROUP BY ?s
             """
         qres = self.g.query(query)
         return [str(row[0]) for row in qres]
@@ -392,7 +394,7 @@ class Ontology:
         return self.get_direct_annotation(param_uri, "label")
 
     def get_direct_annotation(self, param_uri, metadata, predicate="oda"):
-        if param_uri.startswith("http"): param_uri = f"<{param_uri}>"
+        param_uri = self._normalize_uri(param_uri)
 
         query = f"SELECT ?{metadata} WHERE {{{param_uri} {predicate}:{metadata} ?{metadata}}}"
 
@@ -405,7 +407,7 @@ class Ontology:
         return metadata_value
 
     def is_data_product(self, owl_uri, include_parameter_products=True):
-        if owl_uri.startswith("http"): owl_uri = f"<{owl_uri}>"
+        owl_uri = self._normalize_uri(owl_uri)
         
         filt_param = 'MINUS{?cl rdfs:subClassOf* oda:ParameterProduct. }' if not include_parameter_products else ''
         query = """
@@ -464,6 +466,10 @@ class Ontology:
             yield dict(resource=str(resource).split('#')[-1], required=required, env_vars=env_vars)
     
     def is_optional(self, uri: str) -> bool:
-        if uri.startswith("http"): uri = f"<{uri}>"
+        uri = self._normalize_uri(uri)
         s_qres = self.g.query("ASK {%s rdfs:subClassOf? oda:optional .}" % uri )
         return cast(bool, list(s_qres)[0])
+
+    @staticmethod
+    def _normalize_uri(uri):
+        return f"<{uri}>" if uri.startswith("http") else uri

@@ -21,6 +21,9 @@ from astropy import units as u
 from astropy.table import Table
 from matplotlib import pyplot as plt
 
+import base64
+import pickle
+
 secret_key = 'secretkey_test'
 default_exp_time = int(time.time()) + 5000
 default_token_payload = dict(
@@ -32,6 +35,52 @@ default_token_payload = dict(
     mstout=True,
     mssub=True
 )
+
+
+def test_variable_length_rmf():
+    # "compressed" (by removing small matrix values, special RMF spec) RMF is stored in variable length table
+    # which is not well supported by astropy
+
+    isgri_rmf_dp_post_scan = NumpyDataProduct.from_fits_file("tests/test_data/isgri_rmf_Crab.fits")
+    isgri_rmf_dp_post_scan.data_unit[2].to_fits_hdu()
+    encoded_numpy_data_prod_postscan = isgri_rmf_dp_post_scan.encode()
+    decoded_numpy_data_prod_postscan = NumpyDataProduct.decode(encoded_numpy_data_prod_postscan)                
+    decoded_numpy_data_prod_postscan.data_unit[2].to_fits_hdu()
+    
+    isgri_rmf_dp = NumpyDataProduct.from_fits_file("tests/test_data/isgri_rmf_Crab.fits")
+    encoded_numpy_data_prod = isgri_rmf_dp.encode()
+    decoded_numpy_data_prod = NumpyDataProduct.decode(encoded_numpy_data_prod)                    
+    decoded_numpy_data_prod.data_unit[2].to_fits_hdu()
+
+        
+def test_rmf():
+    isgri_rmf_dp = NumpyDataProduct.from_fits_file("tests/test_data/isgri_rmf_Crab.fits")
+
+    for ID, _d in enumerate(isgri_rmf_dp.data_unit):
+        print(ID, _d.header['EXTNAME'], _d.to_fits_hdu())
+        
+    encoded_numpy_data_prod = isgri_rmf_dp.encode()
+    decoded_numpy_data_prod = NumpyDataProduct.decode(encoded_numpy_data_prod)
+    
+    # this is the higher-level call causing the above error in nb2workflow
+    _hdul = fits.HDUList()
+    for ID, _d in enumerate(decoded_numpy_data_prod.data_unit):
+        print(ID, _d.header['EXTNAME'])
+        try:
+            _hdul.append(_d.to_fits_hdu())
+        except Exception as ee:
+            # print(ee)
+            raise Exception(ee)
+        
+    # this reproduces the commands done inside the above call (?)
+    binarys = base64.b64decode(encoded_numpy_data_prod['data_unit_list'][2]['binarys'])
+    try:
+        pickle.loads(binarys, encoding='bytes')
+        print('pickle test successful')
+    except Exception as ee:
+        raise Exception(ee)
+
+        
 
 # TODO: adapt to new product types and implement corresponding tests
 def encode_decode(ndp: typing.Union[NumpyDataProduct, 
