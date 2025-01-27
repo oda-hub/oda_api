@@ -388,9 +388,18 @@ class OdaImage(OdaProduct):
                 raise Exception("fail to elaborate object of interest")
 
             if isinstance(t, table.Table):
-                source_coord = SkyCoord(t['RA'], t['DEC'], unit=(u.hourangle, u.deg), frame="fk5")
+                if 'RA' in t.colnames:
+                    source_coord = SkyCoord(t['RA'][0], t['DEC'][0],
+                                            unit=[u.hourangle, u.deg])
+                elif 'ra' in t.colnames:
+                    source_coord = SkyCoord(t['ra'][0], t['dec'][0],
+                                            unit=[u.deg, u.deg])
+                else:
+                    source_coord = SkyCoord(0, 0, unit=(u.deg, u.deg), frame="fk5")
+                    self.logger.warning('Could not find coordinates for the object setting to (0,0)')
 
-            self.logger.info("Elaborating object of interest: %s %f %f" %(ooi, source_coord.ra.deg, 
+            self.logger.info("Elaborating object of interest: %s %f %f" % (ooi, 
+                                                                           source_coord.ra.deg, 
                              source_coord.dec.deg))
             ra = source_coord.ra.deg
             dec = source_coord.dec.deg
