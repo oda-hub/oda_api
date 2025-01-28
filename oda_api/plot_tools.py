@@ -26,7 +26,7 @@ from astropy.io import fits
 from astroquery.simbad import Simbad
 
 import oda_api.api as api
-from .plot_tools_utils import ScatterPlot, GridPlot
+from .plot_tools_utils import ScatterPlot
 
 import time as _time
 import astropy.wcs as wcs
