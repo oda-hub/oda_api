@@ -735,9 +735,14 @@ class OdaLightCurve(OdaProduct):
         else:
             xlabel = 'Time [IJD]'
 
+        x_range = [(x - dx).min(), (x + dx).max()]
+        y_range = [(y - dy).min(), (y + dy).max()]
+
         sp = ScatterPlot(w=800, h=600,
                         x_label=xlabel,
                         y_label='Rate (%.0f - %.0f keV)' % (e_min, e_max),
+                        x_range=x_range,
+                        y_range=y_range,
                         title=source_name)
 
         sp.add_errorbar(x, y, yerr=dy, xerr=dx, color=color)
@@ -815,7 +820,7 @@ class OdaSpectrum(OdaProduct):
             x_range = [x.min(), x.max()]
         
         if y_range is None:
-            y_range = [numpy.max([1e-4, (y-dy)[x < x_range[1]].min()]), (y+dy).max()]
+            y_range = [numpy.max([1e-2, (y-dy)[x < x_range[1]].min()]), (y+dy).max()]
 
         sp = ScatterPlot(w=800, h=600,
                         x_label="Energy [keV]",
