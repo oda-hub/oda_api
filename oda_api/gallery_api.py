@@ -175,14 +175,25 @@ class GalleryDispatcherAPI(DispatcherAPI):
         if t2 is not None:
             rev2_value = self.get_revnum(t2, token)
 
-        return self.get_list_products_with_conditions(token=token,
-                                                      instrument_name=instrument,
-                                                      product_type='image',
-                                                      e1_kev_value=e1_kev,
-                                                      e2_kev_value=e2_kev,
-                                                      rev1_value=rev1_value,
-                                                      rev2_value=rev2_value)
+        list_rev_range = np.arange(rev1_value, rev2_value, 250)
 
+        product_list = []
+
+        for rev in list_rev_range:
+            rev1 = rev
+            if rev == list_rev_range[-1]:
+                rev2 = rev2_value
+            else:
+                rev2 = rev + 249
+            product_list += self.get_list_products_with_conditions(token=token,
+                                                                   instrument_name=instrument,
+                                                                   product_type='image',
+                                                                   e1_kev_value=e1_kev,
+                                                                   e2_kev_value=e2_kev,
+                                                                   rev1_value=rev1,
+                                                                   rev2_value=rev2)
+
+        return product_list
 
     def get_list_lightcurve_with_conditions(self,
                                             token: str = None,
@@ -198,14 +209,26 @@ class GalleryDispatcherAPI(DispatcherAPI):
         if t2 is not None:
             rev2_value = self.get_revnum(t2, token)
 
-        return self.get_list_products_with_conditions(token=token,
-                                                      instrument_name=instrument,
-                                                      product_type='lightcurve',
-                                                      src_name=source_name,
-                                                      e1_kev_value=e1_kev,
-                                                      e2_kev_value=e2_kev,
-                                                      rev1_value=rev1_value,
-                                                      rev2_value=rev2_value)
+        list_rev_range = np.arange(rev1_value, rev2_value, 250)
+
+        product_list = []
+
+        for rev in list_rev_range:
+            rev1 = rev
+            if rev == list_rev_range[-1]:
+                rev2 = rev2_value
+            else:
+                rev2 = rev + 249
+            product_list += self.get_list_products_with_conditions(token=token,
+                                                                   instrument_name=instrument,
+                                                                   product_type='lightcurve',
+                                                                   src_name=source_name,
+                                                                   e1_kev_value=e1_kev,
+                                                                   e2_kev_value=e2_kev,
+                                                                   rev1_value=rev1,
+                                                                   rev2_value=rev2)
+
+        return product_list
 
 
     def get_revnum(self, time_to_convert, token):
@@ -248,12 +271,24 @@ class GalleryDispatcherAPI(DispatcherAPI):
         if t2 is not None:
             rev2_value = self.get_revnum(t2, token)
 
-        return self.get_list_products_with_conditions(token=token,
+        list_rev_range = np.arange(rev1_value, rev2_value, 250)
+
+        product_list = []
+
+        for rev in list_rev_range:
+            rev1 = rev
+            if rev == list_rev_range[-1]:
+                rev2 = rev2_value
+            else:
+                rev2 = rev + 249
+            product_list += self.get_list_products_with_conditions(token=token,
                                                       instrument_name=instrument,
                                                       src_name=source_name,
                                                       product_type='spectrum',
-                                                      rev1_value=rev1_value,
-                                                      rev2_value=rev2_value)
+                                                      rev1_value=rev1,
+                                                      rev2_value=rev2)
+
+        return product_list
 
 
     def get_list_products_with_conditions(self,
