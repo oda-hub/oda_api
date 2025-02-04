@@ -175,7 +175,7 @@ class GalleryDispatcherAPI(DispatcherAPI):
         if t2 is not None:
             rev2_value = self.get_revnum(t2, token)
 
-        list_rev_range = np.arange(rev1_value, rev2_value, 250)
+        list_rev_range = list(np.arange(rev1_value, rev2_value, 250))
 
         product_list = []
 
@@ -209,7 +209,7 @@ class GalleryDispatcherAPI(DispatcherAPI):
         if t2 is not None:
             rev2_value = self.get_revnum(t2, token)
 
-        list_rev_range = np.arange(rev1_value, rev2_value, 250)
+        list_rev_range = list(np.arange(rev1_value, rev2_value, 250))
 
         product_list = []
 
@@ -271,7 +271,7 @@ class GalleryDispatcherAPI(DispatcherAPI):
         if t2 is not None:
             rev2_value = self.get_revnum(t2, token)
 
-        list_rev_range = np.arange(rev1_value, rev2_value, 250)
+        list_rev_range = list(np.arange(rev1_value, rev2_value, 250))
 
         product_list = []
 
