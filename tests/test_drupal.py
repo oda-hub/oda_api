@@ -893,6 +893,46 @@ def test_product_gallery_get_product_with_conditions(dispatcher_api_with_gallery
             else:
                 assert all(image.get("title") != product_title for image in images_list)
 
+
+@pytest.mark.test_drupal
+@pytest.mark.parametrize("product_type", ["spectrum", "lightcurve", "image"])
+def test_product_gallery_get_product_with_conditions_long_time_range(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery, product_type):
+    disp = dispatcher_api_with_gallery
+    token_payload = {
+        **default_token_payload,
+        "roles": "general, gallery contributor",
+    }
+    encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
+    if product_type == 'spectrum':
+        spectra_list = disp.get_list_spectra_with_conditions(t1='2003-01-01T00:00:00', t2='2024-08-24T23:59:59',
+                                                             instrument="isgri",
+                                                             token=encoded_token)
+        assert isinstance(spectra_list, list)
+        print(f"spectra_list has {len(spectra_list)} products")
+
+    elif product_type == 'image':
+        images_list = disp.get_list_images_with_conditions(t1='2003-01-01T00:00:00', t2='2024-08-24T23:59:59',
+                                                           instrument="isgri",
+                                                           token=encoded_token)
+
+        assert isinstance(images_list, list)
+        print(f"images_list has {len(images_list)} products")
+        images_list = disp.get_list_products_with_conditions(token=encoded_token,
+                                                                  instrument_name="isgri",
+                                                                  product_type='image',
+                                                                  rev1_value=100,
+                                                                  rev2_value=2800)
+        assert isinstance(images_list, dict)
+        assert images_list['error_message'] == 'issue when performing a request to the product gallery'
+
+    elif product_type == 'lightcurve':
+        lightcurves_list = disp.get_list_lightcurve_with_conditions(t1='2003-01-01T00:00:00', t2='2024-08-24T23:59:59',
+                                                                    instrument="isgri",
+                                                                    token=encoded_token)
+        assert isinstance(lightcurves_list, list)
+        print(f"lightcurves_list has {len(lightcurves_list)} products")
+
+
 @pytest.mark.test_drupal
 @pytest.mark.parametrize("source_name", ["new", "known"])
 def test_product_gallery_get_product_list_by_source_name(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery, source_name):
