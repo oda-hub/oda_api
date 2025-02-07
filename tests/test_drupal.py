@@ -906,14 +906,17 @@ def test_product_gallery_get_product_with_conditions_long_time_range(dispatcher_
     if product_type == 'spectrum':
         spectra_list = disp.get_list_spectra_with_conditions(t1='2003-01-01T00:00:00', t2='2024-08-24T23:59:59',
                                                              instrument="isgri",
-                                                             token=encoded_token)
+                                                             token=encoded_token,
+                                                           max_span_rev=0)
         assert isinstance(spectra_list, list)
         print(f"spectra_list has {len(spectra_list)} products")
 
     elif product_type == 'image':
         images_list = disp.get_list_images_with_conditions(t1='2003-01-01T00:00:00', t2='2024-08-24T23:59:59',
                                                            instrument="isgri",
-                                                           token=encoded_token)
+                                                           token=encoded_token,
+                                                           max_span_rev=0
+                                                           )
 
         assert isinstance(images_list, list)
         print(f"images_list has {len(images_list)} products")
@@ -928,9 +931,27 @@ def test_product_gallery_get_product_with_conditions_long_time_range(dispatcher_
     elif product_type == 'lightcurve':
         lightcurves_list = disp.get_list_lightcurve_with_conditions(t1='2003-01-01T00:00:00', t2='2024-08-24T23:59:59',
                                                                     instrument="isgri",
-                                                                    token=encoded_token)
+                                                                    token=encoded_token,
+                                                           max_span_rev=0)
         assert isinstance(lightcurves_list, list)
         print(f"lightcurves_list has {len(lightcurves_list)} products")
+
+
+@pytest.mark.test_drupal
+def test_product_gallery_get_product_with_conditions_long_time_range_rev_range(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery):
+    disp = dispatcher_api_with_gallery
+    images_list = disp.get_list_images_with_conditions(t1='2003-01-01T00:00:00', t2='2024-08-24T23:59:59',
+                                                       instrument="isgri",
+                                                       min_span_rev=100,
+                                                       max_span_rev=2500
+                                                       )
+
+    assert isinstance(images_list, list)
+    print(f"images_list has {len(images_list)} products")
+
+    # test the span rev is actually >= 100 and <= 2500
+    for image in images_list:
+        assert 100 <= (float(image['rev2']) - float(image['rev1']))  <= 2500
 
 
 @pytest.mark.test_drupal
