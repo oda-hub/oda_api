@@ -938,12 +938,13 @@ def test_product_gallery_get_product_with_conditions_long_time_range(dispatcher_
 
 
 @pytest.mark.test_drupal
-def test_product_gallery_get_product_with_conditions_long_time_range_rev_range(dispatcher_api_with_gallery, dispatcher_test_conf_with_gallery):
+@pytest.mark.parametrize("span_rev", [[100, 2500], [None, 50], [50, None], [None, None]])
+def test_product_gallery_get_product_with_conditions_long_time_range_rev_range(dispatcher_api_with_gallery, span_rev):
     disp = dispatcher_api_with_gallery
     images_list = disp.get_list_images_with_conditions(t1='2003-01-01T00:00:00', t2='2024-08-24T23:59:59',
                                                        instrument="isgri",
-                                                       min_span_rev=100,
-                                                       max_span_rev=2500
+                                                       min_span_rev=span_rev[0],
+                                                       max_span_rev=span_rev[1]
                                                        )
 
     assert isinstance(images_list, list)
@@ -951,7 +952,11 @@ def test_product_gallery_get_product_with_conditions_long_time_range_rev_range(d
 
     # test the span rev is actually >= 100 and <= 2500
     for image in images_list:
-        assert 100 <= (float(image['rev2']) - float(image['rev1']))  <= 2500
+        if span_rev[0] is None:
+            span_rev[0] = 0
+        if span_rev[1] is None:
+            span_rev[1] = 3000
+        assert span_rev[0] <= (float(image['rev2']) - float(image['rev1']))  <= span_rev[1]
 
 
 @pytest.mark.test_drupal
