@@ -312,7 +312,7 @@ class GridPlot(object):
         self.f2=f2
 
     def get_html_draw(self,w=None,h=None):
-        grid = gridplot([self.f1.fig,self.f2.fig],ncols=1,plot_width=w, plot_height=h)
+        grid = gridplot([self.f1.fig,self.f2.fig], ncols=1, width=w, height=h)
         script, div = components(grid)
 
         html_dict= {'script': script, 'div': div}
