@@ -10,7 +10,7 @@ astroquery
 scipy
 rdflib
 black
-bokeh
+bokeh==3.1.1
 -e git+https://github.com/oda-hub/dispatcher-app.git#egg=cdci_data_analysis[test]
 # This needs to be editable to allow setting the necessary variables. 
 puremagic
