@@ -76,8 +76,8 @@ class Image(object):
         if dh is None:
             dh = y_range[1]
 
-        fig = figure(plot_width=w,
-                     plot_height=h,
+        fig = figure(width=w,
+                     height=h,
                      x_axis_type=x_scale,
                      y_axis_type=y_scale,
                      x_range=x_range,
