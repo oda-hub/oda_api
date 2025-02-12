@@ -10,7 +10,9 @@ import  numpy  as np
 
 from astropy import wcs
 from bokeh.layouts import row, gridplot, column
-from bokeh.models import (CustomJS,
+# the # type: ignore is needed to avoid mypy error as described in https://github.com/bokeh/bokeh/issues/12960
+# it will be fixed either on my mypy or bokeh side
+from bokeh.models import (CustomJS, # type: ignore
                           Toggle,
                           RangeSlider,
                           HoverTool,
