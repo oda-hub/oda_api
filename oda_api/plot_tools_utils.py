@@ -117,7 +117,7 @@ class Image(object):
                             line_color="white", fill_color=None, alpha=1.0, source=source)
 
                 labels = LabelSet(x='lon', y='lat', text='names', level='glyph',
-                                  x_offset=5, y_offset=5, render_mode='canvas', source=source, text_color='white')
+                                  x_offset=5, y_offset=5, source=source, text_color='white')
 
                 fig.add_layout(labels)
 
