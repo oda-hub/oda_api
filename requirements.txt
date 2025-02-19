@@ -5,7 +5,6 @@ json_tricks
 matplotlib
 numpy
 jsonschema
-pyjwt
 astroquery
 -e git+https://github.com/oda-hub/dispatcher-app.git#egg=cdci_data_analysis[test]
 simplejson
