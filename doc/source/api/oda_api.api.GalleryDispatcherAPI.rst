@@ -1,7 +1,7 @@
 DispatcherAPI
 =============
 
-.. currentmodule:: oda_api.api
+.. currentmodule:: oda_api.gallery_api
 
 .. autoclass:: DispatcherAPI
    :show-inheritance:
