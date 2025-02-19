@@ -7,10 +7,9 @@ numpy
 jsonschema
 pyjwt
 astroquery
-scipy
+-e git+https://github.com/oda-hub/dispatcher-app.git#egg=cdci_data_analysis[test]
+simplejson
+sentry_sdk
 rdflib
-black
 bokeh==3.1.1
--e git+https://github.com/oda-hub/dispatcher-app.git@plot-tools-in-oda-api#egg=cdci_data_analysis[test]
-# This needs to be editable to allow setting the necessary variables. 
 puremagic
