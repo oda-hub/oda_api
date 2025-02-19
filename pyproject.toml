@@ -20,10 +20,10 @@ requires-python = ">=2.7"
 dependencies = [
     "requests",
     "future",
-    "astropy>3.0,<3.2",
+    "astropy>=3.2,<=6.1.4",
     "json_tricks",
     "matplotlib<3.10",
-    "bokeh<=3.1.1",
+    "bokeh>3.0,<3.2",
     "numpy<2.0",
     "jsonschema",
     "pyjwt",
