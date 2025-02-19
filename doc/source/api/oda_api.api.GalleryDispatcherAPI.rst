@@ -3,7 +3,7 @@ DispatcherAPI
 
 .. currentmodule:: oda_api.gallery_api
 
-.. autoclass:: DispatcherAPI
+.. autoclass:: GalleryDispatcherAPI
    :show-inheritance:
 
    .. rubric:: Methods Summary
