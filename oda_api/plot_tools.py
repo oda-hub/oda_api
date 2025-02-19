@@ -14,6 +14,7 @@ __author__ = "Carlo Ferrigno"
 import json
 import numpy
 import copy
+import bokeh
 
 from matplotlib import pylab as plt
 from matplotlib.widgets import Slider
@@ -749,8 +750,8 @@ class OdaLightCurve(OdaProduct):
         html_dict = sp.get_html_draw()
 
         html_str = html_dict['div'] + '\n'
-        html_str += '<script src="https://cdn.bokeh.org/bokeh/release/bokeh-3.6.2.min.js"></script>\n' + \
-                    '<script src="https://cdn.bokeh.org/bokeh/release/bokeh-widgets-3.6.2.min.js"></script>\n'
+        html_str += f'<script src="https://cdn.bokeh.org/bokeh/release/bokeh-{bokeh.__version__}.min.js"></script>\n' + \
+                    f'<script src="https://cdn.bokeh.org/bokeh/release/bokeh-widgets-{bokeh.__version__}.min.js"></script>\n'
         html_str += html_dict['script']
 
         return html_str
@@ -836,8 +837,8 @@ class OdaSpectrum(OdaProduct):
         html_dict = sp.get_html_draw()
 
         html_str = html_dict['div'] + '\n'
-        html_str += '<script src="https://cdn.bokeh.org/bokeh/release/bokeh-3.6.2.min.js"></script>\n' + \
-                    '<script src="https://cdn.bokeh.org/bokeh/release/bokeh-widgets-3.6.2.min.js"></script>\n'
+        html_str += f'<script src="https://cdn.bokeh.org/bokeh/release/bokeh-{bokeh.__version__}.min.js"></script>\n' + \
+                    f'<script src="https://cdn.bokeh.org/bokeh/release/bokeh-widgets-{bokeh.__version__}.min.js"></script>\n'
         html_str += html_dict['script']
 
         return html_str
