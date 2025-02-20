@@ -14,6 +14,7 @@ __author__ = "Carlo Ferrigno"
 import json
 import numpy
 import copy
+import bokeh
 
 from matplotlib import pylab as plt
 from matplotlib.widgets import Slider
@@ -26,9 +27,11 @@ from astropy.io import fits
 from astroquery.simbad import Simbad
 
 import oda_api.api as api
+from .plot_tools_utils import ScatterPlot
 
 import time as _time
 import astropy.wcs as wcs
+
 
 # NOTE GW, optional
 try:
@@ -720,7 +723,7 @@ class OdaLightCurve(OdaProduct):
         return True
 
     def get_html_image(self, source_name, systematic_fraction, color='blue'):
-        import cdci_data_analysis.analysis.plot_tools
+        
         x, dx, y, dy, e_min, e_max = self.get_lc(source_name, systematic_fraction)
         mask = numpy.logical_not(numpy.isnan(y))
 
@@ -733,17 +736,22 @@ class OdaLightCurve(OdaProduct):
         else:
             xlabel = 'Time [IJD]'
 
-        sp = cdci_data_analysis.analysis.plot_tools.ScatterPlot(w=800, h=600,
-                                                                x_label=xlabel,
-                                                                y_label='Rate (%.0f - %.0f keV)' % (e_min, e_max),
-                                                                title=source_name)
+        x_range = [(x - dx).min(), (x + dx).max()]
+        y_range = [(y - dy).min(), (y + dy).max()]
+
+        sp = ScatterPlot(w=800, h=600,
+                        x_label=xlabel,
+                        y_label='Rate (%.0f - %.0f keV)' % (e_min, e_max),
+                        x_range=x_range,
+                        y_range=y_range,
+                        title=source_name)
 
         sp.add_errorbar(x, y, yerr=dy, xerr=dx, color=color)
         html_dict = sp.get_html_draw()
 
         html_str = html_dict['div'] + '\n'
-        html_str += '<script src="https://cdn.bokeh.org/bokeh/release/bokeh-2.4.2.min.js"></script>\n' + \
-                    '<script src="https://cdn.bokeh.org/bokeh/release/bokeh-widgets-2.4.2.min.js"></script>\n'
+        html_str += f'<script src="https://cdn.bokeh.org/bokeh/release/bokeh-{bokeh.__version__}.min.js"></script>\n' + \
+                    f'<script src="https://cdn.bokeh.org/bokeh/release/bokeh-widgets-{bokeh.__version__}.min.js"></script>\n'
         html_str += html_dict['script']
 
         return html_str
@@ -803,8 +811,7 @@ class OdaSpectrum(OdaProduct):
             plt.show()
 
     def get_html_image(self, in_source_name, systematic_fraction, x_range=None, y_range=None, color='blue'):
-        import cdci_data_analysis.analysis.plot_tools
-
+        
         x, dx, y, dy = self.get_values(in_source_name, systematic_fraction)
 
         if len(x) == 0:
@@ -814,24 +821,24 @@ class OdaSpectrum(OdaProduct):
             x_range = [x.min(), x.max()]
         
         if y_range is None:
-            y_range = [numpy.max([1e-4, (y-dy)[x < x_range[1]].min()]), (y+dy).max()]
+            y_range = [numpy.max([1e-2, (y-dy)[x < x_range[1]].min()]), (y+dy).max()]
 
-        sp = cdci_data_analysis.analysis.plot_tools.ScatterPlot(w=800, h=600,
-                                                                x_label="Energy [keV]",
-                                                                y_label='Counts/s/keV',
-                                                                x_axis_type='log',
-                                                                y_axis_type='log',
-                                                                x_range=x_range,
-                                                                y_range=y_range,
-                                                                title=in_source_name)
+        sp = ScatterPlot(w=800, h=600,
+                        x_label="Energy [keV]",
+                        y_label='Counts/s/keV',
+                        x_axis_type='log',
+                        y_axis_type='log',
+                        x_range=x_range,
+                        y_range=y_range,
+                        title=in_source_name)
         if len(x) == 0:
             return ''
         sp.add_errorbar(x, y, yerr=dy, xerr=dx, color=color)
         html_dict = sp.get_html_draw()
 
         html_str = html_dict['div'] + '\n'
-        html_str += '<script src="https://cdn.bokeh.org/bokeh/release/bokeh-2.4.2.min.js"></script>\n' + \
-                    '<script src="https://cdn.bokeh.org/bokeh/release/bokeh-widgets-2.4.2.min.js"></script>\n'
+        html_str += f'<script src="https://cdn.bokeh.org/bokeh/release/bokeh-{bokeh.__version__}.min.js"></script>\n' + \
+                    f'<script src="https://cdn.bokeh.org/bokeh/release/bokeh-widgets-{bokeh.__version__}.min.js"></script>\n'
         html_str += html_dict['script']
 
         return html_str
