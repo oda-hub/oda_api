@@ -166,47 +166,51 @@ class GalleryDispatcherAPI(DispatcherAPI):
                                         token: str = None,
                                         instrument=None,
                                         e1_kev=None, e2_kev=None,
-                                        t1=None, t2=None
-                                        ):
-        rev1_value = None
-        if t1 is not None:
-            rev1_value = self.get_revnum(t1, token)
-        rev2_value = None
-        if t2 is not None:
-            rev2_value = self.get_revnum(t2, token)
+                                        t1=None, t2=None,
+                                        min_span_rev=None,
+                                        max_span_rev=None):
 
-        return self.get_list_products_with_conditions(token=token,
-                                                      instrument_name=instrument,
-                                                      product_type='image',
-                                                      e1_kev_value=e1_kev,
-                                                      e2_kev_value=e2_kev,
-                                                      rev1_value=rev1_value,
-                                                      rev2_value=rev2_value)
-
+        return self.get_list_products_with_conditions_generic(token=token,
+                                                              instrument=instrument,
+                                                              e1_kev=e1_kev, e2_kev=e2_kev,
+                                                              t1=t1, t2=t2,
+                                                              min_span_rev=min_span_rev,
+                                                              max_span_rev=max_span_rev,
+                                                              product_type='image')
 
     def get_list_lightcurve_with_conditions(self,
                                             token: str = None,
                                             instrument=None,
                                             source_name=None,
                                             e1_kev=None, e2_kev=None,
-                                            t1=None, t2=None
-                                            ):
-        rev1_value = None
-        if t1 is not None:
-            rev1_value = self.get_revnum(t1, token)
-        rev2_value = None
-        if t2 is not None:
-            rev2_value = self.get_revnum(t2, token)
+                                            t1=None, t2=None,
+                                            min_span_rev=None,
+                                            max_span_rev=None):
 
-        return self.get_list_products_with_conditions(token=token,
-                                                      instrument_name=instrument,
-                                                      product_type='lightcurve',
-                                                      src_name=source_name,
-                                                      e1_kev_value=e1_kev,
-                                                      e2_kev_value=e2_kev,
-                                                      rev1_value=rev1_value,
-                                                      rev2_value=rev2_value)
+        return self.get_list_products_with_conditions_generic(token=token,
+                                                              instrument=instrument,
+                                                              source_name=source_name,
+                                                              e1_kev=e1_kev, e2_kev=e2_kev,
+                                                              t1=t1, t2=t2,
+                                                              min_span_rev=min_span_rev,
+                                                              max_span_rev=max_span_rev,
+                                                              product_type='lightcurve')
 
+    def get_list_spectra_with_conditions(self,
+                                         token: str = None,
+                                         instrument=None,
+                                         source_name=None,
+                                         t1=None, t2=None,
+                                         min_span_rev=None,
+                                         max_span_rev=None):
+
+        return self.get_list_products_with_conditions_generic(token=token,
+                                                              instrument=instrument,
+                                                              source_name=source_name,
+                                                              t1=t1, t2=t2,
+                                                              min_span_rev=min_span_rev,
+                                                              max_span_rev=max_span_rev,
+                                                              product_type='spectrum')
 
     def get_revnum(self, time_to_convert, token):
         rev1_value = None
@@ -234,13 +238,23 @@ class GalleryDispatcherAPI(DispatcherAPI):
 
         return rev1_value
 
+    def get_list_products_with_conditions_generic(self,
+                                                  token: str = None,
+                                                  instrument=None,
+                                                  source_name=None,
+                                                  e1_kev=None, e2_kev=None,
+                                                  t1=None, t2=None,
+                                                  min_span_rev=None,
+                                                  max_span_rev=None,
+                                                  product_type=None):
 
-    def get_list_spectra_with_conditions(self,
-                                         token: str = None,
-                                         instrument=None,
-                                         source_name=None,
-                                         t1=None, t2=None
-                                         ):
+        if min_span_rev is not None and min_span_rev < 0:
+            raise UserError("min_span_rev must be non-negative")
+        if max_span_rev is not None and max_span_rev < 0:
+            raise UserError("max_span_rev must be non-negative")
+        if min_span_rev is not None and max_span_rev is not None and min_span_rev > max_span_rev:
+            raise UserError("min_span_rev must be less than or equal to max_span_rev")
+
         rev1_value = None
         if t1 is not None:
             rev1_value = self.get_revnum(t1, token)
@@ -248,12 +262,53 @@ class GalleryDispatcherAPI(DispatcherAPI):
         if t2 is not None:
             rev2_value = self.get_revnum(t2, token)
 
-        return self.get_list_products_with_conditions(token=token,
-                                                      instrument_name=instrument,
-                                                      src_name=source_name,
-                                                      product_type='spectrum',
-                                                      rev1_value=rev1_value,
-                                                      rev2_value=rev2_value)
+        product_list = []
+
+        # query call optimization: if min_span_rev is None or 0, or if max_span_rev is 0, we split the query in smaller,
+        # more manageable queries (that should not fail) because we want to include those products that have a span_rev
+        # of 0, and it's risky to do that with a single query
+        if min_span_rev is None or min_span_rev == 0 or (max_span_rev is not None and max_span_rev == 0):
+            list_rev_range = list(np.arange(rev1_value, rev2_value, 250))
+            for rev in list_rev_range:
+                rev1 = rev
+                if rev == list_rev_range[-1]:
+                    rev2 = rev2_value
+                else:
+                    rev2 = rev + 249
+                product_list += self.get_list_products_with_conditions(token=token,
+                                                                       instrument_name=instrument,
+                                                                       product_type=product_type,
+                                                                       src_name=source_name,
+                                                                       e1_kev_value=e1_kev,
+                                                                       e2_kev_value=e2_kev,
+                                                                       rev1_value=rev1,
+                                                                       rev2_value=rev2,
+                                                                       max_span_rev_value=0)
+            # if we have to include also the products with span_rev > 0, we do it with a single, not-split, query
+            if max_span_rev is None or max_span_rev > 0:
+                product_list += self.get_list_products_with_conditions(token=token,
+                                                                       instrument_name=instrument,
+                                                                       product_type=product_type,
+                                                                       src_name=source_name,
+                                                                       e1_kev_value=e1_kev,
+                                                                       e2_kev_value=e2_kev,
+                                                                       rev1_value=rev1_value,
+                                                                       rev2_value=rev2_value,
+                                                                       min_span_rev_value=1,
+                                                                       max_span_rev_value=max_span_rev)
+
+        else:
+            product_list = self.get_list_products_with_conditions(token=token,
+                                                                  instrument_name=instrument,
+                                                                  product_type=product_type,
+                                                                  src_name=source_name,
+                                                                  e1_kev_value=e1_kev,
+                                                                  e2_kev_value=e2_kev,
+                                                                  rev1_value=rev1_value,
+                                                                  rev2_value=rev2_value,
+                                                                  min_span_rev_value=min_span_rev,
+                                                                  max_span_rev_value=max_span_rev)
+        return product_list
 
 
     def get_list_products_with_conditions(self,

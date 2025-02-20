@@ -55,6 +55,7 @@ extensions = [ 'sphinx.ext.autodoc',
                'sphinx_automodapi.automodapi',
                'sphinx.ext.inheritance_diagram',
                'sphinx.ext.autosummary',
+               'sphinx.util.console',
                'nbsphinx',
                'sphinx.ext.mathjax']
 

@@ -5,9 +5,9 @@
 
 ODA API documentation
 ===================================
-API for cdci_data_analysis
+API for Multi Messenger Online Data Analysis (MMODA)
 
-:Authors: `Andrea Tramacere <andrea.tramacere@unige.ch>, Carlo Ferrigno <Carlo.Ferrigno@unige.ch>`_
+:Authors: `Andrea Tramacere <andrea.tramacere@unige.ch>, Carlo Ferrigno <Carlo.Ferrigno@unige.ch>, Gabriele Barni <gabriele.barni@unige.ch>`_
 
 Documentation
 -------------

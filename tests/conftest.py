@@ -44,7 +44,6 @@ def pytest_collection_modifyitems(config, items):
                     item.add_marker(pytest.mark.skip(reason=f"--run-only-{option} prevents this test from running"))
 
 
-
 @pytest.fixture
 def dispatcher_api(dispatcher_live_fixture):
     import oda_api
