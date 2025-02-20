@@ -1,2 +1,2 @@
--e git://github.com/oda-hub/oda_api.git@no-dispatcher#egg=oda_api
+-e git://github.com/oda-hub/oda_api.git#egg=oda_api
 matplotlib
