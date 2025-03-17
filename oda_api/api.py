@@ -378,6 +378,39 @@ class DispatcherAPI:
         else:
             raise RuntimeError("unable to refresh the token with any known method")
 
+    def disable_email_token(self,
+                            token_to_update=None,
+                            write_token=False,
+                            token_write_methods: Union[Tuple[TokenLocation, ...], TokenLocation] = (TokenLocation.ODA_ENV_VAR,
+                                                                                                    TokenLocation.FILE_CUR_DIR),
+                            discard_discovered_token=False):
+        if token_to_update is None:
+            token_to_update = oda_api.token.discover_token()
+        if token_to_update is not None and token_to_update != '':
+            params = dict(token=token_to_update,
+                          msfail=False,
+                          mssub=False,
+                          msdone=False,
+                          query_status='new')
+
+            r = requests.get(os.path.join(self.url, 'update_token_email_options'),
+                             params=params)
+
+            if r.status_code == 200:
+                refreshed_token = r.text
+                if write_token:
+                    oda_api.token.rewrite_token(refreshed_token,
+                                                old_token=token_to_update,
+                                                token_write_methods=token_write_methods,
+                                                discard_discovered_token=discard_discovered_token,
+                                                force_rewrite=True)
+
+                return refreshed_token
+            else:
+                raise RuntimeError(r.text)
+        else:
+            raise RuntimeError("unable to refresh the token with any known method")
+
     def set_custom_progress_formatter(self, F):
         self.custom_progress_formatter = F
 
