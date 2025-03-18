@@ -503,6 +503,74 @@ def test_token_refresh(dispatcher_live_fixture, token_placement, monkeypatch, wr
             assert refreshed_token != discovered_token
 
 
+
+@pytest.mark.parametrize('token_placement', ['oda_env_var', 'file_home', 'file_cur_dir', 'no'])
+@pytest.mark.parametrize('token_write_method', ['oda_env_var', 'file_home', 'file_cur_dir', 'no'])
+@pytest.mark.parametrize('write_token', [True, False])
+def test_token_disable_email(dispatcher_live_fixture, token_placement, monkeypatch, write_token, token_write_method, tmpdir):
+    remove_old_token_files()
+    remove_scratch_folders()
+
+    disp = oda_api.api.DispatcherAPI(url=dispatcher_live_fixture, wait=False)
+
+    # let's generate a valid token
+    token_payload = {
+        **default_token_payload,
+        "roles": ["general", "refresh-tokens"]
+    }
+    encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
+
+    # reset any existing token locations
+    os.makedirs(tmpdir, exist_ok=True)
+    monkeypatch.setenv('HOME', tmpdir)
+
+    oda_token_home_fn = os.path.join(tmpdir, ".oda-token")
+    if os.path.exists(oda_token_home_fn):
+        os.remove(oda_token_home_fn)
+
+    oda_token_cwd_fn = ".oda-token"
+    if os.path.exists(oda_token_cwd_fn):
+        os.remove(oda_token_cwd_fn)
+
+    monkeypatch.setenv('ODA_TOKEN', '')
+
+    if token_placement == 'oda_env_var':
+        monkeypatch.setenv('ODA_TOKEN', encoded_token)
+
+    elif token_placement == 'file_cur_dir':
+        with open(oda_token_cwd_fn, "w") as f:
+            f.write(encoded_token)
+
+    elif token_placement == 'file_home':
+        with open(oda_token_home_fn, "w") as f:
+            f.write(encoded_token)
+
+    token_write_method_enum = None
+    if token_write_method != 'no':
+        token_write_method_enum = oda_api.token.TokenLocation[str.upper(token_write_method)]
+
+    if token_placement == 'no':
+        with pytest.raises(RuntimeError, match="unable to refresh the token with any known method"):
+            if token_write_method != 'no':
+                disp.disable_email_token(write_token=write_token, token_write_methods=token_write_method_enum)
+            else:
+                disp.disable_email_token(write_token=write_token)
+    else:
+        if token_write_method != 'no':
+            refreshed_token = disp.disable_email_token(write_token=write_token, token_write_methods=token_write_method_enum)
+            discovered_token = oda_api.token.discover_token(allow_invalid=True, token_discovery_methods=token_write_method_enum)
+        else:
+            refreshed_token = disp.disable_email_token(write_token=write_token)
+            discovered_token = oda_api.token.discover_token(allow_invalid=True)
+        if write_token:
+            assert refreshed_token == discovered_token
+            list_old_token_files = glob.glob('old-oda-token_*')
+            assert len(list_old_token_files) == 1
+            assert open(list_old_token_files[0]).read() == encoded_token
+        else:
+            assert refreshed_token != discovered_token
+
+
 @pytest.mark.parametrize('tokens_tems', [[100, 100],
                                          [100, 150],
                                          [150, 100]])
