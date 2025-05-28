@@ -5,14 +5,14 @@ import requests
 import pytest
 import logging
 import contextlib
-import os
 
-from oda_api.api import DispatcherAPI, Unauthorized
+from oda_api.api import Unauthorized
 
 
 # this can be set by pytest ... --log-cli-level DEBUG
-logging.getLogger('oda_api').setLevel(logging.DEBUG)
-logging.getLogger('oda_api').addHandler(logging.StreamHandler())
+logger = logging.getLogger('oda_api')
+logger.setLevel(logging.DEBUG)
+logger.addHandler(logging.StreamHandler())
 
 
 secret_key = 'secretkey_test'
@@ -32,6 +32,12 @@ default_token_payload = dict(
 
 
 def get_platform_dispatcher(platform="production-1-2"):
+    if platform.startswith("http"):
+        return platform
+    else:
+        logger.warning('Live dispatcher tests only available against production instance.')
+        return "https://www.astro.unige.ch/mmoda/dispatch-data"
+
     import odakb.sparql as S
 
     R = S.select('?p a oda:platform; oda:location ?loc . ?p ?x ?y',
@@ -125,7 +131,7 @@ def raises_if_failing(scw_kind, exception):
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize("platform", ["staging", "staging-1-2", "production-1-2"])
+@pytest.mark.parametrize("platform", ["production-1-2"])
 @pytest.mark.parametrize("scw_kind", ["crab", "any", "failing"])
 def test_waiting(scw_kind, platform):
     from oda_api.api import UserError, FailedToFindAnyUsefulResults
@@ -221,7 +227,7 @@ def test_token_expired(dispatcher_live_fixture):
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize("platform", ["staging", "staging-1-2", "production-1-2"])
+@pytest.mark.parametrize("platform", ["production-1-2"])
 @pytest.mark.parametrize("scw_kind", ["crab", "any", "failing"])
 def test_not_waiting(scw_kind, platform):
     from oda_api.api import DispatcherAPI, UserError, FailedToFindAnyUsefulResults
@@ -293,7 +299,7 @@ def test_not_waiting(scw_kind, platform):
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize("platform", ["staging", "staging-1-2", "production-1-2"])
+@pytest.mark.parametrize("platform", ["production-1-2"])
 def test_large_request(platform):
 
     dummy_request_parameters = dict(
@@ -337,7 +343,7 @@ def test_large_request(platform):
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize("platform", ["staging", "staging-1-2", "production-1-2"])
+@pytest.mark.parametrize("platform", ["production-1-2"])
 def test_peculiar_request_causing_pickling_problem(platform):
     import logging
     logging.basicConfig(level='DEBUG')
