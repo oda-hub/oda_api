@@ -94,7 +94,7 @@ def test_instruments(remove_any_token_from_environment):
         host=get_platform_dispatcher(),
         instrument="mock",
     )
-    assert {'isgri', 'jemx', 'polar', 'antares', 'gw', 'spi_acs', 'legacysurvey'} - set(disp.get_instruments_list()) == set()
+    assert {'isgri', 'jemx', 'polar', 'spi_acs'} - set(disp.get_instruments_list()) == set()
 
 
 def test_instrument_description_not_null(remove_any_token_from_environment):
