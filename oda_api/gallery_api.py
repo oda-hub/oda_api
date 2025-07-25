@@ -799,8 +799,7 @@ class GalleryDispatcherAPI(DispatcherAPI):
                     source_coord_list.append(source_coord)
 
         else:
-            copied_src_name_arg = src_name_arg
-
+            copied_src_name_arg = src_name_arg  # type: ignore
         if copied_src_name_arg is not None:
             if isinstance(copied_src_name_arg, list):
                 copied_kwargs['src_name'] = ','.join(copied_src_name_arg)
