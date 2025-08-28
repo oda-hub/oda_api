@@ -15,44 +15,46 @@ maintainers = [
   {name = "Denys Savchenko", email = "contact@odahub.io"}
 ]
 readme = "README.md"
-requires-python = ">=2.7"
+requires-python = ">=3.9"
 
 dependencies = [
     "requests",
     "future",
-    "astropy>=3.2,<=6.1.4",
+    "astropy",
     "json_tricks",
     "matplotlib<3.10",
     "bokeh>3.0,<3.2",
-    "numpy<2.0",
+    "numpy>=2.0",
     "jsonschema",
     "pyjwt",
     "astroquery",
     "scipy",
     "rdflib",
     "black",
-    "puremagic"
+    "puremagic",
 ]
 
 [project.optional-dependencies]
 test = [
     "pytest-xdist[psutil]",
     "astroquery>=0.4.4",
-    "sentry_sdk"
-]
-extra-test = [
-    "pytest-xdist[psutil]",
-    "astroquery>=0.4.4"
+    "cdci_data_analysis",
+    "papermill>=2.6.0",
 ]
 gw = [
     "gwpy",
     "ligo.skymap"
 ]
-ontology = [
-    "rdflib"
-]
 
 [project.scripts]
 oda-api = "oda_api.cli:main"
 
-[tool.setuptools_scm]
+
+[tool.setuptools]
+packages = ["oda_api"]
+
+[tool.setuptools.dynamic]
+version = {attr = "oda_api.__version__"}
+
+[tool.uv.sources]
+cdci_data_analysis = { git = "https://github.com/oda-hub/dispatcher-app.git", branch = "numpy-gt-2" }
