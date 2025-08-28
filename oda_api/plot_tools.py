@@ -613,11 +613,11 @@ class OdaLightCurve(OdaProduct):
                 band_width = numpy.sqrt(chi2_limit / err_mean)
 
                 _ = plt.axhspan(meany - band_width, meany + band_width, color='green', alpha=0.3,
-                                label=f'{ng_sig_limit} $\sigma_m$, {100 * systematic_fraction}% syst')
+                                label=fr'{ng_sig_limit} $\sigma_m$, {100 * systematic_fraction}% syst')
 
                 _ = plt.axhspan(meany - std_dev*ng_sig_limit, meany + std_dev*ng_sig_limit,
                                 color='cyan', alpha=0.3,
-                                label=f'{ng_sig_limit} $\sigma_d$, {100 * systematic_fraction}% syst')
+                                label=fr'{ng_sig_limit} $\sigma_d$, {100 * systematic_fraction}% syst')
 
                 _ = plt.legend()
 

@@ -13,7 +13,7 @@ def find_custom_formatter(instrument):
         logger.debug(f"{C.GRAY} NO custom formatter for instrument {instrument} {C.NC}")
 
 def custom_progress_formatter(L):
-    nscw = len(set([l.get('scwid', 'none') for l in L if re.match("[0-9]{12}\.00[0-9]", l.get('scwid', 'none'))]))
+    nscw = len(set([l.get('scwid', 'none') for l in L if re.match(r"[0-9]{12}\.00[0-9]", l.get('scwid', 'none'))]))
     ndone = len(set([l.get('node', 'none') for l in L if l.get('message', 'none') == 'main done']))
     nrestored = len(set([l.get('node', 'none') for l in L if l['message'] == 'restored from cache']))
     nnodes = len(set([l.get('node', 'none') for l in L]))
