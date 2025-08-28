@@ -22,12 +22,12 @@ dependencies = [
     "future",
     "astropy",
     "json_tricks",
-    "matplotlib<3.10",
+    "matplotlib",
     "bokeh>3.0,<3.2",
     "numpy",
     "jsonschema",
     "pyjwt",
-    "astroquery",
+    "astroquery>=0.4.4",
     "scipy",
     "rdflib",
     "black",
@@ -35,12 +35,6 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-test = [
-    "pytest-xdist[psutil]",
-    "astroquery>=0.4.4",
-    "cdci_data_analysis",
-    "papermill>=2.6.0",
-]
 gw = [
     "gwpy",
     "ligo.skymap"
@@ -49,15 +43,14 @@ gw = [
 [project.scripts]
 oda-api = "oda_api.cli:main"
 
-
-[tool.setuptools]
-packages = ["oda_api"]
+[tool.setuptools.packages.find]
+where = ["."]
 
 [tool.setuptools.dynamic]
 version = {attr = "oda_api.__version__"}
 
 [tool.uv.sources]
-cdci_data_analysis = { git = "https://github.com/oda-hub/dispatcher-app.git", branch = "numpy-gt-2" }
+cdci-data-analysis = { git = "https://github.com/oda-hub/dispatcher-app.git", branch = "numpy-gt-2" }
 
 [dependency-groups]
 dev = [
@@ -68,4 +61,7 @@ dev = [
     "types-click>=7.1.8",
     "types-requests>=2.32.4.20250809",
     "types-simplejson>=3.20.0.20250822",
+    "pytest-xdist[psutil]",
+    "papermill>=2.6.0",
+    "cdci-data-analysis",
 ]

@@ -99,8 +99,7 @@ bokeh==3.1.1
     #   oda-api
 bs4==0.0.2
     # via cdci-data-analysis
-cdci-data-analysis @ git+https://github.com/oda-hub/dispatcher-app.git@03f3ff44488fa26d96698cf40a3ba36af4c8f2d7
-    # via oda-api
+cdci-data-analysis @ git+https://github.com/oda-hub/dispatcher-app.git@e07cc61ff1e4cd38b15143265d1fe789b4fcca81
 celery==5.5.3
     # via cdci-data-analysis
 certifi==2025.8.3
@@ -395,7 +394,7 @@ numcodecs==0.13.1 ; python_full_version == '3.10.*'
     # via zarr
 numcodecs==0.16.2 ; python_full_version >= '3.11'
     # via zarr
-numpy==1.26.4 ; python_full_version < '3.10'
+numpy==1.26.4
     # via
     #   astroplan
     #   astropy
@@ -418,58 +417,6 @@ numpy==1.26.4 ; python_full_version < '3.10'
     #   ptemcee
     #   pyerfa
     #   python-ligo-lw
-    #   reproject
-    #   scipy
-    #   zarr
-numpy==2.2.6 ; python_full_version == '3.10.*'
-    # via
-    #   astroplan
-    #   astropy
-    #   astropy-healpix
-    #   astroquery
-    #   bokeh
-    #   cdci-data-analysis
-    #   contourpy
-    #   dask
-    #   gwpy
-    #   h5py
-    #   healpy
-    #   igwn-ligolw
-    #   lalsuite
-    #   ligo-skymap
-    #   matplotlib
-    #   numcodecs
-    #   oda-api
-    #   pandas
-    #   ptemcee
-    #   pyerfa
-    #   python-ligo-lw
-    #   reproject
-    #   scipy
-    #   shapely
-    #   zarr
-numpy==2.3.2 ; python_full_version >= '3.11'
-    # via
-    #   astroplan
-    #   astropy
-    #   astropy-healpix
-    #   astroquery
-    #   bokeh
-    #   cdci-data-analysis
-    #   contourpy
-    #   dask
-    #   gwpy
-    #   h5py
-    #   healpy
-    #   igwn-ligolw
-    #   lalsuite
-    #   ligo-skymap
-    #   matplotlib
-    #   numcodecs
-    #   oda-api
-    #   pandas
-    #   ptemcee
-    #   pyerfa
     #   reproject
     #   scipy
     #   shapely
@@ -490,7 +437,6 @@ packaging==25.0
 pandas==2.3.2
     # via bokeh
 papermill==2.6.0
-    # via oda-api
 partd==1.4.2
     # via dask
 pathspec==0.12.1
@@ -555,7 +501,6 @@ pyrsistent==0.20.0
 pytest==8.4.1
     # via pytest-xdist
 pytest-xdist==3.8.0
-    # via oda-api
 python-dateutil==2.9.0.post0
     # via
     #   celery
