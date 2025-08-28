@@ -24,7 +24,7 @@ dependencies = [
     "json_tricks",
     "matplotlib<3.10",
     "bokeh>3.0,<3.2",
-    "numpy>=2.0",
+    "numpy",
     "jsonschema",
     "pyjwt",
     "astroquery",
