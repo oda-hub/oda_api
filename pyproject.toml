@@ -58,3 +58,14 @@ version = {attr = "oda_api.__version__"}
 
 [tool.uv.sources]
 cdci_data_analysis = { git = "https://github.com/oda-hub/dispatcher-app.git", branch = "numpy-gt-2" }
+
+[dependency-groups]
+dev = [
+    "coverage>=7.10.5",
+    "flake8>=7.3.0",
+    "mypy>=1.17.1",
+    "pylint>=3.3.8",
+    "types-click>=7.1.8",
+    "types-requests>=2.32.4.20250809",
+    "types-simplejson>=3.20.0.20250822",
+]
