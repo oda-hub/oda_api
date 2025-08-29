@@ -35,8 +35,8 @@ jobs:
     - name: Install the project
       run: |
         uv sync --locked --all-extras --dev
-        python -m ipykernel install --prefix $HOME/.local/share/jupyter/kernels --name python3
+        uv run python -m ipykernel install --prefix $HOME/.local/share/jupyter/kernels --name python3
 
     - name: Test with pytest
       run: |
-        python -m coverage run -m pytest tests --run-only-live        
+        uv run python -m coverage run -m pytest tests --run-only-live        
