@@ -1,12 +1,9 @@
-import jwt
 import time
 import random
 import requests
 import pytest
 import logging
 import contextlib
-
-from oda_api.api import Unauthorized
 
 
 # this can be set by pytest ... --log-cli-level DEBUG

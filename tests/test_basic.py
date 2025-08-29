@@ -709,7 +709,7 @@ def test_none_payload():
 
 
 def test_unauthorized(dispatcher_api):
-    from oda_api.api import UserError
+    from oda_api.api import UserError, Unauthorized
 
     disp = dispatcher_api
     disp.wait=True
@@ -739,9 +739,9 @@ def test_unauthorized(dispatcher_api):
     
 
 def test_token_expired(dispatcher_live_fixture):
-    from oda_api.api import UserError
+    from oda_api.api import UserError, DispatcherAPI, Unauthorized
 
-    disp = get_disp(wait=True, platform=dispatcher_live_fixture)
+    disp = DispatcherAPI(host=dispatcher_live_fixture, wait=True)
 
     with pytest.raises(UserError):
         disp.poll()
