@@ -22,32 +22,21 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.9', '3.10']
+        python-version: ['3.12', '3.13']
 
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+    - name: Install uv and set the python version
+      uses: astral-sh/setup-uv@v6
       with:
+        version: "0.8.13"
         python-version: ${{ matrix.python-version }}
 
-    - name: Install dependencies
+    - name: Install the project
       run: |
-        python -m pip install --upgrade pip
-        python -m pip install flake8 pytest wheel coverage pylint mypy
-        python -m pip install types-simplejson types-requests types-click
-        python -m pip install oda-knowledge-base[rdf,cwl] papermill ipykernel
-        python -m pip install -r doc/requirements.txt
+        uv sync --locked --all-extras --dev
         python -m ipykernel install --prefix $HOME/.local/share/jupyter/kernels --name python3
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-        pip install .[test]
 
     - name: Test with pytest
       run: |
         python -m coverage run -m pytest tests --run-only-live        
-
-    - name: Codecov
-      uses: codecov/codecov-action@v1.3.1
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        verbose: true

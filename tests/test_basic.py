@@ -706,4 +706,121 @@ def test_none_payload():
     
     payload = disp.parameters_dict_payload
     assert payload['optional_par'] == '\x00'
+
+
+def test_unauthorized(dispatcher_api):
+    from oda_api.api import UserError
+
+    disp = dispatcher_api
+    disp.wait=True
+
+    with pytest.raises(UserError):
+        disp.poll()
+
+    assert disp.wait
+
+    try:        
+        data = disp.get_product(
+                instrument="empty",
+                product="numerical",
+                product_type="Dummy",
+                T1="2011-11-11T11:11:11",
+                T2="2011-11-11T11:11:11",
+                max_pointings=1000,
+            )
+
+        raise RuntimeError('did not raise Unauthorized for expired token')
+    except Unauthorized as e:
+        assert e.message == "Unfortunately, your priviledges are not sufficient to make the request for this particular product and parameter combination.\n"\
+                            "- Your priviledge roles include []\n"\
+                            "- You are lacking all of the following roles:\n"\
+                            " - general: please refer to support for details\n"\
+                            "You can request support if you think you should be able to make this request."
     
+
+def test_token_expired(dispatcher_live_fixture):
+    from oda_api.api import UserError
+
+    disp = get_disp(wait=True, platform=dispatcher_live_fixture)
+
+    with pytest.raises(UserError):
+        disp.poll()
+
+    assert disp.wait
+
+    token_payload = {
+                        **default_token_payload,
+                        'exp': int(time.time()) - 10,
+                    }   
+
+    encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
+
+    if isinstance(encoded_token, bytes):
+        encoded_token = encoded_token.decode()
+
+    try:        
+        data = disp.get_product(
+                instrument="empty",
+                product="dummy",
+                product_type="Dummy",
+                T1=25.0,
+                T2=80.0,
+                token=encoded_token
+            )
+
+        raise RuntimeError('did not raise Unauthorized for expired token')
+    except Unauthorized as e:
+        assert e.message == "RequestNotAuthorized():The token provided is expired, please try to logout and login again. If already logged out, please clean the cookies, and resubmit you request."
+
+
+def test_reusing_disp_instance(dispatcher_api):
+
+    disp = dispatcher_api
+    disp.wait = True
+
+    assert disp.job_id is None
+    assert disp.query_status == 'not-prepared'
+
+    data = disp.get_product(
+            instrument="empty",
+            product="dummy",
+            product_type="Dummy",
+            T1="2021-05-01T11:11:11",
+            T2="2021-05-02T11:11:11",
+        )
+
+    assert disp.job_id is not None
+    assert disp.query_status == 'done'
+
+    previous_job_id =  disp.job_id
+
+    data = disp.get_product(
+            instrument="empty",
+            product="dummy",
+            product_type="Dummy",
+            T1="2021-05-01T11:11:11",
+            T2="2021-05-02T11:11:11",
+        )
+
+    assert disp.job_id is not None
+    assert disp.query_status == 'done'
+    assert disp.query_status == 'done'
+
+    # identical request results in the same job id
+    assert previous_job_id == disp.job_id
+
+    previous_job_id =  disp.job_id
+
+    data = disp.get_product(
+            instrument="empty",
+            product="dummy",
+            product_type="Dummy",
+            T1="2021-05-01T11:11:11",
+            T2="2021-05-03T11:11:11",
+        )
+
+    assert disp.job_id is not None
+    assert disp.query_status is not None
+
+    # different request results in different job id
+    assert previous_job_id != disp.job_id

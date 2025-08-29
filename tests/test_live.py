@@ -29,6 +29,38 @@ default_token_payload = dict(
     intsub=5
 )
 
+@pytest.mark.live
+def test_remote_301_post():
+    import logging
+
+    logging.basicConfig(level="DEBUG")
+
+    from oda_api.api import DispatcherAPI, URLRedirected
+    from oda_api.token import discover_token
+
+    api_cat_str = '{"cat_frame": "fk5", "cat_coord_units": "deg", "cat_column_list": [[17, 87], ["GRS 1915+105", "MAXI J1820+070"], [29.396455764770508, 1803.1607666015625], [288.799560546875, 275.0911865234375], [10.939922332763672, 7.185144901275635], [-32768, -32768], [2, 2], [0, 0], [0.0002800000074785203, 0.00041666667675599456]], "cat_column_names": ["meta_ID", "src_names", "significance", "ra", "dec", "NEW_SOURCE", "ISGRI_FLAG", "FLAG", "ERR_RAD"], "cat_column_descr": [["meta_ID", "<i8"], ["src_names", "<U20"], ["significance", "<f8"], ["ra", "<f8"], ["dec", "<f8"], ["NEW_SOURCE", "<i8"], ["ISGRI_FLAG", "<i8"], ["FLAG", "<i8"], ["ERR_RAD", "|O"]], "cat_lat_name": "dec", "cat_lon_name": "ra"}'
+    
+    with pytest.raises(URLRedirected) as execinfo:
+        disp = DispatcherAPI(url="http://www.astro.unige.ch/mmoda/dispatch-data")
+        spectrum = disp.get_product(
+            instrument="isgri",
+            product="isgri_spectrum",
+            product_type="Real",
+            osa_version="OSA11.1",
+            RA="275.09142677",
+            DEC="7.18535523",
+            radius="8",
+            T1="58193.455",
+            T2="58246.892",
+            T_format="mjd",
+            max_pointings="50",
+            token=discover_token(),
+            selected_catalog=api_cat_str,
+        )
+
+    assert execinfo.value.args[0] == ('the service was moved permanently, please reinitialize DispatcherAPI '
+                                      'with "https://www.astro.unige.ch/mmoda/dispatch-data/run_analysis" '
+                                      '(you asked for "http://www.astro.unige.ch/mmoda/dispatch-data/run_analysis")')
 
 
 def get_platform_dispatcher(platform="production-1-2"):
@@ -87,7 +119,7 @@ def validate_data(data, scw_kind):
 
         assert len(t) == 1
 
-
+@pytest.mark.live
 def test_instruments(remove_any_token_from_environment):
     from oda_api.api import DispatcherAPI
     disp = DispatcherAPI(
@@ -96,7 +128,7 @@ def test_instruments(remove_any_token_from_environment):
     )
     assert {'isgri', 'jemx', 'polar', 'spi_acs'} - set(disp.get_instruments_list()) == set()
 
-
+@pytest.mark.live
 def test_instrument_description_not_null(remove_any_token_from_environment):
     from oda_api.api import DispatcherAPI
     disp = DispatcherAPI(
@@ -106,7 +138,7 @@ def test_instrument_description_not_null(remove_any_token_from_environment):
 
     assert disp.get_instrument_description('isgri') is not None
 
-
+@pytest.mark.live
 def test_product_description_not_null():
     from oda_api.api import DispatcherAPI
     disp = DispatcherAPI(
@@ -129,7 +161,7 @@ def raises_if_failing(scw_kind, exception):
     else:
         yield
 
-
+@pytest.mark.live
 @pytest.mark.slow
 @pytest.mark.parametrize("platform", ["production-1-2"])
 @pytest.mark.parametrize("scw_kind", ["crab", "any", "failing"])
@@ -159,73 +191,7 @@ def test_waiting(scw_kind, platform):
         validate_data(data, scw_kind)
 
 
-
-
-def test_unauthorized(dispatcher_api):
-    from oda_api.api import UserError
-
-    disp = dispatcher_api
-    disp.wait=True
-
-    with pytest.raises(UserError):
-        disp.poll()
-
-    assert disp.wait
-
-    try:        
-        data = disp.get_product(
-                instrument="empty",
-                product="numerical",
-                product_type="Dummy",
-                T1="2011-11-11T11:11:11",
-                T2="2011-11-11T11:11:11",
-                max_pointings=1000,
-            )
-
-        raise RuntimeError('did not raise Unauthorized for expired token')
-    except Unauthorized as e:
-        assert e.message == "Unfortunately, your priviledges are not sufficient to make the request for this particular product and parameter combination.\n"\
-                            "- Your priviledge roles include []\n"\
-                            "- You are lacking all of the following roles:\n"\
-                            " - general: please refer to support for details\n"\
-                            "You can request support if you think you should be able to make this request."
-    
-
-def test_token_expired(dispatcher_live_fixture):
-    from oda_api.api import UserError
-
-    disp = get_disp(wait=True, platform=dispatcher_live_fixture)
-
-    with pytest.raises(UserError):
-        disp.poll()
-
-    assert disp.wait
-
-    token_payload = {
-                        **default_token_payload,
-                        'exp': int(time.time()) - 10,
-                    }   
-
-    encoded_token = jwt.encode(token_payload, secret_key, algorithm='HS256')
-
-    if isinstance(encoded_token, bytes):
-        encoded_token = encoded_token.decode()
-
-    try:        
-        data = disp.get_product(
-                instrument="empty",
-                product="dummy",
-                product_type="Dummy",
-                T1=25.0,
-                T2=80.0,
-                token=encoded_token
-            )
-
-        raise RuntimeError('did not raise Unauthorized for expired token')
-    except Unauthorized as e:
-        assert e.message == "RequestNotAuthorized():The token provided is expired, please try to logout and login again. If already logged out, please clean the cookies, and resubmit you request."
-
-
+@pytest.mark.live
 @pytest.mark.slow
 @pytest.mark.parametrize("platform", ["production-1-2"])
 @pytest.mark.parametrize("scw_kind", ["crab", "any", "failing"])
@@ -297,7 +263,7 @@ def test_not_waiting(scw_kind, platform):
         validate_data(data, scw_kind)
         validate_data(data2, scw_kind)
 
-
+@pytest.mark.live
 @pytest.mark.slow
 @pytest.mark.parametrize("platform", ["production-1-2"])
 def test_large_request(platform):
@@ -341,7 +307,7 @@ def test_large_request(platform):
     assert disp.preferred_request_method == "GET"
     assert disp.selected_request_method == "GET"
 
-
+@pytest.mark.live
 @pytest.mark.slow
 @pytest.mark.parametrize("platform", ["production-1-2"])
 def test_peculiar_request_causing_pickling_problem(platform):
@@ -369,7 +335,7 @@ def test_peculiar_request_causing_pickling_problem(platform):
         session_id='EV49GW1UN9427QD9',
      )
 
-
+@pytest.mark.live
 @pytest.mark.slow
 @pytest.mark.parametrize("platform", ["staging"])
 def test_bad_request(platform):
@@ -389,56 +355,4 @@ def test_bad_request(platform):
                 max_pointings=1000,
             )
 
-
-def test_reusing_disp_instance(dispatcher_api):
-
-    disp = dispatcher_api
-    disp.wait = True
-
-    assert disp.job_id is None
-    assert disp.query_status == 'not-prepared'
-
-    data = disp.get_product(
-            instrument="empty",
-            product="dummy",
-            product_type="Dummy",
-            T1="2021-05-01T11:11:11",
-            T2="2021-05-02T11:11:11",
-        )
-
-    assert disp.job_id is not None
-    assert disp.query_status == 'done'
-
-    previous_job_id =  disp.job_id
-
-    data = disp.get_product(
-            instrument="empty",
-            product="dummy",
-            product_type="Dummy",
-            T1="2021-05-01T11:11:11",
-            T2="2021-05-02T11:11:11",
-        )
-
-    assert disp.job_id is not None
-    assert disp.query_status == 'done'
-    assert disp.query_status == 'done'
-
-    # identical request results in the same job id
-    assert previous_job_id == disp.job_id
-
-    previous_job_id =  disp.job_id
-
-    data = disp.get_product(
-            instrument="empty",
-            product="dummy",
-            product_type="Dummy",
-            T1="2021-05-01T11:11:11",
-            T2="2021-05-03T11:11:11",
-        )
-
-    assert disp.job_id is not None
-    assert disp.query_status is not None
-
-    # different request results in different job id
-    assert previous_job_id != disp.job_id
 

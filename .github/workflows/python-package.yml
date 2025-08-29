@@ -48,7 +48,7 @@ jobs:
 
     - name: Test with pytest
       run: |
-        uv run python -m coverage run -m pytest tests -m 'not slow and not test_drupal' # this will currently not run any real requests, nor any request to post content over the product gallery
+        uv run python -m coverage run -m pytest tests -m 'not slow and not test_drupal and not live' # this will currently not run any real requests, nor any request to post content over the product gallery
         echo "should maybe also run this: 'python -m pytest tests -k production-1-2'"
 
     - name: Codecov

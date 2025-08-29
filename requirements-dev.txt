@@ -16,6 +16,8 @@ ansicolors==1.1.8
     # via papermill
 antlr4-python3-runtime==4.13.1
     # via queryparser-python3
+appnope==0.1.4 ; sys_platform == 'darwin'
+    # via ipykernel
 asciitree==0.3.3 ; python_full_version < '3.11'
     # via zarr
 astroid==3.3.11
@@ -73,6 +75,8 @@ astropy-iers-data==0.2025.8.25.0.36.58
     # via astropy
 astroquery==0.4.10
     # via oda-api
+asttokens==3.0.0
+    # via stack-data
 async-timeout==5.0.1 ; python_full_version < '3.11.3'
     # via redis
 attrs==25.3.0
@@ -147,11 +151,14 @@ cloudpickle==3.1.1
 colorama==0.4.6 ; sys_platform == 'win32'
     # via
     #   click
+    #   ipython
     #   pylint
     #   pytest
     #   tqdm
 coloredlogs==15.0.1
     # via pylogstash-context
+comm==0.2.3
+    # via ipykernel
 contourpy==1.3.0 ; python_full_version < '3.10'
     # via
     #   bokeh
@@ -181,8 +188,12 @@ dask==2025.7.0 ; python_full_version >= '3.10'
     # via reproject
 dateparser==1.2.2
     # via gwpy
+debugpy==1.8.16
+    # via ipykernel
 decorator==5.2.1
-    # via cdci-data-analysis
+    # via
+    #   cdci-data-analysis
+    #   ipython
 dill==0.4.0
     # via pylint
 donfig==0.8.1.post1 ; python_full_version >= '3.11'
@@ -192,9 +203,13 @@ dqsegdb2==1.3.0
 entrypoints==0.4
     # via papermill
 exceptiongroup==1.3.0 ; python_full_version < '3.11'
-    # via pytest
+    # via
+    #   ipython
+    #   pytest
 execnet==2.1.1
     # via pytest-xdist
+executing==2.2.0
+    # via stack-data
 fasteners==0.20 ; python_full_version < '3.11' and sys_platform != 'emscripten'
     # via zarr
 fastjsonschema==2.21.2
@@ -277,6 +292,15 @@ importlib-resources==6.5.2
     #   matplotlib
 iniconfig==2.1.0
     # via pytest
+ipykernel==6.30.1
+ipython==8.18.1 ; python_full_version < '3.10'
+    # via ipykernel
+ipython==8.37.0 ; python_full_version == '3.10.*'
+    # via ipykernel
+ipython==9.5.0 ; python_full_version >= '3.11'
+    # via ipykernel
+ipython-pygments-lexers==1.1.1 ; python_full_version >= '3.11'
+    # via ipython
 isodate==0.7.2 ; python_full_version < '3.11'
     # via rdflib
 isort==6.0.1
@@ -289,6 +313,8 @@ jaraco-context==6.0.1
     # via keyring
 jaraco-functools==4.3.0
     # via keyring
+jedi==0.19.2
+    # via ipython
 jeepney==0.9.0 ; sys_platform == 'linux'
     # via
     #   keyring
@@ -308,9 +334,12 @@ jsonschema==4.17.3
     #   nbformat
     #   oda-api
 jupyter-client==8.6.3
-    # via nbclient
+    # via
+    #   ipykernel
+    #   nbclient
 jupyter-core==5.8.1
     # via
+    #   ipykernel
     #   jupyter-client
     #   nbclient
     #   nbformat
@@ -358,6 +387,10 @@ matplotlib==3.9.4
     #   lalsuite
     #   ligo-skymap
     #   oda-api
+matplotlib-inline==0.1.7
+    # via
+    #   ipykernel
+    #   ipython
 mccabe==0.7.0
     # via
     #   flake8
@@ -382,6 +415,8 @@ nbformat==5.10.4
     #   cdci-data-analysis
     #   nbclient
     #   papermill
+nest-asyncio==1.6.0
+    # via ipykernel
 networkx==3.2.1 ; python_full_version < '3.10'
     # via ligo-skymap
 networkx==3.4.2 ; python_full_version == '3.10.*'
@@ -429,6 +464,7 @@ packaging==25.0
     #   dask
     #   gunicorn
     #   gwpy
+    #   ipykernel
     #   kombu
     #   marshmallow
     #   matplotlib
@@ -437,12 +473,16 @@ packaging==25.0
 pandas==2.3.2
     # via bokeh
 papermill==2.6.0
+parso==0.8.5
+    # via jedi
 partd==1.4.2
     # via dask
 pathspec==0.12.1
     # via
     #   black
     #   mypy
+pexpect==4.9.0 ; (python_full_version < '3.10' and sys_platform == 'emscripten') or (sys_platform != 'emscripten' and sys_platform != 'win32')
+    # via ipython
 pillow==11.3.0
     # via
     #   bokeh
@@ -457,17 +497,25 @@ platformdirs==4.4.0
 pluggy==1.6.0
     # via pytest
 prompt-toolkit==3.0.52
-    # via click-repl
+    # via
+    #   click-repl
+    #   ipython
 propcache==0.3.2 ; python_full_version == '3.12.*'
     # via
     #   aiohttp
     #   yarl
 psutil==7.0.0
-    # via pytest-xdist
+    # via
+    #   ipykernel
+    #   pytest-xdist
 psycopg2-binary==2.9.10
     # via cdci-data-analysis
 ptemcee==1.0.0
     # via ligo-skymap
+ptyprocess==0.7.0 ; (python_full_version < '3.10' and sys_platform == 'emscripten') or (sys_platform != 'emscripten' and sys_platform != 'win32')
+    # via pexpect
+pure-eval==0.2.3
+    # via stack-data
 puremagic==1.30
     # via oda-api
 pyavm==0.9.6 ; python_full_version >= '3.11'
@@ -481,7 +529,10 @@ pyerfa==2.0.1.5
 pyflakes==3.4.0
     # via flake8
 pygments==2.19.2
-    # via pytest
+    # via
+    #   ipython
+    #   ipython-pygments-lexers
+    #   pytest
 pyjwt==2.10.1
     # via
     #   cdci-data-analysis
@@ -542,7 +593,9 @@ pyyaml==6.0.2
     #   papermill
     #   python-ligo-lw
 pyzmq==27.0.2
-    # via jupyter-client
+    # via
+    #   ipykernel
+    #   jupyter-client
 queryparser-python3==0.7.4
     # via cdci-data-analysis
 raven==6.10.0
@@ -616,6 +669,8 @@ smmap==5.0.2
     # via gitdb
 soupsieve==2.8
     # via beautifulsoup4
+stack-data==0.6.3
+    # via ipython
 tenacity==9.1.2
     # via papermill
 tomli==2.2.1 ; python_full_version < '3.11'
@@ -633,6 +688,7 @@ toolz==1.0.0
 tornado==6.5.2
     # via
     #   bokeh
+    #   ipykernel
     #   jupyter-client
 tqdm==4.67.1
     # via
@@ -643,8 +699,11 @@ tqdm==4.67.1
     #   python-ligo-lw
 traitlets==5.14.3
     # via
+    #   ipykernel
+    #   ipython
     #   jupyter-client
     #   jupyter-core
+    #   matplotlib-inline
     #   nbclient
     #   nbformat
 types-click==7.1.8
@@ -658,6 +717,7 @@ typing-extensions==4.15.0
     #   black
     #   exceptiongroup
     #   gitpython
+    #   ipython
     #   mypy
     #   numcodecs
     #   pylint
