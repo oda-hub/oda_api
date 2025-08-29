@@ -30,6 +30,7 @@ from astropy.table import Table
 from astropy.coordinates import Angle
 from astropy.wcs import WCS
 from astropy import units as u
+from astropy.io.fits import FITS_rec
 
 import  numpy
 import numpy as np
@@ -312,7 +313,7 @@ class NumpyDataUnit(object):
             logger.debug('inside to_fits_hdu methods')
             logger.debug(f'name: {self.name}')
             logger.debug(f'header: {self.header}')
-            logger.debug(f'data: {self.data}')
+            logger.debug(f'data: {repr(self.data)}')
             logger.debug(f'units_dict: {self.units_dict}')
             logger.debug(f'hdu_type: {self.hdu_type}')
             logger.debug('------------------------------')
@@ -482,7 +483,7 @@ class NumpyDataUnit(object):
                     _data = pickle.loads(_binarys,encoding='bytes')
                 else:
                     _data = pickle.loads(_binarys)
-
+            
         elif encoded_data is not None:
             encoded_data=eval(encoded_data) # !!
 
@@ -494,7 +495,11 @@ class NumpyDataUnit(object):
         else:
             _data=None
 
+        if (isinstance(_data, FITS_rec) 
+            and _hdu_type in ["table", "bintable"] 
+            and getattr(_data, "_tbsize", None) is None):
 
+            _data._tbsize = int(np.prod([encoded_header[f"NAXIS{i}"] for i in range(1, encoded_header['NAXIS']+1)]))
 
         return cls(data=_data, data_header=encoded_header, meta_data=encoded_meta_data,name=_name,hdu_type=_hdu_type, units_dict=_units_dict)
 
