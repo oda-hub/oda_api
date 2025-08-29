@@ -204,7 +204,7 @@ numcodecs==0.13.1 ; python_full_version < '3.11'
     # via zarr
 numcodecs==0.16.2 ; python_full_version >= '3.11'
     # via zarr
-numpy==2.2.6 ; python_full_version < '3.11'
+numpy==1.26.4 ; python_full_version < '3.11'
     # via
     #   astroplan
     #   astropy
