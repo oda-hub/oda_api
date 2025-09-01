@@ -64,4 +64,6 @@ dev = [
     "cdci-data-analysis",
     "papermill>=2.6.0",
     "ipykernel>=6.30.1",
+    "isort>=6.0.1",
 ]
+
