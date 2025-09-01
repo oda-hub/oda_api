@@ -19,7 +19,6 @@ requires-python = ">=3.10"
 
 dependencies = [
     "requests",
-    "future",
     "astropy",
     "json_tricks",
     "matplotlib",
@@ -31,7 +30,6 @@ dependencies = [
     "astroquery>=0.4.4",
     "scipy",
     "rdflib",
-    "black",
     "puremagic",
 ]
 

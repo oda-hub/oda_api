@@ -1,8 +1,5 @@
-from __future__ import absolute_import, division, print_function
-
 from collections import OrderedDict
 import gzip
-import hashlib
 from json.decoder import JSONDecodeError
 import pathlib
 
@@ -27,9 +24,6 @@ from .data_products import (NumpyDataProduct,
                             TextLikeProduct)
 from oda_api.token import TokenLocation
 
-from builtins import (bytes, str, open, super, range,
-                      zip, round, input, int, pow, object, map, zip)
-
 __author__ = "Andrea Tramacere, Volodymyr Savchenko"
 
 import warnings
@@ -50,7 +44,6 @@ import time
 import os
 import inspect
 import sys
-from astropy.io import ascii
 import copy
 import pickle
 from . import __version__

@@ -75,9 +75,7 @@ beautifulsoup4==4.13.5
 billiard==4.2.1
     # via celery
 black==25.1.0
-    # via
-    #   cdci-data-analysis
-    #   oda-api
+    # via cdci-data-analysis
 blinker==1.9.0
     # via cdci-data-analysis
 bokeh==3.1.1
@@ -197,8 +195,6 @@ fsspec==2025.7.0
     # via
     #   dask
     #   reproject
-future==1.0.0
-    # via oda-api
 gitdb==4.0.12
     # via gitpython
 gitpython==3.1.45

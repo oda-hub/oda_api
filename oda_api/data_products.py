@@ -1,26 +1,10 @@
-from __future__ import absolute_import, division, print_function
-
-from builtins import (bytes, str, open, super, range,
-                      zip, round, input, int, pow, object, map, zip)
-
 __author__ = "Andrea Tramacere"
-
-# Standard library
-# eg copy
-# absolute import rg:from copy import deepcopy
-
-# Dependencies
-# eg numpy
-# absolute import eg: import numpy as np
-
-# Project
-# relative import eg: from .mod import f
 
 import typing
 
 import traceback
 
-from json_tricks import numpy_encode,dumps,loads,numeric_types_hook,hashodict,json_numpy_obj_hook
+from json_tricks import numpy_encode,dumps
 from astropy.io import fits as pf
 from astropy.io import ascii as astropy_io_ascii
 import json
@@ -38,8 +22,6 @@ import  base64
 import  pickle
 import gzip
 import  hashlib
-from numpy import nan,inf
-from sys import path_importer_cache, version_info
 
 from io import StringIO, BytesIO
 import puremagic
@@ -479,10 +461,7 @@ class NumpyDataUnit(object):
                 _data = pickle.loads(_data)
                 gzip_file.close()
             else:
-                if version_info[0] > 2:
-                    _data = pickle.loads(_binarys,encoding='bytes')
-                else:
-                    _data = pickle.loads(_binarys)
+                _data = pickle.loads(_binarys,encoding='bytes')
             
         elif encoded_data is not None:
             encoded_data=eval(encoded_data) # !!

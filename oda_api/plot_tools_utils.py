@@ -1,9 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
-import os.path
-from builtins import (str, open, range,
-                      zip, round, input, int, pow, object, zip)
-
 __author__ = "Carlo Ferrigno"
 
 import  numpy  as np

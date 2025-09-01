@@ -2,19 +2,13 @@
 # pylint: skip-file
 # pylint: disable-all
 
-from __future__ import absolute_import, division, print_function
-
-import os.path
-from builtins import (str, open, range,
-                      zip, round, input, int, pow, object, zip)
-
-
 __author__ = "Carlo Ferrigno"
 
 import json
 import numpy as np
 import copy
 import bokeh
+import os.path
 
 from matplotlib import pylab as plt
 from matplotlib.widgets import Slider
