@@ -54,7 +54,7 @@ astropy-healpix==1.1.2
     # via
     #   ligo-skymap
     #   reproject
-astropy-iers-data==0.2025.8.25.0.36.58
+astropy-iers-data==0.2025.9.1.0.42.11
     # via astropy
 astroquery==0.4.10
     # via oda-api
@@ -84,7 +84,7 @@ bokeh==3.1.1
     #   oda-api
 bs4==0.0.2
     # via cdci-data-analysis
-cdci-data-analysis @ git+https://github.com/oda-hub/dispatcher-app.git@e07cc61ff1e4cd38b15143265d1fe789b4fcca81
+cdci-data-analysis @ git+https://github.com/oda-hub/dispatcher-app.git@ac3f52a562d35860cf5f1287532958c5d4637a52
 celery==5.5.3
     # via cdci-data-analysis
 certifi==2025.8.3
@@ -137,10 +137,10 @@ contourpy==1.3.3 ; python_full_version >= '3.11'
     # via
     #   bokeh
     #   matplotlib
-coverage==7.10.5
+coverage==7.10.6
 crc32c==2.7.1 ; python_full_version >= '3.11'
     # via numcodecs
-cryptography==45.0.6
+cryptography==45.0.7
     # via
     #   igwn-auth-utils
     #   ligo-gracedb
@@ -172,7 +172,7 @@ exceptiongroup==1.3.0 ; python_full_version < '3.11'
     #   pytest
 execnet==2.1.1
     # via pytest-xdist
-executing==2.2.0
+executing==2.2.1
     # via stack-data
 fasteners==0.20 ; python_full_version < '3.11' and sys_platform != 'emscripten'
     # via zarr
@@ -332,7 +332,7 @@ markupsafe==3.0.2
     # via jinja2
 marshmallow==3.23.3
     # via cdci-data-analysis
-matplotlib==3.9.4
+matplotlib==3.10.6
     # via
     #   gwpy
     #   lalsuite
@@ -577,7 +577,7 @@ rdflib==7.1.4
     # via oda-api
 redis==6.4.0
     # via cdci-data-analysis
-regex==2025.7.34
+regex==2025.8.29
     # via dateparser
 reproject==0.14.1 ; python_full_version < '3.11'
     # via ligo-skymap
@@ -614,12 +614,10 @@ scitokens==1.8.1
     # via igwn-auth-utils
 secretstorage==3.3.3 ; sys_platform == 'linux'
     # via keyring
-sentry-sdk==2.35.1
+sentry-sdk==2.35.2
     # via cdci-data-analysis
 shapely==2.1.1
     # via ligo-skymap
-simplejson==3.20.1
-    # via cdci-data-analysis
 six==1.17.0
     # via
     #   astroplan
@@ -672,7 +670,6 @@ traitlets==5.14.3
     #   nbformat
 types-click==7.1.8
 types-requests==2.32.4.20250809
-types-simplejson==3.20.0.20250822
 typing-extensions==4.15.0
     # via
     #   aiosignal
