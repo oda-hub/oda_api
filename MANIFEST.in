@@ -1,3 +1,5 @@
 include oda_api/pkg_info.json
+include CITATION.cff
+include codemeta.json
 recursive-exclude tests *
 recursive-exclude doc *
