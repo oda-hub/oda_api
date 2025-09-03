@@ -16,12 +16,14 @@ maintainers = [
 ]
 readme = "README.md"
 requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE.rst"]
 
 dependencies = [
     "requests",
-    "astropy",
+    "astropy>=6.1",
     "json_tricks",
-    "matplotlib",
+    "matplotlib>=3.10",
     "bokeh>3.0,<3.2",
     "numpy>=2.0 ; python_full_version >= '3.11'",
     "numpy<2.0 ; python_full_version < '3.11'",
@@ -49,7 +51,7 @@ where = ["."]
 version = {attr = "oda_api.__version__"}
 
 [tool.uv.sources]
-cdci-data-analysis = { git = "https://github.com/oda-hub/dispatcher-app.git", branch = "numpy-gt-2" }
+cdci-data-analysis = { git = "https://github.com/oda-hub/dispatcher-app.git", branch = "numpy-gt-2", group="dev" }
 
 [dependency-groups]
 dev = [

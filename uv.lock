@@ -3250,14 +3250,14 @@ docs = [
 
 [package.metadata]
 requires-dist = [
-    { name = "astropy" },
+    { name = "astropy", specifier = ">=6.1" },
     { name = "astroquery", specifier = ">=0.4.4" },
     { name = "bokeh", specifier = ">3.0,<3.2" },
     { name = "gwpy", marker = "extra == 'gw'" },
     { name = "json-tricks" },
     { name = "jsonschema" },
     { name = "ligo-skymap", marker = "extra == 'gw'" },
-    { name = "matplotlib" },
+    { name = "matplotlib", specifier = ">=3.10" },
     { name = "numpy", marker = "python_full_version < '3.11'", specifier = "<2.0" },
     { name = "numpy", marker = "python_full_version >= '3.11'", specifier = ">=2.0" },
     { name = "puremagic" },
