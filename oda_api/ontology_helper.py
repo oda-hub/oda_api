@@ -1,4 +1,3 @@
-from __future__ import annotations
 import rdflib as rdf
 from rdflib.collection import Collection
 from rdflib.namespace import RDF, RDFS, OWL, XSD
