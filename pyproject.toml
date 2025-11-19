@@ -33,6 +33,7 @@ dependencies = [
     "scipy",
     "rdflib",
     "puremagic",
+    "click>=8.2.1",
 ]
 
 [project.optional-dependencies]

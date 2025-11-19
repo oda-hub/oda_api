@@ -42,8 +42,12 @@ cffi==1.17.1 ; (implementation_name == 'pypy' and platform_python_implementation
     #   pyzmq
 charset-normalizer==3.4.3
     # via requests
+click==8.2.1
+    # via oda-api
 colorama==0.4.6 ; sys_platform == 'win32'
-    # via sphinx
+    # via
+    #   click
+    #   sphinx
 contourpy==1.3.2 ; python_full_version < '3.11'
     # via
     #   bokeh

@@ -107,6 +107,7 @@ click==8.2.1
     #   dask
     #   dqsegdb2
     #   flask
+    #   oda-api
     #   papermill
 click-didyoumean==0.3.1
     # via celery
