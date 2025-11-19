@@ -1,9 +1,0 @@
-git tag  -d stable
-git push --delete all stable
-git tag -a stable  -m stable
-git push all stable
-
-git tag  -d 1.0.1
-git push --delete all 1.0.1
-git tag -a 1.0.1  -m 1.0.1
-git push all 1.0.1

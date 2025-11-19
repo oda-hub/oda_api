@@ -15,43 +15,40 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
+        python-version: ['3.10', '3.11', '3.12', '3.13']
 
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+
+    - name: Install uv and set the python version
+      uses: astral-sh/setup-uv@v6
       with:
+        version: "0.9.9"
         python-version: ${{ matrix.python-version }}
 
-    - name: Install dependencies
+    - name: Install the project
       run: |
-        python -m pip install --upgrade pip
-        python -m pip install flake8 pytest wheel coverage pylint mypy
-        python -m pip install types-simplejson types-requests types-click
-        python -m pip install oda-knowledge-base[rdf,cwl]
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-        pip install .[test,extra-test,ontology]
+        uv sync --locked --all-extras --dev
         curl -o tests/oda-ontology.ttl https://raw.githubusercontent.com/oda-hub/ontology/main/ontology.ttl
 
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
-        flake8 oda_api --count --select=E9,F63,F7,F82 --show-source --statistics
+        uv run flake8 oda_api --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 oda_api --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        uv run flake8 oda_api --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
     - name: PyLint - more lint
       run: |
-        pylint --rcfile=.pylintrc -E oda_api
+        uv run pylint --rcfile=.pylintrc -E oda_api
 
     - name: MyPy
       run: |
-        mypy oda_api --ignore-missing-imports --implicit-optional
+        uv run mypy oda_api --ignore-missing-imports --implicit-optional
 
     - name: Test with pytest
       run: |
-        python -m coverage run -m pytest tests -m 'not slow and not test_drupal' # this will currently not run any real requests, nor any request to post content over the product gallery
+        uv run python -m coverage run -m pytest tests -m 'not slow and not test_drupal and not live' # this will currently not run any real requests, nor any request to post content over the product gallery
         echo "should maybe also run this: 'python -m pytest tests -k production-1-2'"
 
     - name: Codecov

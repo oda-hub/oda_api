@@ -38,13 +38,19 @@
     "identifier": "oda-api",
     "name": "oda-api",
     "runtimePlatform": "Python 3",
+    "isSourceCodeOf": {
+        "@type": "CommandLineApplication",
+        "executableName": "oda-api",
+        "name": "oda-api",
+        "runtimePlatform": "Python 3"
+    },
     "softwareRequirements": [
         {
             "@type": "SoftwareApplication",
             "identifier": "astropy",
             "name": "astropy",
             "runtimePlatform": "Python 3",
-            "version": ">= 3.2"
+            "version": ">= 6.1"
         },
         {
             "@type": "SoftwareApplication",
@@ -55,20 +61,8 @@
         },
         {
             "@type": "SoftwareApplication",
-            "identifier": "astroquery",
-            "name": "astroquery",
-            "runtimePlatform": "Python 3"
-        },
-        {
-            "@type": "SoftwareApplication",
-            "identifier": "black",
-            "name": "black",
-            "runtimePlatform": "Python 3"
-        },
-        {
-            "@type": "SoftwareApplication",
-            "identifier": "future",
-            "name": "future",
+            "identifier": "bokeh<3.2",
+            "name": "bokeh<3.2",
             "runtimePlatform": "Python 3"
         },
         {
@@ -79,8 +73,8 @@
         },
         {
             "@type": "SoftwareApplication",
-            "identifier": "json-tricks",
-            "name": "json-tricks",
+            "identifier": "json_tricks",
+            "name": "json_tricks",
             "runtimePlatform": "Python 3"
         },
         {
@@ -99,24 +93,32 @@
             "@type": "SoftwareApplication",
             "identifier": "matplotlib",
             "name": "matplotlib",
-            "runtimePlatform": "Python 3"
+            "runtimePlatform": "Python 3",
+            "version": ">= 3.10"
         },
         {
             "@type": "SoftwareApplication",
             "identifier": "numpy",
             "name": "numpy",
+            "runtimePlatform": "Python 3",
+            "version": ">= 2.0"
+        },
+        {
+            "@type": "SoftwareApplication",
+            "identifier": "numpy<2.0",
+            "name": "numpy<2.0",
+            "runtimePlatform": "Python 3"
+        },
+        {
+            "@type": "SoftwareApplication",
+            "identifier": "puremagic",
+            "name": "puremagic",
             "runtimePlatform": "Python 3"
         },
         {
             "@type": "SoftwareApplication",
             "identifier": "pyjwt",
             "name": "pyjwt",
-            "runtimePlatform": "Python 3"
-        },
-        {
-            "@type": "SoftwareApplication",
-            "identifier": "pytest-xdist[psutil]",
-            "name": "pytest-xdist[psutil]",
             "runtimePlatform": "Python 3"
         },
         {
@@ -136,19 +138,7 @@
             "identifier": "scipy",
             "name": "scipy",
             "runtimePlatform": "Python 3"
-        },
-        {
-            "@type": "SoftwareApplication",
-            "identifier": "sentry-sdk",
-            "name": "sentry-sdk",
-            "runtimePlatform": "Python 3"
         }
     ],
-    "targetProduct": {
-        "@type": "CommandLineApplication",
-        "executableName": "oda-api",
-        "name": "oda-api",
-        "runtimePlatform": "Python 3"
-    },
-    "version": "1.2.12"
+    "version": "1.3.0"
 }
