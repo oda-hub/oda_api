@@ -765,6 +765,7 @@ class LightCurveDataProduct(NumpyDataProduct):
     @classmethod
     def from_arrays(cls,
                     times, 
+                    timedel = None,
                     fluxes = None,
                     magnitudes = None,
                     rates = None,
