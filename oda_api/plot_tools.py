@@ -519,9 +519,11 @@ class OdaLightCurve(OdaProduct):
         if self.instrument == 'SPI-ACS':
             self.timezero = hdu.header['TIMEZERO'] / 86400. + hdu.header['MJDREF']
             from astropy.time import Time
-            self.timezero_utc = Time(self.timezero, format='mjd').iso
-
-        #This could only be valid for ISGRI
+            tmp_time = Time(self.timezero, format='mjd', scale='tt')
+            self.logger.debug('Time zero TT: %s' % tmp_time.iso)
+            self.timezero_utc = tmp_time.utc.iso
+            self.logger.debug('Time zero UTC: %s' % self.timezero_utc)
+        # This could only be valid for ISGRI
         try:
             dt_lc = hdu.data['XAX_E']
             self.logger.debug('Get time bin directly from light curve')
