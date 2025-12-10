@@ -630,7 +630,7 @@ class OdaLightCurve(OdaProduct):
                 _ = plt.xlabel('seconds since %s UTC' % self.timezero_utc)
             else:
                 if x[0] > 100000:
-                    self.logger.debug('guessing it is seconds')
+                    self.logger.warning('guessing units are seconds in plot label')
                     _ = plt.xlabel('Time [s]')
                 else:
                     _ = plt.xlabel('Time [days]')
