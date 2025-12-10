@@ -839,7 +839,7 @@ class LightCurveDataProduct(NumpyDataProduct):
                    name = name)            
 
 class PictureProduct:
-    def __init__(self, binary_data, name=None, metadata={}, file_path=None, write_on_creation = False):
+    def __init__(self, binary_data, name=None, metadata={}, file_path=None, write_on_creation=False):
         self.binary_data = binary_data
         self.metadata = metadata
         self.name = name
