@@ -202,31 +202,40 @@ def test_bin_image():
                            [2/u.cm**2/u.s] * 3, 
                            None,
                            [{'TIME': 'd', 'FLUX': '1 / (cm**2 s)', 'ERROR': '1 / (cm**2 s)'},
-                            {'TIME': 'd', 'FLUX': '1 / (s cm**2)', 'ERROR': '1 / (s cm**2)'}]),
+                            {'TIME': 'd', 'FLUX': '1 / (s cm**2)', 'ERROR': '1 / (s cm**2)'}],
+                           None),
                                                   
                           (['2022-02-20T13:45:34', '2022-02-20T14:45:34', '2022-02-20T15:45:34'],
                            [2] * 3,
                            None,
-                           [{'TIME': 'd'}]),
+                           [{'TIME': 'd'}],
+                           0.5),
                           
                           ([59630.3, 59630.5, 59630.7],
                            [2] * 3,
                            'mjd',
-                           [{'TIME': 'd'}]),
+                           [{'TIME': 'd', 'TIMEDEL': 'd'}],
+                           [0.5] * 3),
                           
                           (list(map(datetime.fromisoformat, ['2022-02-20T13:45:34', '2022-02-20T14:45:34', '2022-02-20T15:45:34'])),
                            [2/u.cm**2/u.s] * 3, 
                            None,
                            [{'TIME': 'd', 'FLUX': '1 / (cm**2 s)', 'ERROR': '1 / (cm**2 s)'},
-                            {'TIME': 'd', 'FLUX': '1 / (s cm**2)', 'ERROR': '1 / (s cm**2)'}]),
+                            {'TIME': 'd', 'FLUX': '1 / (s cm**2)', 'ERROR': '1 / (s cm**2)'}],
+                           None),
                           ]
                          )
-def test_lightcurve_product_from_arrays(times, values, time_format, expected_units_dict_variants):
+def test_lightcurve_product_from_arrays(times, values, time_format, 
+                                        expected_units_dict_variants, timedel):
     errors = [0.05 * x for x in values]
-    lc = LightCurveDataProduct.from_arrays(times = times, fluxes = values, errors = errors, time_format=time_format)
+    lc = LightCurveDataProduct.from_arrays(times=times, fluxes=values, 
+                                           errors=errors, 
+                                           time_format=time_format, 
+                                           timedel=timedel)
     assert lc.data_unit[1].units_dict in expected_units_dict_variants
     assert all(lc.data_unit[1].data['TIME'].astype('int') == 59630)
-    
+
+
 def test_new_binary_product():
     infile = 'tests/test_data/lc.fits'
     bin_prod = BinaryProduct.from_file(infile, name='binprd')
