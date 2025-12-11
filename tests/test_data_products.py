@@ -197,7 +197,7 @@ def test_bin_image():
     assert bin_image_decoded.binary_data == figdata
 
 
-@pytest.mark.parametrize('times,values,time_format,expected_units_dict_variants',
+@pytest.mark.parametrize('times,values,time_format,expected_units_dict_variants,timedel',
                          [(atime.Time(['2022-02-20T13:45:34', '2022-02-20T14:45:34', '2022-02-20T15:45:34']), 
                            [2/u.cm**2/u.s] * 3, 
                            None,
