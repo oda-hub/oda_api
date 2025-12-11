@@ -474,6 +474,9 @@ class OdaLightCurve(OdaProduct):
 
         hdu = None
         for j, dd in enumerate(combined_lc._p_list):
+            if type(dd) is bytes:
+                self.logger.info(f'Skipping binary product (index={j})')
+                continue
             self.logger.debug(dd.meta_data['src_name'])
             if dd.meta_data['src_name'] in source_name or dd.meta_data['src_name'] in patched_source_name or \
                     dd.meta_data['src_name'] == 'query':
@@ -488,9 +491,20 @@ class OdaLightCurve(OdaProduct):
 
         x = hdu.data['TIME']
         y = hdu.data['RATE']
-        dy = hdu.data['ERROR']
+        if 'ERROR' in hdu.data.columns.names:
+            dy = hdu.data['ERROR']
+        elif 'RATE_ERR' in hdu.data.columns.names:
+            dy = hdu.data['RATE_ERR']
+        elif 'rate_err' in hdu.data.columns.names:
+            dy = hdu.data['rate_err']
+        
+        else:
+            self.logger.warning('No error column found in light curve, setting to Poissonian')
+            dy = numpy.sqrt(numpy.abs(y))
+        
         self.logger.debug("Original length of light curve %d" % len(x))
         ind = numpy.argsort(x)
+        
         x = x[ind]
         y = y[ind]
         dy = dy[ind]
@@ -507,7 +521,7 @@ class OdaLightCurve(OdaProduct):
                 e_min = 75
             else:
                 e_min = 0
-
+        
         if 'E_MAX' in hdu.header:
             e_max = hdu.header['E_MAX']
         else:
@@ -519,18 +533,29 @@ class OdaLightCurve(OdaProduct):
         if self.instrument == 'SPI-ACS':
             self.timezero = hdu.header['TIMEZERO'] / 86400. + hdu.header['MJDREF']
             from astropy.time import Time
-            self.timezero_utc = Time(self.timezero, format='mjd').iso
-
-        #This could only be valid for ISGRI
-        try:
+            tmp_time = Time(self.timezero, format='mjd', scale='tt')
+            self.logger.debug('Time zero TT: %s' % tmp_time.iso)
+            self.timezero_utc = tmp_time.utc.iso
+            self.logger.debug('Time zero UTC: %s' % self.timezero_utc)
+        # This could only be valid for ISGRI
+        if 'XAX_E' in hdu.data.columns.names:
             dt_lc = hdu.data['XAX_E']
-            self.logger.debug('Get time bin directly from light curve')
-        except:
-            timedel = hdu.header['TIMEDEL']
+            self.logger.debug('Get time bin from the XAX_E column')
+        elif 'TIMEDEL' in hdu.data.columns.names:
+            dt_lc = hdu.data['TIMEDEL']
+            self.logger.debug('Get time bin from TIMEDEL column ')
+        else:
+            if 'TIMEDEL' in hdu.header:
+                timedel = hdu.header['TIMEDEL']
+            else:
+                self.logger.debug('No TIMEDEL in header, computing from difference of first two bins')
+                timedel = x[1] - x[0]
             if 'TIMEPIXR' in hdu.header:
                 timepix = hdu.header['TIMEPIXR']
             else:
+                # Guessing middle of the bin
                 timepix = 0.5
+                
             t_lc = hdu.data['TIME'] + (0.5 - timepix) * timedel
             dt_lc = t_lc.copy() * 0.0 + timedel / 2
             for i in range(len(t_lc) - 1):
@@ -538,7 +563,9 @@ class OdaLightCurve(OdaProduct):
 
             self.logger.debug('Computed time bin from TIMEDEL')
 
+        # Data curation: remove negative delta time bins
         m_negative_bins = dt_lc < 0
+        
         if numpy.sum(m_negative_bins) > 0:
             self.logger.debug('found negative time bins at %s: disabling them', x[m_negative_bins])
             x[m_negative_bins] = numpy.NaN
@@ -578,13 +605,15 @@ class OdaLightCurve(OdaProduct):
         from scipy import stats
 
         if in_source_name == '':
-            source_names = [dd.meta_data['src_name'] for dd in combined_lc._p_list]
+            # makes a check on binary extension
+            source_names = [dd.meta_data['src_name'] for dd in combined_lc._p_list if type(dd) is not bytes]
         else:
             source_names = [in_source_name]
 
         figs = []
 
         for source_name in source_names:
+            self.logger.debug('Build_fig for LC: source name is %s', source_name)
             x, dx, y, dy, e_min, e_max = self.get_lc(source_name, systematic_fraction)
             if x is None:
                 return
@@ -595,13 +624,19 @@ class OdaLightCurve(OdaProduct):
             std_dev = numpy.std(y)
 
             figs.append(plt.figure(figsize=(8, 8./1.62)))
+        
             _ = plt.errorbar(x, y, xerr=dx, yerr=dy, marker='o', capsize=0, linestyle='', label='Lightcurve')
             _ = plt.axhline(meany, color='green', linewidth=3)
             if self.instrument == 'SPI-ACS':
                 _ = plt.xlabel('seconds since %s UTC' % self.timezero_utc)
             else:
-                _ = plt.xlabel('Time [IJD]')
-            if e_min == 0 or e_max ==0:
+                if x[0] > 100000:
+                    self.logger.warning('guessing units are seconds in plot label')
+                    _ = plt.xlabel('Time [s]')
+                else:
+                    _ = plt.xlabel('Time [days]')
+                    
+            if e_min == 0 or e_max == 0:
                 _ = plt.ylabel('Rate')
             else:
                 _ = plt.ylabel('Rate %.1f-%.1f keV' % (e_min, e_max))
@@ -620,22 +655,26 @@ class OdaLightCurve(OdaProduct):
                                 label=f'{ng_sig_limit} $\sigma_d$, {100 * systematic_fraction}% syst')
 
                 _ = plt.legend()
-
-            plot_title = source_name
+            # Avoid ugly titles
+            if source_name != 'query' and source_name != 'lc':
+                plot_title = source_name
+            else:
+                self.logger.debug('Source name is not suitable for title')
+                plot_title = ''
+                
             _ = plt.title(plot_title)
+            
             if find_excesses:
                 ind = (y - band_width)/dy > ng_sig_limit
                 if numpy.sum(ind) > 0:
                     _ = plt.plot(x[ind], y[ind], marker='x', color='red', linestyle='', markersize=10)
                     self.logger.info('We found positive excesses on the lightcurve at times')
                     good_ind = numpy.where(ind)
-                    #print(good_ind[0][0:-1], good_ind[0][1:])
                     old_time = -1
                     if len(good_ind[0]) == 1:
                         self.logger.info('%f' % (x[good_ind[0][0]]))
                     else:
                         for i,j in zip(good_ind[0][0:-1], good_ind[0][1:]):
-                            #print(i,j)
                             if j-i > 2:
                                 if x[i] != old_time :
                                     self.logger.info('%f' % x[i])

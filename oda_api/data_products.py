@@ -765,6 +765,7 @@ class LightCurveDataProduct(NumpyDataProduct):
     @classmethod
     def from_arrays(cls,
                     times, 
+                    timedel = None,
                     fluxes = None,
                     magnitudes = None,
                     rates = None,
@@ -825,8 +826,37 @@ class LightCurveDataProduct(NumpyDataProduct):
         if errors is not None and isinstance(errors, u.Quantity):
             units_dict['ERROR'] = errors.unit.to_string(format='OGIP')
             errors = errors.value
-            
-        rec_array = np.core.records.fromarrays([mjd, values, errors], names=('TIME', col_name, 'ERROR'))
+
+        timedel_is_array = False
+        if timedel is not None:
+            # Accept scalar numeric (int/float), numpy scalar, or astropy Quantity
+            if isinstance(timedel, u.Quantity):
+                # convert timedel to days (internal TIME unit is 'd')
+                td_days = timedel.to(u.day).value
+            else:
+                td_days = timedel
+                
+            if np.isscalar(td_days):
+                # treat numeric scalar as days by default
+                td_days = float(td_days)
+                data_header['TIMEDEL'] = td_days
+            else:
+                # If it's array-like, ensure it matches times length
+                try:
+                    if len(td_days) != len(times):
+                        raise ValueError('timedel length must match times length when providing an array')
+                    units_dict['TIMEDEL'] = 'd'
+                    timedel = np.asarray(timedel)
+                except TypeError:
+                    raise ValueError('timedel type not understood; expected scalar, Quantity, or array-like')    
+        
+        if timedel is None or timedel_is_array is False:
+            rec_array = np.core.records.fromarrays([mjd, values, errors], 
+                                                   names=('TIME', col_name, 'ERROR'))
+        else:
+            rec_array = np.core.records.fromarrays([mjd, values, errors, 
+                                                    timedel], names=('TIME',
+                                                        col_name, 'ERROR', 'TIMEDEL'))
         
         return cls([NumpyDataUnit(data=np.array([]), name = 'PRIMARY', hdu_type = 'primary'),
                     NumpyDataUnit(data = rec_array,
@@ -837,8 +867,9 @@ class LightCurveDataProduct(NumpyDataProduct):
                                  name = 'LC')],
                    name = name)            
 
+
 class PictureProduct:
-    def __init__(self, binary_data, name=None, metadata={}, file_path=None, write_on_creation = False):
+    def __init__(self, binary_data, name=None, metadata={}, file_path=None, write_on_creation=False):
         self.binary_data = binary_data
         self.metadata = metadata
         self.name = name
