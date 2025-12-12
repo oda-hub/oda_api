@@ -475,6 +475,7 @@ class OdaLightCurve(OdaProduct):
         hdu = None
         for j, dd in enumerate(combined_lc._p_list):
             if type(dd) is bytes:
+                self.logger.info(f'Skipping binary product (index={j})')
                 continue
             self.logger.debug(dd.meta_data['src_name'])
             if dd.meta_data['src_name'] in source_name or dd.meta_data['src_name'] in patched_source_name or \
@@ -630,7 +631,7 @@ class OdaLightCurve(OdaProduct):
                 _ = plt.xlabel('seconds since %s UTC' % self.timezero_utc)
             else:
                 if x[0] > 100000:
-                    self.logger.debug('guessing it is seconds')
+                    self.logger.warning('guessing units are seconds in plot label')
                     _ = plt.xlabel('Time [s]')
                 else:
                     _ = plt.xlabel('Time [days]')
