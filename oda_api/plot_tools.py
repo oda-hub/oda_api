@@ -494,7 +494,7 @@ class OdaLightCurve(OdaProduct):
         
         else:
             self.logger.warning('No error column found in light curve, setting to Poissonian')
-            dy = numpy.sqrt(numpy.abs(y))
+            dy = np.sqrt(np.abs(y))
         
         self.logger.debug("Original length of light curve %d" % len(x))
         ind = np.argsort(x)
