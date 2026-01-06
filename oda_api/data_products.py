@@ -1,26 +1,10 @@
-from __future__ import absolute_import, division, print_function
-
-from builtins import (bytes, str, open, super, range,
-                      zip, round, input, int, pow, object, map, zip)
-
 __author__ = "Andrea Tramacere"
-
-# Standard library
-# eg copy
-# absolute import rg:from copy import deepcopy
-
-# Dependencies
-# eg numpy
-# absolute import eg: import numpy as np
-
-# Project
-# relative import eg: from .mod import f
 
 import typing
 
 import traceback
 
-from json_tricks import numpy_encode,dumps,loads,numeric_types_hook,hashodict,json_numpy_obj_hook
+from json_tricks import numpy_encode,dumps
 from astropy.io import fits as pf
 from astropy.io import ascii as astropy_io_ascii
 import json
@@ -30,6 +14,7 @@ from astropy.table import Table
 from astropy.coordinates import Angle
 from astropy.wcs import WCS
 from astropy import units as u
+from astropy.io.fits import FITS_rec
 
 import  numpy
 import numpy as np
@@ -37,8 +22,6 @@ import  base64
 import  pickle
 import gzip
 import  hashlib
-from numpy import nan,inf
-from sys import path_importer_cache, version_info
 
 from io import StringIO, BytesIO
 import puremagic
@@ -312,7 +295,7 @@ class NumpyDataUnit(object):
             logger.debug('inside to_fits_hdu methods')
             logger.debug(f'name: {self.name}')
             logger.debug(f'header: {self.header}')
-            logger.debug(f'data: {self.data}')
+            logger.debug(f'data: {repr(self.data)}')
             logger.debug(f'units_dict: {self.units_dict}')
             logger.debug(f'hdu_type: {self.hdu_type}')
             logger.debug('------------------------------')
@@ -478,11 +461,8 @@ class NumpyDataUnit(object):
                 _data = pickle.loads(_data)
                 gzip_file.close()
             else:
-                if version_info[0] > 2:
-                    _data = pickle.loads(_binarys,encoding='bytes')
-                else:
-                    _data = pickle.loads(_binarys)
-
+                _data = pickle.loads(_binarys,encoding='bytes')
+            
         elif encoded_data is not None:
             encoded_data=eval(encoded_data) # !!
 
@@ -494,7 +474,11 @@ class NumpyDataUnit(object):
         else:
             _data=None
 
+        if (isinstance(_data, FITS_rec) 
+            and _hdu_type in ["table", "bintable"] 
+            and getattr(_data, "_tbsize", None) is None):
 
+            _data._tbsize = int(np.prod([encoded_header[f"NAXIS{i}"] for i in range(1, encoded_header['NAXIS']+1)]))
 
         return cls(data=_data, data_header=encoded_header, meta_data=encoded_meta_data,name=_name,hdu_type=_hdu_type, units_dict=_units_dict)
 

@@ -1,78 +1,54 @@
-from __future__ import absolute_import, division, print_function
-
-from collections import OrderedDict
-import gzip
-import hashlib
-from json.decoder import JSONDecodeError
-import pathlib
-
-import rdflib
-from json.decoder import JSONDecodeError 
-
-# NOTE gw is optional for now
-try:
-    import gwpy
-    from gwpy.timeseries.timeseries import TimeSeries
-    from gwpy.spectrogram import Spectrogram
-except ModuleNotFoundError:
-    pass
-
-from .data_products import (NumpyDataProduct, 
-                            BinaryData, 
-                            BinaryProduct, 
-                            ApiCatalog, 
-                            GWContoursDataProduct, 
-                            PictureProduct,
-                            ODAAstropyTable,
-                            TextLikeProduct)
-from oda_api.token import TokenLocation
-
-from builtins import (bytes, str, open, super, range,
-                      zip, round, input, int, pow, object, map, zip)
-
 __author__ = "Andrea Tramacere, Volodymyr Savchenko"
-
-import warnings
-import requests
-import ast
-import json
-import re
-
-try:
-    # compatibility in some remaining environments
-    import simplejson  # type: ignore
-except ImportError:
-    import json as simplejson  # type: ignore
-
-import random
-import string
-import time
-import os
-import inspect
-import sys
-from astropy.io import ascii
-import copy
-import pickle
-from . import __version__
-from . import custom_formatters
-from . import colors as C
-from itertools import cycle
-import numpy as np
-import traceback
-from jsonschema import validate as validate_json
-from typing import Union, Tuple
-
-import oda_api.token
-import oda_api.misc_helpers
-
-import logging
-
-logger = logging.getLogger("oda_api.api")
-advice_logger = logging.getLogger("oda_api.advice")
-
 __all__ = ['Request', 'NoTraceBackWithLineNumber',
            'NoTraceBackWithLineNumber', 'RemoteException', 'DispatcherAPI']
 
+import ast
+import copy
+import gzip
+import inspect
+import json
+import logging
+import os
+import pathlib
+import pickle
+import random
+import re
+import string
+import sys
+import time
+import traceback
+import warnings
+from collections import OrderedDict
+from itertools import cycle
+from json.decoder import JSONDecodeError
+from typing import Tuple, Union
+
+import numpy as np
+import rdflib
+import requests
+from jsonschema import validate as validate_json
+
+import oda_api.misc_helpers
+import oda_api.token
+from oda_api.token import TokenLocation
+
+from . import __version__
+from . import colors as C
+from . import custom_formatters
+from .data_products import (ApiCatalog, BinaryData, BinaryProduct,
+                            GWContoursDataProduct, NumpyDataProduct,
+                            ODAAstropyTable, PictureProduct, TextLikeProduct)
+
+# NOTE gw is optional for now
+try:
+    from gwpy.spectrogram import Spectrogram
+    from gwpy.timeseries.timeseries import TimeSeries
+except ModuleNotFoundError:
+    pass
+
+
+logger = logging.getLogger("oda_api.api")
+advice_logger = logging.getLogger("oda_api.advice")
 
 class Request(object):
     def __init__(self):
@@ -573,7 +549,7 @@ class DispatcherAPI:
             if response.status_code == 500:
                 try:
                     raise DispatcherException(response.json())
-                except simplejson.JSONDecodeError:
+                except JSONDecodeError:
                     raise DispatcherException({'error_message': response.text})
 
             if response.status_code != 200:

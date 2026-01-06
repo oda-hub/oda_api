@@ -15,44 +15,63 @@ maintainers = [
   {name = "Denys Savchenko", email = "contact@odahub.io"}
 ]
 readme = "README.md"
-requires-python = ">=2.7"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE.rst"]
 
 dependencies = [
     "requests",
-    "future",
-    "astropy>=3.2,<=6.1.4",
+    "astropy>=6.1",
     "json_tricks",
-    "matplotlib<3.10",
+    "matplotlib>=3.10",
     "bokeh>3.0,<3.2",
-    "numpy<2.0",
+    "numpy>=2.0 ; python_full_version >= '3.11'",
+    "numpy<2.0 ; python_full_version < '3.11'",
     "jsonschema",
     "pyjwt",
-    "astroquery",
+    "astroquery>=0.4.4",
     "scipy",
     "rdflib",
-    "black",
-    "puremagic"
+    "puremagic",
+    "click>=8.2.1",
 ]
 
 [project.optional-dependencies]
-test = [
-    "pytest-xdist[psutil]",
-    "astroquery>=0.4.4",
-    "sentry_sdk"
-]
-extra-test = [
-    "pytest-xdist[psutil]",
-    "astroquery>=0.4.4"
-]
 gw = [
     "gwpy",
     "ligo.skymap"
-]
-ontology = [
-    "rdflib"
 ]
 
 [project.scripts]
 oda-api = "oda_api.cli:main"
 
-[tool.setuptools_scm]
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.setuptools.dynamic]
+version = {attr = "oda_api.__version__"}
+
+[tool.uv.sources]
+cdci-data-analysis = { git = "https://github.com/oda-hub/dispatcher-app.git", branch = "numpy-gt-2", group="dev" }
+
+[dependency-groups]
+dev = [
+    "coverage>=7.10.5",
+    "flake8>=7.3.0",
+    "mypy>=1.17.1",
+    "pylint>=3.3.8",
+    "types-click>=7.1.8",
+    "types-requests>=2.32.4.20250809",
+    "pytest-xdist[psutil]",
+    "cdci-data-analysis",
+    "papermill>=2.6.0",
+    "ipykernel>=6.30.1",
+    "isort>=6.0.1",
+]
+docs = [
+    "furo>=2025.7.19",
+    "nbsphinx>=0.9.7",
+    "numpydoc>=1.9.0",
+    "sphinx-automodapi>=0.20.0",
+]
+

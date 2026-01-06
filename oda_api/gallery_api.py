@@ -268,7 +268,7 @@ class GalleryDispatcherAPI(DispatcherAPI):
         # more manageable queries (that should not fail) because we want to include those products that have a span_rev
         # of 0, and it's risky to do that with a single query
         if min_span_rev is None or min_span_rev == 0 or (max_span_rev is not None and max_span_rev == 0):
-            list_rev_range = list(np.arange(rev1_value, rev2_value, 250))
+            list_rev_range = list(np.arange(rev1_value, rev2_value, 250)) # type: list
             for rev in list_rev_range:
                 rev1 = rev
                 if rev == list_rev_range[-1]:

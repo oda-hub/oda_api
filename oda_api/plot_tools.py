@@ -2,19 +2,13 @@
 # pylint: skip-file
 # pylint: disable-all
 
-from __future__ import absolute_import, division, print_function
-
-import os.path
-from builtins import (str, open, range,
-                      zip, round, input, int, pow, object, zip)
-
-
 __author__ = "Carlo Ferrigno"
 
 import json
-import numpy
+import numpy as np
 import copy
 import bokeh
+import os.path
 
 from matplotlib import pylab as plt
 from matplotlib.widgets import Slider
@@ -88,7 +82,7 @@ class OdaImage(OdaProduct):
         :param meta: ODA data products metadata, takes from class initialisation by default
         :param header: ODA data product image header, takes from class initialisation by default
         :param sources: ODA catalog table, takes from class initialisation by default
-        :param levels: levels for contour plot, default is  numpy.linspace(1, 10, 10)
+        :param levels: levels for contour plot, default is  np.linspace(1, 10, 10)
         :param cmap: colormap default is cm.gist_earth,
         :param unit_ID: the unit to plot image default is 4
         :param det_sigma: limit detection sigma to lot from catalog, note that
@@ -110,7 +104,7 @@ class OdaImage(OdaProduct):
             raise ValueError('data is required')
 
         if levels is None:
-            levels = numpy.linspace(1, 10, 10)
+            levels = np.linspace(1, 10, 10)
 
         if hasattr(self.data, 'mosaic_image_0_mosaic'):
             my_mosaic = self.data.mosaic_image_0_mosaic
@@ -138,28 +132,28 @@ class OdaImage(OdaProduct):
         
         data = ext_sig.data
 
-        data = numpy.ma.masked_equal(data, numpy.NaN)
+        data = np.ma.masked_equal(data, np.nan)
 
         self.cs = plt.contourf(data, cmap=cmap, levels=levels,
                                extend="both", zorder=0)
         self.cs.cmap.set_under('k')
-        self.cs.set_clim(numpy.min(levels), numpy.max(levels))
+        self.cs.set_clim(np.min(levels), np.max(levels))
 
         self.cb = plt.colorbar(self.cs)
 
         if len(sources) > 0:
-            ras = numpy.array([x for x in sources['ra']])
-            decs = numpy.array([x for x in sources['dec']])
+            ras = np.array([x for x in sources['ra']])
+            decs = np.array([x for x in sources['dec']])
             if 'src_names' in sources.columns:
-                names = numpy.array([x for x in sources['src_names']])
+                names = np.array([x for x in sources['src_names']])
                 # Defines relevant indexes for plotting regions
-                m_new = numpy.array(['NEW' in name for name in names])
+                m_new = np.array(['NEW' in name for name in names])
             if 'significance' in sources.columns:
-                sigmas = numpy.array([x for x in sources['significance']])
+                sigmas = np.array([x for x in sources['significance']])
 
             # plot new sources as pink circles            
             m = m_new & (sigmas > det_sigma)
-            if numpy.sum(m) > 0:
+            if np.sum(m) > 0:
                 ra_coord = ras[m]
                 dec_coord = decs[m]
                 new_names = names[m]
@@ -190,7 +184,7 @@ class OdaImage(OdaProduct):
                             transform=ax.get_transform('world'))
             
             m = ~m_new & (sigmas > det_sigma - 1)
-            if numpy.sum(m) > 0:
+            if np.sum(m) > 0:
                 ra_coord = ras[m]
                 dec_coord = decs[m]
                 cat_names = names[m]
@@ -217,8 +211,8 @@ class OdaImage(OdaProduct):
             # Nice to have : slider
             cmin = plt.axes([0.85, 0.05, 0.02, 0.4])
             cmax = plt.axes([0.85, 0.55, 0.02, 0.4])
-            data_min = data[numpy.isfinite(data)].min()
-            data_max = data[numpy.isfinite(data)].max()
+            data_min = data[np.isfinite(data)].min()
+            data_max = data[np.isfinite(data)].max()
             self.smin = Slider(cmin, 'Min', data_min, data_max, valinit=1., orientation='vertical')
             self.smax = Slider(cmax, 'Max', data_min, data_max, valinit=10., orientation='vertical')
             self.smin.on_changed(self.update)
@@ -410,7 +404,7 @@ class OdaImage(OdaProduct):
                 # Look for the source of interest in NEW sources by coordinates
                 for ss in clean_sources:
                     if 'NEW' in ss['src_names']:
-                        if numpy.abs(ra - ss['ra']) <= tolerance and numpy.abs(dec - ss['dec']) <= tolerance:
+                        if np.abs(ra - ss['ra']) <= tolerance and np.abs(dec - ss['dec']) <= tolerance:
                             self.logger.info('Found ' + ooi + ' in catalog as ' + ss['src_names'])
                             ind = clean_sources['src_names'] == ss['src_names']
                             clean_sources['FLAG'][ind] = flag
@@ -419,7 +413,7 @@ class OdaImage(OdaProduct):
 
                 #Look for the source of interest in
                 ind = clean_sources['src_names'] == ooi
-                if numpy.count_nonzero(ind) > 0:
+                if np.count_nonzero(ind) > 0:
                     self.logger.info('Found ' + ooi + ' in catalog')
                     clean_sources['FLAG'][ind] = flag
                     if 'ISGRI_FLAG' in clean_sources.keys():
@@ -460,10 +454,10 @@ class OdaLightCurve(OdaProduct):
             systematic_fraction (int, optional): relative systematic error to add in quadrature. Defaults to 0.
 
         Returns:
-            numpy array time
-            numpy array delta_time, 
-            numpy array  rate
-            numpy array  rate_error
+            np.array time
+            np.array delta_time, 
+            np.array  rate
+            np.array  rate_error
             float e_min 
             float e_max
             _type_: _description_
@@ -500,18 +494,17 @@ class OdaLightCurve(OdaProduct):
         
         else:
             self.logger.warning('No error column found in light curve, setting to Poissonian')
-            dy = numpy.sqrt(numpy.abs(y))
+            dy = np.sqrt(np.abs(y))
         
         self.logger.debug("Original length of light curve %d" % len(x))
-        ind = numpy.argsort(x)
-        
+        ind = np.argsort(x)
         x = x[ind]
         y = y[ind]
         dy = dy[ind]
-        dy = numpy.sqrt(dy ** 2 + (y * systematic_fraction) ** 2)
-        ind = numpy.logical_and(numpy.isfinite(y), numpy.isfinite(dy))
-        ind = numpy.logical_and(ind, dy > 0)
-        self.logger.debug("Final length of light curve %d " % numpy.sum(ind))
+        dy = np.sqrt(dy ** 2 + (y * systematic_fraction) ** 2)
+        ind = np.logical_and(np.isfinite(y), np.isfinite(dy))
+        ind = np.logical_and(ind, dy > 0)
+        self.logger.debug("Final length of light curve %d " % np.sum(ind))
 
         if 'E_MIN' in hdu.header:
             e_min = hdu.header['E_MIN']
@@ -559,19 +552,18 @@ class OdaLightCurve(OdaProduct):
             t_lc = hdu.data['TIME'] + (0.5 - timepix) * timedel
             dt_lc = t_lc.copy() * 0.0 + timedel / 2
             for i in range(len(t_lc) - 1):
-                dt_lc[i + 1] = numpy.fabs(min(timedel / 2, t_lc[i + 1] - t_lc[i] - dt_lc[i]))
+                dt_lc[i + 1] = np.fabs(min(timedel / 2, t_lc[i + 1] - t_lc[i] - dt_lc[i]))
 
             self.logger.debug('Computed time bin from TIMEDEL')
 
         # Data curation: remove negative delta time bins
         m_negative_bins = dt_lc < 0
-        
-        if numpy.sum(m_negative_bins) > 0:
+        if np.sum(m_negative_bins) > 0:
             self.logger.debug('found negative time bins at %s: disabling them', x[m_negative_bins])
-            x[m_negative_bins] = numpy.NaN
-            dt_lc[m_negative_bins] = numpy.NaN
-            y[m_negative_bins] = numpy.NaN
-            dy[m_negative_bins] = numpy.NaN
+            x[m_negative_bins] = np.nan
+            dt_lc[m_negative_bins] = np.nan
+            y[m_negative_bins] = np.nan
+            dy[m_negative_bins] = np.nan
         
         return x[ind], dt_lc[ind], y[ind], dy[ind], e_min, e_max
 
@@ -618,10 +610,10 @@ class OdaLightCurve(OdaProduct):
             if x is None:
                 return
 
-            meany = numpy.sum(y / dy ** 2) / numpy.sum(1. / dy ** 2)
-            err_mean = numpy.sum(1 / dy ** 2)
+            meany = np.sum(y / dy ** 2) / np.sum(1. / dy ** 2)
+            err_mean = np.sum(1 / dy ** 2)
 
-            std_dev = numpy.std(y)
+            std_dev = np.std(y)
 
             figs.append(plt.figure(figsize=(8, 8./1.62)))
         
@@ -645,14 +637,14 @@ class OdaLightCurve(OdaProduct):
                 ndof = len(y) - 1
                 prob_limit = stats.norm().sf(ng_sig_limit)
                 chi2_limit = stats.chi2(ndof).isf(prob_limit)
-                band_width = numpy.sqrt(chi2_limit / err_mean)
+                band_width = np.sqrt(chi2_limit / err_mean)
 
                 _ = plt.axhspan(meany - band_width, meany + band_width, color='green', alpha=0.3,
-                                label=f'{ng_sig_limit} $\sigma_m$, {100 * systematic_fraction}% syst')
+                                label=fr'{ng_sig_limit} $\sigma_m$, {100 * systematic_fraction}% syst')
 
                 _ = plt.axhspan(meany - std_dev*ng_sig_limit, meany + std_dev*ng_sig_limit,
                                 color='cyan', alpha=0.3,
-                                label=f'{ng_sig_limit} $\sigma_d$, {100 * systematic_fraction}% syst')
+                                label=fr'{ng_sig_limit} $\sigma_d$, {100 * systematic_fraction}% syst')
 
                 _ = plt.legend()
             # Avoid ugly titles
@@ -666,10 +658,11 @@ class OdaLightCurve(OdaProduct):
             
             if find_excesses:
                 ind = (y - band_width)/dy > ng_sig_limit
-                if numpy.sum(ind) > 0:
+                if np.sum(ind) > 0:
                     _ = plt.plot(x[ind], y[ind], marker='x', color='red', linestyle='', markersize=10)
                     self.logger.info('We found positive excesses on the lightcurve at times')
-                    good_ind = numpy.where(ind)
+                    good_ind = np.where(ind)
+                    #print(good_ind[0][0:-1], good_ind[0][1:])
                     old_time = -1
                     if len(good_ind[0]) == 1:
                         self.logger.info('%f' % (x[good_ind[0][0]]))
@@ -764,7 +757,7 @@ class OdaLightCurve(OdaProduct):
     def get_html_image(self, source_name, systematic_fraction, color='blue'):
         
         x, dx, y, dy, e_min, e_max = self.get_lc(source_name, systematic_fraction)
-        mask = numpy.logical_not(numpy.isnan(y))
+        mask = np.logical_not(np.isnan(y))
 
         x = x[mask]
         dx = dx[mask]
@@ -860,7 +853,7 @@ class OdaSpectrum(OdaProduct):
             x_range = [x.min(), x.max()]
         
         if y_range is None:
-            y_range = [numpy.max([1e-2, (y-dy)[x < x_range[1]].min()]), (y+dy).max()]
+            y_range = [np.max([1e-2, (y-dy)[x < x_range[1]].min()]), (y+dy).max()]
 
         sp = ScatterPlot(w=800, h=600,
                         x_label="Energy [keV]",
@@ -885,11 +878,11 @@ class OdaSpectrum(OdaProduct):
     def get_values(self, in_source_name='', systematic_fraction=0):
 
         if in_source_name == '':
-            return numpy.array([]), numpy.array([]), numpy.array([]), numpy.array([])
+            return np.array([]), np.array([]), np.array([]), np.array([])
         specprod = self.get_spectrum_products(in_source_name)
 
         if specprod is None:
-            return numpy.array([]), numpy.array([]), numpy.array([]), numpy.array([])
+            return np.array([]), np.array([]), np.array([]), np.array([])
         
         spec = specprod[0].data_unit[1].to_fits_hdu()
         for hh in specprod[2].data_unit:
@@ -899,8 +892,8 @@ class OdaSpectrum(OdaProduct):
         x = (ebounds.data['E_MAX'] + ebounds.data['E_MIN'])/2.
         dx = (ebounds.data['E_MAX'] - ebounds.data['E_MIN']) / 2.
         y = spec.data['RATE']
-        dy = numpy.sqrt(spec.data['STAT_ERR']**2 + spec.data['SYS_ERR']**2 + (y*systematic_fraction)**2)
-        mask = numpy.logical_not(numpy.isnan(y))
+        dy = np.sqrt(spec.data['STAT_ERR']**2 + spec.data['SYS_ERR']**2 + (y*systematic_fraction)**2)
+        mask = np.logical_not(np.isnan(y))
         x = x[mask]
         dx = dx[mask]
         y = y[mask]
@@ -971,11 +964,11 @@ class OdaSpectrum(OdaProduct):
         tstart = float(ff[1].header['TSTART']) + mjdref
         tstop = float(ff[1].header['TSTOP']) + mjdref
         exposure = ff[1].header['EXPOSURE']
-        ff[1].data['SYS_ERR'] = numpy.zeros(len(ff[1].data['SYS_ERR'])) + systematic_fraction
-        ind = numpy.isfinite(ff[1].data['RATE'])
+        ff[1].data['SYS_ERR'] = np.zeros(len(ff[1].data['SYS_ERR'])) + systematic_fraction
+        ind = np.isfinite(ff[1].data['RATE'])
         ff[1].data['QUALITY'][ind] = 0
 
-        if numpy.sum(grouping) != 0:
+        if np.sum(grouping) != 0:
 
             if grouping[1] <= grouping[0] or grouping[2] == 0:
                 raise RuntimeError('Wrong grouping arguments')
@@ -987,10 +980,10 @@ class OdaSpectrum(OdaProduct):
 
             ff_rmf.close()
 
-            ind1 = numpy.argmin(numpy.abs(e_min - grouping[0]))
-            ind2 = numpy.argmin(numpy.abs(e_max - grouping[1]))
+            ind1 = np.argmin(np.abs(e_min - grouping[0]))
+            ind2 = np.argmin(np.abs(e_max - grouping[1]))
 
-            n_bins = numpy.abs(grouping[2])
+            n_bins = np.abs(grouping[2])
 
             ff[1].data['GROUPING'][0:ind1] = 0
             ff[1].data['GROUPING'][ind2:] = 0
@@ -1010,7 +1003,7 @@ class OdaSpectrum(OdaProduct):
                 self.logger.info('Geometric grouping with step %.3f' % e_step)
                 loc_e = e_min[ind1]
                 while (loc_e < e_max[ind2]):
-                    ind_loc_e = numpy.argmin(numpy.abs(e_min - loc_e))
+                    ind_loc_e = np.argmin(np.abs(e_min - loc_e))
                     ff[1].data['GROUPING'][ind_loc_e] = 1
                     loc_e *= e_step
 
@@ -1036,7 +1029,7 @@ class OdaGWContours(OdaProduct):
     
     @staticmethod
     def _plot_single_contour(contour_coords, ax, color='r'):
-        coords = numpy.array(contour_coords)
+        coords = np.array(contour_coords)
         try:
             ax.plot(coords[:,0], coords[:,1], '-', transform=ax.get_transform('world'), color = color)
         except TypeError:
