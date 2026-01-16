@@ -9,10 +9,12 @@ on:
 jobs:
   bump-version:
     name: Bump package version
+    url: https://pypi.org/p/<your-pypi-project-name>
     if: "!contains(github.event.head_commit.message, 'Bump version')"
     runs-on: ubuntu-latest
 
     permissions: write-all
+      # id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
       # Give the default GITHUB_TOKEN write permission to commit and push the
       # added or changed files to the repository.
       # contents: write
@@ -80,7 +82,7 @@ jobs:
       run: python -m build
 
     - name: Publish package
-      uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
+      uses: pypa/gh-action-pypi-publish@release/v1
       with:
         user: __token__
         verify_metadata: false
