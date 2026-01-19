@@ -34,22 +34,25 @@ Switzerland
 Installation
 -------------------
 
-This is the recommended method, equally in [conda environment](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#using-pip-in-an-environment).
+Can be installed from PyPI, e.g. 
 
 ```bash
 $ pip install oda-api --upgrade
 ```
 
-
-Alternatively, download source and use Anaconda
+as well as from `conda-forge` channel, e.g. 
 
 ```bash
-git clone https://github.com/oda-hub/oda_api oda_api
-cd oda_api
-conda install -c conda-forge --file requirements.txt
-python setup.py install
+conda install -c conda-forge oda-api
 ```
-    
+
+To build the sdist and wheel:
+
+```bash
+git clone https://github.com/oda-hub/oda_api.git
+cd oda_api
+pipx run build # or uv build etc.
+```
 
 Documentation
 -------------------
