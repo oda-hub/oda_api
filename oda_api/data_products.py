@@ -32,29 +32,13 @@ from matplotlib import pyplot as plt
 
 logger = logging.getLogger('oda_api.data_products')
 
-__all__=['sanitize_encoded','_chekc_enc_data','BinaryData','NumpyDataUnit','NumpyDataProduct','ApiCatalog','ODAAstropyTable']
+__all__=['_chekc_enc_data','BinaryData','NumpyDataUnit','NumpyDataProduct','ApiCatalog','ODAAstropyTable']
 
 import astropy.io.fits.fitsrec
 
 
-# these 3 functions are remnants of misusing repr() to serialize data instead of json
-def sanitize_encoded(d):
-    d = d.replace('null', 'None')
-    d = d.replace('true', 'True')
-    d = d.replace('false', 'False')
-    d = d.replace('NaN', 'nan')
-    d = d.replace('Infinity', 'inf')
-    return d
-
-def json_to_literal(d):
-    d = d.replace('null', 'None')
-    d = d.replace('true', 'True')
-    d = d.replace('false', 'False')
-    d = d.replace('NaN', 'nan')
-    d = d.replace('Infinity', 'inf')
-    return d
-
 def literal_to_json(d):
+    return d
     d = d.replace('None', 'null')
     d = d.replace('True', 'true')
     d = d.replace('False', 'false')
