@@ -24,7 +24,7 @@ jobs:
       run: |
         pixi init -c conda-forge -c https://heasarc.gsfc.nasa.gov/FTP/software/conda/
         pixi config set --local run-post-link-scripts insecure
-        pixi add papermill jupyter_client nbconvert xspec
+        pixi add 'python==3.13' papermill jupyter_client nbconvert xspec 
         pixi add --pypi oda-api@file://`realpath ./oda-api`
 
     - name: Run Tutorial Notebooks
