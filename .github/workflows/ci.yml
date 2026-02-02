@@ -30,6 +30,7 @@ jobs:
     - name: Run Tutorial Notebooks
       id: nb
       run: |
+        cd ./oda-api
         set +e
         env
 
