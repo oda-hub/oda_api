@@ -4,7 +4,7 @@ import typing
 
 import traceback
 
-from json_tricks import numpy_encode, dumps, loads
+from json_tricks import numpy_encode,dumps
 from astropy.io import fits as pf
 from astropy.io import ascii as astropy_io_ascii
 import json
@@ -440,8 +440,7 @@ class NumpyDataUnit(object):
                 _data = pickle.loads(_binarys,encoding='bytes')
             
         elif encoded_data is not None:
-            if isinstance(encoded_data, str):
-                encoded_data=json.loads(encoded_data)
+            encoded_data=eval(encoded_data) # !!
 
             for ID,c in enumerate(encoded_data):
                 encoded_data[ID]=tuple(c)
@@ -644,7 +643,7 @@ class NumpyDataProduct(object):
             encoded_name=None
             encoded_meta_data={}
 
-        return cls(data_unit=_data_unit_list,name=encoded_name,meta_data=loads(encoded_meta_data))
+        return cls(data_unit=_data_unit_list,name=encoded_name,meta_data=eval(encoded_meta_data))
 
 
 
