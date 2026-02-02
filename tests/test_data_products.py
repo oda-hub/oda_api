@@ -247,3 +247,7 @@ def test_new_binary_product():
     assert filecmp.cmp(infile, 'decbinprd.foo')
     os.remove('decbinprd.foo') 
     
+def test_decode_wrong_replacement():
+    infile = 'tests/test_data/1E_1740_7_2942_isgri_mosaic_clean_significance25_40.fits.gz'
+    npd = NumpyDataProduct.from_fits_file(infile)
+    encode_decode(npd)
