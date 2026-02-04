@@ -32,35 +32,11 @@ from matplotlib import pyplot as plt
 
 logger = logging.getLogger('oda_api.data_products')
 
-__all__=['sanitize_encoded','_chekc_enc_data','BinaryData','NumpyDataUnit','NumpyDataProduct','ApiCatalog','ODAAstropyTable']
+__all__=['_chekc_enc_data','BinaryData','NumpyDataUnit','NumpyDataProduct','ApiCatalog','ODAAstropyTable']
 
 import astropy.io.fits.fitsrec
 
 
-# these 3 functions are remnants of misusing repr() to serialize data instead of json
-def sanitize_encoded(d):
-    d = d.replace('null', 'None')
-    d = d.replace('true', 'True')
-    d = d.replace('false', 'False')
-    d = d.replace('NaN', 'nan')
-    d = d.replace('Infinity', 'inf')
-    return d
-
-def json_to_literal(d):
-    d = d.replace('null', 'None')
-    d = d.replace('true', 'True')
-    d = d.replace('false', 'False')
-    d = d.replace('NaN', 'nan')
-    d = d.replace('Infinity', 'inf')
-    return d
-
-def literal_to_json(d):
-    d = d.replace('None', 'null')
-    d = d.replace('True', 'true')
-    d = d.replace('False', 'false')
-    d = d.replace('nan', 'NaN')
-    d = d.replace('inf', 'Infinity')
-    return d
 
 
 def _chekc_enc_data(data):
@@ -135,7 +111,7 @@ class ODAAstropyTable(object):
         if isinstance(o_dict, dict):
             _o_dict = o_dict
         elif isinstance(o_dict, str):
-            _o_dict = json.loads(literal_to_json(o_dict))
+            _o_dict = json.loads(o_dict)
         else:
             raise RuntimeError('Wrong table structure')
         encoded_name = _o_dict['name']
@@ -649,7 +625,7 @@ class NumpyDataProduct(object):
                 else:
                     logger.warning('decoding from unexpected object')
                     try:
-                        obj_dict = json.loads(literal_to_json(encoded_obj))
+                        obj_dict = json.loads(encoded_obj)
                     except Exception as e:
                         logger.debug('unable to decode json object: %s', e)                    
                         # why not raise here?                
