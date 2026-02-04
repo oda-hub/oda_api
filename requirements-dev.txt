@@ -331,7 +331,7 @@ lxml==6.0.1
     # via pylogstash-context
 markupsafe==3.0.2
     # via jinja2
-marshmallow==3.23.3
+marshmallow==3.26.2
     # via cdci-data-analysis
 matplotlib==3.10.6
     # via
