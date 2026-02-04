@@ -32,7 +32,7 @@ beautifulsoup4==4.13.5
     #   nbconvert
 bleach==6.2.0
     # via nbconvert
-bokeh==3.1.1
+bokeh==3.8.2
     # via oda-api
 certifi==2025.8.3
     # via requests
