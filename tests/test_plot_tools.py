@@ -1,8 +1,10 @@
 import pathlib
 import pytest
+import sys
 
 
 @pytest.mark.live
+@pytest.mark.skipif(sys.version_info < (3, 11), reason="Incompatible with numpy version in current dispatcher")
 def test_plot_tools_notebook(request, remove_any_token_from_environment):
     import papermill as pm
 
