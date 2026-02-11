@@ -174,7 +174,7 @@ pandas==2.3.2
     # via bokeh
 pandocfilters==1.5.1
     # via nbconvert
-pillow==11.3.0
+pillow==12.1.1
     # via
     #   bokeh
     #   matplotlib
