@@ -141,7 +141,7 @@ contourpy==1.3.3 ; python_full_version >= '3.11'
 coverage==7.10.6
 crc32c==2.7.1 ; python_full_version >= '3.11'
     # via numcodecs
-cryptography==45.0.7
+cryptography==46.0.5
     # via
     #   igwn-auth-utils
     #   ligo-gracedb
