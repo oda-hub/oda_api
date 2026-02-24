@@ -8,8 +8,9 @@ from enum import Enum
 from types import FunctionType
 import time
 import traceback
-
-from jwt.exceptions import ExpiredSignatureError # type: ignore
+import jwt
+from jwt.exceptions import ExpiredSignatureError
+from jwt.types import Options
 
 default_algorithm = 'HS256'
 
@@ -25,11 +26,6 @@ class TokenLocation(Enum):
     FILE_HOME = "file in home"
     CONTEXT_FILE = "context file current directory"
 
-try:
-    import jwt
-except ImportError:
-    jwt = None # type: ignore
-    logger.debug("no pyjwt installed: some token operations will not be available")
 
 def format_token(decoded_oda_token: dict):
     return json.dumps(decoded_oda_token, indent=4, sort_keys=True)
@@ -48,7 +44,7 @@ def decode_oda_token(token: str, secret_key=None, allow_invalid=False) -> dict:
         secret_key = ""
         allow_invalid = True
     
-    decode_options = {}
+    decode_options = Options()
 
     if allow_invalid:
         decode_options['verify_signature'] = False
