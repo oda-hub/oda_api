@@ -840,7 +840,7 @@ class PictureProduct:
             self.write_file(file_path)
         else:
             self.file_path = None                        
-        tp = puremagic.what(None, h=binary_data)
+        tp = puremagic.from_string(binary_data).lstrip('.')
         if tp not in [ # the same as was in imghdr
             'rgb',
             'gif',
