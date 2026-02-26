@@ -689,7 +689,7 @@ wcwidth==0.6.0
     # via prompt-toolkit
 webencodings==0.5.1
     # via html5lib
-werkzeug==2.0.3
+werkzeug==3.1.6
     # via
     #   cdci-data-analysis
     #   flask
