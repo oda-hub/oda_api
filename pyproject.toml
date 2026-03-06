@@ -52,7 +52,7 @@ where = ["."]
 version = {attr = "oda_api.__version__"}
 
 [tool.uv.sources]
-cdci-data-analysis = { git = "https://github.com/oda-hub/dispatcher-app.git", branch = "numpy-gt-2", group="dev" }
+cdci-data-analysis = { git = "https://github.com/oda-hub/dispatcher-app.git", branch = "master", group="dev" }
 
 [dependency-groups]
 dev = [

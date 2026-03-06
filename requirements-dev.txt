@@ -4,23 +4,19 @@
     # via cdci-data-analysis
 aiohappyeyeballs==2.6.1 ; python_full_version == '3.12.*'
     # via aiohttp
-aiohttp==3.12.15 ; python_full_version == '3.12.*'
+aiohttp==3.13.3 ; python_full_version == '3.12.*'
     # via papermill
 aiosignal==1.4.0 ; python_full_version == '3.12.*'
     # via aiohttp
-amqp==5.3.1
-    # via kombu
 aniso8601==10.0.1
     # via flask-restx
 ansicolors==1.1.8
     # via papermill
-antlr4-python3-runtime==4.13.1
-    # via queryparser-python3
 appnope==0.1.4 ; sys_platform == 'darwin'
     # via ipykernel
 asciitree==0.3.3 ; python_full_version < '3.11'
     # via zarr
-astroid==3.3.11
+astroid==4.0.4
     # via pylint
 astroplan==0.10.1
     # via ligo-skymap
@@ -37,7 +33,7 @@ astropy==6.1.7 ; python_full_version < '3.11'
     #   oda-api
     #   pyvo
     #   reproject
-astropy==7.1.0 ; python_full_version >= '3.11'
+astropy==7.2.0 ; python_full_version >= '3.11'
     # via
     #   astroplan
     #   astropy-healpix
@@ -50,31 +46,27 @@ astropy==7.1.0 ; python_full_version >= '3.11'
     #   oda-api
     #   pyvo
     #   reproject
-astropy-healpix==1.1.2
+astropy-healpix==1.1.3
     # via
     #   ligo-skymap
     #   reproject
-astropy-iers-data==0.2025.9.1.0.42.11
+astropy-iers-data==0.2026.2.23.0.48.33
     # via astropy
-astroquery==0.4.10
+astroquery==0.4.11
     # via oda-api
-asttokens==3.0.0
+asttokens==3.0.1
     # via stack-data
-async-timeout==5.0.1 ; python_full_version < '3.11.3'
-    # via redis
-attrs==25.3.0
+attrs==25.4.0
     # via
     #   aiohttp
     #   jsonschema
 backports-tarfile==1.2.0 ; python_full_version < '3.12'
     # via jaraco-context
-beautifulsoup4==4.13.5
+beautifulsoup4==4.14.3
     # via
     #   astroquery
     #   bs4
-billiard==4.2.1
-    # via celery
-black==25.1.0
+black==26.1.0
     # via cdci-data-analysis
 blinker==1.9.0
     # via cdci-data-analysis
@@ -84,38 +76,26 @@ bokeh==3.1.1
     #   oda-api
 bs4==0.0.2
     # via cdci-data-analysis
-cdci-data-analysis @ git+https://github.com/oda-hub/dispatcher-app.git@ac3f52a562d35860cf5f1287532958c5d4637a52
-celery==5.5.3
-    # via cdci-data-analysis
-certifi==2025.8.3
+cdci-data-analysis @ git+https://github.com/oda-hub/dispatcher-app.git@5ac70b681331ac8fe864e1b04ed53fc746b775cb
+certifi==2026.1.4
     # via
     #   requests
     #   sentry-sdk
-cffi==1.17.1 ; implementation_name == 'pypy' or platform_python_implementation != 'PyPy'
+cffi==2.0.0 ; implementation_name == 'pypy' or platform_python_implementation != 'PyPy'
     # via
     #   cryptography
     #   pyzmq
-charset-normalizer==3.4.3
+charset-normalizer==3.4.4
     # via requests
-click==8.2.1
+click==8.3.1
     # via
     #   black
-    #   celery
-    #   click-didyoumean
-    #   click-plugins
-    #   click-repl
     #   dask
     #   dqsegdb2
     #   flask
     #   oda-api
     #   papermill
-click-didyoumean==0.3.1
-    # via celery
-click-plugins==1.1.1.2
-    # via celery
-click-repl==0.3.0
-    # via celery
-cloudpickle==3.1.1
+cloudpickle==3.1.2
     # via
     #   dask
     #   reproject
@@ -138,10 +118,8 @@ contourpy==1.3.3 ; python_full_version >= '3.11'
     # via
     #   bokeh
     #   matplotlib
-coverage==7.10.6
-crc32c==2.7.1 ; python_full_version >= '3.11'
-    # via numcodecs
-cryptography==45.0.7
+coverage==7.13.4
+cryptography==46.0.5
     # via
     #   igwn-auth-utils
     #   ligo-gracedb
@@ -149,17 +127,21 @@ cryptography==45.0.7
     #   secretstorage
 cycler==0.12.1
     # via matplotlib
-dask==2025.7.0
+dask==2026.1.2
+    # via
+    #   dask-image
+    #   reproject
+dask-image==2025.11.0 ; python_full_version >= '3.11'
     # via reproject
-dateparser==1.2.2
+dateparser==1.3.0
     # via gwpy
-debugpy==1.8.16
+debugpy==1.8.20
     # via ipykernel
 decorator==5.2.1
     # via
     #   cdci-data-analysis
     #   ipython
-dill==0.4.0
+dill==0.4.1
     # via pylint
 donfig==0.8.1.post1 ; python_full_version >= '3.11'
     # via zarr
@@ -167,11 +149,11 @@ dqsegdb2==1.3.0
     # via gwpy
 entrypoints==0.4
     # via papermill
-exceptiongroup==1.3.0 ; python_full_version < '3.11'
+exceptiongroup==1.3.1 ; python_full_version < '3.11'
     # via
     #   ipython
     #   pytest
-execnet==2.1.1
+execnet==2.1.2
     # via pytest-xdist
 executing==2.2.1
     # via stack-data
@@ -186,41 +168,39 @@ flask==2.0.3
     #   flask-restx
 flask-restx==1.2.0
     # via cdci-data-analysis
-fonttools==4.59.2
+fonttools==4.61.1
     # via matplotlib
-frozenlist==1.7.0 ; python_full_version == '3.12.*'
+frozenlist==1.8.0 ; python_full_version == '3.12.*'
     # via
     #   aiohttp
     #   aiosignal
-fsspec==2025.7.0
+fsspec==2026.2.0
     # via
     #   dask
     #   reproject
-gitdb==4.0.12
-    # via gitpython
-gitpython==3.1.45
+google-crc32c==1.8.0 ; python_full_version >= '3.11'
+    # via zarr
+gunicorn==25.1.0
     # via cdci-data-analysis
-giturlparse==0.12.0
-    # via cdci-data-analysis
-gunicorn==23.0.0
-    # via cdci-data-analysis
-gwdatafind==2.1.0
+gwdatafind==2.1.1
     # via gwpy
 gwosc==0.8.1
     # via gwpy
-gwpy==3.0.13
+gwpy==3.0.14 ; python_full_version < '3.11'
     # via oda-api
-h5py==3.14.0
+gwpy==4.0.1 ; python_full_version >= '3.11'
+    # via oda-api
+h5py==3.15.1
     # via
     #   gwpy
     #   ligo-skymap
-healpy==1.18.1
+healpy==1.19.0
     # via ligo-skymap
 html5lib==1.1
     # via astroquery
 humanfriendly==10.0
     # via coloredlogs
-idna==3.10
+idna==3.11
     # via
     #   requests
     #   yarl
@@ -229,11 +209,11 @@ igwn-auth-utils==1.4.0
     #   dqsegdb2
     #   gwdatafind
     #   ligo-gracedb
-igwn-ligolw==2.1.0
+igwn-ligolw==2.1.1
     # via
     #   lalsuite
     #   ligo-skymap
-igwn-segments==2.1.0
+igwn-segments==2.1.1
     # via
     #   dqsegdb2
     #   gwdatafind
@@ -242,32 +222,34 @@ igwn-segments==2.1.0
     #   lalsuite
     #   ligo-skymap
     #   lscsoft-glue
-importlib-metadata==8.7.0 ; python_full_version < '3.12'
+imageio==2.37.2 ; python_full_version >= '3.11'
+    # via pims
+importlib-metadata==8.7.1 ; python_full_version < '3.12'
     # via
     #   dask
     #   keyring
 importlib-resources==6.5.2
     # via flask-restx
-iniconfig==2.1.0
+iniconfig==2.3.0
     # via pytest
-ipykernel==6.30.1
-ipython==8.37.0 ; python_full_version < '3.11'
+ipykernel==7.2.0
+ipython==8.38.0 ; python_full_version < '3.11'
     # via ipykernel
-ipython==9.5.0 ; python_full_version >= '3.11'
+ipython==9.10.0 ; python_full_version >= '3.11'
     # via ipykernel
 ipython-pygments-lexers==1.1.1 ; python_full_version >= '3.11'
     # via ipython
 isodate==0.7.2 ; python_full_version < '3.11'
     # via rdflib
-isort==6.0.1
+isort==8.0.0
     # via pylint
 itsdangerous==2.2.0
     # via flask
 jaraco-classes==3.4.0
     # via keyring
-jaraco-context==6.0.1
+jaraco-context==6.1.0
     # via keyring
-jaraco-functools==4.3.0
+jaraco-functools==4.4.0
     # via keyring
 jedi==0.19.2
     # via ipython
@@ -289,25 +271,25 @@ jsonschema==4.17.3
     #   flask-restx
     #   nbformat
     #   oda-api
-jupyter-client==8.6.3
+jupyter-client==8.8.0
     # via
     #   ipykernel
     #   nbclient
-jupyter-core==5.8.1
+jupyter-core==5.9.1
     # via
     #   ipykernel
     #   jupyter-client
     #   nbclient
     #   nbformat
-keyring==25.6.0
+keyring==25.7.0
     # via astroquery
 kiwisolver==1.4.9
     # via matplotlib
-kombu==5.5.4
-    # via celery
-lalsuite==7.26.1
+lalsuite==7.26.4
     # via ligo-skymap
-ligo-gracedb==2.14.2
+librt==0.8.1 ; platform_python_implementation != 'PyPy'
+    # via mypy
+ligo-gracedb==2.14.3
     # via ligo-skymap
 ligo-segments==1.4.0 ; python_full_version < '3.11'
     # via
@@ -315,9 +297,11 @@ ligo-segments==1.4.0 ; python_full_version < '3.11'
     #   python-ligo-lw
 ligo-skymap==2.3.0 ; python_full_version < '3.11'
     # via oda-api
-ligo-skymap==2.4.0 ; python_full_version >= '3.11'
+ligo-skymap==2.5.3 ; python_full_version >= '3.11'
     # via oda-api
-ligotimegps==2.0.1
+ligotimegps==2.0.1 ; python_full_version < '3.11'
+    # via gwpy
+ligotimegps==2.1.0 ; python_full_version >= '3.11'
     # via gwpy
 locket==1.0.0
     # via partd
@@ -327,19 +311,19 @@ lscsoft-glue==4.1.1
     # via
     #   lalsuite
     #   python-ligo-lw
-lxml==6.0.1
+lxml==6.0.2
     # via pylogstash-context
-markupsafe==3.0.2
+markupsafe==3.0.3
     # via jinja2
 marshmallow==3.23.3
     # via cdci-data-analysis
-matplotlib==3.10.6
+matplotlib==3.10.8
     # via
     #   gwpy
     #   lalsuite
     #   ligo-skymap
     #   oda-api
-matplotlib-inline==0.1.7
+matplotlib-inline==0.2.1
     # via
     #   ipykernel
     #   ipython
@@ -347,35 +331,34 @@ mccabe==0.7.0
     # via
     #   flake8
     #   pylint
-more-itertools==10.7.0
+more-itertools==10.8.0
     # via
     #   jaraco-classes
     #   jaraco-functools
-multidict==6.6.4 ; python_full_version == '3.12.*'
+multidict==6.7.1 ; python_full_version == '3.12.*'
     # via
     #   aiohttp
     #   yarl
-mypy==1.17.1
+mypy==1.19.1
 mypy-extensions==1.1.0
     # via
     #   black
     #   mypy
-nbclient==0.10.2
+nbclient==0.10.4
     # via papermill
 nbformat==5.10.4
     # via
-    #   cdci-data-analysis
     #   nbclient
     #   papermill
 nest-asyncio==1.6.0
     # via ipykernel
 networkx==3.4.2 ; python_full_version < '3.11'
     # via ligo-skymap
-networkx==3.5 ; python_full_version >= '3.11'
+networkx==3.6.1 ; python_full_version >= '3.11'
     # via ligo-skymap
 numcodecs==0.13.1 ; python_full_version < '3.11'
     # via zarr
-numcodecs==0.16.2 ; python_full_version >= '3.11'
+numcodecs==0.16.5 ; python_full_version >= '3.11'
     # via zarr
 numpy==1.26.4 ; python_full_version < '3.11'
     # via
@@ -404,7 +387,7 @@ numpy==1.26.4 ; python_full_version < '3.11'
     #   scipy
     #   shapely
     #   zarr
-numpy==2.3.2 ; python_full_version >= '3.11'
+numpy==2.4.2 ; python_full_version >= '3.11'
     # via
     #   astroplan
     #   astropy
@@ -414,23 +397,26 @@ numpy==2.3.2 ; python_full_version >= '3.11'
     #   cdci-data-analysis
     #   contourpy
     #   dask
+    #   dask-image
     #   gwpy
     #   h5py
     #   healpy
     #   igwn-ligolw
+    #   imageio
     #   lalsuite
     #   ligo-skymap
     #   matplotlib
     #   numcodecs
     #   oda-api
     #   pandas
-    #   ptemcee
+    #   pims
     #   pyerfa
     #   reproject
     #   scipy
     #   shapely
+    #   tifffile
     #   zarr
-packaging==25.0
+packaging==26.0
     # via
     #   astropy
     #   black
@@ -439,31 +425,39 @@ packaging==25.0
     #   gunicorn
     #   gwpy
     #   ipykernel
-    #   kombu
     #   marshmallow
     #   matplotlib
+    #   pims
     #   pytest
     #   zarr
-pandas==2.3.2
+pandas==2.3.3 ; python_full_version < '3.11'
     # via bokeh
+pandas==3.0.1 ; python_full_version >= '3.11'
+    # via
+    #   bokeh
+    #   dask
+    #   dask-image
 papermill==2.6.0
-parso==0.8.5
+parso==0.8.6
     # via jedi
 partd==1.4.2
     # via dask
-pathspec==0.12.1
+pathspec==1.0.4
     # via
     #   black
     #   mypy
 pexpect==4.9.0 ; sys_platform != 'emscripten' and sys_platform != 'win32'
     # via ipython
-pillow==11.3.0
+pillow==12.1.1
     # via
     #   bokeh
+    #   imageio
     #   ligo-skymap
     #   matplotlib
     #   reproject
-platformdirs==4.4.0
+pims==0.7 ; python_full_version >= '3.11'
+    # via dask-image
+platformdirs==4.9.2
     # via
     #   black
     #   jupyter-core
@@ -471,32 +465,32 @@ platformdirs==4.4.0
 pluggy==1.6.0
     # via pytest
 prompt-toolkit==3.0.52
-    # via
-    #   click-repl
-    #   ipython
-propcache==0.3.2 ; python_full_version == '3.12.*'
+    # via ipython
+propcache==0.4.1 ; python_full_version == '3.12.*'
     # via
     #   aiohttp
     #   yarl
-psutil==7.0.0
+psutil==7.2.2
     # via
     #   ipykernel
     #   pytest-xdist
-psycopg2-binary==2.9.10
-    # via cdci-data-analysis
-ptemcee==1.0.0
+ptemcee==1.0.0 ; python_full_version < '3.11'
     # via ligo-skymap
 ptyprocess==0.7.0 ; sys_platform != 'emscripten' and sys_platform != 'win32'
     # via pexpect
 pure-eval==0.2.3
     # via stack-data
-puremagic==1.30
+puremagic==1.30 ; python_full_version < '3.12'
     # via oda-api
-pyavm==0.9.6 ; python_full_version >= '3.11'
+puremagic==2.0.0 ; python_full_version >= '3.12'
+    # via oda-api
+pyarrow==23.0.1 ; python_full_version >= '3.11'
+    # via dask
+pyavm==0.9.8 ; python_full_version >= '3.11'
     # via reproject
 pycodestyle==2.14.0
     # via flake8
-pycparser==2.22 ; implementation_name == 'pypy' or platform_python_implementation != 'PyPy'
+pycparser==3.0 ; (implementation_name != 'PyPy' and platform_python_implementation != 'PyPy') or (implementation_name == 'pypy' and platform_python_implementation == 'PyPy')
     # via cffi
 pyerfa==2.0.1.5
     # via astropy
@@ -507,15 +501,15 @@ pygments==2.19.2
     #   ipython
     #   ipython-pygments-lexers
     #   pytest
-pyjwt==2.10.1
+pyjwt==2.11.0
     # via
     #   cdci-data-analysis
     #   oda-api
     #   scitokens
-pylint==3.3.8
+pylint==4.0.5
 pylogstash-context==0.1.19
     # via cdci-data-analysis
-pyparsing==3.2.3
+pyparsing==3.3.2
     # via
     #   matplotlib
     #   rdflib
@@ -523,12 +517,11 @@ pyreadline3==3.5.4 ; sys_platform == 'win32'
     # via humanfriendly
 pyrsistent==0.20.0
     # via jsonschema
-pytest==8.4.1
+pytest==9.0.2
     # via pytest-xdist
 pytest-xdist==3.8.0
 python-dateutil==2.9.0.post0
     # via
-    #   celery
     #   dateparser
     #   gwpy
     #   igwn-ligolw
@@ -541,8 +534,8 @@ python-ligo-lw==1.8.4 ; python_full_version < '3.11'
     # via ligo-skymap
 python-logstash==0.4.8
     # via cdci-data-analysis
-python-shell-colors==0.2.1
-    # via cdci-data-analysis
+pytokens==0.4.1
+    # via black
 pytz==2025.2
     # via
     #   astroplan
@@ -550,13 +543,11 @@ pytz==2025.2
     #   flask-restx
     #   ligo-skymap
     #   pandas
-pyvo==1.7
+pyvo==1.8.1
     # via astroquery
-pywin32==311 ; platform_python_implementation != 'PyPy' and sys_platform == 'win32'
-    # via jupyter-core
 pywin32-ctypes==0.2.3 ; sys_platform == 'win32'
     # via keyring
-pyyaml==6.0.2
+pyyaml==6.0.3
     # via
     #   astropy
     #   bokeh
@@ -566,23 +557,17 @@ pyyaml==6.0.2
     #   igwn-ligolw
     #   papermill
     #   python-ligo-lw
-pyzmq==27.0.2
+pyzmq==27.1.0
     # via
     #   ipykernel
     #   jupyter-client
-queryparser-python3==0.7.4
-    # via cdci-data-analysis
-raven==6.10.0
-    # via cdci-data-analysis
-rdflib==7.1.4
+rdflib==7.6.0
     # via oda-api
-redis==6.4.0
-    # via cdci-data-analysis
-regex==2025.8.29
+regex==2026.2.19
     # via dateparser
 reproject==0.14.1 ; python_full_version < '3.11'
     # via ligo-skymap
-reproject==0.15.0 ; python_full_version >= '3.11'
+reproject==0.19.0 ; python_full_version >= '3.11'
     # via ligo-skymap
 requests==2.32.5
     # via
@@ -604,8 +589,9 @@ scipy==1.15.3 ; python_full_version < '3.11'
     #   ligo-skymap
     #   oda-api
     #   reproject
-scipy==1.16.1 ; python_full_version >= '3.11'
+scipy==1.17.1 ; python_full_version >= '3.11'
     # via
+    #   dask-image
     #   gwpy
     #   lalsuite
     #   ligo-skymap
@@ -613,47 +599,50 @@ scipy==1.16.1 ; python_full_version >= '3.11'
     #   reproject
 scitokens==1.8.1
     # via igwn-auth-utils
-secretstorage==3.3.3 ; sys_platform == 'linux'
+secretstorage==3.5.0 ; sys_platform == 'linux'
     # via keyring
-sentry-sdk==2.35.2
+sentry-sdk==2.53.0
     # via cdci-data-analysis
-shapely==2.1.1
+shapely==2.1.2
     # via ligo-skymap
 six==1.17.0
     # via
     #   astroplan
-    #   cdci-data-analysis
     #   html5lib
     #   ligo-segments
     #   pylogstash-context
     #   python-dateutil
     #   python-ligo-lw
-smmap==5.0.2
-    # via gitdb
-soupsieve==2.8
+slicerator==1.1.0 ; python_full_version >= '3.11'
+    # via pims
+soupsieve==2.8.3
     # via beautifulsoup4
 stack-data==0.6.3
     # via ipython
-tenacity==9.1.2
+tenacity==9.1.4
     # via papermill
-tomli==2.2.1 ; python_full_version < '3.11'
+tifffile==2026.2.20 ; python_full_version >= '3.11'
+    # via
+    #   dask-image
+    #   pims
+tomli==2.4.0 ; python_full_version < '3.11'
     # via
     #   black
     #   mypy
     #   pylint
     #   pytest
-tomlkit==0.13.3
+tomlkit==0.14.0
     # via pylint
-toolz==1.0.0
+toolz==1.1.0
     # via
     #   dask
     #   partd
-tornado==6.5.2
+tornado==6.5.4
     # via
     #   bokeh
     #   ipykernel
     #   jupyter-client
-tqdm==4.67.1
+tqdm==4.67.3
     # via
     #   gwpy
     #   igwn-ligolw
@@ -670,38 +659,33 @@ traitlets==5.14.3
     #   nbclient
     #   nbformat
 types-click==7.1.8
-types-requests==2.32.4.20250809
+types-requests==2.32.4.20260107
 typing-extensions==4.15.0
     # via
     #   aiosignal
     #   astroid
     #   beautifulsoup4
     #   black
+    #   cryptography
     #   exceptiongroup
     #   ipython
     #   mypy
     #   numcodecs
     #   zarr
-tzdata==2025.2
+tzdata==2025.3 ; python_full_version < '3.11' or sys_platform == 'emscripten' or sys_platform == 'win32'
     # via
-    #   kombu
     #   pandas
     #   tzlocal
 tzlocal==5.3.1
     # via dateparser
-urllib3==2.5.0
+urllib3==2.6.3
     # via
     #   requests
     #   sentry-sdk
     #   types-requests
 validators==0.28.3
     # via cdci-data-analysis
-vine==5.1.0
-    # via
-    #   amqp
-    #   celery
-    #   kombu
-wcwidth==0.2.13
+wcwidth==0.6.0
     # via prompt-toolkit
 webencodings==0.5.1
     # via html5lib
@@ -710,13 +694,13 @@ werkzeug==2.0.3
     #   cdci-data-analysis
     #   flask
     #   flask-restx
-xyzservices==2025.4.0
+xyzservices==2025.11.0
     # via bokeh
-yarl==1.20.1 ; python_full_version == '3.12.*'
+yarl==1.22.0 ; python_full_version == '3.12.*'
     # via aiohttp
 zarr==2.18.3 ; python_full_version < '3.11'
     # via reproject
-zarr==3.1.2 ; python_full_version >= '3.11'
+zarr==3.1.5 ; python_full_version >= '3.11'
     # via reproject
 zipp==3.23.0 ; python_full_version < '3.12'
     # via importlib-metadata

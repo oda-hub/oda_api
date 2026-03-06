@@ -1,5 +1,6 @@
 __author__ = "Andrea Tramacere"
 
+import mimetypes
 import typing
 
 import traceback
@@ -840,22 +841,9 @@ class PictureProduct:
             self.write_file(file_path)
         else:
             self.file_path = None                        
-        tp = puremagic.what(None, h=binary_data)
-        if tp not in [ # the same as was in imghdr
-            'rgb',
-            'gif',
-            'pbm',
-            'pgm',
-            'ppm',
-            'tiff',
-            'rast',
-            'xbm',
-            'jpeg',
-            'bmp',
-            'png',
-            'webp',
-            'exr',
-        ]:
+        tp = puremagic.from_string(binary_data).lstrip('.')
+        known_img = [t.lstrip('.') for t,v in mimetypes.types_map.items() if v.startswith('image')]
+        if tp not in known_img:
             raise ValueError('Provided data is not an image')
         self.img_type = tp
     

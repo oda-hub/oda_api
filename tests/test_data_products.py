@@ -176,19 +176,20 @@ def test_astropy_table():
 
     assert (tabp_decoded.table.as_array().tolist() == data).all()
     assert tabp_decoded.table.colnames == ['a', 'b']
-    
-def test_bin_image():
+
+@pytest.mark.parametrize('ext', ['png', 'jpg', 'svg', 'webp', 'tiff'])
+def test_bin_image(ext):
     data = np.zeros((10, 2))
     data[:,0] = range(len(data))
     data[:,1] = np.random.rand(len(data))
     plt.plot(data[:,0], data[:,1])
-    if os.path.isfile('tmp.png'):
-        os.remove('tmp.png')
-    plt.savefig('tmp.png')
-    with open('tmp.png', 'rb') as fd:
+    if os.path.isfile(f'tmp.{ext}'):
+        os.remove(f'tmp.{ext}')
+    plt.savefig(f'tmp.{ext}')
+    with open(f'tmp.{ext}', 'rb') as fd:
         figdata = fd.read()
 
-    bin_image = PictureProduct.from_file('tmp.png')
+    bin_image = PictureProduct.from_file(f'tmp.{ext}')
     
     assert bin_image.binary_data == figdata
     
