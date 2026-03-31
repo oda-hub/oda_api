@@ -126,7 +126,10 @@ def test_get(dispatcher_live_fixture, caplog, monkeypatch, tmpdir):
     runner = CliRunner()
     result = runner.invoke(cli.cli, ['-u', dispatcher_live_fixture, 'get', '-i', 'empty'], obj={})
     assert result.exit_code == 0
-    assert "'prod_dict': {'dummy': 'empty_parameters_dummy_query', 'echo': 'echo_parameters_dummy_query', 'failing': '" in caplog.text
+    assert "{'prod_dict': {" in caplog.text
+    assert "'dummy': 'empty_parameters_dummy_query'" in caplog.text
+    assert "'echo': 'echo_parameters_dummy_query'" in caplog.text
+    assert "'failing': 'failing_parameters_dummy_query'" in caplog.text
 
     runner = CliRunner()
     result = runner.invoke(cli.cli, ['-u', dispatcher_live_fixture, '--no-wait', 'get', '-i', 'empty', '-p', 'dummy', '-a', 'product_type=Dummy'], obj={})
