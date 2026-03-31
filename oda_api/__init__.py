@@ -1,17 +1,14 @@
 import pkgutil
 import os
-import json
+from importlib.metadata import version as pkg_ver
+
 
 __author__ = "Andrea Tramacere"
-
-with open(os.path.dirname(__file__) + '/pkg_info.json') as fp:
-    _info = json.load(fp)
-
+__version__ = pkg_ver("oda-api")
 
 pkg_dir = os.path.abspath(os.path.dirname(__file__))
 pkg_name = os.path.basename(pkg_dir)
 
-__version__=_info['version']
 
 __all__=[]
 for importer, modname, ispkg in pkgutil.walk_packages(path=[pkg_dir],
