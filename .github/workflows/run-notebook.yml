@@ -30,6 +30,7 @@ jobs:
 
     - name: Run Tutorial Notebooks
       id: nb
+      timeout-minutes: 30
       run: |
         cd ./oda-api
         set +e
