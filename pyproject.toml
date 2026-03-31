@@ -95,3 +95,6 @@ filename = "doc/source/user_guide/UploadToGallery.ipynb"
 
 [[tool.bumpversion.files]]
 filename = "doc/source/install.rst" 
+
+[[tool.bumpversion.files]]
+filename = "doc/source/conf.py"
