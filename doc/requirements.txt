@@ -125,7 +125,7 @@ markupsafe==3.0.3
     # via
     #   jinja2
     #   nbconvert
-matplotlib==3.10.8
+matplotlib==3.9.4
     # via oda-api
 mistune==3.2.0
     # via nbconvert

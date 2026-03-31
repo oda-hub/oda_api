@@ -317,7 +317,7 @@ markupsafe==3.0.3
     # via jinja2
 marshmallow==3.23.3
     # via cdci-data-analysis
-matplotlib==3.10.8
+matplotlib==3.9.4
     # via
     #   gwpy
     #   lalsuite
