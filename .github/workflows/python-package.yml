@@ -28,11 +28,12 @@ jobs:
 
     - name: Install the project
       run: |
+        curl -o tests/oda-ontology.ttl https://raw.githubusercontent.com/oda-hub/ontology/main/ontology.ttl
+
         if [ "${{ matrix.python-version }}" == "3.14" ]; then
           uv sync --locked --dev # no lalsuite for 3.14
         else
           uv sync --locked --all-extras --dev
-          curl -o tests/oda-ontology.ttl https://raw.githubusercontent.com/oda-hub/ontology/main/ontology.ttl
         fi
     - name: Lint with flake8
       run: |
