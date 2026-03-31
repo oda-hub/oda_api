@@ -9,4 +9,4 @@ repos:
         args: ["--no-hashes", "--all-extras", "--dev", "-o", "requirements-dev.txt"]
       - id: uv-export
         name: uv-export doc requirements
-        args: ["--no-hashes", "--only-group", "docs", "-o", "doc/requirements.txt"]
+        args: ["--no-hashes", "--group", "docs", "--no-dev", "-o", "doc/requirements.txt"]
