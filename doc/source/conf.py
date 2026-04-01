@@ -14,7 +14,6 @@
 #
 import os
 import sys
-import json
 sys.path.insert(0, os.path.abspath('../../'))
 #import oda_api
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
@@ -26,11 +25,7 @@ project = 'oda_api'
 author = 'Andrea Tramacere, Volodymyr Savchenko, Gabriele Barni'
 copyright = '2021, ' + author
 
-
-with open('../../oda_api/pkg_info.json') as fp:
-    _info = json.load(fp)
-
-__version__ = _info['version']
+__version__ = "1.3.3"
 
 version = __version__
 
