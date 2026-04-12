@@ -25,8 +25,7 @@ dependencies = [
     "json_tricks",
     "matplotlib>=3.9.4", # for compatibility with gammapy==2.0.1 (requires mpl<3.10)
     "bokeh>3.0,<3.2",
-    "numpy>=2.0 ; python_full_version >= '3.11'",
-    "numpy<2.0 ; python_full_version < '3.11'",
+    "numpy>=2.0",
     "jsonschema",
     "pyjwt",
     "astroquery>=0.4.4",
