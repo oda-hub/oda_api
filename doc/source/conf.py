@@ -25,7 +25,7 @@ project = 'oda_api'
 author = 'Andrea Tramacere, Volodymyr Savchenko, Gabriele Barni'
 copyright = '2021, ' + author
 
-__version__ = "1.3.3"
+__version__ = "1.3.4"
 
 version = __version__
 
