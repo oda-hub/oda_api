@@ -18,11 +18,14 @@ from oda_api.data_products import (LightCurveDataProduct,
                                    ODAAstropyTable, 
                                    PictureProduct,
                                    BinaryProduct,
-                                   TextLikeProduct)
+                                   TextLikeProduct,
+                                   ApiCatalog)
 from astropy import time as atime
 from astropy import units as u
 from astropy.table import Table
 from matplotlib import pyplot as plt
+
+from astropy.utils.diff import report_diff_values
 
 import base64
 import pickle
@@ -320,6 +323,47 @@ def test_lightcurve_data_product_write_file_roundtrip(tmp_path):
     assert np.array_equal(loaded.data_unit[1].data['FLUX'], np.array(values))
     assert np.array_equal(loaded.data_unit[1].data['ERROR'], np.array(errors))
 
+def test_catalog_data_product_write_file_roundtrip(tmp_path):
+    catalog_ecsv = """\
+# %ECSV 1.0
+# ---
+# datatype:
+# - {name: meta_ID, datatype: int64}
+# - {name: src_names, datatype: string}
+# - {name: significance, datatype: float32}
+# - {name: ra, datatype: float32}
+# - {name: dec, datatype: float32}
+# - {name: NEW_SOURCE, datatype: uint16}
+# - {name: ISGRI_FLAG, datatype: int64}
+# - {name: FLAG, datatype: int64}
+# - {name: ERR_RAD, datatype: float64}
+# meta: !!omap
+# - {FRAME: fk5}
+# - {LAT_NAME: dec}
+# - {COORD_UNIT: deg}
+# - {LON_NAME: ra}
+# schema: astropy-2.0
+meta_ID src_names significance ra dec NEW_SOURCE ISGRI_FLAG FLAG ERR_RAD
+0 "IGR J15311-3737" 0.0 0.0 0.0 0 1 0 0.0750000029802
+1 "IGR J15409-4057" 0.804126 235.259 -40.9678 0 1 0 0.00860999990255
+"""
+    ecsv_file_in = tmp_path / 'catalog.ecsv'
+    with open(ecsv_file_in, 'w') as fd:
+        fd.write(catalog_ecsv)
+
+    ecsv_file_out = tmp_path / 'catalog.ecsv'
+    fits_file_out = tmp_path / 'catalog.fits'
+
+    catalog = ApiCatalog.from_file(ecsv_file_in, name = 'example catalog', format = 'ascii.ecsv')
+    catalog.write_file(ecsv_file_out)
+    catalog.write_file(fits_file_out)
+
+    with open(ecsv_file_out, 'r') as fd:
+        assert fd.read() == catalog_ecsv
+    
+    from_fits = ApiCatalog.from_file(fits_file_out, name = 'example catalog 1', format = 'fits')
+    assert report_diff_values(from_fits.table, from_fits.table)
+
 
 def test_save_all_data_mixed_collection(tmp_path):
     table = Table({'a': [1, 2], 'b': [3, 4]})
@@ -333,7 +377,18 @@ def test_save_all_data_mixed_collection(tmp_path):
     picture = PictureProduct.from_file(str(plot_fn), name='pic')
     text = TextLikeProduct('hello', name='text')
     lc = LightCurveDataProduct.from_arrays(['2022-02-20T13:45:34', '2022-02-20T14:45:34'], fluxes=[2, 3], errors=[0.1, 0.2])
-    dc = DataCollection([astable, bin_prod, picture, text, lc])
+    ascii_catalog = """\
+meta_ID src_names significance ra dec NEW_SOURCE ISGRI_FLAG FLAG ERR_RAD
+0 "IGR J15311-3737" 0.0 0.0 0.0 0 1 0 0.0750000029802
+1 "IGR J15409-4057" 0.804126 235.259 -40.9678 0 1 0 0.00860999990255
+"""
+    catalog_fn_in = tmp_path / 'catalog.csv'
+    with open(catalog_fn_in, 'w') as fd:
+        fd.write(ascii_catalog)
+    
+    catalog = ApiCatalog.from_file(catalog_fn_in, name='catalog', format='ascii', delimiter=' ')
+
+    dc = DataCollection([astable, bin_prod, picture, text, lc, catalog])
 
     out_dir = tmp_path / 'saved'
     os.makedirs(out_dir, exist_ok=True)
@@ -345,6 +400,7 @@ def test_save_all_data_mixed_collection(tmp_path):
         out_dir / 'mixed_pic_2.png',
         out_dir / 'mixed_text_3.txt',
         out_dir / 'mixed_prod_4.fits',
+        out_dir / 'mixed_catalog_5.ecsv',
     ]
 
     for expected in expected_files:

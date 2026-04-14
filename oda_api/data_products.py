@@ -733,61 +733,100 @@ class NumpyDataProduct(DataProduct):
     def write_file(self, file_path, overwrite=True):
         self.write_fits_file(file_path, overwrite=overwrite)
 
-class ApiCatalog(object):
-
-
-    def __init__(self,cat_dict,name=None):
+class ApiCatalog(DataProduct):
+    def __init__(self, catalog_data: dict | Table, name: str | None = None):
         self.name=name
         _skip_list=['meta_ID']
-        meta = {}
         
-        lon_name = None
-        if 'cat_lon_name' in cat_dict.keys():
-            lon_name =  cat_dict['cat_lon_name']
+        if isinstance(catalog_data, dict):
+            meta = {}
 
-        lat_name = None
-        if 'cat_lat_name' in cat_dict.keys():
-            lat_name = cat_dict['cat_lat_name']
+            lon_name = None
+            if 'cat_lon_name' in catalog_data.keys():
+                lon_name =  catalog_data['cat_lon_name']
 
-        frame = None
-        if 'cat_frame' in cat_dict.keys():
-            frame = cat_dict['cat_frame']
+            lat_name = None
+            if 'cat_lat_name' in catalog_data.keys():
+                lat_name = catalog_data['cat_lat_name']
 
-        coord_units = None
-        if 'cat_coord_units' in cat_dict.keys():
-            coord_units = cat_dict['cat_coord_units']
+            frame = None
+            if 'cat_frame' in catalog_data.keys():
+                frame = catalog_data['cat_frame']
 
-        if 'cat_meta' in cat_dict.keys():
-            cat_meta_entry = cat_dict['cat_meta']
-            meta.update(cat_meta_entry)
-        
-        meta['FRAME'] = frame
-        meta['COORD_UNIT'] = coord_units
-        meta['LON_NAME'] = lon_name
-        meta['LAT_NAME'] = lat_name
+            coord_units = None
+            if 'cat_coord_units' in catalog_data.keys():
+                coord_units = catalog_data['cat_coord_units']
 
-        self.table =Table(cat_dict['cat_column_list'], names=cat_dict['cat_column_names'],meta=meta)
+            if 'cat_meta' in catalog_data.keys():
+                cat_meta_entry = catalog_data['cat_meta']
+                meta.update(cat_meta_entry)
+            
+            meta['FRAME'] = frame
+            meta['COORD_UNIT'] = coord_units
+            meta['LON_NAME'] = lon_name
+            meta['LAT_NAME'] = lat_name
 
-        if coord_units is not None:
-            self.table[lon_name]=Angle(self.table[lon_name],unit=coord_units)
-            self.table[lat_name]=Angle(self.table[lat_name],unit=coord_units)
+            self.table =Table(catalog_data['cat_column_list'], names=catalog_data['cat_column_names'],meta=meta)
 
-        self.lat_name=lat_name
-        self.lon_name=lon_name
+            if coord_units is not None:
+                self.table[lon_name]=Angle(self.table[lon_name],unit=coord_units)
+                self.table[lat_name]=Angle(self.table[lat_name],unit=coord_units)
 
-    def get_api_dictionary(self ):
+            self.lat_name=lat_name
+            self.lon_name=lon_name
+        else:
+            self.table = catalog_data
+            meta = getattr(self.table, 'meta', {})
+            self.lat_name = meta.get('LAT_NAME')
+            self.lon_name = meta.get('LON_NAME')
+
+
+    def get_api_dictionary(self, dump_string=True):
         column_lists = []
         for colname in self.table.colnames:
             column_lists.append([x if str(x) != 'nan' else None for x in self.table[colname]])
                                 
-
-        return json.dumps(dict(cat_frame=self.table.meta['FRAME'], # pyright: ignore[reportOptionalSubscript]
+        cat_dict = dict(cat_frame=self.table.meta['FRAME'], # pyright: ignore[reportOptionalSubscript]
                     cat_coord_units=self.table.meta['COORD_UNIT'], # pyright: ignore[reportOptionalSubscript]
                     cat_column_list=column_lists,
                     cat_column_names=self.table.colnames,
                     cat_column_descr=self.table.dtype.descr,
                     cat_lat_name=self.lat_name,
-                    cat_lon_name=self.lon_name))
+                    cat_lon_name=self.lon_name)
+        if dump_string:
+            return json.dumps(cat_dict)
+        else:
+            return cat_dict
+
+    def encode(self):
+        return self.get_api_dictionary(dump_string=False)
+    
+    @classmethod
+    def decode(cls, encoded_obj : str | dict[str, typing.Any], name: str | None = None) -> "ApiCatalog":
+        if isinstance(encoded_obj, str):
+            obj = json.loads(encoded_obj)
+        else:
+            obj = encoded_obj
+
+        return cls(obj, name = name)
+
+    def suggest_fn_extension(self) -> str:
+        return 'ecsv'
+
+    def write_file(self, file_path, overwrite=True):
+            # determine format from the file extension
+            self.table.write(file_path, overwrite=overwrite)
+
+    @classmethod
+    def from_file(cls, file_path: str, name: str | None = None, delimiter: str | None = None, format: str | None = None):
+        allowed_formats=['ascii','ascii.ecsv','fits']
+        if format in allowed_formats:
+            kw = {'delimiter': delimiter} if format != 'fits' and delimiter is not None else {}
+            table = Table.read(file_path, format=format, **kw)
+        else:
+            raise RuntimeError(f'Catalog file format not understood, allowed: {allowed_formats}')
+
+        return cls(table, name=name)
 
 class GWEventContours:
     def __init__(self, event_contour_dict, name='') -> None:
