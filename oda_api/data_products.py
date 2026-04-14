@@ -2,8 +2,8 @@ __author__ = "Andrea Tramacere"
 
 import mimetypes
 import typing
-
 import traceback
+from warnings import deprecated
 
 from json_tricks import numpy_encode,dumps
 from astropy.io import fits as pf
@@ -13,9 +13,10 @@ from astropy.utils.misc import JsonCustomEncoder
 
 from astropy.table import Table
 from astropy.coordinates import Angle
+from astropy.time import Time as aTime
 from astropy.wcs import WCS
 from astropy import units as u
-from astropy.io.fits import FITS_rec
+from astropy.io.fits import FITS_rec, FitsHDU, Header
 
 import  numpy
 import numpy as np
@@ -25,46 +26,76 @@ import gzip
 import  hashlib
 
 from io import StringIO, BytesIO
+import pandas as pd
 import puremagic
 import os
 import logging
 from matplotlib import image as mpimg
 from matplotlib import pyplot as plt
 
+from abc import ABC, abstractmethod
+
 logger = logging.getLogger('oda_api.data_products')
-
-__all__=['_chekc_enc_data','BinaryData','NumpyDataUnit','NumpyDataProduct','ApiCatalog','ODAAstropyTable']
-
-import astropy.io.fits.fitsrec
-
 
 
 
 def _chekc_enc_data(data):
-    if type(data)==list:
+    if isinstance(data, list):
         _l=data
     else:
         _l=[data]
 
     return _l
 
-class ODAAstropyTable(object):
 
-    def __init__(self,table_object,name=None, meta_data={}):
+class DataProduct(ABC):
+    @abstractmethod
+    def encode(self, *args, **kwargs) -> str | dict[str, typing.Any]: ...
+
+    @classmethod
+    @abstractmethod
+    def decode(cls, *args, **kwargs) -> "DataProduct": ...
+
+    @abstractmethod
+    def write_file(self, file_path, overwrite=True): ...
+
+    @classmethod
+    @abstractmethod
+    def from_file(cls, *args, **kwargs) -> "DataProduct": ...
+
+    @abstractmethod
+    def suggest_fn_extension(self) -> str: ...
+
+
+class ODAAstropyTable(DataProduct):
+    def __init__(self,table_object: Table, name: str | None = None, meta_data: dict | None = None):
+        if meta_data is None:
+            meta_data = {}
         self.name=name
         self.meta_data=meta_data
         self._table=table_object
 
+    def suggest_fn_extension(self) -> str:
+        return 'fits'
+
     @property
     def table(self):
         return self._table
-
+    
     def write(self,file_name,format='fits',overwrite=True):
         self._table.write(file_name,format=format,overwrite=overwrite)
 
     def write_fits_file(self,file_name,overwrite=True):
         self.write(file_name,overwrite=overwrite,format='fits')
 
+    def write_file(self, file_path, overwrite=True):
+        if file_path.endswith('.fits'):
+            self.write_fits_file(file_path, overwrite=overwrite)
+        else:
+            # determine the format from the file extension
+            self._table.write(file_path, overwrite=overwrite)
+
+    
     @classmethod
     def from_file(cls, file_path, name=None, delimiter=None, format=None):
         _allowed_formats_=['ascii','ascii.ecsv','fits']
@@ -103,12 +134,12 @@ class ODAAstropyTable(object):
         _o_dict['name']=self.name
         _o_dict['meta_data']=dumps(self.meta_data)
 
-        if to_json == True:
+        if to_json:
             _o_dict=json.dumps(_o_dict)
         return   _o_dict
 
     @classmethod
-    def decode(cls,o_dict,use_binary=False):
+    def decode(cls, o_dict: dict[str, typing.Any], use_binary=False):
         if isinstance(o_dict, dict):
             _o_dict = o_dict
         elif isinstance(o_dict, str):
@@ -121,24 +152,25 @@ class ODAAstropyTable(object):
             t_rec = base64.b64decode(_o_dict['binary'])
             try:
                 t_rec = pickle.loads(t_rec)
-            except:
-                t_rec= pickle.loads(t_rec,encoding='latin')
+            except Exception:
+                t_rec = pickle.loads(t_rec, encoding='latin')
 
         else:
             t_rec = astropy_io_ascii.read(_o_dict['ascii'])
 
-        return cls(t_rec,name=encoded_name,meta_data=encoded_meta_data)
+        return cls(typing.cast(Table, t_rec),name=encoded_name,meta_data=encoded_meta_data)
 
 
+@deprecated('BinaryData class is deprecated, please use BinaryProduct instead')
 class BinaryData(object):
 
     def __init__(self,file_path=None):
         self.file_path=file_path
 
     def encode(self,file_path=None):
-        if file_path==None:
+        if file_path is None:
             file_path=self.file_path
-        _file_binary = open(file_path, 'rb').read()
+        _file_binary = open(file_path, 'rb').read() # type: ignore
         _file_b64 = base64.urlsafe_b64encode(_file_binary)
         _file_b64_md5 = hashlib.md5(_file_binary).hexdigest()
 
@@ -148,13 +180,20 @@ class BinaryData(object):
         return base64.urlsafe_b64decode(encoded_obj.encode('ascii', 'ignore'))
          
 
-class BinaryProduct:
+class BinaryProduct(DataProduct):
     # New implementation of binary data product. 
     # The meaning of the methods is more in-line with the rest of the products
-    def __init__(self, bin_data, name=None):
+    def __init__(self, bin_data: bytes, name: str | None = None):
         self.bin_data = bin_data
-        if name == 'None': name = None
+        if name == 'None': 
+            name = None
         self.name = name
+
+    def suggest_fn_extension(self) -> str:
+        suggested_extension = puremagic.from_string(self.bin_data)
+        if suggested_extension:
+            return suggested_extension
+        return 'bin'
         
     def encode(self):
         return {
@@ -164,18 +203,22 @@ class BinaryProduct:
         }
     
     @classmethod
-    def decode(cls, encoded_obj):
-        if not isinstance(encoded_obj, dict):
-            encoded_obj = json.loads(encoded_obj)
+    def decode(cls, encoded_obj: dict | str):
+        if isinstance(encoded_obj, str):
+            _encoded_obj: dict = json.loads(encoded_obj)
+        else:
+            _encoded_obj = encoded_obj
             
-        name = encoded_obj['name']
-        bin_data = base64.urlsafe_b64decode(encoded_obj['data'].encode('ascii', 'ignore'))
+        name = _encoded_obj['name']
+        bin_data = base64.urlsafe_b64decode(_encoded_obj['data'].encode('ascii', 'ignore'))
         decoded_md5 = hashlib.md5(bin_data).hexdigest()
-        assert decoded_md5 == encoded_obj['md5']
+        assert decoded_md5 == _encoded_obj['md5']
         
         return cls(bin_data, name)
     
-    def write_file(self, file_path):
+    def write_file(self, file_path, overwrite = True):
+        if os.path.exists(file_path) and not overwrite:
+            raise FileExistsError(f'File {file_path} already exists')
         with open(file_path, 'wb') as fd:
             fd.write(self.bin_data)
     
@@ -185,9 +228,23 @@ class BinaryProduct:
             bin_data = fd.read()
         return cls(bin_data, name)
 
-class NumpyDataUnit(object):
 
-    def __init__(self, data, data_header={}, meta_data={}, hdu_type=None, name=None, units_dict=None):
+
+class NumpyDataUnit:
+
+    def __init__(self, 
+                 data: numpy.ndarray | None, 
+                 data_header: dict | None =None, 
+                 meta_data: dict | None = None, 
+                 hdu_type: str | None = None, 
+                 name: str | None = None, 
+                 units_dict: dict | None = None):
+
+        if meta_data is None:
+            meta_data = {}
+        if data_header is None:
+            data_header = {}
+
         self._hdu_type_list_ = ['primary', 'image', 'table', 'bintable']
 
         self.name=name
@@ -228,38 +285,28 @@ class NumpyDataUnit(object):
         self._warn_chekc_typo()
         return self._check_dict(_kw)
 
-
-    def _check_data(self,data):
-        if isinstance(data, numpy.ndarray) or data is None:
-            pass
-        else:
+    def _check_data(self, data: numpy.ndarray | None):
+        if not (isinstance(data, numpy.ndarray) or data is None):
             raise RuntimeError('data is not numpy ndarray object')
 
-    def _check_hdu_type(self,hdu_type):
-        if hdu_type is None:
-            pass
-        elif hdu_type in self._hdu_type_list_:
-            pass
-        else:
-            raise RuntimeError('hdu type ', hdu_type, 'not in allowed', self._hdu_type_list_)
+    def _check_hdu_type(self, hdu_type: str | None):
+        if not (hdu_type is None or hdu_type in self._hdu_type_list_):
+            raise RuntimeError(f"hdu type {hdu_type} not in allowed {self._hdu_type_list_}")
     
-    def _check_dict(self,_kw):
-
-        if isinstance(_kw, dict):
-            pass
-        else:
-            raise RuntimeError('object is not not dict')
+    def _check_dict(self, d: dict):
+        if not isinstance(d, dict):
+            raise RuntimeError('object is not dict')
 
 
     @classmethod
-    def from_fits_hdu(cls,hdu,name=None):
+    def from_fits_hdu(cls, hdu: FitsHDU, name=None):
 
         if name is None or name == '':
-            name=hdu.name
+            name = hdu.name
 
         r = cls(data=hdu.data,
-                   data_header={k:v for k, v in hdu.header.items()},
-                   hdu_type=cls._map_hdu_type(hdu),name=name)
+                data_header={k:v for k, v in hdu.header.items()},
+                hdu_type=cls._map_hdu_type(hdu),name=name)
         # this is needed to re-read the file due to variable length file
         r.to_fits_hdu()
         return r
@@ -280,29 +327,32 @@ class NumpyDataUnit(object):
             for k,v in self.header.items():
                 if isinstance(v, list):
                     s=''
-                    for l in v:
-                        s+='%s,'%str(l)
+                    for el in v:
+                        s+='%s,'%str(el)
                     
                     self.header[k] = s
                     #unicode(",".join(map(str,v)))
 
-            return  self.new_hdu_from_data(self.data,
-                                    header=pf.header.Header(self.header),
-                                    hdu_type=self.hdu_type,units_dict=self.units_dict)
+            return  self.new_hdu_from_data(
+                self.data,
+                header=pf.header.Header(self.header),
+                hdu_type=self.hdu_type,
+                units_dict=self.units_dict)
+        
         except Exception as e:
             error_message = 'an exception occurred in oda_api when binary products are formatted to fits header: ' + repr(e)
             logger.error(error_message)
             logger.error('traceback: %s', traceback.format_exc())
-            raise Exception("an exception occurred in oda_api when binary products are formatted to fits header: " + repr(e))
+            raise Exception("an exception occurred in oda_api when binary products are formatted to fits header") from e
 
 
 
     @staticmethod
-    def _map_hdu_type(hdu):
+    def _map_hdu_type(hdu: FitsHDU):
         _t=''
-        if isinstance(hdu,pf.PrimaryHDU):
+        if isinstance(hdu, pf.PrimaryHDU):
             _t= 'primary'
-        elif isinstance(hdu,pf.ImageHDU):
+        elif isinstance(hdu, pf.ImageHDU):
             _t = 'image'
         elif isinstance(hdu, pf.BinTableHDU):
             _t = 'bintable'
@@ -310,10 +360,12 @@ class NumpyDataUnit(object):
             _t = 'table'
         else:
             raise RuntimeError('hdu type not understood')
-        #print('_t',_t)
         return _t
 
-    def new_hdu_from_data(self,data,hdu_type, header=None,units_dict=None):
+    def new_hdu_from_data(self, 
+                          data: numpy.ndarray | None, 
+                          hdu_type: str | None, 
+                          header: Header | None = None, units_dict: dict | None = None):
 
         self._check_hdu_type(hdu_type)
 
@@ -329,25 +381,24 @@ class NumpyDataUnit(object):
             raise RuntimeError('hdu type ', hdu_type, 'not in allowed', self._hdu_type_list_)
 
 
-        _h=h(data=data, header=header)
-        _h.name=self.name
+        _h = h(data=data, header=header)
+        _h.name = self.name
         if units_dict is not None:
+            if isinstance(_h, pf.ImageHDU) or isinstance(_h, pf.PrimaryHDU):
+                raise RuntimeError('units_dict is not None but hdu is not a table')
 
             for k in units_dict.keys():
-                _h.columns.change_unit(k,units_dict[k])
+                _h.columns.change_unit(k, units_dict[k]) # pyright: ignore[reportOptionalMemberAccess]
+
             self.header=dict(_h.header)
         return _h
 
     @staticmethod
     def _eval_dt(dt):
-        #print('dt', type(dt), dt)
         try:
             dt = numpy.dtype(dt)
-
-        except:
-
+        except Exception:
             dt = eval(dt)
-        #print('dt', type(dt), dt)
         return dt
 
 
@@ -361,20 +412,18 @@ class NumpyDataUnit(object):
         if self.data is not None:
             _dt= numpy_encode(numpy.array(self.data))['dtype']
 
-            if use_pickle is True:
-
-                if isinstance(self.data, astropy.io.fits.fitsrec.FITS_rec):
+            if use_pickle:
+                if isinstance(self.data, FITS_rec):
                     pickled_data = pickle.dumps(self.data)
                 else:
                     pickled_data = pickle.dumps(numpy.array(self.data))
 
-                if use_gzip==True:
-                    out_file = StringIO(pickled_data)
-                    gzip_file = gzip.GzipFile(fileobj=out_file, mode='wb')
-
-                    gzip_file.write(pickled_data)
-                    _binarys = base64.b64encode(out_file.getvalue())
-                    gzip_file.close()
+                if use_gzip:
+                    with BytesIO(pickled_data) as out_file:
+                        with gzip.GzipFile(fileobj=out_file, mode='wb') as gzip_file:
+                            gzip_file.write(pickled_data)
+                            _binarys = base64.b64encode(out_file.getvalue())
+                        
                 else:
                     _binarys= base64.b64encode(
                         pickled_data
@@ -403,16 +452,15 @@ class NumpyDataUnit(object):
 
 
     @classmethod
-    def decode(cls,encoded_obj,use_gzip=False,from_json=False):
-        #encoded_obj=eval(encoded_obj)
-        #encoded_obj=json.loads(encoded_obj)
-        #print('-->encoded_obj',type(encoded_obj))
+    def decode(cls, encoded_obj: str | dict, use_gzip=False, from_json=False):
 
-        if from_json == False:
+        if not from_json:
             try:
-                encoded_obj = json.loads(encoded_obj)
-            except:
+                encoded_obj = json.loads(encoded_obj) # type: ignore
+            except (json.JSONDecodeError, TypeError):
                 pass
+        
+        encoded_obj = typing.cast(dict, encoded_obj) 
 
         encoded_data = encoded_obj['data']
         encoded_dt=encoded_obj['dt']
@@ -424,21 +472,19 @@ class NumpyDataUnit(object):
         _units_dict = encoded_obj.get('units_dict')
 
         if _binarys is not None:
-            #print('dec ->', type(_binarys))
-            in_file = StringIO()
-            _binarys = base64.b64decode(_binarys)
+            with BytesIO() as in_file:
+                _binarys = base64.b64decode(_binarys)
 
-            if use_gzip ==True:
-                in_file.write(_binarys)
-                in_file.seek(0)
+                if use_gzip:
+                    in_file.write(_binarys)
+                    in_file.seek(0)
 
-                gzip_file = gzip.GzipFile(fileobj=in_file, mode='rb')
-                _data = gzip_file.read()
-                _data = _data.decode('utf-8')
-                _data = pickle.loads(_data)
-                gzip_file.close()
-            else:
-                _data = pickle.loads(_binarys,encoding='bytes')
+                    with gzip.GzipFile(fileobj=in_file, mode='rb') as gzip_file:
+                        _data = gzip_file.read().decode('utf-8')
+                        _data = pickle.loads(_data) # type: ignore
+                        
+                else:
+                    _data = pickle.loads(_binarys, encoding='bytes')
             
         elif encoded_data is not None:
             encoded_data=eval(encoded_data) # !!
@@ -461,15 +507,23 @@ class NumpyDataUnit(object):
 
     @classmethod
     def from_pandas(cls, 
-                    pandas_dataframe, 
-                    name = None, 
-                    column_names=[], 
-                    units_dict={}, 
-                    meta_data = {},
-                    data_header = {}):
-        if column_names and type(column_names) == list:
+                    pandas_dataframe: pd.DataFrame, 
+                    name: str | None = None, 
+                    column_names: list | None = None, 
+                    units_dict: dict | None = None, 
+                    meta_data: dict | None = None,
+                    data_header: dict | None = None):
+        if data_header is None:
+            data_header = {}
+        if meta_data is None:
+            meta_data = {}
+        if units_dict is None:
+            units_dict = {}
+        if column_names is None:
+            column_names = []
+        if column_names and isinstance(column_names, list):
             pandas_dataframe = pandas_dataframe.loc[:, column_names]
-        elif column_names and type(column_names) == dict:
+        elif column_names and isinstance(column_names, dict):
             pandas_dataframe = pandas_dataframe.loc[:, column_names.keys()]
             pandas_dataframe.rename(columns=column_names, inplace=True)
         rec_array = pandas_dataframe.to_records(index=False)
@@ -482,16 +536,25 @@ class NumpyDataUnit(object):
         
 
 
-class NumpyDataProduct(object):
+class NumpyDataProduct(DataProduct):
+    def __init__(
+        self,
+        data_unit: NumpyDataUnit | list[NumpyDataUnit],
+        name: str | None = None,
+        meta_data: dict | None = None,
+    ):
 
-    def __init__(self, data_unit, name=None, meta_data={}):
-
+        if meta_data is None:
+            meta_data = {}
+        
         self.name=name
 
-        self.data_unit=self._seta_data(data_unit)
-        self._chekc_dict(meta_data)
+        self.data_unit=self._set_data(data_unit)
+        self._check_dict(meta_data)
         self.meta_data=meta_data
 
+    def suggest_fn_extension(self) -> str:
+        return 'fits'
 
     def show(self):
         print('------------------------------')
@@ -513,56 +576,48 @@ class NumpyDataProduct(object):
         try:
             return self.data_unit[ID]
         except IndexError as e:
-            raise RuntimeError(f"problem get_data_unit ID:{ID} in self.data_unit:{self.data_unit}")
+            raise RuntimeError(f"problem get_data_unit ID:{ID} in self.data_unit:{self.data_unit}") from e
 
     def get_data_unit_by_name(self, name: str) -> typing.Union[NumpyDataUnit, None]:
         _du = None
 
+        du = None
         for du in self.data_unit:
             if du.name == name:
                 if _du is not None:
-                    print(f"\033[31mWARNING: get_data_unit_by_name found multiple du for name {name}\033[0m")
+                    logger.warning(f"get_data_unit_by_name found multiple du for name {name}")
                 _du = du
-            print('--> NAME',du.name)
+            logger.info(f'--> NAME {du.name}')
 
         if _du is None:
             found_names = '; '.join([ str(_du.name) + ":" + repr(du) for _du in self.data_unit ])
-            print(f"\033[31mWARNING: get_data_unit_by_name found no du for name {name}, have {found_names}\033[0m")
+            logger.warning(f"get_data_unit_by_name found no du for name {name}, have {found_names}")
 
         return _du
 
-    def _seta_data(self,data):
-        if type(data) == list:
+    def _set_data(self, data: NumpyDataUnit | list[NumpyDataUnit]):
+        if isinstance(data, list):
             _dl = data
         else:
             _dl = [data]
 
-        for ID, _d  in enumerate(_dl):
-            if isinstance(_d, NumpyDataUnit):
-                pass
-            else:
+        for _ID, _d  in enumerate(_dl):
+            if not isinstance(_d, NumpyDataUnit):
                 raise RuntimeError ('DataUnit not valid')
-
-
+            
         return _dl
 
-    def _chekc_enc_data(self,data):
+    def _chekc_enc_data(self, data):
         return _chekc_enc_data(data)
 
-    def _chekc_dict(self,_kw):
-
-        if isinstance(_kw, dict):
-            pass
-        else:
+    def _check_dict(self, _kw: dict):
+        if not isinstance(_kw, dict):
             raise RuntimeError('object is not not dict')
-
-
-
 
     def encode(self, use_pickle=True, use_gzip=False, to_json=False):
         _enc = []
 
-        for ID, data_unit in enumerate(self.data_unit):
+        for _ID, data_unit in enumerate(self.data_unit):
             _enc.append(
                 data_unit.encode(
                         use_pickle=use_pickle,
@@ -572,45 +627,50 @@ class NumpyDataProduct(object):
 
         _o_dict={'data_unit_list':_enc,'name':self.name,'meta_data':dumps(self.meta_data)}
 
-        if to_json==True:
+        if to_json:
             return json.dumps(_o_dict)
 
         return _o_dict
 
-
-
-
     def to_fits_hdu_list(self):
         _hdul=pf.HDUList()
-        for ID,_d in enumerate(self.data_unit):
+        for _ID,_d in enumerate(self.data_unit):
             _hdul.append(_d.to_fits_hdu())
         return _hdul
 
-
-    def write_fits_file(self,filename,overwrite=True):
-
-        self.to_fits_hdu_list().writeto(filename,overwrite=overwrite)
-
-
+    def write_fits_file(self, filename: str, overwrite=True):
+        self.to_fits_hdu_list().writeto(filename, overwrite=overwrite)
 
     @classmethod
-    def from_fits_file(cls,filename,ext=None,hdu_name=None,meta_data={},name=''):
+    def from_fits_file(
+        cls,
+        filename: str,
+        ext: int | str | None = None,
+        hdu_name: str | None = None,
+        meta_data: dict | None = None,
+        name: str = "",
+    ):
+        if meta_data is None:
+            meta_data = {}
+
         hdul=pf.open(filename)
         if ext is not None:
-            hdul=[hdul[ext]]
+            hdul = [hdul[ext]]
 
         if hdu_name is not None:
-            _hdul=[]
+            _hdul = []
             for hdu in hdul:
-                if hdu.name == hdu_name:
+                if hdu.name == hdu_name: # type: ignore
                     _hdul.append(hdu)
+
             hdul=_hdul
 
-        return cls(data_unit=[NumpyDataUnit.from_fits_hdu(h) for h in  hdul],meta_data=meta_data,name=name)
+        return cls(data_unit=[NumpyDataUnit.from_fits_hdu(h) for h in  hdul],meta_data=meta_data,name=name) # pyright: ignore[reportArgumentType]
         
 
     @classmethod
     def decode(cls, encoded_obj: typing.Union[str, dict], from_json=False):
+        
         if encoded_obj is not None:
             # from_json has the opposite meaning of what the name implies
             obj_dict: dict 
@@ -628,8 +688,7 @@ class NumpyDataProduct(object):
                     try:
                         obj_dict = json.loads(encoded_obj)
                     except Exception as e:
-                        logger.debug('unable to decode json object: %s', e)                    
-                        # why not raise here?                
+                        raise RuntimeError('unable to decode json object') from e 
 
             encoded_data_unit_list = obj_dict['data_unit_list']
             encoded_name = obj_dict['name']
@@ -644,9 +703,32 @@ class NumpyDataProduct(object):
             encoded_name=None
             encoded_meta_data={}
 
-        return cls(data_unit=_data_unit_list,name=encoded_name,meta_data=eval(encoded_meta_data))
+        if isinstance(encoded_meta_data, str):
+            try:
+                encoded_meta_data = json.loads(encoded_meta_data)
+            except Exception:  # fallback if was not properly encoded, backward compatibility
+                encoded_meta_data = eval(encoded_meta_data)
 
+        return cls(data_unit=_data_unit_list,name=encoded_name,meta_data=encoded_meta_data)
 
+    @classmethod
+    def from_file(
+        cls,
+        filename: str,
+        ext: int | str | None = None,
+        hdu_name: str | None = None,
+        meta_data: dict | None = None,
+        name: str = "",
+    ):
+        return cls.from_fits_file(
+            filename=filename,
+            ext=ext, 
+            hdu_name=hdu_name, 
+            meta_data=meta_data, 
+            name=name)
+    
+    def write_file(self, file_path, overwrite=True):
+        self.write_fits_file(file_path, overwrite=overwrite)
 
 class ApiCatalog(object):
 
@@ -691,14 +773,13 @@ class ApiCatalog(object):
         self.lon_name=lon_name
 
     def get_api_dictionary(self ):
+        column_lists = []
+        for colname in self.table.colnames:
+            column_lists.append([x if str(x) != 'nan' else None for x in self.table[colname]])
+                                
 
-
-        column_lists=[self.table[name].tolist() for name in self.table.colnames]
-        for ID,_col in enumerate(column_lists):
-            column_lists[ID] = [x if str(x)!='nan' else None for x in _col]
-
-        return json.dumps(dict(cat_frame=self.table.meta['FRAME'],
-                    cat_coord_units=self.table.meta['COORD_UNIT'],
+        return json.dumps(dict(cat_frame=self.table.meta['FRAME'], # pyright: ignore[reportOptionalSubscript]
+                    cat_coord_units=self.table.meta['COORD_UNIT'], # pyright: ignore[reportOptionalSubscript]
                     cat_column_list=column_lists,
                     cat_column_names=self.table.colnames,
                     cat_column_descr=self.table.dtype.descr,
@@ -732,10 +813,12 @@ class LightCurveDataProduct(NumpyDataProduct):
                     rates = None,
                     counts = None,
                     errors = None,
-                    units_spec = {}, # TODO: not used yet
+                    units_spec = None, # TODO: not used yet
                     time_format = None,
                     name = None):
         
+        if units_spec is None:
+            units_spec = {}
         data_header = {}
         meta_data = {} # meta data could be attached to both NumpyDataUnit and NumpyDataProduct. Decide on this
         
@@ -764,28 +847,28 @@ class LightCurveDataProduct(NumpyDataProduct):
         # TODO: possibility for other time units
         # TODO: add time-related keywords to header (OGIP)
         units_dict = {'TIME': 'd'}
-        if any(isinstance(x, astropy.time.Time) for x in times):
-            times = astropy.time.Time(times)
+        if any(isinstance(x, aTime) for x in times):
+            times = aTime(times)
                         
-        if isinstance(times, astropy.time.Time):
+        if isinstance(times, aTime):
             mjd = times.mjd
         elif time_format is not None:
-            atimes = astropy.time.Time(times, format=time_format) # NOTE: do we assume paticular scale?
+            atimes = aTime(times, format=time_format) # NOTE: do we assume paticular scale?
             mjd = atimes.mjd 
         else:
-            atimes = astropy.time.Time(times)
+            atimes = aTime(times)
             mjd = atimes.mjd 
         
         if any(isinstance(x, u.Quantity) for x in values):
             values = u.Quantity(values)
         if isinstance(values, u.Quantity):
-            units_dict[col_name] = values.unit.to_string(format='OGIP')
+            units_dict[col_name] = values.unit.to_string(format='OGIP') # pyright: ignore[reportOptionalMemberAccess]
             values = values.value
             
         if errors is not None and any(isinstance(x, u.Quantity) for x in errors):
             errors = u.Quantity(errors)
         if errors is not None and isinstance(errors, u.Quantity):
-            units_dict['ERROR'] = errors.unit.to_string(format='OGIP')
+            units_dict['ERROR'] = errors.unit.to_string(format='OGIP') # pyright: ignore[reportOptionalMemberAccess]
             errors = errors.value
 
         timedel_is_array = False
@@ -799,7 +882,7 @@ class LightCurveDataProduct(NumpyDataProduct):
                 
             if np.isscalar(td_days):
                 # treat numeric scalar as days by default
-                td_days = float(td_days)
+                td_days = float(td_days) # pyright: ignore[reportArgumentType]
                 data_header['TIMEDEL'] = td_days
             else:
                 # If it's array-like, ensure it matches times length
@@ -808,16 +891,13 @@ class LightCurveDataProduct(NumpyDataProduct):
                         raise ValueError('timedel length must match times length when providing an array')
                     units_dict['TIMEDEL'] = 'd'
                     timedel = np.asarray(timedel)
-                except TypeError:
-                    raise ValueError('timedel type not understood; expected scalar, Quantity, or array-like')    
+                except TypeError as e:
+                    raise ValueError('timedel type not understood; expected scalar, Quantity, or array-like') from e
         
         if timedel is None or timedel_is_array is False:
-            rec_array = np.core.records.fromarrays([mjd, values, errors], 
-                                                   names=('TIME', col_name, 'ERROR'))
+            rec_array = np.rec.fromarrays([mjd, values, errors], names=("TIME", col_name, "ERROR"))  # type:ignore
         else:
-            rec_array = np.core.records.fromarrays([mjd, values, errors, 
-                                                    timedel], names=('TIME',
-                                                        col_name, 'ERROR', 'TIMEDEL'))
+            rec_array = np.rec.fromarrays([mjd, values, errors, timedel], names=("TIME", col_name, "ERROR", "TIMEDEL"))  # type:ignore
         
         return cls([NumpyDataUnit(data=np.array([]), name = 'PRIMARY', hdu_type = 'primary'),
                     NumpyDataUnit(data = rec_array,
@@ -829,8 +909,10 @@ class LightCurveDataProduct(NumpyDataProduct):
                    name = name)            
 
 
-class PictureProduct:
-    def __init__(self, binary_data, name=None, metadata={}, file_path=None, write_on_creation=False):
+class PictureProduct(DataProduct):
+    def __init__(self, binary_data, name=None, metadata=None, file_path=None, write_on_creation=False):
+        if metadata is None:
+            metadata = {}
         self.binary_data = binary_data
         self.metadata = metadata
         self.name = name
@@ -847,13 +929,18 @@ class PictureProduct:
             raise ValueError('Provided data is not an image')
         self.img_type = tp
     
+    def suggest_fn_extension(self) -> str:
+        return f'{self.img_type}'
+
     @classmethod
     def from_file(cls, file_path, name=None):
         with open(file_path, 'rb') as fd:
             binary_data = fd.read()
         return cls(binary_data, name=name, file_path=file_path)
             
-    def write_file(self, file_path):
+    def write_file(self, file_path, overwrite=False):
+        if os.path.isfile(file_path) and not overwrite:
+            raise FileExistsError(f'File {file_path} already exists. Use overwrite=True')
         logger.info(f'Creating image file {file_path}.')
         with open(file_path, 'wb') as fd:
             fd.write(self.binary_data)
@@ -892,7 +979,9 @@ class PictureProduct:
         
 class ImageDataProduct(NumpyDataProduct):  
     @classmethod
-    def from_fits_file(cls,filename,ext=None,hdu_name=None,meta_data={},name=None):
+    def from_fits_file(cls,filename,ext=None,hdu_name=None,meta_data=None,name=None):
+        if meta_data is None:
+            meta_data = {}
         npdp = super().from_fits_file(filename,ext=ext,hdu_name=hdu_name,meta_data=meta_data,name=name)
 
         contains_image = cls.check_contains_image(npdp)
@@ -906,14 +995,17 @@ class ImageDataProduct(NumpyDataProduct):
         for hdu in numpy_data_prod.data_unit:
             if hdu.hdu_type in ['primary', 'image']:
                 try:
-                    wcs = WCS(hdu.header)
+                    WCS(hdu.header)
                     return True
-                except:
+                except Exception:
                     pass
+                    
         return False
         
-class TextLikeProduct:
-    def __init__(self, value, name=None, meta_data={}):
+class TextLikeProduct(DataProduct):
+    def __init__(self, value, name=None, meta_data=None):
+        if meta_data is None:
+            meta_data = {}
         self.value = value
         self.name = name
         self.meta_data = meta_data
@@ -933,3 +1025,19 @@ class TextLikeProduct:
         
     def __repr__(self):
         return self.encode().__repr__()
+
+    def write_file(self, file_path, overwrite=True):
+        if os.path.isfile(file_path) and not overwrite:
+            raise FileExistsError(f"File {file_path} already exists")
+        with open(file_path, 'w') as fd:
+            fd.write(self.value)
+    
+    @classmethod
+    def from_file(cls, file_path: str, name: str | None = None, meta_data: dict | None = None) -> DataProduct:
+        with open(file_path, 'r') as fd:
+            value = fd.read()
+        return cls(name=name, value=value, meta_data=meta_data)
+    
+    def suggest_fn_extension(self) -> str:
+        return 'txt'
+

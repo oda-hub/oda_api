@@ -46,7 +46,6 @@ try:
 except ModuleNotFoundError:
     pass
 
-
 logger = logging.getLogger("oda_api.api")
 advice_logger = logging.getLogger("oda_api.advice")
 
