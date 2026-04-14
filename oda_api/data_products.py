@@ -784,7 +784,7 @@ class ApiCatalog(DataProduct):
     def get_api_dictionary(self, dump_string=True):
         column_lists = []
         for colname in self.table.colnames:
-            column_lists.append([x if str(x) != 'nan' else None for x in self.table[colname]])
+            column_lists.append([x if str(x) != 'nan' else None for x in self.table[colname].tolist()]) # type: ignore
                                 
         cat_dict = dict(cat_frame=self.table.meta['FRAME'], # pyright: ignore[reportOptionalSubscript]
                     cat_coord_units=self.table.meta['COORD_UNIT'], # pyright: ignore[reportOptionalSubscript]
