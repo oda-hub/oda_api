@@ -51,3 +51,4 @@ tests/.oda-token
 
 dispatcher-state.json
 tests/dispatcher-state.json
+tmp.*

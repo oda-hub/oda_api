@@ -1,4 +1,5 @@
 from datetime import datetime
+import logging
 
 import pytest
 import json
@@ -8,6 +9,7 @@ import numpy as np
 import time
 import os
 import typing
+from oda_api.api import DataCollection
 from oda_api.json import CustomJSONEncoder
 import filecmp
 
@@ -15,11 +17,15 @@ from oda_api.data_products import (LightCurveDataProduct,
                                    NumpyDataProduct, 
                                    ODAAstropyTable, 
                                    PictureProduct,
-                                   BinaryProduct)
+                                   BinaryProduct,
+                                   TextLikeProduct,
+                                   ApiCatalog)
 from astropy import time as atime
 from astropy import units as u
 from astropy.table import Table
 from matplotlib import pyplot as plt
+
+from astropy.utils.diff import report_diff_values
 
 import base64
 import pickle
@@ -252,3 +258,168 @@ def test_decode_wrong_replacement():
     infile = 'tests/test_data/1E_1740_7_2942_isgri_mosaic_clean_significance25_40.fits.gz'
     npd = NumpyDataProduct.from_fits_file(infile)
     encode_decode(npd)
+
+
+def test_textlike_product_write_file_roundtrip(tmp_path):
+    prod = TextLikeProduct('hello world', name='textprod')
+
+    out_txt = tmp_path / 'hello.txt'
+    prod.write_file(str(out_txt))
+    assert out_txt.read_text(encoding='utf-8') == 'hello world'
+
+
+def test_picture_product_write_file_roundtrip(tmp_path):
+    fn = tmp_path / 'plot.png'
+    plt.plot([0, 1], [0, 1])
+    plt.savefig(str(fn))
+    plt.close()
+
+    picture = PictureProduct.from_file(str(fn), name='picprod')
+    out_fn = tmp_path / 'out_plot.png'
+    picture.write_file(str(out_fn))
+
+    assert out_fn.read_bytes() == fn.read_bytes()
+
+
+def test_odaatable_write_file_roundtrip(tmp_path):
+    data = np.zeros((3, 2))
+    data[:, 0] = range(len(data))
+    data[:, 1] = range(len(data), 0, -1)
+    table = Table(data, names=['a', 'b'])
+    tabp = ODAAstropyTable(table, name='tableprod')
+
+    out_fn = tmp_path / 'table.fits'
+    tabp.write_file(str(out_fn))
+
+    loaded = ODAAstropyTable.from_file(str(out_fn), format='fits')
+    assert loaded.table.colnames == ['a', 'b']
+    assert np.array_equal(np.asarray(loaded.table['a']), data[:, 0])
+    assert np.array_equal(np.asarray(loaded.table['b']), data[:, 1])
+
+
+def test_numpy_data_product_write_file_roundtrip(tmp_path):
+    fn = tmp_path / 'numeric.fits'
+    hdu = fits.PrimaryHDU(np.arange(4).reshape((2, 2)))
+    hdu.writeto(str(fn), overwrite=True)
+
+    prod = NumpyDataProduct.from_file(str(fn))
+    out_fn = tmp_path / 'roundtrip.fits'
+    prod.write_file(str(out_fn))
+
+    loaded = NumpyDataProduct.from_file(str(out_fn))
+    assert np.array_equal(loaded.data_unit[0].data, prod.data_unit[0].data)
+
+
+def test_lightcurve_data_product_write_file_roundtrip(tmp_path):
+    times = ['2022-02-20T13:45:34', '2022-02-20T14:45:34']
+    values = [2, 3]
+    errors = [0.1, 0.1]
+    lc = LightCurveDataProduct.from_arrays(times=times, fluxes=values, errors=errors)
+
+    out_fn = tmp_path / 'lightcurve.fits'
+    lc.write_file(str(out_fn))
+
+    loaded = NumpyDataProduct.from_file(str(out_fn))
+    assert np.array_equal(loaded.data_unit[1].data['FLUX'], np.array(values))
+    assert np.array_equal(loaded.data_unit[1].data['ERROR'], np.array(errors))
+
+def test_catalog_data_product_write_file_roundtrip(tmp_path):
+    catalog_ecsv = """\
+# %ECSV 1.0
+# ---
+# datatype:
+# - {name: meta_ID, datatype: int64}
+# - {name: src_names, datatype: string}
+# - {name: significance, datatype: float32}
+# - {name: ra, datatype: float32}
+# - {name: dec, datatype: float32}
+# - {name: NEW_SOURCE, datatype: uint16}
+# - {name: ISGRI_FLAG, datatype: int64}
+# - {name: FLAG, datatype: int64}
+# - {name: ERR_RAD, datatype: float64}
+# meta: !!omap
+# - {FRAME: fk5}
+# - {LAT_NAME: dec}
+# - {COORD_UNIT: deg}
+# - {LON_NAME: ra}
+# schema: astropy-2.0
+meta_ID src_names significance ra dec NEW_SOURCE ISGRI_FLAG FLAG ERR_RAD
+0 "IGR J15311-3737" 0.0 0.0 0.0 0 1 0 0.0750000029802
+1 "IGR J15409-4057" 0.804126 235.259 -40.9678 0 1 0 0.00860999990255
+"""
+    ecsv_file_in = tmp_path / 'catalog.ecsv'
+    with open(ecsv_file_in, 'w') as fd:
+        fd.write(catalog_ecsv)
+
+    ecsv_file_out = tmp_path / 'catalog.ecsv'
+    fits_file_out = tmp_path / 'catalog.fits'
+
+    catalog = ApiCatalog.from_file(ecsv_file_in, name = 'example catalog', format = 'ascii.ecsv')
+    catalog.write_file(ecsv_file_out)
+    catalog.write_file(fits_file_out)
+
+    with open(ecsv_file_out, 'r') as fd:
+        assert fd.read() == catalog_ecsv
+    
+    from_fits = ApiCatalog.from_file(fits_file_out, name = 'example catalog 1', format = 'fits')
+    assert report_diff_values(from_fits.table, from_fits.table)
+
+
+def test_save_all_data_mixed_collection(tmp_path):
+    table = Table({'a': [1, 2], 'b': [3, 4]})
+    astable = ODAAstropyTable(table, name='table')
+    bin_prod = BinaryProduct.from_file('tests/test_data/lc.fits', name='binprd')
+
+    plot_fn = tmp_path / 'plot.png'
+    plt.plot([1, 2], [1, 0])
+    plt.savefig(str(plot_fn))
+    plt.close()
+    picture = PictureProduct.from_file(str(plot_fn), name='pic')
+    text = TextLikeProduct('hello', name='text')
+    lc = LightCurveDataProduct.from_arrays(['2022-02-20T13:45:34', '2022-02-20T14:45:34'], fluxes=[2, 3], errors=[0.1, 0.2])
+    ascii_catalog = """\
+meta_ID src_names significance ra dec NEW_SOURCE ISGRI_FLAG FLAG ERR_RAD
+0 "IGR J15311-3737" 0.0 0.0 0.0 0 1 0 0.0750000029802
+1 "IGR J15409-4057" 0.804126 235.259 -40.9678 0 1 0 0.00860999990255
+"""
+    catalog_fn_in = tmp_path / 'catalog.csv'
+    with open(catalog_fn_in, 'w') as fd:
+        fd.write(ascii_catalog)
+    
+    catalog = ApiCatalog.from_file(catalog_fn_in, name='catalog', format='ascii', delimiter=' ')
+
+    dc = DataCollection([astable, bin_prod, picture, text, lc, catalog])
+
+    out_dir = tmp_path / 'saved'
+    os.makedirs(out_dir, exist_ok=True)
+    dc.save_all_data(prenpend_name=str(out_dir / 'mixed'))
+
+    expected_files = [
+        out_dir / 'mixed_table_0.fits',
+        out_dir / 'mixed_binprd_1.fits',
+        out_dir / 'mixed_pic_2.png',
+        out_dir / 'mixed_text_3.txt',
+        out_dir / 'mixed_prod_4.fits',
+        out_dir / 'mixed_catalog_5.ecsv',
+    ]
+
+    for expected in expected_files:
+        assert expected.exists()
+
+
+def test_save_all_data_empty_collection(tmp_path):
+    dc = DataCollection([])
+    dc.save_all_data(prenpend_name=str(tmp_path / 'empty'))
+    assert not any(tmp_path.iterdir())
+
+
+def test_save_all_data_skips_unsupported_product(caplog, tmp_path):
+    caplog.set_level(logging.WARNING)
+    text = TextLikeProduct('hello', name='text')
+    unsupported = object()
+    dc = DataCollection([text, unsupported])
+
+    dc.save_all_data(prenpend_name=str(tmp_path / 'skipped'))
+
+    assert 'Writing on disk is not implemented for' in caplog.text
+    assert (tmp_path / 'skipped_text_0.txt').exists()

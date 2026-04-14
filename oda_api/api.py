@@ -21,7 +21,7 @@ import warnings
 from collections import OrderedDict
 from itertools import cycle
 from json.decoder import JSONDecodeError
-from typing import Tuple, Union
+from typing import Tuple, Union, cast
 
 import numpy as np
 import rdflib
@@ -35,7 +35,7 @@ from oda_api.token import TokenLocation
 from . import __version__
 from . import colors as C
 from . import custom_formatters
-from .data_products import (ApiCatalog, BinaryData, BinaryProduct,
+from .data_products import (ApiCatalog, BinaryData, BinaryProduct, DataProduct,
                             GWContoursDataProduct, NumpyDataProduct,
                             ODAAstropyTable, PictureProduct, TextLikeProduct)
 
@@ -45,7 +45,6 @@ try:
     from gwpy.timeseries.timeseries import TimeSeries
 except ModuleNotFoundError:
     pass
-
 
 logger = logging.getLogger("oda_api.api")
 advice_logger = logging.getLogger("oda_api.advice")
@@ -58,9 +57,9 @@ class Request(object):
 class NoTraceBackWithLineNumber(Exception):
     def __init__(self, msg):
         try:
-            ln = sys.exc_info()[-1].tb_lineno
+            ln = sys.exc_info()[-1].tb_lineno # pyright: ignore[reportOptionalMemberAccess]
         except AttributeError:
-            ln = inspect.currentframe().f_back.f_lineno
+            ln = inspect.currentframe().f_back.f_lineno # pyright: ignore[reportOptionalMemberAccess]
         self.args = "{0.__name__} (line {1}): {2}".format(type(self), ln, msg),
         # sys.exit(self)
 
@@ -174,7 +173,7 @@ def safe_run(func):
                 else:
                     raise RemoteException(
                         message=message
-                    )
+                    ) from e
 
     return func_wrapper
 
@@ -196,7 +195,7 @@ class DispatcherAPI:
             G = rdflib.Graph()
             G.parse("https://odahub.io/oda-sites.ttl")
             for site, url in G.subject_objects(rdflib.URIRef("http://odahub.io/ontology#APIURL")):             
-                self._known_sites_dict[site.split("#")[1]] = str(url)
+                self._known_sites_dict[site.split("#")[1]] = str(url) # pyright: ignore[reportAttributeAccessIssue]
 
                 for alias in G.objects(site, rdflib.URIRef("http://www.w3.org/2000/01/rdf-schema#label")):
                     self._known_sites_dict[str(alias)] = str(url)
@@ -236,7 +235,7 @@ class DispatcherAPI:
                     self.logger.info('url %s interpretted an alias for %s', url, self.known_sites_dict[url])
                     url = self.known_sites_dict[url]
                 else:
-                    logger.debug(f'url %s does not match http(s) schema and is not one of the aliases (%s)', url, list(self.known_sites_dict))                    
+                    logger.debug(f'url {url} does not match http(s) schema and is not one of the aliases (%s) {list(self.known_sites_dict)}')
 
 
         if host is not None:
@@ -245,7 +244,7 @@ class DispatcherAPI:
             msg += 'support for the parameter host will end soon \n'
             msg += 'please use "url" instead of "host" while providing dispatcher URL \n'
             msg += '----------------------------------------------------------------------------\n'
-            warnings.warn(msg, DeprecationWarning)
+            warnings.warn(msg, DeprecationWarning, stacklevel=1)
             self.url = host
 
             # TODO: disregard this, but leave parameter for compatibility
@@ -393,6 +392,8 @@ class DispatcherAPI:
     @classmethod
     def build_from_envs(cls):
         cookies_path = os.environ.get('ODA_API_TOKEN')
+        if cookies_path is None:
+            raise RuntimeError("ODA_API_TOKEN environment variable is not set")
         cookies = dict(_oauth2_proxy=open(cookies_path).read().strip())
         host_url = os.environ.get('DISP_URL')
 
@@ -478,12 +479,14 @@ class DispatcherAPI:
         if self.use_local_cache:
             try:
                 return self.load_result()            
-            except Exception as e:
-                logger.debug('unable to load result from %s: will need to compute', self.unique_response_json_fn)        
+            except Exception:
+                logger.debug('unable to load result from %s: will need to compute', self.unique_response_json_fn)
 
 
         self.progress_logger.info(
             f'- waiting for remote response (since {time.strftime("%Y-%m-%d %H:%M:%S")}), please wait for {self.url}/{self.run_analysis_handle}')
+
+        response = None
 
         try:
             timeout = getattr(self, 'timeout', 120)
@@ -531,13 +534,13 @@ class DispatcherAPI:
             if response.status_code == 403:
                 try:
                     response_json = response.json()
-                except JSONDecodeError:
-                    raise Unauthorized(f"undecodable: {response.text}")
+                except JSONDecodeError as e:
+                    raise Unauthorized(f"undecodable: {response.text}") from e
 
                 try:
                     raise Unauthorized(response_json['exit_status']['message'])
-                except KeyError:
-                    raise Unauthorized(response_json['error'])
+                except KeyError as e:
+                    raise Unauthorized(response_json['error']) from e
 
             if response.status_code == 400:
                 raise RequestNotUnderstood(
@@ -549,8 +552,8 @@ class DispatcherAPI:
             if response.status_code == 500:
                 try:
                     raise DispatcherException(response.json())
-                except JSONDecodeError:
-                    raise DispatcherException({'error_message': response.text})
+                except JSONDecodeError as e:
+                    raise DispatcherException({'error_message': response.text}) from e
 
             if response.status_code != 200:
                 raise UnexpectedDispatcherStatusCode(
@@ -570,10 +573,11 @@ class DispatcherAPI:
                 self.save_result(response_json)
 
             return response_json
-        except json.decoder.JSONDecodeError as e:
+        except json.decoder.JSONDecodeError:
             self.logger.error(
                 f"{C.RED}{C.BOLD}unable to decode json from response:{C.NC}")
-            self.logger.error(f"{C.RED}{response.text}{C.NC}")
+            if response is not None:
+                self.logger.error(f"{C.RED}{response.text}{C.NC}")
             raise
 
     def returned_analysis_parameters_consistency(self):
@@ -603,7 +607,7 @@ class DispatcherAPI:
         """
         as provided in request, not modified by state changes
         """
-        return getattr(self, '_parameters_dict', None)
+        return getattr(self, '_parameters_dict', {})
 
     @parameters_dict.setter
     def parameters_dict(self, value):
@@ -852,7 +856,7 @@ class DispatcherAPI:
             self.failure_report(self.response_json)
 
         if self.query_status != 'failed':
-            self.logger('query done succesfully!')
+            self.logger.info('query done succesfully!')
         else:
             logger.error("exception, message: \"%s\"",
                          self.response_json['exit_status']['message'])
@@ -897,7 +901,7 @@ class DispatcherAPI:
                 _s = ''
                 for k, v in b.items():
 
-                    if 'query_name' == k or 'instrument' == k and only_prod == False:
+                    if 'query_name' == k or 'instrument' == k and not only_prod:
                         self.logger.info('')
                         self.logger.info('--------------')
                         _s += '%s' % k + ': ' + v
@@ -955,10 +959,10 @@ class DispatcherAPI:
                 msg += '--- res content ---\n %s\n' % res.content
             msg += "--------------------------------------------------------------"
 
-            raise RemoteException(message=msg)
+            raise RemoteException(message=msg) from e
 
     def get_token_from_environment(self):
-        token = oda_api.token.discover_token(self.token_discovery_methods)
+        token = oda_api.token.discover_token(allow_invalid=False, token_discovery_methods=self.token_discovery_methods)
         if token is not None:
             logger.info("discovered token in environment")
 
@@ -1041,7 +1045,8 @@ class DispatcherAPI:
 
         if 'dry_run' in kwargs:
             warnings.warn('The dry_run parameter you included is not going to have any effect on the execution.\n'
-                          'However the oda_api will perform a check of the list of valid parameters for your request.')
+                          'However the oda_api will perform a check of the list of valid parameters for your request.',
+                          stacklevel = 1)
             del kwargs['dry_run']
 
         res = requests.get("%s/api/par-names" % self.url, params=dict(
@@ -1049,7 +1054,8 @@ class DispatcherAPI:
 
         if res.status_code != 200:
             warnings.warn(
-                'parameter check not available on remote server, check carefully parameters name')
+                'parameter check not available on remote server, check carefully parameters name',
+                stacklevel = 1)
         else:
             _ignore_list = ['instrument', 'product_type', 'query_type',
                             'off_line', 'query_status', 'verbose', 'session_id']
@@ -1075,7 +1081,7 @@ class DispatcherAPI:
                         # msg += 'this will throw an error in a future version \n'
                         # msg += 'and might break the current request!\n '
                         msg += '----------------------------------------------------------------------------\n'
-                        warnings.warn(msg)
+                        warnings.warn(msg, stacklevel = 1)
 
         if kwargs.get('token', None) is None and self.token_discovery_methods is not None:
             discovered_token = oda_api.token.discover_token(self.token_discovery_methods)
@@ -1180,7 +1186,8 @@ data_collection = disp.get_product(**par_dict)
     @property
     def unique_response_json_fn(self):
         request_hash = oda_api.misc_helpers.make_hash(self.set_api_code(self.parameters_dict))
-        return pathlib.Path(os.getenv('ODA_CACHE', pathlib.Path(os.getenv('HOME')) / ".cache/oda-api")) / f"cache/oda_api_data_collection_{request_hash}.json.gz"
+        return (pathlib.Path(os.getenv('ODA_CACHE', pathlib.Path(os.getenv('HOME', '/tmp')) / ".cache/oda-api")) 
+                / f"cache/oda_api_data_collection_{request_hash}.json.gz")
 
 
     def __repr__(self):
@@ -1189,15 +1196,23 @@ data_collection = disp.get_product(**par_dict)
 
 class DataCollection(object):
 
-    def __init__(self, data_list, add_meta_to_name=['src_name', 'product'], instrument=None, product=None, request_job_id=None):
-        self._p_list = []
-        self._n_list = []
+    def __init__(self, 
+                 data_list: list[DataProduct], 
+                 add_meta_to_name: list[str] | None = None, 
+                 instrument: str | None = None, 
+                 product: str | None =None, 
+                 request_job_id: str | None=None
+                 ):
+        if add_meta_to_name is None:
+            add_meta_to_name = ['src_name', 'product']
+        self._p_list: list[DataProduct] = []
+        self._n_list: list[str] = []
         self.request_job_id = request_job_id
         for ID, data in enumerate(data_list):
 
             name = ''
             if hasattr(data, 'name'):
-                name = data.name    
+                name = data.name  # type: ignore[assignment]
 
             if name is None or name.strip() == '':
                 if product is not None:
@@ -1251,15 +1266,21 @@ class DataCollection(object):
                         name += '_' + s.strip()
         return name, oda_api.misc_helpers.clean_var_name(name)
 
-    def save_all_data(self, prenpend_name=None):
-        for pname, prod in zip(self._n_list, self._p_list):
+    def save_all_data(self, prenpend_name = None, overwrite=True):
+        # NOTE: prepend_name also determines file path
+        for pname, prod in zip(self._n_list, self._p_list, strict=False):
+            if not isinstance(prod, DataProduct):
+                logger.warning(f"Writing on disk is not implemented for product {pname} of type {pname.__class__.__name__}, skipping.")
+                continue
             if prenpend_name is not None:
                 file_name = prenpend_name + '_' + pname
             else:
                 file_name = pname
 
-            file_name = file_name + '.fits'
-            prod.write_fits_file(file_name)
+            fn_extension = prod.suggest_fn_extension()
+            file_name = f"{file_name}.{fn_extension}"
+
+            prod.write_file(file_name, overwrite=overwrite)
 
     def save(self, file_name):
         pickle.dump(self, open(file_name, 'wb'),
@@ -1292,7 +1313,7 @@ class DataCollection(object):
             try:
                 data.extend([BinaryProduct.decode(d)
                              for d in res_json['products']['binary_data_product_list']])
-            except:
+            except Exception:
                 data.extend([BinaryData().decode(d)
                              for d in res_json['products']['binary_data_product_list']])
         
@@ -1321,7 +1342,7 @@ class DataCollection(object):
                              for text_data in res_json['products']['text_product_list']])
             
         if 'gw_strain_product_list' in res_json['products'].keys():
-            data.extend([TimeSeries(strain_data['value'],
+            data.extend([TimeSeries(strain_data['value'], # pyright: ignore[reportPossiblyUnboundVariable]
                                     name=strain_data['name'],
                                     t0=strain_data['t0'],
                                     dt=strain_data['dt'])
@@ -1329,7 +1350,7 @@ class DataCollection(object):
 
         if 'gw_spectrogram_product' in res_json['products'].keys():
             sgram = res_json['products']['gw_spectrogram_product']
-            data.append(Spectrogram(sgram['value'],
+            data.append(Spectrogram(sgram['value'], # pyright: ignore[reportPossiblyUnboundVariable]
                                     name='Spectrogram',
                                     unit='s',
                                     t0=sgram['x0'],
@@ -1354,7 +1375,7 @@ class DataCollection(object):
         d = cls(data, instrument=instrument, product=product, request_job_id=request_job_id)
         for p in d._p_list:
             if hasattr(p, 'meta_data') is False and hasattr(p, 'meta') is True:
-                p.meta_data = p.meta
+                p.meta_data = p.meta  # type:ignore
 
         return d
 
@@ -1391,8 +1412,8 @@ class ProgressReporter(object):
     def enabled(self):
         return self._callback is not None
 
-    def report_progress(self, stage: str=None, progress: float=50., progress_max: float=100., substage: str=None,
-                        subprogress: float=None, subprogress_max: float=100., message:str=None):
+    def report_progress(self, stage: str | None = None, progress: float=50., progress_max: float=100., substage: str | None = None,
+                        subprogress: float | None = None, subprogress_max: float=100., message: str | None = None):
         """
         Report progress via callback URL
         :param stage: current stage description string
@@ -1411,14 +1432,15 @@ class ProgressReporter(object):
             logger.info('no callback registered, skipping')
             return
 
+        self._callback = cast(str, self._callback)
         logger.info('will perform callback: %s', self._callback)
 
-        if re.match('^file://', self._callback):
+        if re.match(r'^file://', self._callback):
             with open(self._callback.replace('file://', ''), "w") as f:
                 json.dump(callback_payload, f)
             logger.info('stored callback in a file %s', self._callback)
 
-        elif re.match('^https?://', self._callback):
+        elif re.match(r'^https?://', self._callback):
             r = requests.get(self._callback, params=callback_payload)
             logger.info('callback %s returns %s : %s', self._callback, r, r.text)
 
