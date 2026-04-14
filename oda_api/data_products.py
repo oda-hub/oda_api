@@ -4,6 +4,7 @@ import mimetypes
 import typing
 import traceback
 from warnings import deprecated
+import warnings
 
 from json_tricks import numpy_encode,dumps
 from astropy.io import fits as pf
@@ -164,10 +165,10 @@ class ODAAstropyTable(DataProduct):
         return cls(typing.cast(Table, t_rec),name=encoded_name,meta_data=encoded_meta_data)
 
 
-@deprecated('BinaryData class is deprecated, please use BinaryProduct instead')
 class BinaryData(object):
 
     def __init__(self,file_path=None):
+        warnings.warn('BinaryData class is deprecated, please use BinaryProduct instead', DeprecationWarning, stacklevel=2)
         self.file_path=file_path
 
     def encode(self,file_path=None):
