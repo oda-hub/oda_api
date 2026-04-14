@@ -3,7 +3,6 @@ __author__ = "Andrea Tramacere"
 import mimetypes
 import typing
 import traceback
-from warnings import deprecated
 import warnings
 
 from json_tricks import numpy_encode,dumps
