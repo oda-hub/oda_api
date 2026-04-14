@@ -1,4 +1,5 @@
 from datetime import datetime
+import logging
 
 import pytest
 import json
@@ -8,6 +9,7 @@ import numpy as np
 import time
 import os
 import typing
+from oda_api.api import DataCollection
 from oda_api.json import CustomJSONEncoder
 import filecmp
 
@@ -317,3 +319,51 @@ def test_lightcurve_data_product_write_file_roundtrip(tmp_path):
     loaded = NumpyDataProduct.from_file(str(out_fn))
     assert np.array_equal(loaded.data_unit[1].data['FLUX'], np.array(values))
     assert np.array_equal(loaded.data_unit[1].data['ERROR'], np.array(errors))
+
+
+def test_save_all_data_mixed_collection(tmp_path):
+    table = Table({'a': [1, 2], 'b': [3, 4]})
+    astable = ODAAstropyTable(table, name='table')
+    bin_prod = BinaryProduct.from_file('tests/test_data/lc.fits', name='binprd')
+
+    plot_fn = tmp_path / 'plot.png'
+    plt.plot([1, 2], [1, 0])
+    plt.savefig(str(plot_fn))
+    plt.close()
+    picture = PictureProduct.from_file(str(plot_fn), name='pic')
+    text = TextLikeProduct('hello', name='text')
+    lc = LightCurveDataProduct.from_arrays(['2022-02-20T13:45:34', '2022-02-20T14:45:34'], fluxes=[2, 3], errors=[0.1, 0.2])
+    dc = DataCollection([astable, bin_prod, picture, text, lc])
+
+    out_dir = tmp_path / 'saved'
+    os.makedirs(out_dir, exist_ok=True)
+    dc.save_all_data(prenpend_name=str(out_dir / 'mixed'))
+
+    expected_files = [
+        out_dir / 'mixed_table_0.fits',
+        out_dir / 'mixed_binprd_1.fits',
+        out_dir / 'mixed_pic_2.png',
+        out_dir / 'mixed_text_3.txt',
+        out_dir / 'mixed_prod_4.fits',
+    ]
+
+    for expected in expected_files:
+        assert expected.exists()
+
+
+def test_save_all_data_empty_collection(tmp_path):
+    dc = DataCollection([])
+    dc.save_all_data(prenpend_name=str(tmp_path / 'empty'))
+    assert not any(tmp_path.iterdir())
+
+
+def test_save_all_data_skips_unsupported_product(caplog, tmp_path):
+    caplog.set_level(logging.WARNING)
+    text = TextLikeProduct('hello', name='text')
+    unsupported = object()
+    dc = DataCollection([text, unsupported])
+
+    dc.save_all_data(prenpend_name=str(tmp_path / 'skipped'))
+
+    assert 'Writing on disk is not implemented for' in caplog.text
+    assert (tmp_path / 'skipped_text_0.txt').exists()

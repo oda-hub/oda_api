@@ -35,7 +35,7 @@ from oda_api.token import TokenLocation
 from . import __version__
 from . import colors as C
 from . import custom_formatters
-from .data_products import (ApiCatalog, BinaryData, BinaryProduct,
+from .data_products import (ApiCatalog, BinaryData, BinaryProduct, DataProduct,
                             GWContoursDataProduct, NumpyDataProduct,
                             ODAAstropyTable, PictureProduct, TextLikeProduct)
 
@@ -1196,11 +1196,17 @@ data_collection = disp.get_product(**par_dict)
 
 class DataCollection(object):
 
-    def __init__(self, data_list, add_meta_to_name=None, instrument=None, product=None, request_job_id=None):
+    def __init__(self, 
+                 data_list: list[DataProduct], 
+                 add_meta_to_name: list[str] | None = None, 
+                 instrument: str | None = None, 
+                 product: str | None =None, 
+                 request_job_id: str | None=None
+                 ):
         if add_meta_to_name is None:
             add_meta_to_name = ['src_name', 'product']
-        self._p_list = []
-        self._n_list = []
+        self._p_list: list[DataProduct] = []
+        self._n_list: list[str] = []
         self.request_job_id = request_job_id
         for ID, data in enumerate(data_list):
 
@@ -1260,15 +1266,21 @@ class DataCollection(object):
                         name += '_' + s.strip()
         return name, oda_api.misc_helpers.clean_var_name(name)
 
-    def save_all_data(self, prenpend_name=None):
+    def save_all_data(self, prenpend_name = None, overwrite=True):
+        # NOTE: prepend_name also determines file path
         for pname, prod in zip(self._n_list, self._p_list, strict=False):
+            if not isinstance(prod, DataProduct):
+                logger.warning(f"Writing on disk is not implemented for product {pname} of type {pname.__class__.__name__}, skipping.")
+                continue
             if prenpend_name is not None:
                 file_name = prenpend_name + '_' + pname
             else:
                 file_name = pname
 
-            file_name = file_name + '.fits'
-            prod.write_fits_file(file_name)
+            fn_extension = prod.suggest_fn_extension()
+            file_name = f"{file_name}.{fn_extension}"
+
+            prod.write_file(file_name, overwrite=overwrite)
 
     def save(self, file_name):
         pickle.dump(self, open(file_name, 'wb'),
@@ -1363,7 +1375,7 @@ class DataCollection(object):
         d = cls(data, instrument=instrument, product=product, request_job_id=request_job_id)
         for p in d._p_list:
             if hasattr(p, 'meta_data') is False and hasattr(p, 'meta') is True:
-                p.meta_data = p.meta
+                p.meta_data = p.meta  # type:ignore
 
         return d
 

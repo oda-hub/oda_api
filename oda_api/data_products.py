@@ -49,6 +49,9 @@ def _chekc_enc_data(data):
 
 
 class DataProduct(ABC):
+    name: str | None
+    meta_data: dict
+
     @abstractmethod
     def encode(self, *args, **kwargs) -> str | dict[str, typing.Any]: ...
 
@@ -192,7 +195,7 @@ class BinaryProduct(DataProduct):
     def suggest_fn_extension(self) -> str:
         suggested_extension = puremagic.from_string(self.bin_data)
         if suggested_extension:
-            return suggested_extension
+            return suggested_extension.strip('.')
         return 'bin'
         
     def encode(self):
