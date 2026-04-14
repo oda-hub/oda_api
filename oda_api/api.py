@@ -1212,7 +1212,7 @@ class DataCollection(object):
 
             name = ''
             if hasattr(data, 'name'):
-                name = data.name    
+                name = data.name  # type: ignore[assignment]
 
             if name is None or name.strip() == '':
                 if product is not None:
