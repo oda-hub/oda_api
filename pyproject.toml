@@ -28,7 +28,7 @@ dependencies = [
     "numpy>=2.0 ; python_full_version >= '3.11'",
     "numpy<2.0 ; python_full_version < '3.11'",
     "jsonschema",
-    "pyjwt",
+    "pyjwt>=2.11",
     "astroquery>=0.4.4",
     "scipy",
     "rdflib",

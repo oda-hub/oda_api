@@ -3958,7 +3958,7 @@ requires-dist = [
     { name = "numpy", marker = "python_full_version < '3.11'", specifier = "<2.0" },
     { name = "numpy", marker = "python_full_version >= '3.11'", specifier = ">=2.0" },
     { name = "puremagic" },
-    { name = "pyjwt" },
+    { name = "pyjwt", specifier = ">=2.11" },
     { name = "rdflib" },
     { name = "requests" },
     { name = "scipy" },
